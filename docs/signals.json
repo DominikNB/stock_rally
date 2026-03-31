@@ -1,0 +1,6606 @@
+{
+  "generated": "2026-04-01 00:28",
+  "threshold": 0.7799999999999997,
+  "signals": [
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "date": "2026-03-26",
+      "prob": 0.7952173352241516
+    },
+    {
+      "ticker": "R3NK.DE",
+      "company": "RENK Group",
+      "date": "2026-03-26",
+      "prob": 0.8069930672645569
+    },
+    {
+      "ticker": "G24.DE",
+      "company": "Scout24",
+      "date": "2026-03-24",
+      "prob": 0.7982943058013916
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2026-03-20",
+      "prob": 0.7857394814491272
+    },
+    {
+      "ticker": "WAC.DE",
+      "company": "Wacker Neuson",
+      "date": "2026-03-20",
+      "prob": 0.7895696759223938
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2026-03-20",
+      "prob": 0.7916350364685059
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2026-02-03",
+      "prob": 0.5912498831748962
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2026-01-31",
+      "prob": 0.831816554069519
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2026-01-31",
+      "prob": 0.7918319702148438
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-11-25",
+      "prob": 0.24399007856845856
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2025-11-24",
+      "prob": 0.666580319404602
+    },
+    {
+      "ticker": "R3NK.DE",
+      "company": "RENK Group",
+      "date": "2025-11-24",
+      "prob": 0.8015912771224976
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "date": "2025-11-24",
+      "prob": 0.7998506426811218
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-11-23",
+      "prob": 0.8050804138183594
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2025-11-22",
+      "prob": 0.7814794182777405
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-11-22",
+      "prob": 0.7987949252128601
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2025-11-21",
+      "prob": 0.8144391775131226
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "date": "2025-11-20",
+      "prob": 0.7959690690040588
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2025-11-20",
+      "prob": 0.3590189814567566
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2025-11-19",
+      "prob": 0.5306477546691895
+    },
+    {
+      "ticker": "R3NK.DE",
+      "company": "RENK Group",
+      "date": "2025-11-19",
+      "prob": 0.8260310292243958
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-11-18",
+      "prob": 0.5918251872062683
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-11-18",
+      "prob": 0.6082091331481934
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2025-11-17",
+      "prob": 0.47997426986694336
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2025-11-17",
+      "prob": 0.7801660895347595
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2025-11-16",
+      "prob": 0.7917110919952393
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-11-15",
+      "prob": 0.8181242942810059
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-11-15",
+      "prob": 0.8304055333137512
+    },
+    {
+      "ticker": "G24.DE",
+      "company": "Scout24",
+      "date": "2025-11-14",
+      "prob": 0.807172954082489
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2025-11-12",
+      "prob": 0.6104133129119873
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2025-11-11",
+      "prob": 0.781963586807251
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "date": "2025-11-10",
+      "prob": 0.8039298057556152
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-11-09",
+      "prob": 0.28670692443847656
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2025-11-07",
+      "prob": 0.7993907928466797
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-11-07",
+      "prob": 0.8271931409835815
+    },
+    {
+      "ticker": "NOEJ.DE",
+      "company": "NORMA Group",
+      "date": "2025-11-07",
+      "prob": 0.7847396731376648
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2025-11-06",
+      "prob": 0.8091166019439697
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-11-06",
+      "prob": 0.8184333443641663
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2025-11-04",
+      "prob": 0.7858338952064514
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2025-11-04",
+      "prob": 0.8088478446006775
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2025-11-04",
+      "prob": 0.8243372440338135
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-11-04",
+      "prob": 0.8396567702293396
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2025-11-04",
+      "prob": 0.7802171111106873
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-11-03",
+      "prob": 0.8315136432647705
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2025-10-31",
+      "prob": 0.8081745505332947
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2025-10-18",
+      "prob": 0.8005478382110596
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2025-10-13",
+      "prob": 0.5191053152084351
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2025-10-11",
+      "prob": 0.7836179137229919
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2025-10-11",
+      "prob": 0.8076571226119995
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2025-10-10",
+      "prob": 0.7912613749504089
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2025-09-05",
+      "prob": 0.786774754524231
+    },
+    {
+      "ticker": "CRM",
+      "company": "Salesforce",
+      "date": "2025-04-21",
+      "prob": 0.7939928770065308
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2025-04-21",
+      "prob": 0.8234823346138
+    },
+    {
+      "ticker": "UNH",
+      "company": "UnitedHealth",
+      "date": "2025-04-21",
+      "prob": 0.8029500842094421
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2025-04-14",
+      "prob": 0.43783798813819885
+    },
+    {
+      "ticker": "DOW",
+      "company": "Dow Inc.",
+      "date": "2025-04-14",
+      "prob": 0.29383987188339233
+    },
+    {
+      "ticker": "DTG.DE",
+      "company": "Daimler Truck",
+      "date": "2025-04-14",
+      "prob": 0.3920268714427948
+    },
+    {
+      "ticker": "G1A.DE",
+      "company": "GEA Group",
+      "date": "2025-04-14",
+      "prob": 0.10271845012903214
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2025-04-14",
+      "prob": 0.13169172406196594
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2025-04-14",
+      "prob": 0.3971043825149536
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2025-04-14",
+      "prob": 0.2968459129333496
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2025-04-14",
+      "prob": 0.31582188606262207
+    },
+    {
+      "ticker": "LYB",
+      "company": "LyondellBasell",
+      "date": "2025-04-14",
+      "prob": 0.28515976667404175
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2025-04-14",
+      "prob": 0.47248226404190063
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2025-04-14",
+      "prob": 0.19546827673912048
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "date": "2025-04-14",
+      "prob": 0.32457923889160156
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2025-04-14",
+      "prob": 0.705670177936554
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-04-12",
+      "prob": 0.24251069128513336
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2025-04-11",
+      "prob": 0.2518903613090515
+    },
+    {
+      "ticker": "BAS.DE",
+      "company": "BASF",
+      "date": "2025-04-11",
+      "prob": 0.4677375853061676
+    },
+    {
+      "ticker": "BMW.DE",
+      "company": "BMW",
+      "date": "2025-04-11",
+      "prob": 0.5860416889190674
+    },
+    {
+      "ticker": "BOSS.DE",
+      "company": "Hugo Boss",
+      "date": "2025-04-11",
+      "prob": 0.4780348837375641
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2025-04-11",
+      "prob": 0.4796958863735199
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2025-04-11",
+      "prob": 0.38475942611694336
+    },
+    {
+      "ticker": "NOEJ.DE",
+      "company": "NORMA Group",
+      "date": "2025-04-11",
+      "prob": 0.4809023141860962
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2025-04-11",
+      "prob": 0.6642708778381348
+    },
+    {
+      "ticker": "ADS.DE",
+      "company": "Adidas",
+      "date": "2025-04-10",
+      "prob": 0.6910043954849243
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2025-04-10",
+      "prob": 0.841904878616333
+    },
+    {
+      "ticker": "FME.DE",
+      "company": "Fresenius Med.",
+      "date": "2025-04-10",
+      "prob": 0.8238564729690552
+    },
+    {
+      "ticker": "FNTN.DE",
+      "company": "freenet",
+      "date": "2025-04-10",
+      "prob": 0.6941851377487183
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2025-04-10",
+      "prob": 0.6815860271453857
+    },
+    {
+      "ticker": "INH.DE",
+      "company": "INDUS Holding",
+      "date": "2025-04-10",
+      "prob": 0.4715596139431
+    },
+    {
+      "ticker": "MRK.DE",
+      "company": "Merck KGaA",
+      "date": "2025-04-10",
+      "prob": 0.7050517201423645
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "date": "2025-04-10",
+      "prob": 0.5647172927856445
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "date": "2025-04-10",
+      "prob": 0.6783154606819153
+    },
+    {
+      "ticker": "RRTL.DE",
+      "company": "RTL Group",
+      "date": "2025-04-10",
+      "prob": 0.5394203662872314
+    },
+    {
+      "ticker": "6503.T",
+      "company": "Mitsubishi",
+      "date": "2025-04-09",
+      "prob": 0.822207510471344
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2025-04-09",
+      "prob": 0.8579087853431702
+    },
+    {
+      "ticker": "AAPL",
+      "company": "Apple",
+      "date": "2025-04-09",
+      "prob": 0.7474023103713989
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2025-04-09",
+      "prob": 0.6516039371490479
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "date": "2025-04-09",
+      "prob": 0.4933391213417053
+    },
+    {
+      "ticker": "APD",
+      "company": "Air Products",
+      "date": "2025-04-09",
+      "prob": 0.7512478828430176
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2025-04-09",
+      "prob": 0.7169681191444397
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "date": "2025-04-09",
+      "prob": 0.5997498035430908
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2025-04-09",
+      "prob": 0.8755759000778198
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2025-04-09",
+      "prob": 0.8227499723434448
+    },
+    {
+      "ticker": "CARR",
+      "company": "Carrier",
+      "date": "2025-04-09",
+      "prob": 0.6076697707176208
+    },
+    {
+      "ticker": "CAT",
+      "company": "Caterpillar",
+      "date": "2025-04-09",
+      "prob": 0.8303985595703125
+    },
+    {
+      "ticker": "CRM",
+      "company": "Salesforce",
+      "date": "2025-04-09",
+      "prob": 0.6878470182418823
+    },
+    {
+      "ticker": "DBK.DE",
+      "company": "Deutsche Bank",
+      "date": "2025-04-09",
+      "prob": 0.7976400256156921
+    },
+    {
+      "ticker": "DHL.DE",
+      "company": "DHL Group",
+      "date": "2025-04-09",
+      "prob": 0.8561919927597046
+    },
+    {
+      "ticker": "DIS",
+      "company": "Disney",
+      "date": "2025-04-09",
+      "prob": 0.6780392527580261
+    },
+    {
+      "ticker": "DOW",
+      "company": "Dow Inc.",
+      "date": "2025-04-09",
+      "prob": 0.8758792281150818
+    },
+    {
+      "ticker": "DRW3.DE",
+      "company": "Dr\u00e4gerwerk",
+      "date": "2025-04-09",
+      "prob": 0.8166381120681763
+    },
+    {
+      "ticker": "DTG.DE",
+      "company": "Daimler Truck",
+      "date": "2025-04-09",
+      "prob": 0.8541022539138794
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "date": "2025-04-09",
+      "prob": 0.7784625887870789
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2025-04-09",
+      "prob": 0.7648105025291443
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-04-09",
+      "prob": 0.8358054161071777
+    },
+    {
+      "ticker": "EVK.DE",
+      "company": "Evonik",
+      "date": "2025-04-09",
+      "prob": 0.8477271795272827
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "date": "2025-04-09",
+      "prob": 0.7885709404945374
+    },
+    {
+      "ticker": "G1A.DE",
+      "company": "GEA Group",
+      "date": "2025-04-09",
+      "prob": 0.8357247710227966
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2025-04-09",
+      "prob": 0.8307105898857117
+    },
+    {
+      "ticker": "GS",
+      "company": "Goldman Sachs",
+      "date": "2025-04-09",
+      "prob": 0.6544281840324402
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2025-04-09",
+      "prob": 0.8298991918563843
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2025-04-09",
+      "prob": 0.8519684076309204
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2025-04-09",
+      "prob": 0.6189650297164917
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "date": "2025-04-09",
+      "prob": 0.8170934915542603
+    },
+    {
+      "ticker": "JUN3.DE",
+      "company": "Jungheinrich",
+      "date": "2025-04-09",
+      "prob": 0.8594631552696228
+    },
+    {
+      "ticker": "KBX.DE",
+      "company": "Knorr-Bremse",
+      "date": "2025-04-09",
+      "prob": 0.8233590722084045
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2025-04-09",
+      "prob": 0.9023587703704834
+    },
+    {
+      "ticker": "KSB.DE",
+      "company": "KSB",
+      "date": "2025-04-09",
+      "prob": 0.7652419209480286
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2025-04-09",
+      "prob": 0.8273175954818726
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2025-04-09",
+      "prob": 0.8312663435935974
+    },
+    {
+      "ticker": "LYB",
+      "company": "LyondellBasell",
+      "date": "2025-04-09",
+      "prob": 0.8463911414146423
+    },
+    {
+      "ticker": "MBG.DE",
+      "company": "Mercedes-Benz",
+      "date": "2025-04-09",
+      "prob": 0.8541170358657837
+    },
+    {
+      "ticker": "MLP.DE",
+      "company": "MLP",
+      "date": "2025-04-09",
+      "prob": 0.8577905297279358
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2025-04-09",
+      "prob": 0.7614861726760864
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2025-04-09",
+      "prob": 0.3164181113243103
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "date": "2025-04-09",
+      "prob": 0.8105239868164062
+    },
+    {
+      "ticker": "NVS",
+      "company": "Novartis",
+      "date": "2025-04-09",
+      "prob": 0.7845817804336548
+    },
+    {
+      "ticker": "P911.DE",
+      "company": "Porsche AG",
+      "date": "2025-04-09",
+      "prob": 0.8168505430221558
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2025-04-09",
+      "prob": 0.7027035355567932
+    },
+    {
+      "ticker": "R3NK.DE",
+      "company": "RENK Group",
+      "date": "2025-04-09",
+      "prob": 0.43348217010498047
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2025-04-09",
+      "prob": 0.7857562303543091
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2025-04-09",
+      "prob": 0.8610698580741882
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "date": "2025-04-09",
+      "prob": 0.8464353084564209
+    },
+    {
+      "ticker": "SHL.DE",
+      "company": "Siemens Healthineers",
+      "date": "2025-04-09",
+      "prob": 0.867340087890625
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "date": "2025-04-09",
+      "prob": 0.8197345733642578
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-04-09",
+      "prob": 0.6190546751022339
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2025-04-09",
+      "prob": 0.8068042993545532
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "date": "2025-04-09",
+      "prob": 0.7631641030311584
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2025-04-09",
+      "prob": 0.7371014952659607
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2025-04-09",
+      "prob": 0.8429955840110779
+    },
+    {
+      "ticker": "TLX.DE",
+      "company": "Talanx",
+      "date": "2025-04-09",
+      "prob": 0.8557326197624207
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2025-04-09",
+      "prob": 0.8122974038124084
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2025-04-09",
+      "prob": 0.8136146068572998
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "date": "2025-04-09",
+      "prob": 0.7464005351066589
+    },
+    {
+      "ticker": "WAC.DE",
+      "company": "Wacker Neuson",
+      "date": "2025-04-09",
+      "prob": 0.8402183651924133
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2025-04-09",
+      "prob": 0.8225775361061096
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2025-04-09",
+      "prob": 0.7821564078330994
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2025-04-09",
+      "prob": 0.7729467153549194
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2025-04-08",
+      "prob": 0.7452757954597473
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2025-04-08",
+      "prob": 0.8192207217216492
+    },
+    {
+      "ticker": "BAS.DE",
+      "company": "BASF",
+      "date": "2025-04-08",
+      "prob": 0.7903835773468018
+    },
+    {
+      "ticker": "BMW.DE",
+      "company": "BMW",
+      "date": "2025-04-08",
+      "prob": 0.8056795597076416
+    },
+    {
+      "ticker": "BOSS.DE",
+      "company": "Hugo Boss",
+      "date": "2025-04-08",
+      "prob": 0.829733669757843
+    },
+    {
+      "ticker": "BP",
+      "company": "BP",
+      "date": "2025-04-08",
+      "prob": 0.8557826280593872
+    },
+    {
+      "ticker": "DOU.DE",
+      "company": "Douglas",
+      "date": "2025-04-08",
+      "prob": 0.7894994616508484
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2025-04-08",
+      "prob": 0.8736655116081238
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "date": "2025-04-08",
+      "prob": 0.7944245338439941
+    },
+    {
+      "ticker": "IBM",
+      "company": "IBM",
+      "date": "2025-04-08",
+      "prob": 0.8005388379096985
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2025-04-08",
+      "prob": 0.8038329482078552
+    },
+    {
+      "ticker": "NKE",
+      "company": "Nike",
+      "date": "2025-04-08",
+      "prob": 0.8401421904563904
+    },
+    {
+      "ticker": "NOEJ.DE",
+      "company": "NORMA Group",
+      "date": "2025-04-08",
+      "prob": 0.8733609318733215
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2025-04-08",
+      "prob": 0.8256564140319824
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2025-04-08",
+      "prob": 0.8292246460914612
+    },
+    {
+      "ticker": "SPG",
+      "company": "Simon Property",
+      "date": "2025-04-08",
+      "prob": 0.8237505555152893
+    },
+    {
+      "ticker": "T",
+      "company": "AT&T",
+      "date": "2025-04-08",
+      "prob": 0.7997643351554871
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2025-04-08",
+      "prob": 0.7876686453819275
+    },
+    {
+      "ticker": "1U1.DE",
+      "company": "1&1",
+      "date": "2025-04-07",
+      "prob": 0.7818595767021179
+    },
+    {
+      "ticker": "ADS.DE",
+      "company": "Adidas",
+      "date": "2025-04-07",
+      "prob": 0.8227182626724243
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2025-04-07",
+      "prob": 0.8369883894920349
+    },
+    {
+      "ticker": "F",
+      "company": "Ford",
+      "date": "2025-04-07",
+      "prob": 0.8068550229072571
+    },
+    {
+      "ticker": "FNTN.DE",
+      "company": "freenet",
+      "date": "2025-04-07",
+      "prob": 0.805518388748169
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2025-04-07",
+      "prob": 0.801747739315033
+    },
+    {
+      "ticker": "HEN3.DE",
+      "company": "Henkel",
+      "date": "2025-04-07",
+      "prob": 0.795616626739502
+    },
+    {
+      "ticker": "HNR1.DE",
+      "company": "Hannover R\u00fcck",
+      "date": "2025-04-07",
+      "prob": 0.8028036952018738
+    },
+    {
+      "ticker": "INH.DE",
+      "company": "INDUS Holding",
+      "date": "2025-04-07",
+      "prob": 0.8332798480987549
+    },
+    {
+      "ticker": "MRK.DE",
+      "company": "Merck KGaA",
+      "date": "2025-04-07",
+      "prob": 0.8184093832969666
+    },
+    {
+      "ticker": "MUV2.DE",
+      "company": "Munich Re",
+      "date": "2025-04-07",
+      "prob": 0.7843102812767029
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "date": "2025-04-07",
+      "prob": 0.7820959091186523
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "date": "2025-04-07",
+      "prob": 0.8087132573127747
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "date": "2025-04-07",
+      "prob": 0.8132216930389404
+    },
+    {
+      "ticker": "RRTL.DE",
+      "company": "RTL Group",
+      "date": "2025-04-07",
+      "prob": 0.8177002668380737
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2025-04-06",
+      "prob": 0.8008359670639038
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2025-04-06",
+      "prob": 0.7819514870643616
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2025-04-06",
+      "prob": 0.83382248878479
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-04-06",
+      "prob": 0.8072304725646973
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2025-04-06",
+      "prob": 0.8026113510131836
+    },
+    {
+      "ticker": "6503.T",
+      "company": "Mitsubishi",
+      "date": "2025-04-04",
+      "prob": 0.8431989550590515
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2025-04-04",
+      "prob": 0.7857739329338074
+    },
+    {
+      "ticker": "AAPL",
+      "company": "Apple",
+      "date": "2025-04-04",
+      "prob": 0.8708561658859253
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "date": "2025-04-04",
+      "prob": 0.8463209271430969
+    },
+    {
+      "ticker": "APD",
+      "company": "Air Products",
+      "date": "2025-04-04",
+      "prob": 0.7830012440681458
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2025-04-04",
+      "prob": 0.8116146326065063
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "date": "2025-04-04",
+      "prob": 0.8580381274223328
+    },
+    {
+      "ticker": "BC8.DE",
+      "company": "Bechtle",
+      "date": "2025-04-04",
+      "prob": 0.8014431595802307
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2025-04-04",
+      "prob": 0.843265950679779
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2025-04-04",
+      "prob": 0.8227671384811401
+    },
+    {
+      "ticker": "CARR",
+      "company": "Carrier",
+      "date": "2025-04-04",
+      "prob": 0.7886879444122314
+    },
+    {
+      "ticker": "CAT",
+      "company": "Caterpillar",
+      "date": "2025-04-04",
+      "prob": 0.8117703199386597
+    },
+    {
+      "ticker": "CRM",
+      "company": "Salesforce",
+      "date": "2025-04-04",
+      "prob": 0.835001528263092
+    },
+    {
+      "ticker": "DBK.DE",
+      "company": "Deutsche Bank",
+      "date": "2025-04-04",
+      "prob": 0.8166113495826721
+    },
+    {
+      "ticker": "DHL.DE",
+      "company": "DHL Group",
+      "date": "2025-04-04",
+      "prob": 0.8009693622589111
+    },
+    {
+      "ticker": "DIS",
+      "company": "Disney",
+      "date": "2025-04-04",
+      "prob": 0.8563395738601685
+    },
+    {
+      "ticker": "DOW",
+      "company": "Dow Inc.",
+      "date": "2025-04-04",
+      "prob": 0.8523388504981995
+    },
+    {
+      "ticker": "DTG.DE",
+      "company": "Daimler Truck",
+      "date": "2025-04-04",
+      "prob": 0.7940733432769775
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "date": "2025-04-04",
+      "prob": 0.8249528408050537
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2025-04-04",
+      "prob": 0.798772931098938
+    },
+    {
+      "ticker": "EVK.DE",
+      "company": "Evonik",
+      "date": "2025-04-04",
+      "prob": 0.8237422704696655
+    },
+    {
+      "ticker": "G1A.DE",
+      "company": "GEA Group",
+      "date": "2025-04-04",
+      "prob": 0.7951701283454895
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2025-04-04",
+      "prob": 0.8516825437545776
+    },
+    {
+      "ticker": "GS",
+      "company": "Goldman Sachs",
+      "date": "2025-04-04",
+      "prob": 0.8193380832672119
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2025-04-04",
+      "prob": 0.8044543862342834
+    },
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "date": "2025-04-04",
+      "prob": 0.8179975152015686
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2025-04-04",
+      "prob": 0.8129100203514099
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2025-04-04",
+      "prob": 0.842720091342926
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2025-04-04",
+      "prob": 0.811344563961029
+    },
+    {
+      "ticker": "JPM",
+      "company": "JPMorgan",
+      "date": "2025-04-04",
+      "prob": 0.8252778053283691
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "date": "2025-04-04",
+      "prob": 0.8520633578300476
+    },
+    {
+      "ticker": "JUN3.DE",
+      "company": "Jungheinrich",
+      "date": "2025-04-04",
+      "prob": 0.8620133399963379
+    },
+    {
+      "ticker": "KBX.DE",
+      "company": "Knorr-Bremse",
+      "date": "2025-04-04",
+      "prob": 0.8044461011886597
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2025-04-04",
+      "prob": 0.8528364300727844
+    },
+    {
+      "ticker": "KSB.DE",
+      "company": "KSB",
+      "date": "2025-04-04",
+      "prob": 0.8647057414054871
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2025-04-04",
+      "prob": 0.8470187187194824
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2025-04-04",
+      "prob": 0.8093312978744507
+    },
+    {
+      "ticker": "LYB",
+      "company": "LyondellBasell",
+      "date": "2025-04-04",
+      "prob": 0.7814251184463501
+    },
+    {
+      "ticker": "MLP.DE",
+      "company": "MLP",
+      "date": "2025-04-04",
+      "prob": 0.8240641355514526
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2025-04-04",
+      "prob": 0.8558451533317566
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2025-04-04",
+      "prob": 0.8325912952423096
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "date": "2025-04-04",
+      "prob": 0.7981365323066711
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2025-04-04",
+      "prob": 0.795637309551239
+    },
+    {
+      "ticker": "P911.DE",
+      "company": "Porsche AG",
+      "date": "2025-04-04",
+      "prob": 0.8278395533561707
+    },
+    {
+      "ticker": "PAH3.DE",
+      "company": "Porsche SE",
+      "date": "2025-04-04",
+      "prob": 0.7834537029266357
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2025-04-04",
+      "prob": 0.7993907332420349
+    },
+    {
+      "ticker": "R3NK.DE",
+      "company": "RENK Group",
+      "date": "2025-04-04",
+      "prob": 0.7927811741828918
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2025-04-04",
+      "prob": 0.7856061458587646
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2025-04-04",
+      "prob": 0.8150008320808411
+    },
+    {
+      "ticker": "SHL.DE",
+      "company": "Siemens Healthineers",
+      "date": "2025-04-04",
+      "prob": 0.7870819568634033
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "date": "2025-04-04",
+      "prob": 0.8089531064033508
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2025-04-04",
+      "prob": 0.7956493496894836
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "date": "2025-04-04",
+      "prob": 0.8139756321907043
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2025-04-04",
+      "prob": 0.8157629370689392
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2025-04-04",
+      "prob": 0.8475518226623535
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2025-04-04",
+      "prob": 0.7894165515899658
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2025-04-04",
+      "prob": 0.791499674320221
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "date": "2025-04-04",
+      "prob": 0.8430711030960083
+    },
+    {
+      "ticker": "WAC.DE",
+      "company": "Wacker Neuson",
+      "date": "2025-04-04",
+      "prob": 0.8604148030281067
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2025-04-04",
+      "prob": 0.7966713309288025
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2025-04-04",
+      "prob": 0.8367703557014465
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2025-04-04",
+      "prob": 0.8241937756538391
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2025-04-03",
+      "prob": 0.8375251293182373
+    },
+    {
+      "ticker": "NOEJ.DE",
+      "company": "NORMA Group",
+      "date": "2025-04-03",
+      "prob": 0.7966064810752869
+    },
+    {
+      "ticker": "DOU.DE",
+      "company": "Douglas",
+      "date": "2025-03-26",
+      "prob": 0.8138903379440308
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2025-03-19",
+      "prob": 0.363766610622406
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2025-03-14",
+      "prob": 0.786382794380188
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2025-03-09",
+      "prob": 0.7907397747039795
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2025-03-01",
+      "prob": 0.8002912402153015
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2024-12-19",
+      "prob": 0.8225115537643433
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2024-11-27",
+      "prob": 0.6511930823326111
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2024-11-22",
+      "prob": 0.788275420665741
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2024-11-22",
+      "prob": 0.8459774851799011
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "date": "2024-11-21",
+      "prob": 0.8258540034294128
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2024-11-21",
+      "prob": 0.6907181739807129
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "date": "2024-11-21",
+      "prob": 0.8046135306358337
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2024-11-18",
+      "prob": 0.7906200885772705
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "date": "2024-11-15",
+      "prob": 0.8636982440948486
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2024-11-14",
+      "prob": 0.7889906764030457
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "date": "2024-11-12",
+      "prob": 0.8047422766685486
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2024-09-06",
+      "prob": 0.814583420753479
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2024-09-03",
+      "prob": 0.5281937718391418
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2024-08-31",
+      "prob": 0.8201123476028442
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "date": "2024-08-12",
+      "prob": 0.8373476266860962
+    },
+    {
+      "ticker": "1U1.DE",
+      "company": "1&1",
+      "date": "2024-08-09",
+      "prob": 0.6366098523139954
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2024-08-09",
+      "prob": 0.3933933973312378
+    },
+    {
+      "ticker": "6367.T",
+      "company": "Daikin",
+      "date": "2024-08-08",
+      "prob": 0.7975642681121826
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2024-08-08",
+      "prob": 0.6147409081459045
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2024-08-08",
+      "prob": 0.7920043468475342
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2024-08-08",
+      "prob": 0.6365256309509277
+    },
+    {
+      "ticker": "1U1.DE",
+      "company": "1&1",
+      "date": "2024-08-06",
+      "prob": 0.8266835808753967
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2024-08-06",
+      "prob": 0.8194035887718201
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2024-08-06",
+      "prob": 0.7451765537261963
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2024-08-06",
+      "prob": 0.818479597568512
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2024-08-06",
+      "prob": 0.8496057391166687
+    },
+    {
+      "ticker": "6367.T",
+      "company": "Daikin",
+      "date": "2024-08-05",
+      "prob": 0.8169988393783569
+    },
+    {
+      "ticker": "6503.T",
+      "company": "Mitsubishi",
+      "date": "2024-08-05",
+      "prob": 0.8482639789581299
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2024-08-05",
+      "prob": 0.787851095199585
+    },
+    {
+      "ticker": "CARR",
+      "company": "Carrier",
+      "date": "2024-08-05",
+      "prob": 0.7963137030601501
+    },
+    {
+      "ticker": "F",
+      "company": "Ford",
+      "date": "2024-08-05",
+      "prob": 0.8069337606430054
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2024-08-05",
+      "prob": 0.809727132320404
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2024-08-05",
+      "prob": 0.8026464581489563
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2024-08-05",
+      "prob": 0.853049635887146
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2024-08-05",
+      "prob": 0.841570258140564
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2024-08-03",
+      "prob": 0.821617841720581
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2024-08-03",
+      "prob": 0.7819216847419739
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2024-08-03",
+      "prob": 0.8185678720474243
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2024-08-03",
+      "prob": 0.8380486369132996
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2024-07-09",
+      "prob": 0.49453702569007874
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2024-07-08",
+      "prob": 0.7553151249885559
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2024-07-07",
+      "prob": 0.8590156435966492
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2024-07-07",
+      "prob": 0.8071190714836121
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2024-07-06",
+      "prob": 0.8078007102012634
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2024-07-05",
+      "prob": 0.8023536801338196
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2024-06-24",
+      "prob": 0.804009735584259
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2024-06-23",
+      "prob": 0.8120408058166504
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2024-05-11",
+      "prob": 0.8135632276535034
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2024-05-01",
+      "prob": 0.8407019972801208
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2024-04-16",
+      "prob": 0.7334321737289429
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2024-04-13",
+      "prob": 0.7980859279632568
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2024-04-13",
+      "prob": 0.8549732565879822
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2024-04-13",
+      "prob": 0.8527142405509949
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2024-04-13",
+      "prob": 0.8129575252532959
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2024-03-13",
+      "prob": 0.8469731211662292
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2023-11-02",
+      "prob": 0.3733378052711487
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2023-11-02",
+      "prob": 0.24565865099430084
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2023-11-02",
+      "prob": 0.16733179986476898
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "date": "2023-11-02",
+      "prob": 0.7248329520225525
+    },
+    {
+      "ticker": "GM",
+      "company": "General Motors",
+      "date": "2023-11-01",
+      "prob": 0.5977591276168823
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2023-11-01",
+      "prob": 0.8593314290046692
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2023-10-31",
+      "prob": 0.42053261399269104
+    },
+    {
+      "ticker": "ENR.DE",
+      "company": "Siemens Energy",
+      "date": "2023-10-31",
+      "prob": 0.8794528245925903
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2023-10-31",
+      "prob": 0.6893316507339478
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2023-10-31",
+      "prob": 0.5867660641670227
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2023-10-31",
+      "prob": 0.8065453767776489
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "date": "2023-10-31",
+      "prob": 0.512998104095459
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2023-10-30",
+      "prob": 0.7625541687011719
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2023-10-30",
+      "prob": 0.76374751329422
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2023-10-30",
+      "prob": 0.4683615267276764
+    },
+    {
+      "ticker": "JUN3.DE",
+      "company": "Jungheinrich",
+      "date": "2023-10-30",
+      "prob": 0.817679762840271
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2023-10-30",
+      "prob": 0.8102350234985352
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2023-10-30",
+      "prob": 0.47453179955482483
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2023-10-30",
+      "prob": 0.6543676853179932
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2023-10-30",
+      "prob": 0.7837399840354919
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "date": "2023-10-30",
+      "prob": 0.8428728580474854
+    },
+    {
+      "ticker": "6367.T",
+      "company": "Daikin",
+      "date": "2023-10-27",
+      "prob": 0.708243191242218
+    },
+    {
+      "ticker": "F",
+      "company": "Ford",
+      "date": "2023-10-27",
+      "prob": 0.8624910116195679
+    },
+    {
+      "ticker": "F3C.DE",
+      "company": "SFC Energy",
+      "date": "2023-10-27",
+      "prob": 0.7184332013130188
+    },
+    {
+      "ticker": "FME.DE",
+      "company": "Fresenius Med.",
+      "date": "2023-10-27",
+      "prob": 0.8300000429153442
+    },
+    {
+      "ticker": "G24.DE",
+      "company": "Scout24",
+      "date": "2023-10-27",
+      "prob": 0.6549867391586304
+    },
+    {
+      "ticker": "GM",
+      "company": "General Motors",
+      "date": "2023-10-27",
+      "prob": 0.8113672733306885
+    },
+    {
+      "ticker": "INH.DE",
+      "company": "INDUS Holding",
+      "date": "2023-10-27",
+      "prob": 0.7815220952033997
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2023-10-27",
+      "prob": 0.7133979201316833
+    },
+    {
+      "ticker": "P911.DE",
+      "company": "Porsche AG",
+      "date": "2023-10-27",
+      "prob": 0.8374363780021667
+    },
+    {
+      "ticker": "WSO",
+      "company": "Watsco",
+      "date": "2023-10-27",
+      "prob": 0.625446081161499
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2023-10-27",
+      "prob": 0.8517916202545166
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "date": "2023-10-26",
+      "prob": 0.8043041825294495
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2023-10-26",
+      "prob": 0.633553683757782
+    },
+    {
+      "ticker": "CARR",
+      "company": "Carrier",
+      "date": "2023-10-26",
+      "prob": 0.7927076816558838
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2023-10-26",
+      "prob": 0.8591017723083496
+    },
+    {
+      "ticker": "ENR.DE",
+      "company": "Siemens Energy",
+      "date": "2023-10-26",
+      "prob": 0.8578476309776306
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "date": "2023-10-26",
+      "prob": 0.7822173237800598
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2023-10-26",
+      "prob": 0.8213542103767395
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2023-10-26",
+      "prob": 0.6676990389823914
+    },
+    {
+      "ticker": "JCI",
+      "company": "Johnson Controls",
+      "date": "2023-10-26",
+      "prob": 0.6387991905212402
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2023-10-26",
+      "prob": 0.8178051114082336
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2023-10-26",
+      "prob": 0.832767128944397
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "date": "2023-10-26",
+      "prob": 0.8122490048408508
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2023-10-25",
+      "prob": 0.8064606189727783
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2023-10-25",
+      "prob": 0.8135462999343872
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2023-10-25",
+      "prob": 0.8135649561882019
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2023-10-25",
+      "prob": 0.78154456615448
+    },
+    {
+      "ticker": "LEG.DE",
+      "company": "LEG Immobilien",
+      "date": "2023-10-25",
+      "prob": 0.8236757516860962
+    },
+    {
+      "ticker": "LII",
+      "company": "Lennox",
+      "date": "2023-10-25",
+      "prob": 0.7979356646537781
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2023-10-25",
+      "prob": 0.811955988407135
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2023-10-25",
+      "prob": 0.7883011102676392
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2023-10-25",
+      "prob": 0.7879826426506042
+    },
+    {
+      "ticker": "6367.T",
+      "company": "Daikin",
+      "date": "2023-10-24",
+      "prob": 0.8047080039978027
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2023-10-24",
+      "prob": 0.8352964520454407
+    },
+    {
+      "ticker": "DBK.DE",
+      "company": "Deutsche Bank",
+      "date": "2023-10-24",
+      "prob": 0.8011853694915771
+    },
+    {
+      "ticker": "F3C.DE",
+      "company": "SFC Energy",
+      "date": "2023-10-24",
+      "prob": 0.793326199054718
+    },
+    {
+      "ticker": "G24.DE",
+      "company": "Scout24",
+      "date": "2023-10-24",
+      "prob": 0.7883095145225525
+    },
+    {
+      "ticker": "GM",
+      "company": "General Motors",
+      "date": "2023-10-24",
+      "prob": 0.827639639377594
+    },
+    {
+      "ticker": "GYC.DE",
+      "company": "Grand City Prop.",
+      "date": "2023-10-24",
+      "prob": 0.8596200942993164
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2023-10-24",
+      "prob": 0.8115031719207764
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "date": "2023-10-24",
+      "prob": 0.8052530884742737
+    },
+    {
+      "ticker": "WSO",
+      "company": "Watsco",
+      "date": "2023-10-24",
+      "prob": 0.828372597694397
+    },
+    {
+      "ticker": "AOS",
+      "company": "A.O. Smith",
+      "date": "2023-10-23",
+      "prob": 0.7806103825569153
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "date": "2023-10-23",
+      "prob": 0.7833317518234253
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2023-10-23",
+      "prob": 0.820865273475647
+    },
+    {
+      "ticker": "CARR",
+      "company": "Carrier",
+      "date": "2023-10-23",
+      "prob": 0.7868438959121704
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2023-10-23",
+      "prob": 0.8345242142677307
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2023-10-23",
+      "prob": 0.8546320796012878
+    },
+    {
+      "ticker": "ENR.DE",
+      "company": "Siemens Energy",
+      "date": "2023-10-23",
+      "prob": 0.8020076751708984
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "date": "2023-10-23",
+      "prob": 0.7803168296813965
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2023-10-23",
+      "prob": 0.7859014868736267
+    },
+    {
+      "ticker": "JCI",
+      "company": "Johnson Controls",
+      "date": "2023-10-23",
+      "prob": 0.816636860370636
+    },
+    {
+      "ticker": "KSB.DE",
+      "company": "KSB",
+      "date": "2023-10-23",
+      "prob": 0.830810010433197
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2023-10-23",
+      "prob": 0.794579803943634
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2023-10-23",
+      "prob": 0.7810486555099487
+    },
+    {
+      "ticker": "PBB.DE",
+      "company": "Deutsche Pfandbriefbank",
+      "date": "2023-10-23",
+      "prob": 0.7811434864997864
+    },
+    {
+      "ticker": "VNA.DE",
+      "company": "Vonovia",
+      "date": "2023-10-23",
+      "prob": 0.7853278517723083
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2023-10-20",
+      "prob": 0.7815445065498352
+    },
+    {
+      "ticker": "LEG.DE",
+      "company": "LEG Immobilien",
+      "date": "2023-10-20",
+      "prob": 0.7901437878608704
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2023-10-20",
+      "prob": 0.8081429600715637
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2023-10-19",
+      "prob": 0.8313760757446289
+    },
+    {
+      "ticker": "GYC.DE",
+      "company": "Grand City Prop.",
+      "date": "2023-10-19",
+      "prob": 0.7885640263557434
+    },
+    {
+      "ticker": "WSO",
+      "company": "Watsco",
+      "date": "2023-10-19",
+      "prob": 0.8024837970733643
+    },
+    {
+      "ticker": "FME.DE",
+      "company": "Fresenius Med.",
+      "date": "2023-10-16",
+      "prob": 0.7912052273750305
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2023-10-09",
+      "prob": 0.7838642001152039
+    },
+    {
+      "ticker": "NDX1.DE",
+      "company": "Nordex",
+      "date": "2023-10-04",
+      "prob": 0.8005594611167908
+    },
+    {
+      "ticker": "LEG.DE",
+      "company": "LEG Immobilien",
+      "date": "2023-10-03",
+      "prob": 0.8195993900299072
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2023-10-02",
+      "prob": 0.7813637852668762
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2023-09-27",
+      "prob": 0.7810025215148926
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2023-09-03",
+      "prob": 0.8394489288330078
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2023-08-22",
+      "prob": 0.47569310665130615
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2023-08-20",
+      "prob": 0.8198336362838745
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2023-08-19",
+      "prob": 0.7937033772468567
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2023-08-19",
+      "prob": 0.7847761511802673
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2023-06-13",
+      "prob": 0.6801578402519226
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2023-06-13",
+      "prob": 0.5598801374435425
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2023-06-13",
+      "prob": 0.7755714654922485
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2023-06-10",
+      "prob": 0.8138591051101685
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2023-06-10",
+      "prob": 0.8374786972999573
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2023-06-10",
+      "prob": 0.8179637789726257
+    },
+    {
+      "ticker": "GYC.DE",
+      "company": "Grand City Prop.",
+      "date": "2023-03-30",
+      "prob": 0.5794265866279602
+    },
+    {
+      "ticker": "VNA.DE",
+      "company": "Vonovia",
+      "date": "2023-03-30",
+      "prob": 0.48260119557380676
+    },
+    {
+      "ticker": "GYC.DE",
+      "company": "Grand City Prop.",
+      "date": "2023-03-27",
+      "prob": 0.7881188988685608
+    },
+    {
+      "ticker": "VNA.DE",
+      "company": "Vonovia",
+      "date": "2023-03-27",
+      "prob": 0.792156994342804
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "date": "2023-03-20",
+      "prob": 0.7890433073043823
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2023-03-17",
+      "prob": 0.8094242811203003
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2023-03-15",
+      "prob": 0.8105354309082031
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2023-03-15",
+      "prob": 0.846623420715332
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2023-03-15",
+      "prob": 0.8392461538314819
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2023-03-15",
+      "prob": 0.7846534848213196
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "date": "2023-03-15",
+      "prob": 0.7892221212387085
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2023-03-11",
+      "prob": 0.804780125617981
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2023-03-11",
+      "prob": 0.8099351525306702
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-12-20",
+      "prob": 0.41574373841285706
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2022-12-19",
+      "prob": 0.797881007194519
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-12-17",
+      "prob": 0.7840291261672974
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-11-15",
+      "prob": 0.5985634922981262
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-11-15",
+      "prob": 0.4205150008201599
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-11-15",
+      "prob": 0.7020735740661621
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-11-12",
+      "prob": 0.8347143530845642
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-11-12",
+      "prob": 0.8719049692153931
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-11-12",
+      "prob": 0.8804364204406738
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-11-12",
+      "prob": 0.8729311227798462
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2022-11-12",
+      "prob": 0.8349722623825073
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-11-09",
+      "prob": 0.8033713102340698
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-11-09",
+      "prob": 0.840336263179779
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2022-10-17",
+      "prob": 0.4307934045791626
+    },
+    {
+      "ticker": "FIE.DE",
+      "company": "Fielmann",
+      "date": "2022-10-17",
+      "prob": 0.6873055100440979
+    },
+    {
+      "ticker": "AMT",
+      "company": "American Tower",
+      "date": "2022-10-14",
+      "prob": 0.5882619023323059
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2022-10-14",
+      "prob": 0.7751116156578064
+    },
+    {
+      "ticker": "BC8.DE",
+      "company": "Bechtle",
+      "date": "2022-10-14",
+      "prob": 0.6477936506271362
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "date": "2022-10-14",
+      "prob": 0.5297925472259521
+    },
+    {
+      "ticker": "MSFT",
+      "company": "Microsoft",
+      "date": "2022-10-14",
+      "prob": 0.5526714324951172
+    },
+    {
+      "ticker": "NDX1.DE",
+      "company": "Nordex",
+      "date": "2022-10-14",
+      "prob": 0.48203426599502563
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2022-10-14",
+      "prob": 0.5292643904685974
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2022-10-14",
+      "prob": 0.5923367738723755
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2022-10-13",
+      "prob": 0.8055713176727295
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2022-10-13",
+      "prob": 0.7967498898506165
+    },
+    {
+      "ticker": "F3C.DE",
+      "company": "SFC Energy",
+      "date": "2022-10-13",
+      "prob": 0.8074936866760254
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-10-13",
+      "prob": 0.7904269099235535
+    },
+    {
+      "ticker": "LEG.DE",
+      "company": "LEG Immobilien",
+      "date": "2022-10-13",
+      "prob": 0.8137226104736328
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2022-10-13",
+      "prob": 0.8121689558029175
+    },
+    {
+      "ticker": "VNA.DE",
+      "company": "Vonovia",
+      "date": "2022-10-13",
+      "prob": 0.8080762624740601
+    },
+    {
+      "ticker": "VZ",
+      "company": "Verizon",
+      "date": "2022-10-13",
+      "prob": 0.6798740029335022
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2022-10-13",
+      "prob": 0.8380882740020752
+    },
+    {
+      "ticker": "ADS.DE",
+      "company": "Adidas",
+      "date": "2022-10-12",
+      "prob": 0.8059760332107544
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2022-10-12",
+      "prob": 0.799447774887085
+    },
+    {
+      "ticker": "BNR.DE",
+      "company": "Brenntag",
+      "date": "2022-10-12",
+      "prob": 0.8011919856071472
+    },
+    {
+      "ticker": "CARR",
+      "company": "Carrier",
+      "date": "2022-10-12",
+      "prob": 0.7991986274719238
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2022-10-12",
+      "prob": 0.7983700037002563
+    },
+    {
+      "ticker": "DIS",
+      "company": "Disney",
+      "date": "2022-10-12",
+      "prob": 0.8457390069961548
+    },
+    {
+      "ticker": "FIE.DE",
+      "company": "Fielmann",
+      "date": "2022-10-12",
+      "prob": 0.8312947154045105
+    },
+    {
+      "ticker": "GM",
+      "company": "General Motors",
+      "date": "2022-10-12",
+      "prob": 0.7991057634353638
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2022-10-12",
+      "prob": 0.8192988634109497
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2022-10-12",
+      "prob": 0.8227294087409973
+    },
+    {
+      "ticker": "NEE",
+      "company": "NextEra",
+      "date": "2022-10-12",
+      "prob": 0.7919270992279053
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-10-12",
+      "prob": 0.7848699688911438
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2022-10-12",
+      "prob": 0.8248420357704163
+    },
+    {
+      "ticker": "T",
+      "company": "AT&T",
+      "date": "2022-10-12",
+      "prob": 0.7807811498641968
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2022-10-12",
+      "prob": 0.8175436854362488
+    },
+    {
+      "ticker": "1U1.DE",
+      "company": "1&1",
+      "date": "2022-10-11",
+      "prob": 0.7886207699775696
+    },
+    {
+      "ticker": "AMT",
+      "company": "American Tower",
+      "date": "2022-10-11",
+      "prob": 0.8048571348190308
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2022-10-11",
+      "prob": 0.8324444890022278
+    },
+    {
+      "ticker": "BC8.DE",
+      "company": "Bechtle",
+      "date": "2022-10-11",
+      "prob": 0.7920617461204529
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "date": "2022-10-11",
+      "prob": 0.7887223958969116
+    },
+    {
+      "ticker": "MSFT",
+      "company": "Microsoft",
+      "date": "2022-10-11",
+      "prob": 0.8261873126029968
+    },
+    {
+      "ticker": "NDX1.DE",
+      "company": "Nordex",
+      "date": "2022-10-11",
+      "prob": 0.8391693830490112
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2022-10-11",
+      "prob": 0.7974620461463928
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2022-10-11",
+      "prob": 0.8191844820976257
+    },
+    {
+      "ticker": "VH2.DE",
+      "company": "Friedrich Vorwerk",
+      "date": "2022-10-11",
+      "prob": 0.7838891744613647
+    },
+    {
+      "ticker": "FME.DE",
+      "company": "Fresenius Med.",
+      "date": "2022-10-10",
+      "prob": 0.7871327996253967
+    },
+    {
+      "ticker": "GYC.DE",
+      "company": "Grand City Prop.",
+      "date": "2022-10-10",
+      "prob": 0.7818001508712769
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "date": "2022-10-10",
+      "prob": 0.8198283314704895
+    },
+    {
+      "ticker": "VZ",
+      "company": "Verizon",
+      "date": "2022-10-10",
+      "prob": 0.7888098955154419
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2022-10-07",
+      "prob": 0.8181605339050293
+    },
+    {
+      "ticker": "AMT",
+      "company": "American Tower",
+      "date": "2022-10-06",
+      "prob": 0.7936448454856873
+    },
+    {
+      "ticker": "ADS.DE",
+      "company": "Adidas",
+      "date": "2022-10-05",
+      "prob": 0.61909019947052
+    },
+    {
+      "ticker": "NKE",
+      "company": "Nike",
+      "date": "2022-10-05",
+      "prob": 0.8096906542778015
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2022-10-03",
+      "prob": 0.33207011222839355
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2022-10-03",
+      "prob": 0.7975478172302246
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2022-10-03",
+      "prob": 0.6484189629554749
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2022-10-03",
+      "prob": 0.7999363541603088
+    },
+    {
+      "ticker": "VH2.DE",
+      "company": "Friedrich Vorwerk",
+      "date": "2022-10-03",
+      "prob": 0.7981069684028625
+    },
+    {
+      "ticker": "ADS.DE",
+      "company": "Adidas",
+      "date": "2022-09-30",
+      "prob": 0.7836151719093323
+    },
+    {
+      "ticker": "CON.DE",
+      "company": "Continental",
+      "date": "2022-09-30",
+      "prob": 0.6752831339836121
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2022-09-30",
+      "prob": 0.4495069086551666
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "date": "2022-09-30",
+      "prob": 0.6651681065559387
+    },
+    {
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "date": "2022-09-30",
+      "prob": 0.7303836345672607
+    },
+    {
+      "ticker": "PAH3.DE",
+      "company": "Porsche SE",
+      "date": "2022-09-29",
+      "prob": 0.7949309349060059
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2022-09-29",
+      "prob": 0.8148937225341797
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2022-09-29",
+      "prob": 0.7961578965187073
+    },
+    {
+      "ticker": "DRW3.DE",
+      "company": "Dr\u00e4gerwerk",
+      "date": "2022-09-28",
+      "prob": 0.6902792453765869
+    },
+    {
+      "ticker": "FME.DE",
+      "company": "Fresenius Med.",
+      "date": "2022-09-28",
+      "prob": 0.7255761623382568
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2022-09-28",
+      "prob": 0.8634107708930969
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2022-09-28",
+      "prob": 0.8232033848762512
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "date": "2022-09-27",
+      "prob": 0.8079913854598999
+    },
+    {
+      "ticker": "CON.DE",
+      "company": "Continental",
+      "date": "2022-09-27",
+      "prob": 0.8034056425094604
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2022-09-27",
+      "prob": 0.8158982992172241
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "date": "2022-09-27",
+      "prob": 0.8234407305717468
+    },
+    {
+      "ticker": "HABA.DE",
+      "company": "Hamborner REIT",
+      "date": "2022-09-27",
+      "prob": 0.827448308467865
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2022-09-27",
+      "prob": 0.794360339641571
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2022-09-27",
+      "prob": 0.8081216812133789
+    },
+    {
+      "ticker": "PBB.DE",
+      "company": "Deutsche Pfandbriefbank",
+      "date": "2022-09-27",
+      "prob": 0.7958908081054688
+    },
+    {
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "date": "2022-09-27",
+      "prob": 0.8181321024894714
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2022-09-27",
+      "prob": 0.8107016682624817
+    },
+    {
+      "ticker": "VH2.DE",
+      "company": "Friedrich Vorwerk",
+      "date": "2022-09-27",
+      "prob": 0.8212380409240723
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2022-09-27",
+      "prob": 0.8516925573348999
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2022-09-27",
+      "prob": 0.8235353827476501
+    },
+    {
+      "ticker": "INH.DE",
+      "company": "INDUS Holding",
+      "date": "2022-09-26",
+      "prob": 0.8125459551811218
+    },
+    {
+      "ticker": "DRW3.DE",
+      "company": "Dr\u00e4gerwerk",
+      "date": "2022-09-23",
+      "prob": 0.8021194934844971
+    },
+    {
+      "ticker": "F",
+      "company": "Ford",
+      "date": "2022-09-23",
+      "prob": 0.8083267211914062
+    },
+    {
+      "ticker": "FME.DE",
+      "company": "Fresenius Med.",
+      "date": "2022-09-23",
+      "prob": 0.8082932233810425
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2022-09-23",
+      "prob": 0.8185498714447021
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "date": "2022-09-22",
+      "prob": 0.8198961615562439
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2022-09-22",
+      "prob": 0.8397122025489807
+    },
+    {
+      "ticker": "DMP.DE",
+      "company": "Dermapharm",
+      "date": "2022-09-21",
+      "prob": 0.7820278406143188
+    },
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "date": "2022-09-20",
+      "prob": 0.6078386902809143
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2022-09-19",
+      "prob": 0.8385067582130432
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-09-18",
+      "prob": 0.748552143573761
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2022-09-16",
+      "prob": 0.797024130821228
+    },
+    {
+      "ticker": "DMP.DE",
+      "company": "Dermapharm",
+      "date": "2022-09-16",
+      "prob": 0.818827748298645
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-09-15",
+      "prob": 0.7816702127456665
+    },
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "date": "2022-09-15",
+      "prob": 0.8202418684959412
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "date": "2022-09-01",
+      "prob": 0.8305521011352539
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-08-28",
+      "prob": 0.8210564255714417
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "date": "2022-07-18",
+      "prob": 0.7800756096839905
+    },
+    {
+      "ticker": "FRA.DE",
+      "company": "Fraport",
+      "date": "2022-07-08",
+      "prob": 0.5459567308425903
+    },
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "date": "2022-07-08",
+      "prob": 0.6823004484176636
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2022-07-08",
+      "prob": 0.5098285675048828
+    },
+    {
+      "ticker": "MBG.DE",
+      "company": "Mercedes-Benz",
+      "date": "2022-07-08",
+      "prob": 0.4733603298664093
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2022-07-08",
+      "prob": 0.42694029211997986
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "date": "2022-07-08",
+      "prob": 0.4284692108631134
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2022-07-08",
+      "prob": 0.39257556200027466
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2022-07-07",
+      "prob": 0.5415497422218323
+    },
+    {
+      "ticker": "COK.DE",
+      "company": "CANCOM",
+      "date": "2022-07-07",
+      "prob": 0.3041546940803528
+    },
+    {
+      "ticker": "ENR.DE",
+      "company": "Siemens Energy",
+      "date": "2022-07-07",
+      "prob": 0.26115313172340393
+    },
+    {
+      "ticker": "EVK.DE",
+      "company": "Evonik",
+      "date": "2022-07-07",
+      "prob": 0.4418548047542572
+    },
+    {
+      "ticker": "HBH.DE",
+      "company": "Hornbach",
+      "date": "2022-07-07",
+      "prob": 0.48626506328582764
+    },
+    {
+      "ticker": "MUX.DE",
+      "company": "Mutares",
+      "date": "2022-07-07",
+      "prob": 0.509493350982666
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "date": "2022-07-07",
+      "prob": 0.4928733706474304
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2022-07-07",
+      "prob": 0.31310099363327026
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-07-07",
+      "prob": 0.4636922776699066
+    },
+    {
+      "ticker": "PAH3.DE",
+      "company": "Porsche SE",
+      "date": "2022-07-07",
+      "prob": 0.5397074222564697
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2022-07-07",
+      "prob": 0.23093803226947784
+    },
+    {
+      "ticker": "WDP.BR",
+      "company": "WDP",
+      "date": "2022-07-07",
+      "prob": 0.3856518268585205
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2022-07-07",
+      "prob": 0.438092976808548
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2022-07-06",
+      "prob": 0.6759795546531677
+    },
+    {
+      "ticker": "CAT",
+      "company": "Caterpillar",
+      "date": "2022-07-06",
+      "prob": 0.7961804270744324
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2022-07-06",
+      "prob": 0.8262166380882263
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2022-07-06",
+      "prob": 0.8569164872169495
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2022-07-06",
+      "prob": 0.8158223032951355
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2022-07-06",
+      "prob": 0.8424350023269653
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2022-07-05",
+      "prob": 0.8050029277801514
+    },
+    {
+      "ticker": "BAS.DE",
+      "company": "BASF",
+      "date": "2022-07-05",
+      "prob": 0.7934901714324951
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "date": "2022-07-05",
+      "prob": 0.8286959528923035
+    },
+    {
+      "ticker": "FRA.DE",
+      "company": "Fraport",
+      "date": "2022-07-05",
+      "prob": 0.8392785787582397
+    },
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "date": "2022-07-05",
+      "prob": 0.800129771232605
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2022-07-05",
+      "prob": 0.8191935420036316
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "date": "2022-07-05",
+      "prob": 0.8082610368728638
+    },
+    {
+      "ticker": "KBX.DE",
+      "company": "Knorr-Bremse",
+      "date": "2022-07-05",
+      "prob": 0.8007238507270813
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2022-07-05",
+      "prob": 0.7822720408439636
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2022-07-05",
+      "prob": 0.8121362924575806
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2022-07-05",
+      "prob": 0.8215318322181702
+    },
+    {
+      "ticker": "MBG.DE",
+      "company": "Mercedes-Benz",
+      "date": "2022-07-05",
+      "prob": 0.8370040059089661
+    },
+    {
+      "ticker": "MTX.DE",
+      "company": "MTU Aero",
+      "date": "2022-07-05",
+      "prob": 0.8119974136352539
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2022-07-05",
+      "prob": 0.7879523634910583
+    },
+    {
+      "ticker": "PBB.DE",
+      "company": "Deutsche Pfandbriefbank",
+      "date": "2022-07-05",
+      "prob": 0.8556024432182312
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2022-07-05",
+      "prob": 0.8476885557174683
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "date": "2022-07-05",
+      "prob": 0.8115920424461365
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2022-07-05",
+      "prob": 0.8082674145698547
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "date": "2022-07-05",
+      "prob": 0.8575506210327148
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2022-07-05",
+      "prob": 0.8105222582817078
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2022-07-04",
+      "prob": 0.8359740376472473
+    },
+    {
+      "ticker": "COK.DE",
+      "company": "CANCOM",
+      "date": "2022-07-04",
+      "prob": 0.7979898452758789
+    },
+    {
+      "ticker": "ENR.DE",
+      "company": "Siemens Energy",
+      "date": "2022-07-04",
+      "prob": 0.7959730625152588
+    },
+    {
+      "ticker": "EVK.DE",
+      "company": "Evonik",
+      "date": "2022-07-04",
+      "prob": 0.8058749437332153
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-07-04",
+      "prob": 0.799517810344696
+    },
+    {
+      "ticker": "HBH.DE",
+      "company": "Hornbach",
+      "date": "2022-07-04",
+      "prob": 0.790471613407135
+    },
+    {
+      "ticker": "MUX.DE",
+      "company": "Mutares",
+      "date": "2022-07-04",
+      "prob": 0.8376757502555847
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "date": "2022-07-04",
+      "prob": 0.7890518307685852
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2022-07-04",
+      "prob": 0.8041093349456787
+    },
+    {
+      "ticker": "PAH3.DE",
+      "company": "Porsche SE",
+      "date": "2022-07-04",
+      "prob": 0.8165448904037476
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2022-07-04",
+      "prob": 0.8374825716018677
+    },
+    {
+      "ticker": "WDP.BR",
+      "company": "WDP",
+      "date": "2022-07-04",
+      "prob": 0.7863226532936096
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2022-07-04",
+      "prob": 0.7824492454528809
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2022-07-01",
+      "prob": 0.7929593324661255
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2022-07-01",
+      "prob": 0.8233957886695862
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2022-07-01",
+      "prob": 0.821835994720459
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-07-01",
+      "prob": 0.8342962861061096
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2022-07-01",
+      "prob": 0.7873814105987549
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2022-07-01",
+      "prob": 0.795665979385376
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "date": "2022-06-30",
+      "prob": 0.8191123008728027
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2022-06-30",
+      "prob": 0.8206512331962585
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "date": "2022-06-29",
+      "prob": 0.7901478409767151
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2022-06-28",
+      "prob": 0.8064820766448975
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2022-06-23",
+      "prob": 0.8380810618400574
+    },
+    {
+      "ticker": "BP",
+      "company": "BP",
+      "date": "2022-06-22",
+      "prob": 0.7857480049133301
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2022-06-22",
+      "prob": 0.8245429992675781
+    },
+    {
+      "ticker": "XOM",
+      "company": "ExxonMobil",
+      "date": "2022-06-22",
+      "prob": 0.8005562424659729
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2022-06-21",
+      "prob": 0.564281702041626
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-06-18",
+      "prob": 0.7095057368278503
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-06-18",
+      "prob": 0.7324704527854919
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2022-06-17",
+      "prob": 0.8304027318954468
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-06-17",
+      "prob": 0.8066053986549377
+    },
+    {
+      "ticker": "HBH.DE",
+      "company": "Hornbach",
+      "date": "2022-06-17",
+      "prob": 0.8029496073722839
+    },
+    {
+      "ticker": "JCI",
+      "company": "Johnson Controls",
+      "date": "2022-06-17",
+      "prob": 0.6950603723526001
+    },
+    {
+      "ticker": "LII",
+      "company": "Lennox",
+      "date": "2022-06-17",
+      "prob": 0.6057019233703613
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "date": "2022-06-17",
+      "prob": 0.5957505106925964
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2022-06-17",
+      "prob": 0.7935834527015686
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "date": "2022-06-17",
+      "prob": 0.8334290981292725
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2022-06-17",
+      "prob": 0.816557765007019
+    },
+    {
+      "ticker": "VH2.DE",
+      "company": "Friedrich Vorwerk",
+      "date": "2022-06-17",
+      "prob": 0.7061842679977417
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "date": "2022-06-17",
+      "prob": 0.7558500170707703
+    },
+    {
+      "ticker": "AAPL",
+      "company": "Apple",
+      "date": "2022-06-16",
+      "prob": 0.8287488222122192
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2022-06-16",
+      "prob": 0.8296567797660828
+    },
+    {
+      "ticker": "COK.DE",
+      "company": "CANCOM",
+      "date": "2022-06-16",
+      "prob": 0.7793951630592346
+    },
+    {
+      "ticker": "DIS",
+      "company": "Disney",
+      "date": "2022-06-16",
+      "prob": 0.8360146880149841
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2022-06-16",
+      "prob": 0.8298158049583435
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "date": "2022-06-16",
+      "prob": 0.8096819519996643
+    },
+    {
+      "ticker": "F",
+      "company": "Ford",
+      "date": "2022-06-16",
+      "prob": 0.7906230092048645
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-06-16",
+      "prob": 0.7561560869216919
+    },
+    {
+      "ticker": "GM",
+      "company": "General Motors",
+      "date": "2022-06-16",
+      "prob": 0.7602529525756836
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2022-06-16",
+      "prob": 0.8005371689796448
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2022-06-16",
+      "prob": 0.8210997581481934
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2022-06-16",
+      "prob": 0.8531257510185242
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-06-16",
+      "prob": 0.8254062533378601
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2022-06-16",
+      "prob": 0.8004007935523987
+    },
+    {
+      "ticker": "WSO",
+      "company": "Watsco",
+      "date": "2022-06-16",
+      "prob": 0.8174335956573486
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2022-06-16",
+      "prob": 0.8054074645042419
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-06-15",
+      "prob": 0.8175191879272461
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-06-15",
+      "prob": 0.8296254277229309
+    },
+    {
+      "ticker": "DOW",
+      "company": "Dow Inc.",
+      "date": "2022-06-15",
+      "prob": 0.8291129469871521
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "date": "2022-06-14",
+      "prob": 0.7931563258171082
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2022-06-14",
+      "prob": 0.791235625743866
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-06-14",
+      "prob": 0.8315287828445435
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2022-06-14",
+      "prob": 0.8168907165527344
+    },
+    {
+      "ticker": "JCI",
+      "company": "Johnson Controls",
+      "date": "2022-06-14",
+      "prob": 0.8012704849243164
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2022-06-14",
+      "prob": 0.7992844581604004
+    },
+    {
+      "ticker": "LII",
+      "company": "Lennox",
+      "date": "2022-06-14",
+      "prob": 0.8093211650848389
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "date": "2022-06-14",
+      "prob": 0.7800494432449341
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2022-06-14",
+      "prob": 0.8119928240776062
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "date": "2022-06-14",
+      "prob": 0.8314725160598755
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2022-06-14",
+      "prob": 0.8481059074401855
+    },
+    {
+      "ticker": "SPG",
+      "company": "Simon Property",
+      "date": "2022-06-14",
+      "prob": 0.7911710739135742
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "date": "2022-06-14",
+      "prob": 0.8192183971405029
+    },
+    {
+      "ticker": "VH2.DE",
+      "company": "Friedrich Vorwerk",
+      "date": "2022-06-14",
+      "prob": 0.7967098355293274
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "date": "2022-06-14",
+      "prob": 0.7877475619316101
+    },
+    {
+      "ticker": "AAPL",
+      "company": "Apple",
+      "date": "2022-06-13",
+      "prob": 0.784770131111145
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2022-06-13",
+      "prob": 0.800967276096344
+    },
+    {
+      "ticker": "COK.DE",
+      "company": "CANCOM",
+      "date": "2022-06-13",
+      "prob": 0.8035933375358582
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2022-06-13",
+      "prob": 0.7874100804328918
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-06-13",
+      "prob": 0.7952072024345398
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "date": "2022-06-13",
+      "prob": 0.8154221177101135
+    },
+    {
+      "ticker": "GM",
+      "company": "General Motors",
+      "date": "2022-06-13",
+      "prob": 0.8224552273750305
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2022-06-13",
+      "prob": 0.8315620422363281
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2022-06-13",
+      "prob": 0.8110296726226807
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2022-06-13",
+      "prob": 0.8291237950325012
+    },
+    {
+      "ticker": "LYB",
+      "company": "LyondellBasell",
+      "date": "2022-06-13",
+      "prob": 0.7802154421806335
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-06-13",
+      "prob": 0.8028013706207275
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2022-06-13",
+      "prob": 0.8356279134750366
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2022-06-13",
+      "prob": 0.8002697229385376
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-06-12",
+      "prob": 0.7930553555488586
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-06-12",
+      "prob": 0.817614734172821
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-06-11",
+      "prob": 0.7843502163887024
+    },
+    {
+      "ticker": "CSCO",
+      "company": "Cisco",
+      "date": "2022-05-24",
+      "prob": 0.8350091576576233
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2022-05-17",
+      "prob": 0.7942880392074585
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "date": "2022-05-16",
+      "prob": 0.5272965431213379
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-05-13",
+      "prob": 0.7670908570289612
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-05-13",
+      "prob": 0.7364261746406555
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2022-05-13",
+      "prob": 0.7803431749343872
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2022-05-13",
+      "prob": 0.5518923401832581
+    },
+    {
+      "ticker": "NDX1.DE",
+      "company": "Nordex",
+      "date": "2022-05-13",
+      "prob": 0.7898252606391907
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-05-13",
+      "prob": 0.7774775624275208
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2022-05-12",
+      "prob": 0.8077682852745056
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-05-12",
+      "prob": 0.8371700644493103
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-05-12",
+      "prob": 0.800932765007019
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2022-05-12",
+      "prob": 0.79913330078125
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2022-05-12",
+      "prob": 0.8227855563163757
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "date": "2022-05-11",
+      "prob": 0.7937080264091492
+    },
+    {
+      "ticker": "CRM",
+      "company": "Salesforce",
+      "date": "2022-05-11",
+      "prob": 0.8018345832824707
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-05-10",
+      "prob": 0.7956143021583557
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2022-05-10",
+      "prob": 0.7989848256111145
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-05-10",
+      "prob": 0.7945147752761841
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-05-10",
+      "prob": 0.8392764329910278
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2022-05-10",
+      "prob": 0.7832654118537903
+    },
+    {
+      "ticker": "NDX1.DE",
+      "company": "Nordex",
+      "date": "2022-05-10",
+      "prob": 0.8314467668533325
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-05-10",
+      "prob": 0.746781587600708
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "date": "2022-05-10",
+      "prob": 0.7942973971366882
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "date": "2022-05-09",
+      "prob": 0.7893410325050354
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-05-09",
+      "prob": 0.8507277965545654
+    },
+    {
+      "ticker": "COK.DE",
+      "company": "CANCOM",
+      "date": "2022-05-09",
+      "prob": 0.847062885761261
+    },
+    {
+      "ticker": "F3C.DE",
+      "company": "SFC Energy",
+      "date": "2022-05-09",
+      "prob": 0.7924081683158875
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2022-05-09",
+      "prob": 0.802488386631012
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2022-05-09",
+      "prob": 0.8260535597801208
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-05-07",
+      "prob": 0.8094453811645508
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-05-07",
+      "prob": 0.8139926195144653
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-05-07",
+      "prob": 0.7871995568275452
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-05-05",
+      "prob": 0.8280448913574219
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "date": "2022-05-05",
+      "prob": 0.7940976023674011
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-04-30",
+      "prob": 0.7916484475135803
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2022-04-28",
+      "prob": 0.7832626104354858
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2022-04-26",
+      "prob": 0.8213337063789368
+    },
+    {
+      "ticker": "NKE",
+      "company": "Nike",
+      "date": "2022-03-15",
+      "prob": 0.4623485505580902
+    },
+    {
+      "ticker": "SHW",
+      "company": "Sherwin-Williams",
+      "date": "2022-03-15",
+      "prob": 0.29779037833213806
+    },
+    {
+      "ticker": "BMW.DE",
+      "company": "BMW",
+      "date": "2022-03-14",
+      "prob": 0.17184554040431976
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2022-03-10",
+      "prob": 0.590538501739502
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2022-03-10",
+      "prob": 0.6470790505409241
+    },
+    {
+      "ticker": "FPE3.DE",
+      "company": "Fuchs SE",
+      "date": "2022-03-10",
+      "prob": 0.6671929955482483
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2022-03-10",
+      "prob": 0.6668565273284912
+    },
+    {
+      "ticker": "KWS.DE",
+      "company": "KWS Saat",
+      "date": "2022-03-10",
+      "prob": 0.6212007403373718
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2022-03-10",
+      "prob": 0.5568758249282837
+    },
+    {
+      "ticker": "NKE",
+      "company": "Nike",
+      "date": "2022-03-10",
+      "prob": 0.8434306979179382
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-03-10",
+      "prob": 0.7729402184486389
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2022-03-10",
+      "prob": 0.5867900252342224
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2022-03-10",
+      "prob": 0.7071030735969543
+    },
+    {
+      "ticker": "SHW",
+      "company": "Sherwin-Williams",
+      "date": "2022-03-10",
+      "prob": 0.8332164287567139
+    },
+    {
+      "ticker": "SZU.DE",
+      "company": "S\u00fcdzucker",
+      "date": "2022-03-10",
+      "prob": 0.8131461143493652
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "date": "2022-03-10",
+      "prob": 0.7874658107757568
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2022-03-09",
+      "prob": 0.718462347984314
+    },
+    {
+      "ticker": "APD",
+      "company": "Air Products",
+      "date": "2022-03-09",
+      "prob": 0.6849883198738098
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2022-03-09",
+      "prob": 0.7143105268478394
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2022-03-09",
+      "prob": 0.578797459602356
+    },
+    {
+      "ticker": "BAS.DE",
+      "company": "BASF",
+      "date": "2022-03-09",
+      "prob": 0.5823836922645569
+    },
+    {
+      "ticker": "BMW.DE",
+      "company": "BMW",
+      "date": "2022-03-09",
+      "prob": 0.6442366242408752
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2022-03-09",
+      "prob": 0.3586452007293701
+    },
+    {
+      "ticker": "BVB.DE",
+      "company": "Borussia Dortmund",
+      "date": "2022-03-09",
+      "prob": 0.5581662654876709
+    },
+    {
+      "ticker": "CON.DE",
+      "company": "Continental",
+      "date": "2022-03-09",
+      "prob": 0.5843226909637451
+    },
+    {
+      "ticker": "CWC.DE",
+      "company": "CEWE",
+      "date": "2022-03-09",
+      "prob": 0.6378166675567627
+    },
+    {
+      "ticker": "DBK.DE",
+      "company": "Deutsche Bank",
+      "date": "2022-03-09",
+      "prob": 0.558743953704834
+    },
+    {
+      "ticker": "DHL.DE",
+      "company": "DHL Group",
+      "date": "2022-03-09",
+      "prob": 0.5391745567321777
+    },
+    {
+      "ticker": "DMP.DE",
+      "company": "Dermapharm",
+      "date": "2022-03-09",
+      "prob": 0.6994394659996033
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2022-03-09",
+      "prob": 0.5576838254928589
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2022-03-09",
+      "prob": 0.7133496999740601
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "date": "2022-03-09",
+      "prob": 0.7754228115081787
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "date": "2022-03-09",
+      "prob": 0.4220709502696991
+    },
+    {
+      "ticker": "G1A.DE",
+      "company": "GEA Group",
+      "date": "2022-03-09",
+      "prob": 0.6224573850631714
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-03-09",
+      "prob": 0.46908941864967346
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2022-03-09",
+      "prob": 0.46570244431495667
+    },
+    {
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "date": "2022-03-09",
+      "prob": 0.552311897277832
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2022-03-09",
+      "prob": 0.6185342669487
+    },
+    {
+      "ticker": "HEN3.DE",
+      "company": "Henkel",
+      "date": "2022-03-09",
+      "prob": 0.6873124241828918
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2022-03-09",
+      "prob": 0.7691916227340698
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "date": "2022-03-09",
+      "prob": 0.47292566299438477
+    },
+    {
+      "ticker": "JUN3.DE",
+      "company": "Jungheinrich",
+      "date": "2022-03-09",
+      "prob": 0.49006974697113037
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2022-03-09",
+      "prob": 0.4474208652973175
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2022-03-09",
+      "prob": 0.49080079793930054
+    },
+    {
+      "ticker": "MUX.DE",
+      "company": "Mutares",
+      "date": "2022-03-09",
+      "prob": 0.4549631178379059
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2022-03-09",
+      "prob": 0.5988545417785645
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2022-03-09",
+      "prob": 0.6115867495536804
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "date": "2022-03-09",
+      "prob": 0.542262852191925
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2022-03-09",
+      "prob": 0.4907397925853729
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2022-03-09",
+      "prob": 0.6196564435958862
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2022-03-09",
+      "prob": 0.45362618565559387
+    },
+    {
+      "ticker": "WAC.DE",
+      "company": "Wacker Neuson",
+      "date": "2022-03-09",
+      "prob": 0.6014240384101868
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2022-03-08",
+      "prob": 0.8030295372009277
+    },
+    {
+      "ticker": "PAH3.DE",
+      "company": "Porsche SE",
+      "date": "2022-03-08",
+      "prob": 0.8344604969024658
+    },
+    {
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "date": "2022-03-08",
+      "prob": 0.8293188214302063
+    },
+    {
+      "ticker": "SHL.DE",
+      "company": "Siemens Healthineers",
+      "date": "2022-03-08",
+      "prob": 0.8228368759155273
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "date": "2022-03-08",
+      "prob": 0.7756646871566772
+    },
+    {
+      "ticker": "SY1.DE",
+      "company": "Symrise",
+      "date": "2022-03-08",
+      "prob": 0.7950544953346252
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2022-03-08",
+      "prob": 0.7887100577354431
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "date": "2022-03-08",
+      "prob": 0.8036970496177673
+    },
+    {
+      "ticker": "6367.T",
+      "company": "Daikin",
+      "date": "2022-03-07",
+      "prob": 0.820559024810791
+    },
+    {
+      "ticker": "ADS.DE",
+      "company": "Adidas",
+      "date": "2022-03-07",
+      "prob": 0.8012995719909668
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "date": "2022-03-07",
+      "prob": 0.7996307611465454
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2022-03-07",
+      "prob": 0.780683696269989
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2022-03-07",
+      "prob": 0.8517171144485474
+    },
+    {
+      "ticker": "DEQ.DE",
+      "company": "Deutsche EuroShop",
+      "date": "2022-03-07",
+      "prob": 0.8285865783691406
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2022-03-07",
+      "prob": 0.8439092636108398
+    },
+    {
+      "ticker": "FPE3.DE",
+      "company": "Fuchs SE",
+      "date": "2022-03-07",
+      "prob": 0.8692372441291809
+    },
+    {
+      "ticker": "HBH.DE",
+      "company": "Hornbach",
+      "date": "2022-03-07",
+      "prob": 0.8338400721549988
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2022-03-07",
+      "prob": 0.8299481272697449
+    },
+    {
+      "ticker": "KBX.DE",
+      "company": "Knorr-Bremse",
+      "date": "2022-03-07",
+      "prob": 0.7869465351104736
+    },
+    {
+      "ticker": "KWS.DE",
+      "company": "KWS Saat",
+      "date": "2022-03-07",
+      "prob": 0.845241367816925
+    },
+    {
+      "ticker": "MBG.DE",
+      "company": "Mercedes-Benz",
+      "date": "2022-03-07",
+      "prob": 0.8002845048904419
+    },
+    {
+      "ticker": "MUV2.DE",
+      "company": "Munich Re",
+      "date": "2022-03-07",
+      "prob": 0.7853835821151733
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2022-03-07",
+      "prob": 0.8344098925590515
+    },
+    {
+      "ticker": "NKE",
+      "company": "Nike",
+      "date": "2022-03-07",
+      "prob": 0.7986456155776978
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-03-07",
+      "prob": 0.8519944548606873
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2022-03-07",
+      "prob": 0.7897478938102722
+    },
+    {
+      "ticker": "PBB.DE",
+      "company": "Deutsche Pfandbriefbank",
+      "date": "2022-03-07",
+      "prob": 0.7824926972389221
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2022-03-07",
+      "prob": 0.8350843787193298
+    },
+    {
+      "ticker": "SHW",
+      "company": "Sherwin-Williams",
+      "date": "2022-03-07",
+      "prob": 0.7972500324249268
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2022-03-07",
+      "prob": 0.8181518316268921
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "date": "2022-03-07",
+      "prob": 0.8176164031028748
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2022-03-07",
+      "prob": 0.8180316686630249
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2022-03-04",
+      "prob": 0.8464808464050293
+    },
+    {
+      "ticker": "APD",
+      "company": "Air Products",
+      "date": "2022-03-04",
+      "prob": 0.7833406925201416
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2022-03-04",
+      "prob": 0.836447536945343
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2022-03-04",
+      "prob": 0.7838799357414246
+    },
+    {
+      "ticker": "BAS.DE",
+      "company": "BASF",
+      "date": "2022-03-04",
+      "prob": 0.8461164236068726
+    },
+    {
+      "ticker": "BMW.DE",
+      "company": "BMW",
+      "date": "2022-03-04",
+      "prob": 0.8296559453010559
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2022-03-04",
+      "prob": 0.8451021313667297
+    },
+    {
+      "ticker": "BVB.DE",
+      "company": "Borussia Dortmund",
+      "date": "2022-03-04",
+      "prob": 0.8107228875160217
+    },
+    {
+      "ticker": "CON.DE",
+      "company": "Continental",
+      "date": "2022-03-04",
+      "prob": 0.8520310521125793
+    },
+    {
+      "ticker": "CWC.DE",
+      "company": "CEWE",
+      "date": "2022-03-04",
+      "prob": 0.8296172618865967
+    },
+    {
+      "ticker": "DBK.DE",
+      "company": "Deutsche Bank",
+      "date": "2022-03-04",
+      "prob": 0.8613533973693848
+    },
+    {
+      "ticker": "DHL.DE",
+      "company": "DHL Group",
+      "date": "2022-03-04",
+      "prob": 0.7987385392189026
+    },
+    {
+      "ticker": "DMP.DE",
+      "company": "Dermapharm",
+      "date": "2022-03-04",
+      "prob": 0.8143973350524902
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2022-03-04",
+      "prob": 0.8299962878227234
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2022-03-04",
+      "prob": 0.797822117805481
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "date": "2022-03-04",
+      "prob": 0.8231664896011353
+    },
+    {
+      "ticker": "FNTN.DE",
+      "company": "freenet",
+      "date": "2022-03-04",
+      "prob": 0.8169996738433838
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "date": "2022-03-04",
+      "prob": 0.7888156771659851
+    },
+    {
+      "ticker": "G1A.DE",
+      "company": "GEA Group",
+      "date": "2022-03-04",
+      "prob": 0.8103529214859009
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-03-04",
+      "prob": 0.8219305872917175
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "date": "2022-03-04",
+      "prob": 0.8110723495483398
+    },
+    {
+      "ticker": "GM",
+      "company": "General Motors",
+      "date": "2022-03-04",
+      "prob": 0.8036254644393921
+    },
+    {
+      "ticker": "GXI.DE",
+      "company": "Gerresheimer",
+      "date": "2022-03-04",
+      "prob": 0.8116143941879272
+    },
+    {
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "date": "2022-03-04",
+      "prob": 0.7911669015884399
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2022-03-04",
+      "prob": 0.8212481737136841
+    },
+    {
+      "ticker": "HEN3.DE",
+      "company": "Henkel",
+      "date": "2022-03-04",
+      "prob": 0.7850595712661743
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2022-03-04",
+      "prob": 0.8275827765464783
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "date": "2022-03-04",
+      "prob": 0.8456624746322632
+    },
+    {
+      "ticker": "JUN3.DE",
+      "company": "Jungheinrich",
+      "date": "2022-03-04",
+      "prob": 0.8136166334152222
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2022-03-04",
+      "prob": 0.8154908418655396
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2022-03-04",
+      "prob": 0.8502260446548462
+    },
+    {
+      "ticker": "LIN",
+      "company": "Linde",
+      "date": "2022-03-04",
+      "prob": 0.8107761740684509
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2022-03-04",
+      "prob": 0.8340171575546265
+    },
+    {
+      "ticker": "MUX.DE",
+      "company": "Mutares",
+      "date": "2022-03-04",
+      "prob": 0.8134486675262451
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2022-03-04",
+      "prob": 0.8175781965255737
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2022-03-04",
+      "prob": 0.8241851925849915
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "date": "2022-03-04",
+      "prob": 0.8324748873710632
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "date": "2022-03-04",
+      "prob": 0.8149531483650208
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2022-03-04",
+      "prob": 0.8197089433670044
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2022-03-04",
+      "prob": 0.7937017679214478
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "date": "2022-03-04",
+      "prob": 0.6752432584762573
+    },
+    {
+      "ticker": "WAC.DE",
+      "company": "Wacker Neuson",
+      "date": "2022-03-04",
+      "prob": 0.8222213387489319
+    },
+    {
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "date": "2022-03-03",
+      "prob": 0.7934233546257019
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "date": "2022-03-03",
+      "prob": 0.8264931440353394
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "date": "2022-03-03",
+      "prob": 0.7817681431770325
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2022-03-02",
+      "prob": 0.795379638671875
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2022-03-02",
+      "prob": 0.7805556058883667
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2022-03-01",
+      "prob": 0.8346879482269287
+    },
+    {
+      "ticker": "CON.DE",
+      "company": "Continental",
+      "date": "2022-03-01",
+      "prob": 0.7996199131011963
+    },
+    {
+      "ticker": "DBK.DE",
+      "company": "Deutsche Bank",
+      "date": "2022-03-01",
+      "prob": 0.8646938800811768
+    },
+    {
+      "ticker": "FRA.DE",
+      "company": "Fraport",
+      "date": "2022-03-01",
+      "prob": 0.8146007061004639
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2022-03-01",
+      "prob": 0.8673070669174194
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "date": "2022-03-01",
+      "prob": 0.7847211360931396
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "date": "2022-03-01",
+      "prob": 0.8381094932556152
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2022-03-01",
+      "prob": 0.8296075463294983
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2022-03-01",
+      "prob": 0.8398153185844421
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2022-03-01",
+      "prob": 0.8499742150306702
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2022-03-01",
+      "prob": 0.8330890536308289
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "date": "2022-03-01",
+      "prob": 0.802364706993103
+    },
+    {
+      "ticker": "WAC.DE",
+      "company": "Wacker Neuson",
+      "date": "2022-03-01",
+      "prob": 0.8109509348869324
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2022-02-24",
+      "prob": 0.7859280109405518
+    },
+    {
+      "ticker": "HD",
+      "company": "Home Depot",
+      "date": "2022-02-24",
+      "prob": 0.7856950759887695
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "date": "2022-02-24",
+      "prob": 0.794029176235199
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-02-23",
+      "prob": 0.8012948036193848
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-02-21",
+      "prob": 0.8442585468292236
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-02-21",
+      "prob": 0.7919113636016846
+    },
+    {
+      "ticker": "DHER.DE",
+      "company": "Delivery Hero",
+      "date": "2022-02-15",
+      "prob": 0.8377079367637634
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-01-27",
+      "prob": 0.7999606132507324
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-01-27",
+      "prob": 0.47393205761909485
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-01-25",
+      "prob": 0.8239096403121948
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-01-25",
+      "prob": 0.8277037143707275
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2022-01-25",
+      "prob": 0.7862462401390076
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-01-24",
+      "prob": 0.8405818343162537
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2022-01-24",
+      "prob": 0.8368127942085266
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-01-24",
+      "prob": 0.813511312007904
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-01-22",
+      "prob": 0.8371682167053223
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-01-22",
+      "prob": 0.8463634848594666
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2022-01-22",
+      "prob": 0.790467381477356
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-01-21",
+      "prob": 0.7833852171897888
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-01-21",
+      "prob": 0.8122162222862244
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-01-11",
+      "prob": 0.6295216083526611
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-01-11",
+      "prob": 0.46970656514167786
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-01-11",
+      "prob": 0.6364037394523621
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-01-11",
+      "prob": 0.6307493448257446
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2022-01-08",
+      "prob": 0.781777024269104
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2022-01-08",
+      "prob": 0.8218791484832764
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2022-01-08",
+      "prob": 0.795225203037262
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2022-01-08",
+      "prob": 0.817801833152771
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2022-01-08",
+      "prob": 0.7831935882568359
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2021-12-21",
+      "prob": 0.8623956441879272
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2021-12-14",
+      "prob": 0.8086177706718445
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2021-12-13",
+      "prob": 0.78528892993927
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2021-12-11",
+      "prob": 0.7961663603782654
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2021-12-07",
+      "prob": 0.7859594225883484
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2021-12-07",
+      "prob": 0.8230410218238831
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2021-12-07",
+      "prob": 0.7950881123542786
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2021-12-04",
+      "prob": 0.8549732565879822
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2021-12-04",
+      "prob": 0.7881715297698975
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2021-11-29",
+      "prob": 0.5316007137298584
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2021-11-26",
+      "prob": 0.798536479473114
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2021-11-26",
+      "prob": 0.785637378692627
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2021-10-14",
+      "prob": 0.6601678133010864
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "date": "2021-10-11",
+      "prob": 0.6929532289505005
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2021-10-11",
+      "prob": 0.843085527420044
+    },
+    {
+      "ticker": "6367.T",
+      "company": "Daikin",
+      "date": "2021-10-07",
+      "prob": 0.5579081177711487
+    },
+    {
+      "ticker": "BC8.DE",
+      "company": "Bechtle",
+      "date": "2021-10-07",
+      "prob": 0.6994884610176086
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2021-10-06",
+      "prob": 0.808423638343811
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "date": "2021-10-06",
+      "prob": 0.8089454174041748
+    },
+    {
+      "ticker": "MUX.DE",
+      "company": "Mutares",
+      "date": "2021-10-06",
+      "prob": 0.8447394371032715
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2021-10-06",
+      "prob": 0.8101977109909058
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2021-10-06",
+      "prob": 0.7944779396057129
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "date": "2021-10-06",
+      "prob": 0.8084978461265564
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2021-10-06",
+      "prob": 0.8135764002799988
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2021-10-06",
+      "prob": 0.7822502851486206
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "date": "2021-10-06",
+      "prob": 0.8721537590026855
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2021-10-06",
+      "prob": 0.842054545879364
+    },
+    {
+      "ticker": "6367.T",
+      "company": "Daikin",
+      "date": "2021-10-04",
+      "prob": 0.8173704147338867
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2021-10-04",
+      "prob": 0.802021861076355
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "date": "2021-10-04",
+      "prob": 0.8347839713096619
+    },
+    {
+      "ticker": "BC8.DE",
+      "company": "Bechtle",
+      "date": "2021-10-04",
+      "prob": 0.7917723655700684
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2021-10-04",
+      "prob": 0.7930711507797241
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2021-07-22",
+      "prob": 0.6620550155639648
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2021-07-20",
+      "prob": 0.7902282476425171
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2021-07-19",
+      "prob": 0.8479906320571899
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2021-07-19",
+      "prob": 0.786910891532898
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "date": "2021-07-18",
+      "prob": 0.7870181798934937
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2021-07-17",
+      "prob": 0.8453234434127808
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2021-07-16",
+      "prob": 0.8208808302879333
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2021-06-28",
+      "prob": 0.3887707591056824
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2021-06-25",
+      "prob": 0.7517401576042175
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2021-06-24",
+      "prob": 0.8359385132789612
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "date": "2021-06-24",
+      "prob": 0.7944013476371765
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2021-06-22",
+      "prob": 0.7540146112442017
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2021-06-21",
+      "prob": 0.7874923348426819
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "date": "2021-06-19",
+      "prob": 0.81121426820755
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2021-05-29",
+      "prob": 0.7894929647445679
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2021-05-25",
+      "prob": 0.5470286011695862
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2021-05-25",
+      "prob": 0.5619425177574158
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "date": "2021-05-22",
+      "prob": 0.8442297577857971
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2021-05-22",
+      "prob": 0.8309675455093384
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2020-11-12",
+      "prob": 0.80077064037323
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2020-11-05",
+      "prob": 0.2578503489494324
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "date": "2020-11-04",
+      "prob": 0.2863365411758423
+    },
+    {
+      "ticker": "1U1.DE",
+      "company": "1&1",
+      "date": "2020-11-03",
+      "prob": 0.2956624925136566
+    },
+    {
+      "ticker": "ACT.DE",
+      "company": "AlzChem",
+      "date": "2020-11-03",
+      "prob": 0.4801010489463806
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2020-11-03",
+      "prob": 0.4656858444213867
+    },
+    {
+      "ticker": "FNTN.DE",
+      "company": "freenet",
+      "date": "2020-11-03",
+      "prob": 0.409940242767334
+    },
+    {
+      "ticker": "FRA.DE",
+      "company": "Fraport",
+      "date": "2020-11-03",
+      "prob": 0.5598520636558533
+    },
+    {
+      "ticker": "MTX.DE",
+      "company": "MTU Aero",
+      "date": "2020-11-03",
+      "prob": 0.5403467416763306
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2020-11-03",
+      "prob": 0.3443327844142914
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2020-11-03",
+      "prob": 0.3876478374004364
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2020-11-02",
+      "prob": 0.6304961442947388
+    },
+    {
+      "ticker": "AAPL",
+      "company": "Apple",
+      "date": "2020-11-02",
+      "prob": 0.7625248432159424
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "date": "2020-11-02",
+      "prob": 0.7090798616409302
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2020-11-02",
+      "prob": 0.7206014394760132
+    },
+    {
+      "ticker": "ALV.DE",
+      "company": "Allianz",
+      "date": "2020-11-02",
+      "prob": 0.6427720785140991
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "date": "2020-11-02",
+      "prob": 0.784847617149353
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "date": "2020-11-02",
+      "prob": 0.7008171677589417
+    },
+    {
+      "ticker": "BAS.DE",
+      "company": "BASF",
+      "date": "2020-11-02",
+      "prob": 0.7125020623207092
+    },
+    {
+      "ticker": "BC8.DE",
+      "company": "Bechtle",
+      "date": "2020-11-02",
+      "prob": 0.6539246439933777
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2020-11-02",
+      "prob": 0.5929813981056213
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2020-11-02",
+      "prob": 0.7260838747024536
+    },
+    {
+      "ticker": "BOSS.DE",
+      "company": "Hugo Boss",
+      "date": "2020-11-02",
+      "prob": 0.5214323401451111
+    },
+    {
+      "ticker": "CAT",
+      "company": "Caterpillar",
+      "date": "2020-11-02",
+      "prob": 0.541796088218689
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2020-11-02",
+      "prob": 0.646219789981842
+    },
+    {
+      "ticker": "CRM",
+      "company": "Salesforce",
+      "date": "2020-11-02",
+      "prob": 0.7162417769432068
+    },
+    {
+      "ticker": "DEQ.DE",
+      "company": "Deutsche EuroShop",
+      "date": "2020-11-02",
+      "prob": 0.6678367257118225
+    },
+    {
+      "ticker": "DHL.DE",
+      "company": "DHL Group",
+      "date": "2020-11-02",
+      "prob": 0.6267386078834534
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "date": "2020-11-02",
+      "prob": 0.3184415102005005
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2020-11-02",
+      "prob": 0.49397143721580505
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "date": "2020-11-02",
+      "prob": 0.6403700113296509
+    },
+    {
+      "ticker": "FPE3.DE",
+      "company": "Fuchs SE",
+      "date": "2020-11-02",
+      "prob": 0.6810783743858337
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2020-11-02",
+      "prob": 0.5620182752609253
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2020-11-02",
+      "prob": 0.4695418179035187
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2020-11-02",
+      "prob": 0.5134317278862
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2020-11-02",
+      "prob": 0.8319398760795593
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2020-11-02",
+      "prob": 0.7044939398765564
+    },
+    {
+      "ticker": "JUN3.DE",
+      "company": "Jungheinrich",
+      "date": "2020-11-02",
+      "prob": 0.6827820539474487
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2020-11-02",
+      "prob": 0.8270071148872375
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2020-11-02",
+      "prob": 0.5600321888923645
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2020-11-02",
+      "prob": 0.5534124970436096
+    },
+    {
+      "ticker": "LYB",
+      "company": "LyondellBasell",
+      "date": "2020-11-02",
+      "prob": 0.7538767457008362
+    },
+    {
+      "ticker": "MBG.DE",
+      "company": "Mercedes-Benz",
+      "date": "2020-11-02",
+      "prob": 0.7592188119888306
+    },
+    {
+      "ticker": "MSFT",
+      "company": "Microsoft",
+      "date": "2020-11-02",
+      "prob": 0.5107357501983643
+    },
+    {
+      "ticker": "NDX1.DE",
+      "company": "Nordex",
+      "date": "2020-11-02",
+      "prob": 0.4482458829879761
+    },
+    {
+      "ticker": "NOEJ.DE",
+      "company": "NORMA Group",
+      "date": "2020-11-02",
+      "prob": 0.665370523929596
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2020-11-02",
+      "prob": 0.7887483835220337
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "date": "2020-11-02",
+      "prob": 0.4413469731807709
+    },
+    {
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "date": "2020-11-02",
+      "prob": 0.47268322110176086
+    },
+    {
+      "ticker": "TLX.DE",
+      "company": "Talanx",
+      "date": "2020-11-02",
+      "prob": 0.6387346386909485
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "date": "2020-11-02",
+      "prob": 0.28241533041000366
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "date": "2020-11-02",
+      "prob": 0.37628060579299927
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "date": "2020-11-02",
+      "prob": 0.6396069526672363
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2020-11-02",
+      "prob": 0.664640486240387
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2020-11-02",
+      "prob": 0.7324338555335999
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2020-11-02",
+      "prob": 0.6828781962394714
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2020-11-01",
+      "prob": 0.47726303339004517
+    },
+    {
+      "ticker": "AIR.DE",
+      "company": "Airbus",
+      "date": "2020-10-30",
+      "prob": 0.809827446937561
+    },
+    {
+      "ticker": "AOS",
+      "company": "A.O. Smith",
+      "date": "2020-10-30",
+      "prob": 0.7872539162635803
+    },
+    {
+      "ticker": "COK.DE",
+      "company": "CANCOM",
+      "date": "2020-10-30",
+      "prob": 0.799535870552063
+    },
+    {
+      "ticker": "DB1.DE",
+      "company": "Deutsche B\u00f6rse",
+      "date": "2020-10-30",
+      "prob": 0.8119076490402222
+    },
+    {
+      "ticker": "DOW",
+      "company": "Dow Inc.",
+      "date": "2020-10-30",
+      "prob": 0.7845388054847717
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "date": "2020-10-30",
+      "prob": 0.8193382024765015
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "date": "2020-10-30",
+      "prob": 0.8440468907356262
+    },
+    {
+      "ticker": "MUV2.DE",
+      "company": "Munich Re",
+      "date": "2020-10-30",
+      "prob": 0.8271942138671875
+    },
+    {
+      "ticker": "NKE",
+      "company": "Nike",
+      "date": "2020-10-30",
+      "prob": 0.8100825548171997
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2020-10-30",
+      "prob": 0.8892810940742493
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "date": "2020-10-30",
+      "prob": 0.799445629119873
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "date": "2020-10-30",
+      "prob": 0.8237918615341187
+    },
+    {
+      "ticker": "1U1.DE",
+      "company": "1&1",
+      "date": "2020-10-29",
+      "prob": 0.8147761225700378
+    },
+    {
+      "ticker": "ACT.DE",
+      "company": "AlzChem",
+      "date": "2020-10-29",
+      "prob": 0.8381692171096802
+    },
+    {
+      "ticker": "AXP",
+      "company": "AmEx",
+      "date": "2020-10-29",
+      "prob": 0.8446081876754761
+    },
+    {
+      "ticker": "FNTN.DE",
+      "company": "freenet",
+      "date": "2020-10-29",
+      "prob": 0.7944955229759216
+    },
+    {
+      "ticker": "FRA.DE",
+      "company": "Fraport",
+      "date": "2020-10-29",
+      "prob": 0.8244540691375732
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2020-10-29",
+      "prob": 0.6898713707923889
+    },
+    {
+      "ticker": "IBM",
+      "company": "IBM",
+      "date": "2020-10-29",
+      "prob": 0.8232112526893616
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "date": "2020-10-29",
+      "prob": 0.7915731072425842
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "date": "2020-10-29",
+      "prob": 0.7946587204933167
+    },
+    {
+      "ticker": "MTX.DE",
+      "company": "MTU Aero",
+      "date": "2020-10-29",
+      "prob": 0.8103939890861511
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2020-10-29",
+      "prob": 0.7177258729934692
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "date": "2020-10-29",
+      "prob": 0.8045417070388794
+    },
+    {
+      "ticker": "STM.DE",
+      "company": "Stabilus",
+      "date": "2020-10-29",
+      "prob": 0.7947600483894348
+    },
+    {
+      "ticker": "UNH",
+      "company": "UnitedHealth",
+      "date": "2020-10-29",
+      "prob": 0.7937741279602051
+    },
+    {
+      "ticker": "UTDI.DE",
+      "company": "United Internet",
+      "date": "2020-10-29",
+      "prob": 0.7964432835578918
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "date": "2020-10-28",
+      "prob": 0.8721696734428406
+    },
+    {
+      "ticker": "AAPL",
+      "company": "Apple",
+      "date": "2020-10-28",
+      "prob": 0.8406131267547607
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "date": "2020-10-28",
+      "prob": 0.7865173816680908
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "date": "2020-10-28",
+      "prob": 0.8107940554618835
+    },
+    {
+      "ticker": "ALV.DE",
+      "company": "Allianz",
+      "date": "2020-10-28",
+      "prob": 0.8290485143661499
+    },
+    {
+      "ticker": "AMT",
+      "company": "American Tower",
+      "date": "2020-10-28",
+      "prob": 0.781725287437439
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "date": "2020-10-28",
+      "prob": 0.836538553237915
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "date": "2020-10-28",
+      "prob": 0.812116801738739
+    },
+    {
+      "ticker": "BAS.DE",
+      "company": "BASF",
+      "date": "2020-10-28",
+      "prob": 0.8644616603851318
+    },
+    {
+      "ticker": "BC8.DE",
+      "company": "Bechtle",
+      "date": "2020-10-28",
+      "prob": 0.8869809508323669
+    },
+    {
+      "ticker": "BFSA.DE",
+      "company": "Befesa",
+      "date": "2020-10-28",
+      "prob": 0.8007243871688843
+    },
+    {
+      "ticker": "BMW.DE",
+      "company": "BMW",
+      "date": "2020-10-28",
+      "prob": 0.8165952563285828
+    },
+    {
+      "ticker": "BNP.PA",
+      "company": "BNP Paribas",
+      "date": "2020-10-28",
+      "prob": 0.8411943316459656
+    },
+    {
+      "ticker": "BOSS.DE",
+      "company": "Hugo Boss",
+      "date": "2020-10-28",
+      "prob": 0.7903379201889038
+    },
+    {
+      "ticker": "CAT",
+      "company": "Caterpillar",
+      "date": "2020-10-28",
+      "prob": 0.820133626461029
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "date": "2020-10-28",
+      "prob": 0.7971010804176331
+    },
+    {
+      "ticker": "CRM",
+      "company": "Salesforce",
+      "date": "2020-10-28",
+      "prob": 0.8178136348724365
+    },
+    {
+      "ticker": "CSCO",
+      "company": "Cisco",
+      "date": "2020-10-28",
+      "prob": 0.7932339906692505
+    },
+    {
+      "ticker": "CVX",
+      "company": "Chevron",
+      "date": "2020-10-28",
+      "prob": 0.8505094647407532
+    },
+    {
+      "ticker": "DEQ.DE",
+      "company": "Deutsche EuroShop",
+      "date": "2020-10-28",
+      "prob": 0.8571885824203491
+    },
+    {
+      "ticker": "DHL.DE",
+      "company": "DHL Group",
+      "date": "2020-10-28",
+      "prob": 0.8307181000709534
+    },
+    {
+      "ticker": "DIS",
+      "company": "Disney",
+      "date": "2020-10-28",
+      "prob": 0.8050475120544434
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "date": "2020-10-28",
+      "prob": 0.8555245995521545
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "date": "2020-10-28",
+      "prob": 0.7832146286964417
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "date": "2020-10-28",
+      "prob": 0.8080867528915405
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "date": "2020-10-28",
+      "prob": 0.8230684399604797
+    },
+    {
+      "ticker": "F3C.DE",
+      "company": "SFC Energy",
+      "date": "2020-10-28",
+      "prob": 0.8770803809165955
+    },
+    {
+      "ticker": "FPE3.DE",
+      "company": "Fuchs SE",
+      "date": "2020-10-28",
+      "prob": 0.8079991936683655
+    },
+    {
+      "ticker": "G1A.DE",
+      "company": "GEA Group",
+      "date": "2020-10-28",
+      "prob": 0.8323392271995544
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2020-10-28",
+      "prob": 0.8507146835327148
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "date": "2020-10-28",
+      "prob": 0.8426023125648499
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "date": "2020-10-28",
+      "prob": 0.7985397577285767
+    },
+    {
+      "ticker": "HON",
+      "company": "Honeywell",
+      "date": "2020-10-28",
+      "prob": 0.7959655523300171
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "date": "2020-10-28",
+      "prob": 0.8719713687896729
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "date": "2020-10-28",
+      "prob": 0.870962381362915
+    },
+    {
+      "ticker": "JUN3.DE",
+      "company": "Jungheinrich",
+      "date": "2020-10-28",
+      "prob": 0.8679909110069275
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "date": "2020-10-28",
+      "prob": 0.8914719820022583
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "date": "2020-10-28",
+      "prob": 0.8149328827857971
+    },
+    {
+      "ticker": "LIN",
+      "company": "Linde",
+      "date": "2020-10-28",
+      "prob": 0.8071933388710022
+    },
+    {
+      "ticker": "LXS.DE",
+      "company": "LANXESS",
+      "date": "2020-10-28",
+      "prob": 0.8338242769241333
+    },
+    {
+      "ticker": "LYB",
+      "company": "LyondellBasell",
+      "date": "2020-10-28",
+      "prob": 0.8397202491760254
+    },
+    {
+      "ticker": "MBG.DE",
+      "company": "Mercedes-Benz",
+      "date": "2020-10-28",
+      "prob": 0.8270301222801208
+    },
+    {
+      "ticker": "MSFT",
+      "company": "Microsoft",
+      "date": "2020-10-28",
+      "prob": 0.8173848986625671
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "date": "2020-10-28",
+      "prob": 0.8509093523025513
+    },
+    {
+      "ticker": "NDX1.DE",
+      "company": "Nordex",
+      "date": "2020-10-28",
+      "prob": 0.8437942862510681
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "date": "2020-10-28",
+      "prob": 0.8244951367378235
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "date": "2020-10-28",
+      "prob": 0.8319219350814819
+    },
+    {
+      "ticker": "NIBE-B.ST",
+      "company": "NIBE",
+      "date": "2020-10-28",
+      "prob": 0.8073527812957764
+    },
+    {
+      "ticker": "NOEJ.DE",
+      "company": "NORMA Group",
+      "date": "2020-10-28",
+      "prob": 0.8652523756027222
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "date": "2020-10-28",
+      "prob": 0.8575671911239624
+    },
+    {
+      "ticker": "PAH3.DE",
+      "company": "Porsche SE",
+      "date": "2020-10-28",
+      "prob": 0.8198478817939758
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "date": "2020-10-28",
+      "prob": 0.877662181854248
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "date": "2020-10-28",
+      "prob": 0.84269779920578
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "date": "2020-10-28",
+      "prob": 0.7951491475105286
+    },
+    {
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "date": "2020-10-28",
+      "prob": 0.8423051834106445
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "date": "2020-10-28",
+      "prob": 0.8068122267723083
+    },
+    {
+      "ticker": "TLX.DE",
+      "company": "Talanx",
+      "date": "2020-10-28",
+      "prob": 0.8516508936882019
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "date": "2020-10-28",
+      "prob": 0.7882899045944214
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "date": "2020-10-28",
+      "prob": 0.8750584721565247
+    },
+    {
+      "ticker": "VNA.DE",
+      "company": "Vonovia",
+      "date": "2020-10-28",
+      "prob": 0.80498206615448
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "date": "2020-10-28",
+      "prob": 0.8035039901733398
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "date": "2020-10-28",
+      "prob": 0.805858314037323
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "date": "2020-10-28",
+      "prob": 0.7942804098129272
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "date": "2020-10-28",
+      "prob": 0.8341808915138245
+    },
+    {
+      "ticker": "WDP.BR",
+      "company": "WDP",
+      "date": "2020-10-28",
+      "prob": 0.825408399105072
+    },
+    {
+      "ticker": "XOM",
+      "company": "ExxonMobil",
+      "date": "2020-10-28",
+      "prob": 0.7902711629867554
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "date": "2020-10-28",
+      "prob": 0.8046408891677856
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "date": "2020-10-27",
+      "prob": 0.7972741723060608
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "date": "2020-10-27",
+      "prob": 0.7826510667800903
+    },
+    {
+      "ticker": "ACT.DE",
+      "company": "AlzChem",
+      "date": "2020-10-26",
+      "prob": 0.8257126212120056
+    },
+    {
+      "ticker": "HYQ.DE",
+      "company": "Hypoport",
+      "date": "2020-10-26",
+      "prob": 0.7956905961036682
+    },
+    {
+      "ticker": "SANT.DE",
+      "company": "Kontron",
+      "date": "2020-10-26",
+      "prob": 0.8351181149482727
+    },
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "date": "2020-10-23",
+      "prob": 0.7929009199142456
+    },
+    {
+      "ticker": "1U1.DE",
+      "company": "1&1",
+      "date": "2020-09-24",
+      "prob": 0.8067317605018616
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "date": "2020-09-21",
+      "prob": 0.840133547782898
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "date": "2020-09-05",
+      "prob": 0.8088682889938354
+    }
+  ]
+}
