@@ -1,307 +1,496 @@
 {
-  "generated": "2026-04-06 19:50",
-  "threshold": 0.7399999999999999,
+  "generated": "2026-04-06 21:56",
+  "threshold": 0.6349999999999999,
   "signals": [
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "sector": "energy",
+      "date": "2026-03-24",
+      "prob": 0.6362478137016296
+    },
+    {
+      "ticker": "AOS",
+      "company": "A.O. Smith",
+      "sector": "heat_pump",
+      "date": "2025-04-10",
+      "prob": 0.6609094142913818
+    },
+    {
+      "ticker": "STLA",
+      "company": "Stellantis",
+      "sector": "automotive",
+      "date": "2025-04-09",
+      "prob": 0.6400190591812134
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-03-17",
+      "prob": 0.6692457795143127
+    },
+    {
+      "ticker": "BNR.DE",
+      "company": "Brenntag",
+      "sector": "materials",
+      "date": "2024-11-15",
+      "prob": 0.7024977207183838
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "sector": "energy",
+      "date": "2024-11-14",
+      "prob": 0.6715576648712158
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "healthcare",
+      "date": "2024-08-13",
+      "prob": 0.720449686050415
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "sector": "energy",
+      "date": "2024-08-08",
+      "prob": 0.6547396183013916
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "sector": "industrial",
+      "date": "2023-10-25",
+      "prob": 0.6509739756584167
+    },
+    {
+      "ticker": "PNE3.DE",
+      "company": "PNE",
+      "sector": "energy",
+      "date": "2023-10-25",
+      "prob": 0.6423847675323486
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "sector": "healthcare",
+      "date": "2023-10-23",
+      "prob": 0.6577195525169373
+    },
+    {
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
+      "sector": "tech",
+      "date": "2023-06-29",
+      "prob": 0.7779309749603271
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2023-06-14",
+      "prob": 0.6649609208106995
+    },
+    {
+      "ticker": "XOM",
+      "company": "ExxonMobil",
+      "sector": "energy",
+      "date": "2023-03-21",
+      "prob": 0.6484283804893494
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "sector": "crypto",
+      "date": "2022-12-20",
+      "prob": 0.6868112087249756
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-12-20",
+      "prob": 0.6374743580818176
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-11-11",
+      "prob": 0.662835419178009
+    },
+    {
+      "ticker": "HLAG.DE",
+      "company": "Hapag-Lloyd",
+      "sector": "industrial",
+      "date": "2022-11-08",
+      "prob": 0.6935241222381592
+    },
+    {
+      "ticker": "NA9.DE",
+      "company": "Nagarro",
+      "sector": "tech",
+      "date": "2022-07-19",
+      "prob": 0.6463487148284912
+    },
+    {
+      "ticker": "CON.DE",
+      "company": "Continental",
+      "sector": "automotive",
+      "date": "2022-07-08",
+      "prob": 0.7268756031990051
+    },
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "sector": "industrial",
+      "date": "2022-07-08",
+      "prob": 0.7178292274475098
+    },
+    {
+      "ticker": "MLP.DE",
+      "company": "MLP",
+      "sector": "finance",
+      "date": "2022-07-08",
+      "prob": 0.6692860722541809
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-01-01",
+      "prob": 0.6412048935890198
+    },
+    {
+      "ticker": "ADA-USD",
+      "company": "Cardano",
+      "sector": "crypto",
+      "date": "2021-07-23",
+      "prob": 0.6888710856437683
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-07-23",
+      "prob": 0.6556522846221924
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "sector": "crypto",
+      "date": "2021-06-24",
+      "prob": 0.6531327366828918
+    },
     {
       "ticker": "ETH-USD",
       "company": "Ethereum",
       "sector": "crypto",
-      "date": "2026-03-17",
-      "prob": 0.7578819394111633
+      "date": "2021-06-24",
+      "prob": 0.6377646923065186
     },
     {
       "ticker": "XRP-USD",
       "company": "XRP",
       "sector": "crypto",
-      "date": "2025-03-04",
-      "prob": 0.7780646085739136
+      "date": "2021-06-24",
+      "prob": 0.7055904269218445
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-02-11",
+      "prob": 0.6656519770622253
+    },
+    {
+      "ticker": "FRA.DE",
+      "company": "Fraport",
+      "sector": "industrial",
+      "date": "2021-01-11",
+      "prob": 0.43029430508613586
     },
     {
       "ticker": "XRP-USD",
       "company": "XRP",
       "sector": "crypto",
-      "date": "2025-02-20",
-      "prob": 0.6618772149085999
+      "date": "2020-12-29",
+      "prob": 0.6451340317726135
     },
     {
-      "ticker": "XRP-USD",
-      "company": "XRP",
-      "sector": "crypto",
-      "date": "2025-02-17",
-      "prob": 0.7540887594223022
-    },
-    {
-      "ticker": "XRP-USD",
-      "company": "XRP",
-      "sector": "crypto",
-      "date": "2025-01-07",
-      "prob": 0.75360107421875
+      "ticker": "FRA.DE",
+      "company": "Fraport",
+      "sector": "industrial",
+      "date": "2020-12-23",
+      "prob": 0.6641147136688232
     },
     {
       "ticker": "INTC",
       "company": "Intel",
       "sector": "tech",
-      "date": "2024-11-01",
-      "prob": 0.7622627019882202
+      "date": "2020-12-23",
+      "prob": 0.6430618166923523
     },
     {
       "ticker": "SOL-USD",
       "company": "Solana",
       "sector": "crypto",
-      "date": "2024-04-15",
-      "prob": 0.7566689252853394
+      "date": "2020-11-29",
+      "prob": 0.6823694705963135
     },
     {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2020-11-03",
+      "prob": 0.6633334755897522
+    },
+    {
+      "ticker": "BMW.DE",
+      "company": "BMW",
+      "sector": "automotive",
+      "date": "2020-11-03",
+      "prob": 0.6422619819641113
+    },
+    {
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "sector": "finance",
+      "date": "2020-11-03",
+      "prob": 0.6354351043701172
+    },
+    {
+      "ticker": "COK.DE",
+      "company": "CANCOM",
       "sector": "tech",
-      "date": "2024-02-20",
-      "prob": 0.7818979620933533
+      "date": "2020-11-03",
+      "prob": 0.7333647608757019
     },
     {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-02-05",
-      "prob": 0.8218804001808167
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "sector": "materials",
+      "date": "2020-11-02",
+      "prob": 0.761890172958374
     },
     {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-02-02",
-      "prob": 0.7582718133926392
+      "ticker": "LIN",
+      "company": "Linde",
+      "sector": "materials",
+      "date": "2020-11-02",
+      "prob": 0.6932241320610046
     },
     {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-30",
-      "prob": 0.6761731505393982
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-27",
-      "prob": 0.7884356379508972
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-24",
-      "prob": 0.800749659538269
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-21",
-      "prob": 0.8195211887359619
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-18",
-      "prob": 0.8273099660873413
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-15",
-      "prob": 0.8105922937393188
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-12",
-      "prob": 0.769216775894165
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-09",
-      "prob": 0.5351822972297668
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2024-01-06",
-      "prob": 0.77306067943573
-    },
-    {
-      "ticker": "NVDA",
-      "company": "NVIDIA",
-      "sector": "tech",
-      "date": "2022-01-06",
-      "prob": 0.6348865032196045
-    },
-    {
-      "ticker": "NVDA",
-      "company": "NVIDIA",
-      "sector": "tech",
-      "date": "2022-01-03",
-      "prob": 0.7927097678184509
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2021-06-14",
-      "prob": 0.7433541417121887
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-03-27",
-      "prob": 0.6610166430473328
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-03-24",
-      "prob": 0.7493294477462769
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2021-03-24",
-      "prob": 0.7736064195632935
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-03-10",
-      "prob": 0.6227717399597168
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-03-07",
-      "prob": 0.6944732069969177
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2021-03-07",
-      "prob": 0.5406020879745483
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2021-03-06",
-      "prob": 0.7439141273498535
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-03-04",
-      "prob": 0.8274326324462891
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2021-03-04",
-      "prob": 0.8090910911560059
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2021-03-03",
-      "prob": 0.7151108384132385
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-03-01",
-      "prob": 0.7713612914085388
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2021-02-28",
-      "prob": 0.8198553919792175
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-02-26",
-      "prob": 0.8385372757911682
-    },
-    {
-      "ticker": "BTC-USD",
-      "company": "Bitcoin",
-      "sector": "crypto",
-      "date": "2021-02-26",
-      "prob": 0.7939268350601196
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2021-02-25",
-      "prob": 0.7513636350631714
-    },
-    {
-      "ticker": "SOL-USD",
-      "company": "Solana",
-      "sector": "crypto",
-      "date": "2021-02-25",
-      "prob": 0.7753723859786987
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-02-23",
-      "prob": 0.8093461394309998
-    },
-    {
-      "ticker": "BTC-USD",
-      "company": "Bitcoin",
-      "sector": "crypto",
-      "date": "2021-02-01",
-      "prob": 0.7529599666595459
+      "ticker": "PBB.DE",
+      "company": "Deutsche Pfandbriefbank",
+      "sector": "finance",
+      "date": "2020-11-02",
+      "prob": 0.6391286849975586
     },
     {
       "ticker": "AOF.DE",
       "company": "ATOSS Software",
       "sector": "tech",
-      "date": "2021-01-29",
-      "prob": 0.7401440739631653
+      "date": "2020-10-30",
+      "prob": 0.6529487371444702
     },
     {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
+      "ticker": "MSFT",
+      "company": "Microsoft",
       "sector": "tech",
-      "date": "2021-01-29",
-      "prob": 0.7457738518714905
+      "date": "2020-10-30",
+      "prob": 0.6443384885787964
     },
     {
-      "ticker": "BTC-USD",
-      "company": "Bitcoin",
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2020-10-30",
+      "prob": 0.6975603699684143
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
       "sector": "crypto",
-      "date": "2021-01-23",
-      "prob": 0.7779524326324463
+      "date": "2020-10-30",
+      "prob": 0.6571325063705444
+    },
+    {
+      "ticker": "SRT3.DE",
+      "company": "Sartorius",
+      "sector": "healthcare",
+      "date": "2020-10-30",
+      "prob": 0.7441633343696594
+    },
+    {
+      "ticker": "VOW3.DE",
+      "company": "Volkswagen",
+      "sector": "automotive",
+      "date": "2020-10-30",
+      "prob": 0.6380159854888916
+    },
+    {
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "sector": "industrial",
+      "date": "2020-10-29",
+      "prob": 0.6401435136795044
+    },
+    {
+      "ticker": "HEN3.DE",
+      "company": "Henkel",
+      "sector": "consumer",
+      "date": "2020-10-29",
+      "prob": 0.6479932069778442
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "sector": "tech",
+      "date": "2020-10-29",
+      "prob": 0.6624743342399597
+    },
+    {
+      "ticker": "MCD",
+      "company": "McDonald's",
+      "sector": "consumer",
+      "date": "2020-10-29",
+      "prob": 0.6796419024467468
+    },
+    {
+      "ticker": "NKE",
+      "company": "Nike",
+      "sector": "consumer",
+      "date": "2020-10-29",
+      "prob": 0.7039565443992615
+    },
+    {
+      "ticker": "NOEJ.DE",
+      "company": "NORMA Group",
+      "sector": "industrial",
+      "date": "2020-10-29",
+      "prob": 0.7075627446174622
+    },
+    {
+      "ticker": "SPG",
+      "company": "Simon Property",
+      "sector": "real_estate",
+      "date": "2020-10-29",
+      "prob": 0.6549208164215088
+    },
+    {
+      "ticker": "SY1.DE",
+      "company": "Symrise",
+      "sector": "materials",
+      "date": "2020-10-29",
+      "prob": 0.6915406584739685
+    },
+    {
+      "ticker": "UNH",
+      "company": "UnitedHealth",
+      "sector": "healthcare",
+      "date": "2020-10-29",
+      "prob": 0.6769422292709351
+    },
+    {
+      "ticker": "AFX.DE",
+      "company": "Carl Zeiss Meditec",
+      "sector": "healthcare",
+      "date": "2020-10-28",
+      "prob": 0.6721218228340149
+    },
+    {
+      "ticker": "AOS",
+      "company": "A.O. Smith",
+      "sector": "heat_pump",
+      "date": "2020-10-28",
+      "prob": 0.6824746131896973
+    },
+    {
+      "ticker": "APD",
+      "company": "Air Products",
+      "sector": "materials",
+      "date": "2020-10-28",
+      "prob": 0.6849163174629211
+    },
+    {
+      "ticker": "CAT",
+      "company": "Caterpillar",
+      "sector": "industrial",
+      "date": "2020-10-28",
+      "prob": 0.6719425916671753
+    },
+    {
+      "ticker": "DHL.DE",
+      "company": "DHL Group",
+      "sector": "industrial",
+      "date": "2020-10-28",
+      "prob": 0.6834628582000732
+    },
+    {
+      "ticker": "DOW",
+      "company": "Dow Inc.",
+      "sector": "industrial",
+      "date": "2020-10-28",
+      "prob": 0.6581422090530396
+    },
+    {
+      "ticker": "EKT.DE",
+      "company": "Energiekontor",
+      "sector": "energy",
+      "date": "2020-10-28",
+      "prob": 0.690726101398468
+    },
+    {
+      "ticker": "HD",
+      "company": "Home Depot",
+      "sector": "consumer",
+      "date": "2020-10-28",
+      "prob": 0.6389257311820984
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2020-10-28",
+      "prob": 0.6624147295951843
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "sector": "industrial",
+      "date": "2020-10-28",
+      "prob": 0.6978982090950012
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "materials",
+      "date": "2020-10-28",
+      "prob": 0.6860499978065491
+    },
+    {
+      "ticker": "YSN.DE",
+      "company": "secunet",
+      "sector": "tech",
+      "date": "2020-10-28",
+      "prob": 0.7353440523147583
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "sector": "industrial",
+      "date": "2020-10-27",
+      "prob": 0.6575441956520081
+    },
+    {
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "sector": "industrial",
+      "date": "2020-09-18",
+      "prob": 0.6476322412490845
     }
   ]
 }
