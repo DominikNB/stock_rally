@@ -1,69 +1,307 @@
 {
-  "generated": "2026-04-06 17:12",
-  "threshold": 0.695,
+  "generated": "2026-04-06 19:50",
+  "threshold": 0.7399999999999999,
   "signals": [
     {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "date": "2025-04-10",
-      "prob": 0.7717046141624451
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "sector": "crypto",
+      "date": "2026-03-17",
+      "prob": 0.7578819394111633
     },
     {
       "ticker": "XRP-USD",
       "company": "XRP",
       "sector": "crypto",
-      "date": "2025-02-26",
-      "prob": 0.7043534517288208
+      "date": "2025-03-04",
+      "prob": 0.7780646085739136
     },
     {
-      "ticker": "VBK.DE",
-      "company": "Verbio",
-      "sector": "energy",
-      "date": "2023-11-01",
-      "prob": 0.7364190220832825
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-02-20",
+      "prob": 0.6618772149085999
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-02-17",
+      "prob": 0.7540887594223022
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-01-07",
+      "prob": 0.75360107421875
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-11-01",
+      "prob": 0.7622627019882202
     },
     {
       "ticker": "SOL-USD",
       "company": "Solana",
       "sector": "crypto",
-      "date": "2023-03-11",
-      "prob": 0.7408276200294495
+      "date": "2024-04-15",
+      "prob": 0.7566689252853394
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "sector": "tech",
+      "date": "2024-02-20",
+      "prob": 0.7818979620933533
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-02-05",
+      "prob": 0.8218804001808167
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-02-02",
+      "prob": 0.7582718133926392
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-30",
+      "prob": 0.6761731505393982
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-27",
+      "prob": 0.7884356379508972
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-24",
+      "prob": 0.800749659538269
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-21",
+      "prob": 0.8195211887359619
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-18",
+      "prob": 0.8273099660873413
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-15",
+      "prob": 0.8105922937393188
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-12",
+      "prob": 0.769216775894165
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-09",
+      "prob": 0.5351822972297668
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2024-01-06",
+      "prob": 0.77306067943573
     },
     {
       "ticker": "NVDA",
       "company": "NVIDIA",
       "sector": "tech",
-      "date": "2022-11-02",
-      "prob": 0.7503815293312073
+      "date": "2022-01-06",
+      "prob": 0.6348865032196045
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "sector": "tech",
+      "date": "2022-01-03",
+      "prob": 0.7927097678184509
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
       "sector": "crypto",
-      "date": "2022-10-14",
-      "prob": 0.7263690233230591
-    },
-    {
-      "ticker": "VBK.DE",
-      "company": "Verbio",
-      "sector": "energy",
-      "date": "2021-03-09",
-      "prob": 0.7208105325698853
+      "date": "2021-06-14",
+      "prob": 0.7433541417121887
     },
     {
       "ticker": "BNB-USD",
       "company": "BNB",
       "sector": "crypto",
-      "date": "2021-02-27",
-      "prob": 0.7544868588447571
+      "date": "2021-03-27",
+      "prob": 0.6610166430473328
     },
     {
-      "ticker": "BP",
-      "company": "BP",
-      "sector": "energy",
-      "date": "2020-11-04",
-      "prob": 0.7300712466239929
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-03-24",
+      "prob": 0.7493294477462769
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2021-03-24",
+      "prob": 0.7736064195632935
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-03-10",
+      "prob": 0.6227717399597168
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-03-07",
+      "prob": 0.6944732069969177
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "sector": "crypto",
+      "date": "2021-03-07",
+      "prob": 0.5406020879745483
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2021-03-06",
+      "prob": 0.7439141273498535
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-03-04",
+      "prob": 0.8274326324462891
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "sector": "crypto",
+      "date": "2021-03-04",
+      "prob": 0.8090910911560059
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2021-03-03",
+      "prob": 0.7151108384132385
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-03-01",
+      "prob": 0.7713612914085388
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2021-02-28",
+      "prob": 0.8198553919792175
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-02-26",
+      "prob": 0.8385372757911682
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "sector": "crypto",
+      "date": "2021-02-26",
+      "prob": 0.7939268350601196
+    },
+    {
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "sector": "crypto",
+      "date": "2021-02-25",
+      "prob": 0.7513636350631714
+    },
+    {
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2021-02-25",
+      "prob": 0.7753723859786987
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-02-23",
+      "prob": 0.8093461394309998
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "sector": "crypto",
+      "date": "2021-02-01",
+      "prob": 0.7529599666595459
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "sector": "tech",
+      "date": "2021-01-29",
+      "prob": 0.7401440739631653
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "sector": "tech",
+      "date": "2021-01-29",
+      "prob": 0.7457738518714905
+    },
+    {
+      "ticker": "BTC-USD",
+      "company": "Bitcoin",
+      "sector": "crypto",
+      "date": "2021-01-23",
+      "prob": 0.7779524326324463
     }
   ]
 }
