@@ -1,1196 +1,3828 @@
 {
-  "generated": "2026-04-06 13:22",
-  "threshold": 0.6249999999999999,
+  "generated": "2026-04-06 14:51",
+  "threshold": 0.21499999999999997,
   "signals": [
     {
-      "ticker": "HAG.DE",
-      "company": "Hensoldt",
-      "sector": "industrial",
-      "date": "2026-04-02",
-      "prob": 0.6722503900527954
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-03-31",
+      "prob": 0.27699804306030273
     },
     {
-      "ticker": "LXS.DE",
-      "company": "LANXESS",
-      "sector": "materials",
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-03-31",
+      "prob": 0.27699804306030273
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
       "date": "2026-03-26",
-      "prob": 0.6772221922874451
+      "prob": 0.3086060583591461
     },
     {
-      "ticker": "SPG.DE",
-      "company": "Springer Nature",
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-03-26",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2026-03-26",
+      "prob": 0.4045731723308563
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2026-03-25",
+      "prob": 0.24922721087932587
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
       "sector": "media",
+      "date": "2026-03-23",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-03-21",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-03-21",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
       "date": "2026-03-18",
-      "prob": 0.6847440600395203
+      "prob": 0.17075113952159882
     },
     {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "materials",
-      "date": "2026-03-16",
-      "prob": 0.6838923692703247
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2026-03-11",
+      "prob": 0.23700757324695587
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2026-02-26",
-      "prob": 0.6738765835762024
-    },
-    {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "materials",
-      "date": "2026-02-11",
-      "prob": 0.6537358164787292
-    },
-    {
-      "ticker": "LYB",
-      "company": "LyondellBasell",
-      "sector": "materials",
-      "date": "2026-02-06",
-      "prob": 0.6266529560089111
-    },
-    {
-      "ticker": "RAA.DE",
-      "company": "Rational",
-      "sector": "industrial",
-      "date": "2026-02-06",
-      "prob": 0.6672782897949219
-    },
-    {
-      "ticker": "LXS.DE",
-      "company": "LANXESS",
-      "sector": "materials",
-      "date": "2026-02-05",
-      "prob": 0.6359117031097412
-    },
-    {
-      "ticker": "HAG.DE",
-      "company": "Hensoldt",
-      "sector": "industrial",
-      "date": "2026-01-06",
-      "prob": 0.6369003057479858
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "materials",
-      "date": "2025-12-09",
-      "prob": 0.6855944395065308
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2025-12-01",
-      "prob": 0.6787355542182922
-    },
-    {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "consumer",
-      "date": "2025-11-28",
-      "prob": 0.6787355542182922
-    },
-    {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "consumer",
-      "date": "2025-09-18",
-      "prob": 0.6787355542182922
-    },
-    {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "materials",
-      "date": "2025-09-17",
-      "prob": 0.6772221922874451
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2025-09-13",
-      "prob": 0.642768383026123
+      "date": "2026-03-11",
+      "prob": 0.3086060583591461
     },
     {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-03-06",
+      "prob": 0.3086060583591461
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-03-06",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
       "sector": "consumer",
+      "date": "2026-03-06",
+      "prob": 0.218983456492424
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-03-01",
+      "prob": 0.20932906866073608
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-03-01",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-02-24",
+      "prob": 0.21603885293006897
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-02-24",
+      "prob": 0.21603885293006897
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-02-19",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-02-19",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2026-02-17",
+      "prob": 0.3170875608921051
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-02-14",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-02-14",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-02-07",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-02-07",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2026-02-06",
+      "prob": 0.24169987440109253
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2026-02-04",
+      "prob": 0.2751159965991974
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-02-02",
+      "prob": 0.37723344564437866
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-02-02",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-01-28",
+      "prob": 0.20776085555553436
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-01-28",
+      "prob": 0.2881552577018738
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2026-01-23",
+      "prob": 0.22338654100894928
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-01-23",
+      "prob": 0.2881552577018738
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2026-01-19",
+      "prob": 0.29987454414367676
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-01-18",
+      "prob": 0.16201113164424896
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-01-13",
+      "prob": 0.22694259881973267
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-01-08",
+      "prob": 0.28624245524406433
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2026-01-02",
+      "prob": 0.35487326979637146
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2026-01-01",
+      "prob": 0.3086060583591461
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2025-12-31",
+      "prob": 0.26977354288101196
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-12-27",
+      "prob": 0.24456839263439178
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-12-22",
+      "prob": 0.31835049390792847
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "materials",
+      "date": "2025-12-22",
+      "prob": 0.32646721601486206
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-12-22",
+      "prob": 0.20000490546226501
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-12-17",
+      "prob": 0.26407986879348755
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2025-12-15",
+      "prob": 0.44616416096687317
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-12-12",
+      "prob": 0.17653888463974
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-12-07",
+      "prob": 0.32547733187675476
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-12-02",
+      "prob": 0.3397202789783478
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-11-23",
+      "prob": 0.23578102886676788
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-11-18",
+      "prob": 0.24555960297584534
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-11-17",
+      "prob": 0.24469532072544098
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-11-06",
+      "prob": 0.2244211584329605
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-11-05",
+      "prob": 0.2972562313079834
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2025-11-01",
+      "prob": 0.21818174421787262
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-10-30",
+      "prob": 0.253124862909317
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2025-10-25",
+      "prob": 0.15997523069381714
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2025-10-24",
+      "prob": 0.2290428876876831
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-10-22",
+      "prob": 0.2563445270061493
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2025-10-20",
+      "prob": 0.25856924057006836
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2025-10-17",
+      "prob": 0.5586998462677002
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-10-17",
+      "prob": 0.243882954120636
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-10-14",
+      "prob": 0.22934938967227936
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2025-10-11",
+      "prob": 0.2867980897426605
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2025-10-10",
+      "prob": 0.3330432176589966
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-10-03",
+      "prob": 0.3173295259475708
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2025-09-16",
+      "prob": 0.41251182556152344
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
       "date": "2025-09-09",
-      "prob": 0.675955057144165
+      "prob": 0.2269044816493988
     },
     {
       "ticker": "PUM.DE",
       "company": "PUMA",
       "sector": "consumer",
-      "date": "2025-08-26",
-      "prob": 0.6399418711662292
+      "date": "2025-08-19",
+      "prob": 0.29368212819099426
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2025-08-23",
-      "prob": 0.6912286281585693
+      "date": "2025-08-15",
+      "prob": 0.2990376353263855
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2025-08-10",
-      "prob": 0.6886917352676392
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "PUM.DE",
+      "company": "PUMA",
       "sector": "consumer",
-      "date": "2025-07-25",
-      "prob": 0.6862384676933289
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2025-07-10",
-      "prob": 0.6814397573471069
-    },
-    {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2025-07-09",
-      "prob": 0.6870239973068237
+      "date": "2025-08-12",
+      "prob": 0.31261855363845825
     },
     {
       "ticker": "GLJ.DE",
       "company": "GRENKE",
       "sector": "finance",
-      "date": "2025-06-30",
-      "prob": 0.6738765835762024
+      "date": "2025-08-05",
+      "prob": 0.3074330687522888
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2025-06-11",
-      "prob": 0.6434682011604309
-    },
-    {
-      "ticker": "HAG.DE",
-      "company": "Hensoldt",
-      "sector": "industrial",
-      "date": "2025-05-23",
-      "prob": 0.6494632363319397
-    },
-    {
-      "ticker": "HAG.DE",
-      "company": "Hensoldt",
-      "sector": "industrial",
-      "date": "2025-05-05",
-      "prob": 0.6421322822570801
-    },
-    {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2025-04-16",
-      "prob": 0.6404654383659363
-    },
-    {
-      "ticker": "HAG.DE",
-      "company": "Hensoldt",
-      "sector": "industrial",
-      "date": "2025-04-16",
-      "prob": 0.6444050073623657
-    },
-    {
-      "ticker": "BA",
-      "company": "Boeing",
-      "sector": "industrial",
-      "date": "2025-04-14",
-      "prob": 0.6618143320083618
-    },
-    {
-      "ticker": "BFSA.DE",
-      "company": "Befesa",
-      "sector": "materials",
-      "date": "2025-03-19",
-      "prob": 0.6258016228675842
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "materials",
-      "date": "2025-03-06",
-      "prob": 0.6936283707618713
-    },
-    {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2025-03-04",
-      "prob": 0.6961427927017212
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "materials",
-      "date": "2025-02-20",
-      "prob": 0.649607241153717
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "PUM.DE",
+      "company": "PUMA",
       "sector": "consumer",
-      "date": "2025-02-14",
-      "prob": 0.6834926605224609
+      "date": "2025-08-04",
+      "prob": 0.27859124541282654
     },
     {
-      "ticker": "JCI",
-      "company": "Johnson Controls",
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-07-31",
+      "prob": 0.2548564076423645
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-07-21",
+      "prob": 0.5366313457489014
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-07-14",
+      "prob": 0.5366313457489014
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-07-07",
+      "prob": 0.5079843997955322
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2025-06-20",
+      "prob": 0.26842162013053894
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "materials",
+      "date": "2025-06-20",
+      "prob": 0.3673033118247986
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-06-19",
+      "prob": 0.24966253340244293
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-06-18",
+      "prob": 0.12669993937015533
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-06-13",
+      "prob": 0.221631720662117
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-06-12",
+      "prob": 0.36722010374069214
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2025-06-10",
+      "prob": 0.25596940517425537
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-06-05",
+      "prob": 0.36608174443244934
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-06-03",
+      "prob": 0.28279244899749756
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2025-06-02",
+      "prob": 0.3137610852718353
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-05-29",
+      "prob": 0.2585503160953522
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-05-19",
+      "prob": 0.3314732611179352
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-05-02",
+      "prob": 0.4126177430152893
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-04-25",
+      "prob": 0.33826664090156555
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-04-17",
+      "prob": 0.3958779573440552
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
       "sector": "heat_pump",
-      "date": "2025-02-06",
-      "prob": 0.6861056089401245
+      "date": "2025-04-15",
+      "prob": 0.10750307142734528
     },
     {
-      "ticker": "GS",
-      "company": "Goldman Sachs",
-      "sector": "finance",
-      "date": "2025-01-21",
-      "prob": 0.6839365363121033
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2025-04-11",
+      "prob": 0.34517163038253784
     },
     {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
-      "date": "2024-12-09",
-      "prob": 0.6741871237754822
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-04-09",
+      "prob": 0.4319215714931488
     },
     {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2024-11-20",
-      "prob": 0.6772221922874451
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2025-04-08",
+      "prob": 0.27045774459838867
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "materials",
+      "date": "2025-04-08",
+      "prob": 0.3113463521003723
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2024-11-08",
-      "prob": 0.6814397573471069
+      "date": "2025-04-08",
+      "prob": 0.23676273226737976
     },
     {
-      "ticker": "GS",
-      "company": "Goldman Sachs",
-      "sector": "finance",
-      "date": "2024-11-07",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "materials",
-      "date": "2024-10-03",
-      "prob": 0.6684892177581787
-    },
-    {
-      "ticker": "CBK.DE",
-      "company": "Commerzbank",
-      "sector": "finance",
-      "date": "2024-09-12",
-      "prob": 0.6818689107894897
-    },
-    {
-      "ticker": "RAA.DE",
-      "company": "Rational",
-      "sector": "industrial",
-      "date": "2024-08-12",
-      "prob": 0.6945375800132751
-    },
-    {
-      "ticker": "LXS.DE",
-      "company": "LANXESS",
-      "sector": "materials",
-      "date": "2024-07-18",
-      "prob": 0.6894165873527527
-    },
-    {
-      "ticker": "SFQ.DE",
-      "company": "SAF-Holland",
-      "sector": "industrial",
-      "date": "2024-06-20",
-      "prob": 0.6910649538040161
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "PUM.DE",
+      "company": "PUMA",
       "sector": "consumer",
-      "date": "2024-05-15",
-      "prob": 0.6862384676933289
+      "date": "2025-04-04",
+      "prob": 0.3545690178871155
     },
     {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2024-04-05",
-      "prob": 0.6709058284759521
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-04-02",
+      "prob": 0.30218926072120667
     },
     {
-      "ticker": "LXS.DE",
-      "company": "LANXESS",
-      "sector": "materials",
-      "date": "2024-04-04",
-      "prob": 0.6636368036270142
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2024-03-12",
-      "prob": 0.675955057144165
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "materials",
-      "date": "2024-03-07",
-      "prob": 0.6918317675590515
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2024-02-15",
-      "prob": 0.6787355542182922
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2024-02-13",
-      "prob": 0.6250479817390442
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2024-01-11",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "LXS.DE",
-      "company": "LANXESS",
-      "sector": "materials",
-      "date": "2023-12-07",
-      "prob": 0.6280261278152466
-    },
-    {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2023-12-01",
-      "prob": 0.6478357911109924
-    },
-    {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
-      "date": "2023-11-20",
-      "prob": 0.6772221922874451
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2023-11-17",
-      "prob": 0.6787355542182922
-    },
-    {
-      "ticker": "BFSA.DE",
-      "company": "Befesa",
-      "sector": "materials",
-      "date": "2023-11-15",
-      "prob": 0.6772221922874451
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-03-26",
+      "prob": 0.378523588180542
     },
     {
       "ticker": "GLJ.DE",
       "company": "GRENKE",
       "sector": "finance",
-      "date": "2023-11-15",
-      "prob": 0.6797925233840942
+      "date": "2025-03-21",
+      "prob": 0.2874569296836853
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2023-11-06",
-      "prob": 0.6797925233840942
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-03-19",
+      "prob": 0.5114983916282654
     },
     {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-03-12",
+      "prob": 0.22239208221435547
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-03-05",
+      "prob": 0.30829769372940063
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-02-26",
+      "prob": 0.39652910828590393
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-02-26",
+      "prob": 0.29356127977371216
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-02-21",
+      "prob": 0.21872395277023315
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-02-19",
+      "prob": 0.5586684942245483
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-02-16",
+      "prob": 0.21532779932022095
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-02-11",
+      "prob": 0.6185102462768555
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
+      "date": "2025-02-11",
+      "prob": 0.2431858330965042
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-02-11",
+      "prob": 0.21743905544281006
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-02-03",
+      "prob": 0.285054087638855
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-01-28",
+      "prob": 0.22201505303382874
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2025-01-08",
+      "prob": 0.30946436524391174
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2025-01-07",
+      "prob": 0.2867980897426605
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2025-01-06",
+      "prob": 0.37714335322380066
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-12-31",
+      "prob": 0.31095823645591736
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-12-31",
+      "prob": 0.21872395277023315
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-12-25",
+      "prob": 0.3159290850162506
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-12-23",
+      "prob": 0.3602752387523651
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-12-19",
+      "prob": 0.24553082883358002
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-12-11",
+      "prob": 0.30296778678894043
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-12-11",
+      "prob": 0.23936353623867035
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-12-02",
+      "prob": 0.30075085163116455
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-11-22",
+      "prob": 0.22407189011573792
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2024-11-11",
+      "prob": 0.24763604998588562
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-11-11",
+      "prob": 0.2779453992843628
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2024-11-08",
+      "prob": 0.2344505339860916
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-11-05",
+      "prob": 0.2517092227935791
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2024-10-23",
+      "prob": 0.295157253742218
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-10-22",
+      "prob": 0.21708564460277557
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-10-17",
+      "prob": 0.2701434791088104
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-10-16",
+      "prob": 0.4401845633983612
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-09-19",
+      "prob": 0.23343250155448914
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-09-13",
+      "prob": 0.3191997706890106
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-09-13",
+      "prob": 0.45378178358078003
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-09-12",
+      "prob": 0.28563132882118225
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-09-03",
+      "prob": 0.1989428997039795
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-08-26",
+      "prob": 0.22148378193378448
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-08-19",
+      "prob": 0.3214859068393707
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2024-08-14",
+      "prob": 0.37029021978378296
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-08-12",
+      "prob": 0.49204421043395996
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2024-08-07",
+      "prob": 0.28822505474090576
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-08-07",
+      "prob": 0.2662428617477417
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-08-05",
+      "prob": 0.2868616282939911
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-07-30",
+      "prob": 0.3790249824523926
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-07-29",
+      "prob": 0.1215612143278122
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-07-23",
+      "prob": 0.2150634378194809
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2024-07-22",
+      "prob": 0.3063063323497772
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-06-01",
+      "prob": 0.2924630343914032
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-05-27",
+      "prob": 0.6102747321128845
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-04-16",
+      "prob": 0.23467212915420532
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-04-16",
+      "prob": 0.25669676065444946
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
+      "date": "2024-04-12",
+      "prob": 0.3963838219642639
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-04-04",
+      "prob": 0.2547989785671234
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2024-03-28",
+      "prob": 0.37625011801719666
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2024-03-21",
+      "prob": 0.32685962319374084
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2024-03-17",
+      "prob": 0.22426842153072357
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
       "sector": "consumer",
-      "date": "2023-11-03",
-      "prob": 0.6787355542182922
+      "date": "2024-03-15",
+      "prob": 0.34701552987098694
     },
     {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2024-03-08",
+      "prob": 0.4126252233982086
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-03-05",
+      "prob": 0.3985964357852936
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
+      "date": "2024-02-27",
+      "prob": 0.24703294038772583
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2024-02-23",
+      "prob": 0.4070553481578827
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2024-02-21",
+      "prob": 0.3049134612083435
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2024-02-08",
+      "prob": 0.23145008087158203
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2024-01-26",
+      "prob": 0.29953533411026
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2024-01-25",
+      "prob": 0.24065308272838593
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2024-01-18",
+      "prob": 0.44941702485084534
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2024-01-11",
+      "prob": 0.3567619025707245
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-12-14",
+      "prob": 0.31185296177864075
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2023-12-12",
+      "prob": 0.34859591722488403
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-12-07",
+      "prob": 0.43197333812713623
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2023-12-05",
+      "prob": 0.25877583026885986
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-11-30",
+      "prob": 0.27691084146499634
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2023-11-28",
+      "prob": 0.2944744825363159
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2023-10-31",
+      "prob": 0.2456987053155899
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2023-10-23",
+      "prob": 0.27872946858406067
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2023-10-14",
+      "prob": 0.24308909475803375
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2023-10-12",
+      "prob": 0.4164176881313324
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-08-15",
+      "prob": 0.22453856468200684
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2023-08-01",
+      "prob": 0.13820487260818481
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2023-07-27",
+      "prob": 0.26361003518104553
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
       "sector": "consumer",
       "date": "2023-06-30",
-      "prob": 0.6834926605224609
+      "prob": 0.16456738114356995
     },
     {
-      "ticker": "SFQ.DE",
-      "company": "SAF-Holland",
-      "sector": "industrial",
-      "date": "2023-04-03",
-      "prob": 0.6279811263084412
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-06-23",
+      "prob": 0.31436434388160706
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2023-03-14",
-      "prob": 0.6912286281585693
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-06-12",
+      "prob": 0.22396007180213928
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2023-02-18",
-      "prob": 0.6896089315414429
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-06-05",
+      "prob": 0.35759323835372925
     },
     {
-      "ticker": "CBK.DE",
-      "company": "Commerzbank",
-      "sector": "finance",
-      "date": "2023-02-17",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "AOS",
-      "company": "A.O. Smith",
-      "sector": "heat_pump",
-      "date": "2023-02-01",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "materials",
-      "date": "2023-01-12",
-      "prob": 0.6803455948829651
-    },
-    {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2023-01-06",
-      "prob": 0.6296583414077759
-    },
-    {
-      "ticker": "GLJ.DE",
-      "company": "GRENKE",
-      "sector": "finance",
-      "date": "2023-01-05",
-      "prob": 0.6770169138908386
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "materials",
-      "date": "2023-01-03",
-      "prob": 0.6258037686347961
-    },
-    {
-      "ticker": "CBK.DE",
-      "company": "Commerzbank",
-      "sector": "finance",
-      "date": "2022-12-21",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2022-11-16",
-      "prob": 0.6797925233840942
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2023-05-26",
+      "prob": 0.3969692587852478
     },
     {
       "ticker": "PUM.DE",
       "company": "PUMA",
       "sector": "consumer",
-      "date": "2022-11-15",
-      "prob": 0.6787355542182922
+      "date": "2023-05-26",
+      "prob": 0.22376114130020142
     },
     {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2022-11-11",
-      "prob": 0.6787355542182922
-    },
-    {
-      "ticker": "LII",
-      "company": "Lennox",
-      "sector": "heat_pump",
-      "date": "2022-11-11",
-      "prob": 0.6833592653274536
-    },
-    {
-      "ticker": "RAA.DE",
-      "company": "Rational",
-      "sector": "industrial",
-      "date": "2022-11-11",
-      "prob": 0.6586197018623352
-    },
-    {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2022-11-11",
-      "prob": 0.6772221922874451
-    },
-    {
-      "ticker": "APD",
-      "company": "Air Products",
-      "sector": "materials",
-      "date": "2022-11-08",
-      "prob": 0.6945375800132751
-    },
-    {
-      "ticker": "BA",
-      "company": "Boeing",
-      "sector": "industrial",
-      "date": "2022-11-04",
-      "prob": 0.6349913477897644
-    },
-    {
-      "ticker": "RAA.DE",
-      "company": "Rational",
-      "sector": "industrial",
-      "date": "2022-09-30",
-      "prob": 0.6772221922874451
-    },
-    {
-      "ticker": "CBK.DE",
-      "company": "Commerzbank",
-      "sector": "finance",
-      "date": "2022-09-14",
-      "prob": 0.6788338422775269
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2022-09-09",
-      "prob": 0.675955057144165
-    },
-    {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2022-08-25",
-      "prob": 0.6814397573471069
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2022-08-14",
-      "prob": 0.6310519576072693
+      "date": "2023-05-25",
+      "prob": 0.42342472076416016
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2022-07-31",
-      "prob": 0.6310519576072693
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-05-24",
+      "prob": 0.35548171401023865
     },
     {
-      "ticker": "SFQ.DE",
-      "company": "SAF-Holland",
-      "sector": "industrial",
-      "date": "2022-07-29",
-      "prob": 0.6772221922874451
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2023-05-19",
+      "prob": 0.24716727435588837
     },
     {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-05-17",
+      "prob": 0.34306663274765015
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-05-10",
+      "prob": 0.3870907425880432
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-05-02",
+      "prob": 0.168239563703537
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-04-25",
+      "prob": 0.1709473431110382
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-04-18",
+      "prob": 0.2844429910182953
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-04-11",
+      "prob": 0.37752750515937805
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-03-27",
+      "prob": 0.3700264096260071
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
       "sector": "consumer",
-      "date": "2022-07-25",
-      "prob": 0.6350129246711731
+      "date": "2023-03-27",
+      "prob": 0.22911441326141357
     },
     {
-      "ticker": "PNE3.DE",
-      "company": "PNE",
-      "sector": "energy",
-      "date": "2022-07-20",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2022-07-17",
-      "prob": 0.6738765835762024
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
       "sector": "consumer",
-      "date": "2022-06-01",
-      "prob": 0.637956440448761
-    },
-    {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2022-05-17",
-      "prob": 0.6722124814987183
-    },
-    {
-      "ticker": "SHW",
-      "company": "Sherwin-Williams",
-      "sector": "industrial",
-      "date": "2022-04-29",
-      "prob": 0.6332332491874695
-    },
-    {
-      "ticker": "PNE3.DE",
-      "company": "PNE",
-      "sector": "energy",
-      "date": "2022-04-01",
-      "prob": 0.6843228936195374
+      "date": "2023-03-27",
+      "prob": 0.4542527198791504
     },
     {
       "ticker": "GLJ.DE",
       "company": "GRENKE",
       "sector": "finance",
-      "date": "2022-03-18",
-      "prob": 0.6814397573471069
+      "date": "2023-03-23",
+      "prob": 0.3566855490207672
     },
     {
-      "ticker": "DB1.DE",
-      "company": "Deutsche B\u00f6rse",
-      "sector": "finance",
-      "date": "2022-03-16",
-      "prob": 0.6471902132034302
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-03-20",
+      "prob": 0.6286093592643738
     },
     {
-      "ticker": "CBK.DE",
-      "company": "Commerzbank",
-      "sector": "finance",
-      "date": "2022-03-15",
-      "prob": 0.6400492191314697
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2023-03-20",
+      "prob": 0.33042457699775696
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-03-20",
+      "prob": 0.6840136051177979
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2023-03-14",
+      "prob": 0.2859026789665222
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-03-13",
+      "prob": 0.6264035105705261
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
+      "date": "2023-03-08",
+      "prob": 0.3350543975830078
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-03-06",
+      "prob": 0.35444962978363037
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-02-27",
+      "prob": 0.28359994292259216
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-02-17",
+      "prob": 0.20099233090877533
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-02-10",
+      "prob": 0.43655478954315186
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-01-31",
+      "prob": 0.17432941496372223
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-01-27",
+      "prob": 0.23207451403141022
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2023-01-24",
+      "prob": 0.38533976674079895
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-01-24",
+      "prob": 0.2547544538974762
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2023-01-20",
+      "prob": 0.6644571423530579
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2023-01-17",
+      "prob": 0.2999507188796997
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2023-01-10",
+      "prob": 0.3211178183555603
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2023-01-05",
+      "prob": 0.31309059262275696
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2023-01-02",
+      "prob": 0.24913078546524048
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2023-01-02",
+      "prob": 0.2360588014125824
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-12-31",
+      "prob": 0.1493106335401535
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-12-31",
+      "prob": 0.31547272205352783
     },
     {
       "ticker": "PSM.DE",
       "company": "ProSieben",
       "sector": "media",
-      "date": "2022-03-15",
-      "prob": 0.6329611539840698
+      "date": "2022-12-28",
+      "prob": 0.286937415599823
     },
     {
-      "ticker": "TLX.DE",
-      "company": "Talanx",
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-12-27",
+      "prob": 0.2743854522705078
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-12-26",
+      "prob": 0.37664735317230225
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-12-26",
+      "prob": 0.25246623158454895
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-12-21",
+      "prob": 0.40044981241226196
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-12-21",
+      "prob": 0.3043927848339081
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2022-12-20",
+      "prob": 0.31082773208618164
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2022-12-19",
+      "prob": 0.22790586948394775
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-12-19",
+      "prob": 0.23104548454284668
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-12-19",
+      "prob": 0.3045000433921814
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-12-16",
+      "prob": 0.3839322626590729
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-12-16",
+      "prob": 0.28361403942108154
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-12-12",
+      "prob": 0.28617390990257263
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-12-11",
+      "prob": 0.22712038457393646
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2022-12-05",
+      "prob": 0.22635246813297272
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-12-05",
+      "prob": 0.36070719361305237
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-12-03",
+      "prob": 0.23449300229549408
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2022-12-02",
+      "prob": 0.43362462520599365
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-11-28",
+      "prob": 0.38994479179382324
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-11-23",
+      "prob": 0.1536330282688141
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-11-21",
+      "prob": 0.31594574451446533
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-11-20",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-11-18",
+      "prob": 0.2649381458759308
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-11-15",
+      "prob": 0.24820537865161896
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-11-10",
+      "prob": 0.22268590331077576
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-11-10",
+      "prob": 0.2655850648880005
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2022-11-09",
+      "prob": 0.2572799623012543
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-11-08",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-11-05",
+      "prob": 0.1680358499288559
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
+      "date": "2022-11-02",
+      "prob": 0.25511202216148376
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-11-01",
+      "prob": 0.2307664006948471
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-11-01",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-10-31",
+      "prob": 0.2589649260044098
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-10-26",
+      "prob": 0.18498948216438293
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2022-10-25",
+      "prob": 0.2572799623012543
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-10-25",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-10-22",
+      "prob": 0.23881374299526215
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-10-21",
+      "prob": 0.29981398582458496
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2022-10-18",
+      "prob": 0.2572799623012543
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-10-18",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-10-16",
+      "prob": 0.21600556373596191
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-10-15",
+      "prob": 0.35817185044288635
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "materials",
+      "date": "2022-10-14",
+      "prob": 0.30346617102622986
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-10-11",
+      "prob": 0.2307664006948471
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-10-10",
+      "prob": 0.2092573493719101
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2022-10-10",
+      "prob": 0.24272488057613373
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "materials",
+      "date": "2022-10-07",
+      "prob": 0.2795175611972809
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2022-10-04",
+      "prob": 0.3121386766433716
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-10-04",
+      "prob": 0.26046687364578247
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-10-04",
+      "prob": 0.2307664006948471
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-10-03",
+      "prob": 0.3000972270965576
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2022-09-30",
+      "prob": 0.2914879024028778
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2022-09-30",
+      "prob": 0.5143693089485168
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "materials",
+      "date": "2022-09-30",
+      "prob": 0.2969873249530792
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-09-29",
+      "prob": 0.20708006620407104
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-09-29",
+      "prob": 0.28863725066185
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-09-27",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-09-24",
+      "prob": 0.28372278809547424
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-09-24",
+      "prob": 0.227874293923378
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2022-09-23",
+      "prob": 0.6208136677742004
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-09-20",
+      "prob": 0.33038291335105896
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-09-19",
+      "prob": 0.3041192293167114
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2022-09-16",
+      "prob": 0.2961382567882538
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-09-14",
+      "prob": 0.29460209608078003
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-09-13",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-09-09",
+      "prob": 0.286388635635376
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-09-06",
+      "prob": 0.23897741734981537
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-09-04",
+      "prob": 0.2757931351661682
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-09-04",
+      "prob": 0.22227300703525543
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2022-09-01",
+      "prob": 0.43053916096687317
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-08-30",
+      "prob": 0.35926327109336853
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-08-30",
+      "prob": 0.28265711665153503
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2022-08-26",
+      "prob": 0.2704951763153076
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-08-25",
+      "prob": 0.3889777958393097
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2022-08-23",
+      "prob": 0.2191842943429947
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-08-23",
+      "prob": 0.24966253340244293
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2022-08-22",
+      "prob": 0.2597969174385071
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-08-20",
+      "prob": 0.2591105103492737
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-08-17",
+      "prob": 0.22422732412815094
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-08-17",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-08-08",
+      "prob": 0.28828132152557373
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-08-03",
+      "prob": 0.2601148188114166
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-08-03",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-08-02",
+      "prob": 0.2900255620479584
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
+      "date": "2022-08-02",
+      "prob": 0.3086060583591461
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-07-27",
+      "prob": 0.2712627053260803
+    },
+    {
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
+      "date": "2022-07-26",
+      "prob": 0.2795175611972809
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-07-26",
+      "prob": 0.21644939482212067
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-07-23",
+      "prob": 0.20726020634174347
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2022-07-14",
+      "prob": 0.23389454185962677
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-07-13",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2022-07-13",
+      "prob": 0.2572799623012543
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-07-13",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-07-13",
+      "prob": 0.2025642693042755
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-07-11",
+      "prob": 0.2934487462043762
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2022-07-08",
+      "prob": 0.242308109998703
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-07-08",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2022-07-06",
+      "prob": 0.2572799623012543
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-07-06",
+      "prob": 0.2307664006948471
+    },
+    {
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
+      "sector": "materials",
+      "date": "2022-07-05",
+      "prob": 0.2969873249530792
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-07-03",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-07-03",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2022-07-01",
+      "prob": 0.27139541506767273
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-06-29",
+      "prob": 0.2712627053260803
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-06-28",
+      "prob": 0.30014342069625854
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-06-28",
+      "prob": 0.3554568886756897
+    },
+    {
+      "ticker": "PAT.DE",
+      "company": "PATRIZIA",
+      "sector": "real_estate",
+      "date": "2022-06-27",
+      "prob": 0.24134406447410583
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-06-23",
+      "prob": 0.2548799216747284
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2022-06-23",
+      "prob": 0.24651341140270233
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-06-23",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-06-22",
+      "prob": 0.2180480808019638
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-06-18",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-06-18",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2022-06-15",
+      "prob": 0.29414045810699463
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-06-12",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-06-10",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-06-10",
+      "prob": 0.2180480808019638
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-06-07",
+      "prob": 0.285379558801651
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-06-05",
+      "prob": 0.2665148675441742
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-06-03",
+      "prob": 0.25475776195526123
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-05-31",
+      "prob": 0.25058475136756897
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-05-27",
+      "prob": 0.33389195799827576
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-05-27",
+      "prob": 0.2712627053260803
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-05-26",
+      "prob": 0.30434438586235046
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-05-21",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-05-17",
+      "prob": 0.2213076502084732
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-05-16",
+      "prob": 0.20715931057929993
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-05-12",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-05-12",
+      "prob": 0.2180480808019638
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-05-11",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-05-07",
+      "prob": 0.2186301350593567
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-05-06",
+      "prob": 0.2334803193807602
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-05-05",
+      "prob": 0.16770225763320923
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-05-02",
+      "prob": 0.23634915053844452
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-05-01",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-04-28",
+      "prob": 0.2967306971549988
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-04-26",
+      "prob": 0.2907354533672333
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-04-21",
+      "prob": 0.3617638945579529
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-04-16",
+      "prob": 0.2760656774044037
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-04-13",
+      "prob": 0.25607359409332275
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-04-11",
+      "prob": 0.28157830238342285
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-04-06",
+      "prob": 0.3709213137626648
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2022-03-24",
+      "prob": 0.21519425511360168
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-03-16",
+      "prob": 0.26039379835128784
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
       "sector": "finance",
       "date": "2022-03-15",
-      "prob": 0.6702902317047119
+      "prob": 0.198872908949852
     },
     {
-      "ticker": "LXS.DE",
-      "company": "LANXESS",
-      "sector": "materials",
-      "date": "2022-03-14",
-      "prob": 0.6772221922874451
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-03-13",
+      "prob": 0.23578102886676788
     },
     {
-      "ticker": "SIE.DE",
-      "company": "Siemens",
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-03-13",
+      "prob": 0.2757931351661682
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-03-09",
+      "prob": 0.18601171672344208
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2022-03-08",
+      "prob": 0.2620616555213928
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-03-08",
+      "prob": 0.3334897458553314
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2022-03-08",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2022-03-08",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
       "sector": "industrial",
-      "date": "2022-03-14",
-      "prob": 0.6299237608909607
+      "date": "2022-03-08",
+      "prob": 0.31045278906822205
     },
     {
-      "ticker": "HAG.DE",
-      "company": "Hensoldt",
-      "sector": "industrial",
-      "date": "2022-03-11",
-      "prob": 0.6882274746894836
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2022-03-07",
+      "prob": 0.3053668141365051
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "date": "2022-03-07",
+      "prob": 0.2712627053260803
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-03-06",
+      "prob": 0.2341168224811554
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-03-02",
+      "prob": 0.23878732323646545
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
       "date": "2022-03-01",
-      "prob": 0.6733211278915405
+      "prob": 0.23706062138080597
     },
     {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
       "date": "2022-03-01",
-      "prob": 0.6346086263656616
+      "prob": 0.22487111389636993
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2022-02-08",
-      "prob": 0.6738765835762024
+      "date": "2022-03-01",
+      "prob": 0.3447224795818329
     },
     {
-      "ticker": "F",
-      "company": "Ford",
-      "sector": "automotive",
-      "date": "2022-01-05",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2021-12-01",
-      "prob": 0.6912286281585693
+      "date": "2022-02-28",
+      "prob": 0.3123771846294403
     },
     {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2021-11-17",
-      "prob": 0.6910649538040161
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2022-02-28",
+      "prob": 0.2772046625614166
     },
     {
-      "ticker": "F",
-      "company": "Ford",
-      "sector": "automotive",
-      "date": "2021-11-02",
-      "prob": 0.6859575510025024
-    },
-    {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2021-11-01",
-      "prob": 0.6691189408302307
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2021-10-17",
-      "prob": 0.6280248165130615
+      "date": "2022-02-23",
+      "prob": 0.24584254622459412
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-02-23",
+      "prob": 0.2290998101234436
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2021-10-03",
-      "prob": 0.6912286281585693
+      "date": "2022-02-22",
+      "prob": 0.2334803193807602
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2021-09-09",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2021-09-01",
-      "prob": 0.6912286281585693
+      "date": "2022-02-18",
+      "prob": 0.3123771846294403
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2021-08-04",
-      "prob": 0.6251162886619568
+      "date": "2022-02-17",
+      "prob": 0.37514036893844604
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-02-12",
+      "prob": 0.2512619197368622
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-02-05",
+      "prob": 0.24104931950569153
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-02-02",
+      "prob": 0.2351076751947403
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-01-31",
+      "prob": 0.2919673025608063
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-01-28",
+      "prob": 0.21603885293006897
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-01-26",
+      "prob": 0.2938460409641266
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-01-23",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2022-01-21",
+      "prob": 0.2919673025608063
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-01-18",
+      "prob": 0.23104830086231232
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-01-13",
+      "prob": 0.40044981241226196
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2022-01-11",
+      "prob": 0.24487093091011047
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-01-08",
+      "prob": 0.23578102886676788
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2022-01-03",
+      "prob": 0.31309059262275696
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-12-29",
+      "prob": 0.40044981241226196
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-12-24",
+      "prob": 0.2723550498485565
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-12-18",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-12-13",
+      "prob": 0.31309059262275696
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-12-08",
+      "prob": 0.40044981241226196
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-12-03",
+      "prob": 0.3390176594257355
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-11-28",
+      "prob": 0.20497190952301025
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-11-23",
+      "prob": 0.21298830211162567
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-11-18",
+      "prob": 0.2210475504398346
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-11-12",
+      "prob": 0.359208881855011
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-10-28",
+      "prob": 0.2912754416465759
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-10-23",
+      "prob": 0.17158722877502441
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-10-18",
+      "prob": 0.2614135146141052
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2021-10-06",
+      "prob": 0.228204607963562
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-10-02",
+      "prob": 0.21926149725914001
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-10-01",
+      "prob": 0.1019880622625351
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-09-27",
+      "prob": 0.2309127151966095
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-09-26",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-09-22",
+      "prob": 0.21900925040245056
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-09-21",
+      "prob": 0.31309059262275696
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-09-17",
+      "prob": 0.31563302874565125
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-09-10",
+      "prob": 0.248173326253891
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-08-24",
+      "prob": 0.08025545626878738
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-08-17",
+      "prob": 0.27199748158454895
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-08-03",
+      "prob": 0.3155217468738556
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2021-07-30",
+      "prob": 0.258480429649353
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
       "date": "2021-07-25",
-      "prob": 0.6738765835762024
+      "prob": 0.20182347297668457
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2021-07-01",
-      "prob": 0.6738765835762024
+      "date": "2021-07-23",
+      "prob": 0.31309059262275696
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-07-20",
+      "prob": 0.31309059262275696
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-07-18",
+      "prob": 0.23578102886676788
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-07-15",
+      "prob": 0.21900925040245056
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-07-13",
+      "prob": 0.2824168801307678
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-07-13",
+      "prob": 0.31309059262275696
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-07-10",
+      "prob": 0.21923871338367462
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-07-08",
+      "prob": 0.31309059262275696
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-07-03",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-06-29",
+      "prob": 0.3004809319972992
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
       "date": "2021-06-28",
-      "prob": 0.6604341864585876
+      "prob": 0.2919673025608063
     },
     {
-      "ticker": "AIR.DE",
-      "company": "Airbus",
-      "sector": "industrial",
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-06-23",
+      "prob": 0.2810859680175781
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-06-22",
+      "prob": 0.31877025961875916
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-06-15",
+      "prob": 0.41014599800109863
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-06-14",
+      "prob": 0.31867536902427673
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-06-09",
+      "prob": 0.2691633701324463
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-06-04",
+      "prob": 0.33366820216178894
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
       "date": "2021-06-01",
-      "prob": 0.6287444829940796
+      "prob": 0.30218610167503357
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2021-05-27",
-      "prob": 0.6814397573471069
+      "date": "2021-06-01",
+      "prob": 0.3485868573188782
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-05-30",
+      "prob": 0.2764224112033844
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-05-25",
+      "prob": 0.25516101717948914
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-05-25",
+      "prob": 0.25516101717948914
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
       "date": "2021-05-20",
-      "prob": 0.6705546379089355
+      "prob": 0.25516101717948914
     },
     {
-      "ticker": "RAA.DE",
-      "company": "Rational",
-      "sector": "industrial",
-      "date": "2021-05-07",
-      "prob": 0.6484687328338623
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2021-04-28",
-      "prob": 0.6912286281585693
+      "date": "2021-05-18",
+      "prob": 0.34600120782852173
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-05-17",
+      "prob": 0.23898956179618835
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-05-13",
+      "prob": 0.3159290850162506
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-05-10",
+      "prob": 0.2601771652698517
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-05-10",
+      "prob": 0.19518649578094482
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-05-08",
+      "prob": 0.2401985079050064
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-05-05",
+      "prob": 0.33795851469039917
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-05-03",
+      "prob": 0.3173046112060547
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-04-30",
+      "prob": 0.2539680600166321
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
       "date": "2021-04-27",
-      "prob": 0.6628678441047668
+      "prob": 0.20078785717487335
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2021-04-14",
-      "prob": 0.6912286281585693
+      "date": "2021-04-25",
+      "prob": 0.2764224112033844
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2021-03-31",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2021-03-30",
-      "prob": 0.6805210709571838
+      "date": "2021-04-22",
+      "prob": 0.19889046251773834
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2021-03-08",
-      "prob": 0.6912286281585693
+      "date": "2021-04-17",
+      "prob": 0.21532779932022095
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2021-02-19",
-      "prob": 0.6805210709571838
-    },
-    {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2021-02-15",
-      "prob": 0.6288638710975647
-    },
-    {
-      "ticker": "SPG",
-      "company": "Simon Property",
-      "sector": "real_estate",
-      "date": "2021-02-10",
-      "prob": 0.6847440600395203
-    },
-    {
-      "ticker": "AIR.DE",
-      "company": "Airbus",
-      "sector": "industrial",
-      "date": "2021-02-08",
-      "prob": 0.6847440600395203
-    },
-    {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2021-02-05",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "MBG.DE",
-      "company": "Mercedes-Benz",
-      "sector": "automotive",
-      "date": "2021-02-04",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
+      "date": "2021-04-17",
+      "prob": 0.21532779932022095
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-04-13",
+      "prob": 0.2712627053260803
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
+      "date": "2021-03-25",
+      "prob": 0.2192557156085968
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2021-03-12",
+      "prob": 0.23654325306415558
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-03-10",
+      "prob": 0.25440698862075806
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-03-05",
+      "prob": 0.2209276705980301
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-02-24",
+      "prob": 0.26917847990989685
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2021-02-23",
+      "prob": 0.2712627053260803
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-02-17",
+      "prob": 0.2884877920150757
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-02-09",
+      "prob": 0.34384316205978394
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
       "date": "2021-02-03",
-      "prob": 0.6912286281585693
+      "prob": 0.2267151176929474
     },
     {
-      "ticker": "RAA.DE",
-      "company": "Rational",
-      "sector": "industrial",
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2021-01-29",
+      "prob": 0.21903589367866516
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-01-28",
+      "prob": 0.20146261155605316
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-01-27",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-01-23",
+      "prob": 0.16478034853935242
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
       "date": "2021-01-22",
-      "prob": 0.6945375800132751
+      "prob": 0.29936638474464417
     },
     {
-      "ticker": "SPG",
-      "company": "Simon Property",
-      "sector": "real_estate",
-      "date": "2021-01-19",
-      "prob": 0.676669716835022
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2021-01-22",
+      "prob": 0.24378083646297455
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2021-01-18",
-      "prob": 0.6805210709571838
+      "date": "2021-01-22",
+      "prob": 0.31309059262275696
     },
     {
-      "ticker": "F",
-      "company": "Ford",
-      "sector": "automotive",
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-01-17",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
       "date": "2021-01-13",
-      "prob": 0.6912286281585693
+      "prob": 0.268473356962204
     },
     {
-      "ticker": "BP",
-      "company": "BP",
-      "sector": "energy",
-      "date": "2021-01-08",
-      "prob": 0.6814397573471069
-    },
-    {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2020-12-29",
-      "prob": 0.6912286281585693
+      "date": "2021-01-12",
+      "prob": 0.3076653480529785
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2021-01-08",
+      "prob": 0.27379846572875977
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-01-07",
+      "prob": 0.24730032682418823
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-01-02",
+      "prob": 0.22377455234527588
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-12-28",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-12-22",
+      "prob": 0.22280427813529968
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
       "date": "2020-12-17",
-      "prob": 0.6912286281585693
+      "prob": 0.2867980897426605
     },
     {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
-      "date": "2020-12-15",
-      "prob": 0.6746954321861267
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-12-11",
+      "prob": 0.23709723353385925
     },
     {
-      "ticker": "BA",
-      "company": "Boeing",
-      "sector": "industrial",
-      "date": "2020-12-04",
-      "prob": 0.6673150658607483
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2020-12-10",
+      "prob": 0.27337679266929626
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "XRP-USD",
+      "company": "XRP",
       "sector": "crypto",
-      "date": "2020-12-02",
-      "prob": 0.6912286281585693
+      "date": "2020-12-09",
+      "prob": 0.21532779932022095
     },
     {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2020-11-25",
-      "prob": 0.6772221922874451
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-12-04",
+      "prob": 0.34685415029525757
     },
     {
-      "ticker": "SPG",
-      "company": "Simon Property",
-      "sector": "real_estate",
-      "date": "2020-11-24",
-      "prob": 0.6772221922874451
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-12-04",
+      "prob": 0.2355806827545166
     },
     {
-      "ticker": "HNR1.DE",
-      "company": "Hannover R\u00fcck",
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2020-12-03",
+      "prob": 0.3573365807533264
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-11-27",
+      "prob": 0.2712627053260803
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2020-11-19",
+      "prob": 0.23734110593795776
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
       "sector": "finance",
       "date": "2020-11-12",
-      "prob": 0.6306917071342468
+      "prob": 0.3053668141365051
     },
     {
-      "ticker": "LYB",
-      "company": "LyondellBasell",
-      "sector": "materials",
-      "date": "2020-11-11",
-      "prob": 0.6945375800132751
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "tech",
+      "date": "2020-11-12",
+      "prob": 0.22266000509262085
     },
     {
-      "ticker": "AXP",
-      "company": "AmEx",
-      "sector": "finance",
-      "date": "2020-11-10",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "BA",
-      "company": "Boeing",
-      "sector": "industrial",
-      "date": "2020-11-10",
-      "prob": 0.6772221922874451
-    },
-    {
-      "ticker": "CBK.DE",
-      "company": "Commerzbank",
-      "sector": "finance",
-      "date": "2020-11-10",
-      "prob": 0.6814397573471069
-    },
-    {
-      "ticker": "SIE.DE",
-      "company": "Siemens",
-      "sector": "industrial",
-      "date": "2020-11-10",
-      "prob": 0.6780230402946472
-    },
-    {
-      "ticker": "SPG",
-      "company": "Simon Property",
-      "sector": "real_estate",
-      "date": "2020-11-10",
-      "prob": 0.6772221922874451
-    },
-    {
-      "ticker": "TKA.DE",
-      "company": "Thyssenkrupp",
-      "sector": "industrial",
-      "date": "2020-11-10",
-      "prob": 0.6772221922874451
-    },
-    {
-      "ticker": "MBG.DE",
-      "company": "Mercedes-Benz",
-      "sector": "automotive",
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
       "date": "2020-11-09",
-      "prob": 0.6896089315414429
+      "prob": 0.05657494068145752
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2020-11-07",
-      "prob": 0.6912286281585693
-    },
-    {
-      "ticker": "DHER.DE",
-      "company": "Delivery Hero",
-      "sector": "consumer",
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "tech",
       "date": "2020-11-06",
-      "prob": 0.6912286281585693
+      "prob": 0.2552371919155121
     },
     {
-      "ticker": "LII",
-      "company": "Lennox",
-      "sector": "heat_pump",
-      "date": "2020-11-06",
-      "prob": 0.6859575510025024
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-11-03",
+      "prob": 0.3053668141365051
     },
     {
-      "ticker": "LIN",
-      "company": "Linde",
-      "sector": "materials",
-      "date": "2020-11-06",
-      "prob": 0.6883422136306763
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2020-11-02",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2020-11-02",
+      "prob": 0.26024967432022095
     },
     {
       "ticker": "PSM.DE",
       "company": "ProSieben",
       "sector": "media",
-      "date": "2020-11-06",
-      "prob": 0.673917829990387
+      "date": "2020-10-30",
+      "prob": 0.33332255482673645
     },
     {
-      "ticker": "AIR.DE",
-      "company": "Airbus",
-      "sector": "industrial",
-      "date": "2020-11-05",
-      "prob": 0.6772221922874451
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2020-10-29",
+      "prob": 0.27859658002853394
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
-      "date": "2020-11-05",
-      "prob": 0.6734890341758728
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-10-27",
+      "prob": 0.2307664006948471
     },
     {
-      "ticker": "TRV",
-      "company": "Travelers",
-      "sector": "industrial",
-      "date": "2020-10-22",
-      "prob": 0.6945375800132751
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2020-10-26",
+      "prob": 0.3053668141365051
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "FRE.DE",
+      "company": "Fresenius",
+      "sector": "healthcare",
+      "date": "2020-10-26",
+      "prob": 0.31450873613357544
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "consumer",
+      "date": "2020-10-26",
+      "prob": 0.23122891783714294
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-10-20",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "BAYN.DE",
+      "company": "Bayer",
+      "sector": "healthcare",
+      "date": "2020-10-19",
+      "prob": 0.3053668141365051
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
+      "date": "2020-10-18",
+      "prob": 0.2825600802898407
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-10-13",
+      "prob": 0.28760573267936707
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
       "date": "2020-10-12",
-      "prob": 0.6912286281585693
+      "prob": 0.2563697099685669
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2020-10-07",
+      "prob": 0.24809007346630096
     },
     {
       "ticker": "GLJ.DE",
       "company": "GRENKE",
       "sector": "finance",
       "date": "2020-10-06",
-      "prob": 0.6738765835762024
+      "prob": 0.21798552572727203
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2020-09-12",
-      "prob": 0.6912286281585693
+      "date": "2020-10-02",
+      "prob": 0.2736915946006775
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
-      "sector": "crypto",
-      "date": "2020-08-31",
-      "prob": 0.6481994390487671
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-09-28",
+      "prob": 0.2307664006948471
     },
     {
-      "ticker": "ETH-USD",
-      "company": "Ethereum",
+      "ticker": "BNB-USD",
+      "company": "BNB",
       "sector": "crypto",
-      "date": "2020-08-14",
-      "prob": 0.6912286281585693
+      "date": "2020-09-27",
+      "prob": 0.21532779932022095
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2020-09-21",
+      "prob": 0.13377229869365692
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2020-09-16",
+      "prob": 0.22426842153072357
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-09-11",
+      "prob": 0.28488197922706604
+    },
+    {
+      "ticker": "PSM.DE",
+      "company": "ProSieben",
+      "sector": "media",
+      "date": "2020-09-09",
+      "prob": 0.3353133201599121
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-09-04",
+      "prob": 0.19122213125228882
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-08-28",
+      "prob": 0.4050218164920807
+    },
+    {
+      "ticker": "AALB.AS",
+      "company": "Aalberts",
+      "sector": "heat_pump",
+      "date": "2020-08-24",
+      "prob": 0.2399117648601532
+    },
+    {
+      "ticker": "GLJ.DE",
+      "company": "GRENKE",
+      "sector": "finance",
+      "date": "2020-08-21",
+      "prob": 0.24361930787563324
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-07-19",
+      "prob": 0.23299969732761383
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-07-14",
+      "prob": 0.25268054008483887
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-07-07",
+      "prob": 0.35817185044288635
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2020-07-05",
+      "prob": 0.2757931351661682
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-07-02",
+      "prob": 0.2812100648880005
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2020-06-30",
+      "prob": 0.2757931351661682
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-06-27",
+      "prob": 0.3013766407966614
+    },
+    {
+      "ticker": "BNB-USD",
+      "company": "BNB",
+      "sector": "crypto",
+      "date": "2020-06-25",
+      "prob": 0.25478246808052063
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-06-22",
+      "prob": 0.34228166937828064
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-06-17",
+      "prob": 0.3322092890739441
+    },
+    {
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2020-06-12",
+      "prob": 0.3851155638694763
     }
   ]
 }
