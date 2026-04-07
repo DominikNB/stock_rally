@@ -1,303 +1,141 @@
 {
-  "generated": "2026-04-07 15:59",
-  "threshold": 0.7949999999999999,
+  "generated": "2026-04-07 19:42",
+  "threshold": 0.7899999999999999,
   "signals": [
     {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
-      "date": "2026-03-24",
-      "prob": 0.8977097272872925
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "sector": "energy",
+      "date": "2023-10-04",
+      "prob": 0.8221542835235596
     },
     {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2025-11-22",
-      "prob": 0.8596906661987305
-    },
-    {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "consumer",
-      "date": "2025-04-09",
-      "prob": 0.8091050982475281
-    },
-    {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "consumer",
-      "date": "2025-03-14",
-      "prob": 0.917341947555542
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "date": "2024-08-08",
-      "prob": 0.8198651671409607
-    },
-    {
-      "ticker": "O",
-      "company": "Realty Income",
-      "sector": "real_estate",
-      "date": "2022-10-20",
-      "prob": 0.8121436834335327
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2022-06-19",
-      "prob": 0.8985766172409058
-    },
-    {
-      "ticker": "AALB.AS",
-      "company": "Aalberts",
-      "sector": "heat_pump",
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "sector": "finance",
       "date": "2022-03-08",
-      "prob": 0.8208498954772949
+      "prob": 0.8330909609794617
     },
     {
-      "ticker": "GLJ.DE",
-      "company": "GRENKE",
-      "sector": "finance",
-      "date": "2022-03-07",
-      "prob": 0.8969302177429199
+      "ticker": "SOL-USD",
+      "company": "Solana",
+      "sector": "crypto",
+      "date": "2022-01-25",
+      "prob": 0.876502275466919
     },
     {
-      "ticker": "JST.DE",
-      "company": "JOST Werke",
+      "ticker": "XRP-USD",
+      "company": "XRP",
+      "sector": "crypto",
+      "date": "2021-07-21",
+      "prob": 0.8599371910095215
+    },
+    {
+      "ticker": "EUZ.DE",
+      "company": "Eckert & Ziegler",
+      "sector": "healthcare",
+      "date": "2020-03-23",
+      "prob": 0.876319944858551
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
       "sector": "industrial",
-      "date": "2022-03-07",
-      "prob": 0.9304348230361938
-    },
-    {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
-      "date": "2022-03-07",
-      "prob": 0.8689418435096741
-    },
-    {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "consumer",
-      "date": "2022-03-07",
-      "prob": 0.9231003522872925
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2022-01-23",
-      "prob": 0.8388116359710693
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-05-31",
-      "prob": 0.8121263980865479
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2021-05-23",
-      "prob": 0.8052570223808289
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "date": "2020-11-02",
-      "prob": 0.8026356101036072
-    },
-    {
-      "ticker": "GLJ.DE",
-      "company": "GRENKE",
-      "sector": "finance",
-      "date": "2020-10-28",
-      "prob": 0.8810081481933594
-    },
-    {
-      "ticker": "GLJ.DE",
-      "company": "GRENKE",
-      "sector": "finance",
-      "date": "2020-09-15",
-      "prob": 0.8852021098136902
-    },
-    {
-      "ticker": "AALB.AS",
-      "company": "Aalberts",
-      "sector": "heat_pump",
-      "date": "2020-05-18",
-      "prob": 0.7975608706474304
-    },
-    {
-      "ticker": "GLJ.DE",
-      "company": "GRENKE",
-      "sector": "finance",
       "date": "2020-03-20",
-      "prob": 0.8111456632614136
+      "prob": 0.8169336318969727
     },
     {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
-      "date": "2020-03-20",
-      "prob": 0.8631079792976379
-    },
-    {
-      "ticker": "AALB.AS",
-      "company": "Aalberts",
-      "sector": "heat_pump",
-      "date": "2020-03-19",
-      "prob": 0.9000053405761719
-    },
-    {
-      "ticker": "JST.DE",
-      "company": "JOST Werke",
-      "sector": "industrial",
-      "date": "2020-03-19",
-      "prob": 0.8616534471511841
-    },
-    {
-      "ticker": "O",
-      "company": "Realty Income",
-      "sector": "real_estate",
-      "date": "2020-03-18",
-      "prob": 0.804375171661377
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2020-03-15",
-      "prob": 0.9053525328636169
-    },
-    {
-      "ticker": "GLJ.DE",
-      "company": "GRENKE",
-      "sector": "finance",
-      "date": "2020-03-11",
-      "prob": 0.7979192733764648
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
+      "ticker": "ELG.DE",
+      "company": "Elmos Semiconductor",
       "sector": "tech",
-      "date": "2020-03-11",
-      "prob": 0.8473688960075378
+      "date": "2020-03-19",
+      "prob": 0.8486812114715576
     },
     {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "date": "2020-03-11",
-      "prob": 0.8960505127906799
+      "ticker": "CBK.DE",
+      "company": "Commerzbank",
+      "sector": "finance",
+      "date": "2020-03-17",
+      "prob": 0.8817245960235596
     },
     {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
-      "date": "2020-03-11",
-      "prob": 0.8377286791801453
+      "ticker": "COK.DE",
+      "company": "CANCOM",
+      "sector": "tech",
+      "date": "2020-03-16",
+      "prob": 0.8153443932533264
     },
     {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "consumer",
-      "date": "2020-03-11",
-      "prob": 0.8056092262268066
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
+      "sector": "crypto",
+      "date": "2020-03-14",
+      "prob": 0.8329271078109741
+    },
+    {
+      "ticker": "AIR.DE",
+      "company": "Airbus",
+      "sector": "industrial",
+      "date": "2020-03-12",
+      "prob": 0.8738017678260803
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "sector": "tech",
+      "date": "2020-03-12",
+      "prob": 0.8835055828094482
+    },
+    {
+      "ticker": "DBK.DE",
+      "company": "Deutsche Bank",
+      "sector": "finance",
+      "date": "2020-03-12",
+      "prob": 0.9064961075782776
+    },
+    {
+      "ticker": "RWE.DE",
+      "company": "RWE",
+      "sector": "energy",
+      "date": "2020-03-12",
+      "prob": 0.838699460029602
     },
     {
       "ticker": "AALB.AS",
       "company": "Aalberts",
       "sector": "heat_pump",
-      "date": "2020-03-10",
-      "prob": 0.8727394342422485
+      "date": "2020-03-11",
+      "prob": 0.83864825963974
     },
     {
-      "ticker": "JST.DE",
-      "company": "JOST Werke",
-      "sector": "industrial",
-      "date": "2020-03-10",
-      "prob": 0.9237219095230103
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
+      "ticker": "ADA-USD",
+      "company": "Cardano",
       "sector": "crypto",
-      "date": "2019-11-24",
-      "prob": 0.8002692461013794
+      "date": "2019-02-07",
+      "prob": 0.8186269402503967
     },
     {
-      "ticker": "BNB-USD",
-      "company": "BNB",
+      "ticker": "ADA-USD",
+      "company": "Cardano",
       "sector": "crypto",
-      "date": "2019-09-25",
-      "prob": 0.9303526878356934
+      "date": "2019-01-29",
+      "prob": 0.9246413707733154
     },
     {
-      "ticker": "BNB-USD",
-      "company": "BNB",
+      "ticker": "ETH-USD",
+      "company": "Ethereum",
       "sector": "crypto",
-      "date": "2019-09-01",
-      "prob": 0.844328761100769
+      "date": "2019-01-26",
+      "prob": 0.8032638430595398
     },
     {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "date": "2018-12-27",
-      "prob": 0.8238216638565063
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
+      "ticker": "ADA-USD",
+      "company": "Cardano",
       "sector": "crypto",
-      "date": "2018-11-26",
-      "prob": 0.9229066967964172
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2018-11-19",
-      "prob": 0.9258604645729065
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "date": "2018-10-26",
-      "prob": 0.8779979944229126
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2018-08-15",
-      "prob": 0.8605442047119141
+      "date": "2019-01-14",
+      "prob": 0.8906443119049072
     }
   ],
-  "signals_holdout_final": [
-    {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
-      "date": "2026-03-24",
-      "prob": 0.8977097272872925
-    },
-    {
-      "ticker": "BNB-USD",
-      "company": "BNB",
-      "sector": "crypto",
-      "date": "2025-11-22",
-      "prob": 0.8596906661987305
-    }
-  ],
+  "signals_holdout_final": [],
   "note": "signals_holdout_final = nur FINAL-Zeitfenster (OOS). signals = volle Historie inkl. In-Sample."
 }
