@@ -1,12 +1,16 @@
 """
-Kerndichteschätzung (KDE) der Forward-Renditen aus data/meta_holdout_signals.csv.
+Kerndichteschätzung (KDE) der Forward-Renditen aus data/master_complete.csv (Fallback: meta_holdout_signals.csv).
 
-python plot_holdout_returns_kde.py
+python -m holdout.plot_holdout_returns_kde
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
+_root = Path(__file__).resolve().parents[1]
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
 
 import matplotlib
 
@@ -16,8 +20,10 @@ import numpy as np
 import pandas as pd
 from scipy.stats import gaussian_kde
 
-ROOT = Path(__file__).resolve().parent
-CSV_PATH = ROOT / "data" / "meta_holdout_signals.csv"
+ROOT = Path(__file__).resolve().parents[1]
+CSV_PATH = ROOT / "data" / "master_complete.csv"
+if not CSV_PATH.is_file():
+    CSV_PATH = ROOT / "data" / "meta_holdout_signals.csv"
 OUT_PATH = ROOT / "figures" / "holdout_returns_kde.png"
 HORIZONS = (2, 4, 6, 8, 10)
 

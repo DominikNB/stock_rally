@@ -1,6 +1,6 @@
 """
 Persist / load Meta-Scoring bundle (base models, meta_clf, threshold, FEAT_COLS, filters).
-Used by stock_rally_v10.ipynb Cell 2 and Cell 19; import works without running Cell 2 first.
+Used by stock_rally_v10.ipynb (``save_scoring_artifacts`` aus Cell 2; automatischer Aufruf nach Phase 5 in Cell 14).
 """
 from __future__ import annotations
 
@@ -12,10 +12,32 @@ import joblib
 import numpy as np
 
 
+def _max_date_iso_from_threshold_df(df: Any) -> str | None:
+    """Letzter Kalendertag der THRESHOLD-Stichprobe (für Kalibrierung von ``best_threshold``)."""
+    if df is None or not hasattr(df, "columns"):
+        return None
+    cols = getattr(df, "columns", None)
+    if cols is None or "Date" not in cols:
+        return None
+    try:
+        import pandas as pd
+
+        return str(pd.to_datetime(df["Date"]).max().date())
+    except Exception:
+        return None
+
+
 def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None) -> Path:
     """Build bundle from notebook namespace ``g`` and joblib-dump to ``path``."""
     path = Path(path or g.get("SCORING_ARTIFACT_PATH") or Path("models") / "scoring_artifacts.joblib")
     path.parent.mkdir(parents=True, exist_ok=True)
+    _thr_end = g.get("threshold_calibration_end_date")
+    if _thr_end is None:
+        _thr_end = _max_date_iso_from_threshold_df(g.get("df_threshold"))
+    if isinstance(_thr_end, str) and len(_thr_end) >= 10:
+        g["threshold_calibration_end_date"] = _thr_end[:10]
+    else:
+        g["threshold_calibration_end_date"] = _thr_end
     bundle = {
         "base_models": g["base_models"],
         "meta_clf": g["meta_clf"],
@@ -36,6 +58,7 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         "signal_max_rsi": None
         if g.get("SIGNAL_MAX_RSI") is None
         else float(g["SIGNAL_MAX_RSI"]),
+        "threshold_calibration_end_date": g.get("threshold_calibration_end_date"),
     }
     joblib.dump(bundle, path)
     print(f"Gespeichert: {path}  (threshold={bundle['best_threshold']:.4f})")
@@ -72,6 +95,8 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
     g["SIGNAL_MAX_RSI"] = None if _sr is None else float(_sr)
     if b.get("tickers_for_run"):
         g["_tickers_for_run"] = list(b["tickers_for_run"])
+    _tce = b.get("threshold_calibration_end_date")
+    g["threshold_calibration_end_date"] = _tce[:10] if isinstance(_tce, str) and len(_tce) >= 10 else _tce
 
     base_models = g["base_models"]
     topk_idx = g["topk_idx"]

@@ -1,9 +1,14 @@
+# Secrets — niemals committen
 .env
+.env.*
+config/secrets.env
 *.env
 .venv/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 data/
+# CSV exports (anywhere in the repo)
+*.csv
 # Large ML artifacts — GitHub rejects files > 100 MB
 models/scoring_artifacts.joblib

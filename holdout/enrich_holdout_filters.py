@@ -1,9 +1,9 @@
 """
 Reichert Holdout-Signale mit zusätzlichen Filtern an (signal_extra_filters).
 
-  python enrich_holdout_filters.py
-  python enrich_holdout_filters.py --input data/holdout_signals.csv --output data/holdout_signals_enriched.csv
-  python enrich_holdout_filters.py --merge-master   # merged in data/meta_holdout_signals.csv
+  python -m holdout.enrich_holdout_filters
+  python -m holdout.enrich_holdout_filters --input data/holdout_signals.csv --output data/holdout_signals_enriched.csv
+  python -m holdout.enrich_holdout_filters --merge-master   # merged in data/master_complete.csv
 
 Benötigt einen vorherigen Download derselben Ticker wie build_holdout_signals_master (yfinance).
 """
@@ -18,15 +18,19 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
+_root = Path(__file__).resolve().parents[1]
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
+
 warnings.filterwarnings(
     "ignore", message=".*fill_method.*pct_change.*", category=FutureWarning
 )
 logging.getLogger("yfinance").setLevel(logging.ERROR)
 
-ROOT = Path(__file__).resolve().parent
+ROOT = _root
 DEFAULT_IN = ROOT / "data" / "holdout_signals.csv"
 DEFAULT_OUT = ROOT / "data" / "holdout_signals_enriched.csv"
-MASTER = ROOT / "data" / "meta_holdout_signals.csv"
+MASTER = ROOT / "data" / "master_complete.csv"
 YF_START = "2018-01-01"
 
 
@@ -47,7 +51,7 @@ def main() -> None:
     ap.add_argument(
         "--merge-master",
         action="store_true",
-        help=f"Nach Anreicherung mit {MASTER.name} per ticker+Date mergen und Master überschreiben",
+        help=f"Nach Anreicherung mit {MASTER.name} (master_complete) per ticker+Date mergen",
     )
     args = ap.parse_args()
 
@@ -55,7 +59,7 @@ def main() -> None:
         print(f"Fehlt: {args.input}", file=sys.stderr)
         sys.exit(1)
 
-    from signal_extra_filters import enrich_signal_frame
+    from lib.signal_extra_filters import enrich_signal_frame
 
     sig = pd.read_csv(args.input)
     for col in ("ticker", "Date", "prob", "threshold_used", "sector"):
@@ -89,13 +93,39 @@ def main() -> None:
         "signals_same_day",
         "signals_same_sector_same_day",
         "sector_share_same_day",
+        "n_sectors_same_day",
+        "sector_hhi_same_day",
         "cluster_mean_corr_60d",
+        "cluster_corr_pairwise_valid",
         "adv_20d_local",
         "adv_pctile_same_day",
+        "adv_rank_same_day",
         "liquidity_tier",
+        "rank_prob_same_day",
+        "pct_rank_prob_same_day",
+        "prob_zscore_same_day",
         "next_earnings_date",
         "bdays_to_next_earnings",
         "earnings_in_3_15_bday_window",
+        "earnings_date_known",
+        "earnings_beyond_swing_15b",
+        "earnings_too_soon_lt3b",
+        "ret_vs_spy_5d",
+        "ret_vs_sector_5d",
+        "open_gap_pct",
+        "short_float_pct",
+        "short_days_to_cover",
+        "inst_own_pct",
+        "volatility_20d",
+        "volatility_60d",
+        "volatility_20d_ann",
+        "momentum_20d",
+        "momentum_60d",
+        "dist_from_20d_high_pct",
+        "dist_from_20d_low_pct",
+        "ret_1d_signal_day",
+        "avg_hl_range_pct_14d",
+        "volume_zscore_20d",
     ]
     print("Neue Spalten:", ", ".join(extra))
 
@@ -112,6 +142,19 @@ def main() -> None:
         merged = m.merge(slim, on=key, how="left")
         merged.to_csv(MASTER, index=False)
         print(f"Gemerged: {MASTER}")
+        from holdout.build_holdout_signals_master import (
+            HORIZONS,
+            META_EXPORT_CSV,
+            MASTER_DAILY_CSV,
+            _build_daily_update,
+        )
+
+        ret_cols = [f"ret_{h}d" for h in HORIZONS]
+        merged.to_csv(META_EXPORT_CSV, index=False)
+        daily = _build_daily_update(merged, ret_cols)
+        daily.to_csv(MASTER_DAILY_CSV, index=False)
+        print(f"Geschrieben: {META_EXPORT_CSV}  (Kopie von master_complete)")
+        print(f"Geschrieben: {MASTER_DAILY_CSV}  ({len(daily)} Zeilen, tagesaktuell)")
 
 
 if __name__ == "__main__":

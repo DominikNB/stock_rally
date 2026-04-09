@@ -4,15 +4,19 @@ Baut eine einzige CSV mit allen Holdout-Signal-Daten (keine Joins nötig):
   • Meta/Metadaten (ticker, Date, prob, threshold_used, company, sector) aus CSV oder DataFrame
   • Forward-Renditen (2/4/6/8/10 Handelstage, ret_mean_5) — gleiche Timing-Logik wie bisher
   • Trainings-Label-Eval (train_target, rally, eval_note) aus models/scoring_artifacts.joblib, falls vorhanden
-  • Zusätzliche Filter (Liquidität, Cluster, Korrelation, Earnings-Fenster) — signal_extra_filters.py
+  • Zusätzliche Filter (Liquidität, Cluster, Sektor-HHI, Korrelation, Cross-Section-Ranks,
+    OHLCV-Technik, Earnings-Fenster) — signal_extra_filters.py
     Standard: **an**; mit `--no-filters` abschaltbar (schneller, schlankere CSV).
 
-Ausgabe: **data/meta_holdout_signals.csv** (eine Datei: Meta + Forward + Filter + optional Rally-Labels)
+Ausgabe:
+  • **data/master_complete.csv** — volle Historie: Meta + Forward-Renditen + Trainingslabels + Zusatzfilter
+  • **data/master_daily_update.csv** — nur **letzter Signaltag**, **ohne** Forward-/Label-Spalten (tagesaktuelle Hits)
+  • **data/meta_holdout_signals.csv** — identisch zu ``master_complete.csv`` (Abwärtskompatibilität)
 
 Eingabe CLI: data/holdout_signals.csv — oder Aufruf ``main(holdout_df=...)`` (Notebook nach Meta-Scoring).
 
-python build_holdout_signals_master.py
-python build_holdout_signals_master.py --no-filters
+python -m holdout.build_holdout_signals_master
+python -m holdout.build_holdout_signals_master --no-filters
 """
 from __future__ import annotations
 
@@ -22,13 +26,18 @@ from pathlib import Path
 # Anreicherung standardmäßig aktiv (auch wenn main() von analyze_holdout_*.py importiert wird).
 WITH_FILTERS = "--no-filters" not in sys.argv
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import joblib
 import numpy as np
 import pandas as pd
 import yfinance as yf
 
-ROOT = Path(__file__).resolve().parent
 HOLDOUT_CSV = ROOT / "data" / "holdout_signals.csv"
+MASTER_COMPLETE_CSV = ROOT / "data" / "master_complete.csv"
+MASTER_DAILY_CSV = ROOT / "data" / "master_daily_update.csv"
 META_EXPORT_CSV = ROOT / "data" / "meta_holdout_signals.csv"
 ARTIFACT = ROOT / "models" / "scoring_artifacts.joblib"
 HORIZONS = (2, 4, 6, 8, 10)
@@ -113,6 +122,24 @@ def _close_series(raw: pd.DataFrame, ticker: str) -> pd.Series:
 _MIN_META_COLS = ("ticker", "Date", "prob", "threshold_used", "company", "sector")
 
 
+def _columns_to_drop_for_daily(ret_cols: list[str]) -> list[str]:
+    """Forward-Renditen, Entry/Fehler, Trainingslabels — für tagesaktuelle Exporte ohne Blick nach vorne."""
+    return (
+        ["entry_date", "fwd_error"]
+        + ret_cols
+        + ["ret_mean_5", "train_target", "rally", "eval_note"]
+    )
+
+
+def _build_daily_update(full: pd.DataFrame, ret_cols: list[str]) -> pd.DataFrame:
+    """Nur Zeilen mit maximalem Signaltag; ohne Forward-/Label-Spalten."""
+    dts = pd.to_datetime(full["Date"])
+    latest = dts.max()
+    sub = full.loc[dts == latest].copy()
+    drop = [c for c in _columns_to_drop_for_daily(ret_cols) if c in sub.columns]
+    return sub.drop(columns=drop, errors="ignore")
+
+
 def main(holdout_df: pd.DataFrame | None = None) -> None:
     """
     holdout_df: optional DataFrame mit Spalten ticker, Date, prob, threshold_used, company, sector
@@ -122,6 +149,16 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
     if holdout_df is None:
         if HOLDOUT_CSV.is_file():
             sig = pd.read_csv(HOLDOUT_CSV)
+        elif MASTER_COMPLETE_CSV.is_file():
+            sig = pd.read_csv(MASTER_COMPLETE_CSV)
+            miss = [c for c in _MIN_META_COLS if c not in sig.columns]
+            if miss:
+                print(
+                    f"Fehlt {MASTER_COMPLETE_CSV} Spalten {miss}; alternativ {HOLDOUT_CSV} anlegen.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            sig = sig[list(_MIN_META_COLS)].copy()
         elif META_EXPORT_CSV.is_file():
             sig = pd.read_csv(META_EXPORT_CSV)
             miss = [c for c in _MIN_META_COLS if c not in sig.columns]
@@ -134,7 +171,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
             sig = sig[list(_MIN_META_COLS)].copy()
         else:
             print(
-                f"Fehlt {HOLDOUT_CSV} oder {META_EXPORT_CSV}.",
+                f"Fehlt {HOLDOUT_CSV}, {MASTER_COMPLETE_CSV} oder {META_EXPORT_CSV}.",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -303,7 +340,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
 
     if WITH_FILTERS:
         try:
-            from signal_extra_filters import enrich_signal_frame
+            from lib.signal_extra_filters import enrich_signal_frame, ensure_llm_signal_columns
 
             fil = enrich_signal_frame(sig, raw)
             for c in fil.columns:
@@ -311,15 +348,29 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
                     out[c] = fil[c].values
             tail = [c for c in out.columns if c not in base_cols]
             out = out[base_cols + tail]
+            out = ensure_llm_signal_columns(out)
             print(f"Zusätzliche Filter-Spalten: {', '.join(tail)}")
         except Exception as e:
-            print(f"Warnung: Zusatzfilter fehlgeschlagen ({e}). Export ohne Filter-Spalten.", file=sys.stderr)
+            print(f"Warnung: Zusatzfilter fehlgeschlagen ({e}). Export mit leeren LLM-Strukturspalten.", file=sys.stderr)
+            from lib.signal_extra_filters import ensure_llm_signal_columns
+
+            out = ensure_llm_signal_columns(out)
 
     META_EXPORT_CSV.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(MASTER_COMPLETE_CSV, index=False)
     out.to_csv(META_EXPORT_CSV, index=False)
 
+    daily = _build_daily_update(out, list(ret_cols))
+    daily.to_csv(MASTER_DAILY_CSV, index=False)
+
     n_ok = int(out[ret_cols].notna().all(axis=1).sum())
-    print(f"\nGeschrieben: {META_EXPORT_CSV}  ({len(out)} Zeilen, davon {n_ok} mit allen Forward-Renditen)")
+    print(
+        f"\nGeschrieben: {MASTER_COMPLETE_CSV}  ({len(out)} Zeilen, davon {n_ok} mit allen Forward-Renditen)"
+    )
+    print(f"Geschrieben: {META_EXPORT_CSV}  (Kopie von master_complete.csv)")
+    print(
+        f"Geschrieben: {MASTER_DAILY_CSV}  ({len(daily)} Zeilen, letzter Signaltag, ohne Forward-/Label-Spalten)"
+    )
     for h in HORIZONS:
         col = f"ret_{h}d"
         s = pd.to_numeric(out[col], errors="coerce")

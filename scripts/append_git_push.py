@@ -1,14 +1,18 @@
 import json
+from pathlib import Path
 
-NB_PATH = r'c:\Python projects\stock_rally\stock_rally_v10.ipynb'
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+NB_PATH = str(PROJECT_ROOT / "stock_rally_v10.ipynb")
 
 GIT_BLOCK = '''
 # ─────────────────────────────────────────────────────────────────────────────
 # 6.  Auto-push to GitHub Pages
 # ─────────────────────────────────────────────────────────────────────────────
 import subprocess as _sp, os as _os
+from pathlib import Path as _Path
 
-_repo = r'c:\\Python projects\\stock_rally'
+_repo = str(_Path.cwd().resolve())
 
 def _git(*args):
     r = _sp.run(['git'] + list(args), cwd=_repo, capture_output=True, text=True)
@@ -19,7 +23,6 @@ def _git(*args):
     return r.returncode
 
 print('\\nPushing docs/ to GitHub Pages ...')
-from pathlib import Path as _Path
 _git_docs = [
     'docs/index.html', 'docs/signals.json', 'docs/website_analysis_prompt.txt',
     'docs/analysis_llm_last.html', 'docs/analysis_llm_last.txt',
