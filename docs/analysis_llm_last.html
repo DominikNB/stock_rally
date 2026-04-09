@@ -1,125 +1,79 @@
 <div class="section analysis-llm">
   <h2>KI-Analyse (automatisch)</h2>
-  <p class="prompt-lead">Generiert per Gemini (File-Upload + Google Search Grounding); keine Anlageberatung.</p>
-  <div class="analysis-llm-body prose-analysis"><p>Die Analyse der Meta-Classifier-Treffer für den Signaltag 2026-04-08 umfasst 40 Titel aus verschiedenen Sektoren. Der Markt zeigte an diesem Tag eine deutliche Erholung, die jedoch von geopolitischen Unsicherheiten überschattet wird.</p>
-<h4>Makroökonomischer Rahmen und Marktkontext</h4>
-<p>Am 8. April 2026 erlebten die globalen Aktienmärkte, insbesondere in den USA, Europa und Asien, eine <strong>deutliche Rallye</strong>. Der deutsche Leitindex DAX stieg um 5,1%, der S&amp;P 500 um 2,5% und der Nasdaq Composite um 2,8%. Diese positive Entwicklung war primär auf die Ankündigung einer provisorischen zweiwöchigen Waffenruhe zwischen den USA und dem Iran zurückzuführen, die die unmittelbaren Sorgen vor einer Eskalation im Nahen Osten und damit verbundene Versorgungsengpässe bei Öl vorübergehend zerstreute. Infolgedessen fielen die Ölpreise für Brent und WTI am 8. April spürbar unter 95 USD pro Barrel.</p>
-<p>Allerdings war diese Erleichterung kurzlebig. Bereits am 9. April stiegen die Ölpreise wieder an, und die asiatischen Märkte zeigten sich größtenteils schwächer, da Skepsis bezüglich der Dauerhaftigkeit der Waffenruhe aufkam. Berichte über israelische Angriffe im Libanon und die erneute Schließung der Straße von Hormus durch den Iran trugen zur Unsicherheit bei.</p>
-<p>Die Inflation bleibt ein zentrales Thema. In den USA stiegen die Inflationserwartungen für kurze und mittlere Fristen im März 2026, hauptsächlich aufgrund steigender Gaspreise. Die jährliche Inflationsrate in den USA lag im Februar 2026 bei 2,4%, während die Kern-PCE-Inflation im Januar 2026 3,1% betrug – beides über dem Zielwert der Federal Reserve von 2%. Die Europäische Zentralbank (EZB) erhöhte ihre Inflationsprognosen für 2026 auf 2,6%, ebenfalls bedingt durch höhere Energiepreise.</p>
-<p>Die EZB hielt ihre Leitzinsen bei der Sitzung am 19. März 2026 unverändert (Einlagefazilität: 2,00%, Hauptrefinanzierungssatz: 2,15%, Spitzenrefinanzierungssatz: 2,40%). Die nächste Zinsentscheidung ist für den 30. April 2026 angesetzt, wobei Händler weitgehend keine Änderung erwarten. Für die USA prognostiziert KKR eine Zinskürzung der Fed im Jahr 2026.</p>
-<p>Das globale Wirtschaftswachstum wird für 2026 zwischen 3,1% und 3,3% prognostiziert, wobei jedoch das Wachstum in der Eurozone niedriger eingeschätzt wird (0,9% für 2026). Die geopolitischen Spannungen und höhere Zölle stellen weiterhin Abwärtsrisiken dar.</p>
-<h4>Strukturelle Informationen aus der CSV und fehlende Daten</h4>
-<p>Die Analyse der beigefügten CSV-Daten zeigt, dass für den Signaltag 2026-04-08 insgesamt 56 Signale identifiziert wurden (<code class="analysis-code">signals_same_day</code>). Die mittlere paarweise Korrelation der Tagesrenditen über 60 Handelstage (<code class="analysis-code">cluster_mean_corr_60d</code>) liegt einheitlich bei ca. 0,46, was auf eine moderate Korrelation innerhalb der betrachteten Gruppe hindeutet.</p>
-<p>Es ist wichtig zu beachten, dass einige im Prompt angefragte Spalten in der bereitgestellten CSV nicht enthalten sind. Dazu gehören detaillierte Konzentrationsmaße für Branchen (<code class="analysis-code">n_sectors_same_day</code>, <code class="analysis-code">sector_hhi_same_day</code>), spezifische Korrelationswerte (<code class="analysis-code">cluster_corr_pairwise_valid</code>), detaillierte Liquiditätsrankings (<code class="analysis-code">adv_rank_same_day</code>), präzise Meta-Rankings (<code class="analysis-code">rank_prob_same_day</code>, <code class="analysis-code">pct_rank_prob_same_day</code>, <code class="analysis-code">prob_zscore_same_day</code>), alle Kurs-/Technik-Indikatoren sowie spezifische Informationen zu den Earnings-Terminen wie <code class="analysis-code">earnings_date_known</code>, <code class="analysis-code">earnings_beyond_swing_15b</code> und <code class="analysis-code">earnings_too_soon_lt3b</code>. Dies schränkt die Tiefe der Analyse in diesen Bereichen ein.</p>
-<p>Die Spalte <code class="analysis-code">earnings_in_3_15_bday_window</code> ist für einige Titel auf &quot;True&quot; gesetzt, was bedeutet, dass ein potenzieller Einstieg im vorgeschlagenen Haltezeitraum von 3-15 Handelstagen mit erhöhter Volatilität durch bevorstehende Quartalszahlen verbunden sein könnte.</p>
-<h4>Analyse nach Sektoren und ausgewählten Titeln</h4>
-<p><strong>Technologie (Tech)</strong><br>
-Dieser Sektor ist mit neun Treffern stark vertreten.</p>
+  <p class="prompt-lead">Generiert per Gemini (File-Upload; Google Search fehlgeschlagen — Analyse ohne Web-Grounding); keine Anlageberatung.</p>
+  <div class="analysis-llm-body prose-analysis"><p>Kurzfristige Rally-Einordnung: Meta-Hits des letzten Signaltags, News/Makro im Swing-Horizont, Liquidität/Cluster/Earnings; Schluss: welche Aktie – falls eine – für einen <strong>kurzfristigen</strong> Impuls am ehesten infrage kommt — keine Anlageberatung.</p>
+<hr class="analysis-hr">
+<h3>Analyse der Meta-Classifier-Treffer am 2026-04-08</h3>
+<p>Am Signaltag 2026-04-08 wurden insgesamt 40 Ticker vom Meta-Classifier als potenzielle Kandidaten für eine <strong>kurzfristige Kurs-Rally</strong> über einen Zeitraum von 3 bis 15 Handelstagen identifiziert. Die Rally-Definition des Modells zielt auf eine kumulative Rendite von mindestens 6% innerhalb von 10 Handelstagen, mit einem Vorlauf von 3 Tagen.</p>
+<h4>Gesamtmarktkonditionen am Signaltag</h4>
+<p>Der aktuelle Signaltag zeigt ein breites Signal mit 56 Treffern über 10 verschiedene Sektoren hinweg. Die geringe Sektorkonzentration (HHI von 0.151) deutet darauf hin, dass es sich nicht um eine isolierte Branchenrally handelt, sondern um ein breiteres positives Sentiment oder mehrere parallel wirkende Katalysatoren im Markt. Die durchschnittliche Korrelation der Tagesrenditen im Cluster (0.46) ist moderat, was auf einen gewissen Gleichlauf hindeutet, aber auch Spielraum für individuelle Outperformance lässt.</p>
+<p>Auffällig ist, dass viele der getriggerten Titel am Signaltag einen sehr starken Kursanstieg (<code class="analysis-code">ret_1d_signal_day</code> zwischen 5% und 12%) verzeichneten und oft am oder nahe des 20-Tages-Hochs (<code class="analysis-code">dist_from_20d_high_pct = 0.0</code>) schlossen. Dies sind deutliche Anzeichen für einen unmittelbaren, starken Kursimpuls, der die Grundlage für eine kurzfristige Rally bilden kann.</p>
+<h4>Risikobetrachtung: Liquidität und Termine</h4>
+<p>Vor der tiefergehenden Analyse ist es entscheidend, potenzielle Risiken wie geringe Liquidität und bevorstehende Quartalsberichte zu identifizieren, da diese das kurzfristige Rally-Potenzial erheblich beeinflussen können:</p>
+<p><strong>1. Liquiditätsrisiko:</strong><br>
+Mehrere Titel weisen eine &quot;thin&quot; oder &quot;very_thin&quot; Liquidität auf, was erhöhte Volatilität und schwierigere Ein- und Ausstiegsmöglichkeiten bedeuten kann:</p>
 <ul class="analysis-ul">
-<li><strong>IFX.DE (Infineon)</strong>: Mit einem <code class="analysis-code">prob</code> von 0.926 und <code class="analysis-code">meta_prob_margin</code> von 0.216, sowie einer &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 184 Mio. $), gehört Infineon zu den Top-Hits. Der nächste Earnings-Termin ist der 06.05.2026 (20 Handelstage entfernt), außerhalb des 3-15-Tage-Fensters. Infineon verzeichnete am 8. April einen Kursgewinn von 11,33%. Dies dürfte im Einklang mit der allgemeinen Markterholung und der Entspannung der geopolitischen Lage stehen, was sich positiv auf die Halbleiterindustrie auswirken kann.</li>
-<li><strong>AIXA.DE (Aixtron)</strong>: Hohe <code class="analysis-code">prob</code> (0.924), <code class="analysis-code">meta_prob_margin</code> (0.214) und &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 40 Mio. $). Earnings am 30.04.2026 (16 Handelstage), knapp außerhalb des 3-15-Tage-Fensters.</li>
-<li><strong>ELG.DE (Elmos Semiconductor)</strong>: Hohe <code class="analysis-code">prob</code> (0.921), aber mit &quot;thin&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 4,7 Mio. $). Earnings am 05.05.2026 (19 Handelstage), außerhalb des 3-15-Tage-Fensters.</li>
-<li><strong>SMHN.DE (SÜSS MicroTec)</strong>: Hohe <code class="analysis-code">prob</code> (0.919), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 9,6 Mio. $). Earnings am 07.05.2026 (21 Handelstage).</li>
-<li><strong>BC8.DE (Bechtle)</strong>: <code class="analysis-code">prob</code> von 0.842, &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 12,8 Mio. $). Earnings am 08.05.2026 (22 Handelstage).</li>
-<li><strong>YSN.DE (secunet)</strong>: <code class="analysis-code">prob</code> von 0.836, aber <strong>&quot;very_thin&quot; Liquidität</strong> (<code class="analysis-code">adv_20d_local</code> von ca. 0,7 Mio. $). Earnings am 05.05.2026 (19 Handelstage). Die sehr dünne Liquidität stellt ein hohes Risiko für Swing-Trades dar.</li>
+<li><strong>Thin:</strong> Befesa (BFSA.DE), Elmos Semiconductor (ELG.DE), Grand City Prop. (GYC.DE), Hornbach (HBH.DE), Hypoport (HYQ.DE), Siltronic (WAF.DE).</li>
+<li><strong>Very Thin:</strong> KSB (KSB.DE), SAF-Holland (SFQ.DE), Douglas (DOU.DE), secunet (YSN.DE).</li>
 </ul>
-<p>*News &amp; Kontext Tech-Sektor:* Der Technologiebereich könnte von einer allgemeinen Marktverbesserung profitieren, aber auch von den langfristigen Trends in der Digitalisierung und künstlichen Intelligenz, die globale Wachstumsprognosen stützen.</p>
-<p><strong>Industrie (Industrial)</strong><br>
-Dies ist der am stärksten vertretene Sektor mit 16 Treffern. Viele dieser Unternehmen dürften von der allgemeinen Markterholung profitieren.</p>
+<p><strong>Diese Werte sind für Swing-Trades aufgrund potenziell hoher Spreads und geringer Handelbarkeit als eher riskant einzuschätzen.</strong></p>
+<p><strong>2. Earnings-Risiko im Swing-Fenster (3-15 Handelstage):</strong><br>
+Folgende Aktien haben einen Quartalsbericht innerhalb des relevanten Anlagehorizonts:</p>
 <ul class="analysis-ul">
-<li><strong>SIE.DE (Siemens)</strong>: Hohe <code class="analysis-code">prob</code> (0.923), hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 344 Mio. $). Earnings am 13.05.2026 (25 Handelstage). Siemens war am 8. April ein Top-Performer im DAX mit einem Plus von 10,17%. Dies untermauert die Stärke des Unternehmens im Kontext der Markterholung.</li>
-<li><strong>DUE.DE (Dürr)</strong>: Hohe <code class="analysis-code">prob</code> (0.923), aber &quot;thin&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 3,5 Mio. $). Earnings am 12.05.2026 (24 Handelstage).</li>
-<li><strong>LHA.DE (Lufthansa)</strong>: <code class="analysis-code">prob</code> (0.921), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 59 Mio. $). Earnings am 06.05.2026 (20 Handelstage).</li>
-<li><strong>RAA.DE (Rational)</strong>: <code class="analysis-code">prob</code> (0.914), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 11,5 Mio. $). Earnings am 06.05.2026 (20 Handelstage).</li>
-<li><strong>MTX.DE (MTU Aero)</strong>: <code class="analysis-code">prob</code> (0.907), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 62,7 Mio. $). Earnings am 30.04.2026 (16 Handelstage).</li>
-<li><strong>R3NK.DE (RENK Group)</strong>: <code class="analysis-code">prob</code> (0.906), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 41,6 Mio. $). Earnings am 06.05.2026 (20 Handelstage).</li>
-<li><strong>KSB.DE (KSB)</strong>: <code class="analysis-code">prob</code> (0.906), aber <strong>&quot;very_thin&quot; Liquidität</strong> (<code class="analysis-code">adv_20d_local</code> von ca. 0,4 Mio. $). Earnings am 05.05.2026 (19 Handelstage). Die extrem dünne Liquidität macht den Titel für Swing-Trades sehr riskant.</li>
-<li><strong>FRA.DE (Fraport)</strong>: <code class="analysis-code">prob</code> (0.898), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 11,5 Mio. $). Earnings am 05.05.2026 (19 Handelstage).</li>
-<li><strong>KBX.DE (Knorr-Bremse)</strong>: <code class="analysis-code">prob</code> (0.897), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 18,3 Mio. $). Earnings am 07.05.2026 (21 Handelstage).</li>
-<li><strong>RHM.DE (Rheinmetall)</strong>: <code class="analysis-code">prob</code> (0.896), sehr hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 417,5 Mio. $). Earnings am 07.05.2026 (21 Handelstage).</li>
-<li><strong>DHL.DE (DHL Group)</strong>: <code class="analysis-code">prob</code> (0.887), hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 130,8 Mio. $). Earnings am 30.04.2026 (16 Handelstage).</li>
-<li><strong>AIR.DE (Airbus)</strong>: <code class="analysis-code">prob</code> (0.880), hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 60,7 Mio. $). <strong>Earnings im Fenster</strong> am 28.04.2026 (14 Handelstage). Dies ist ein klares Risiko für die Haltedauer.</li>
-<li><strong>SFQ.DE (SAF-Holland)</strong>: <code class="analysis-code">prob</code> (0.870), aber <strong>&quot;very_thin&quot; Liquidität</strong> (<code class="analysis-code">adv_20d_local</code> von ca. 1,8 Mio. $). Earnings am 07.05.2026 (21 Handelstage).</li>
-<li><strong>JUN3.DE (Jungheinrich)</strong>: <code class="analysis-code">prob</code> (0.843), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 5,4 Mio. $). Earnings am 07.05.2026 (21 Handelstage).</li>
+<li><strong>Siltronic (WAF.DE):</strong> Earnings in 15 Handelstagen.</li>
+<li><strong>Airbus (AIR.DE):</strong> Earnings in 14 Handelstagen.</li>
+<li><strong>Deutsche Bank (DBK.DE):</strong> Earnings in 15 Handelstagen.</li>
+<li><strong>Porsche AG (P911.DE):</strong> Earnings in 15 Handelstagen.</li>
 </ul>
-<p>*News &amp; Kontext Industrie-Sektor:* Der breite Industriesektor profitiert von der allgemeinen Wirtschaftserholung. Unternehmen wie Siemens und Rheinmetall zeigen hohe Liquidität und wurden am Signaltag stark nachgefragt. Die erhöhte Korrelation im Cluster (<code class="analysis-code">cluster_mean_corr_60d</code> ~0.46) deutet darauf hin, dass sektorweite oder marktweite Faktoren eine Rolle spielen.</p>
-<p><strong>Finanzen (Finance)</strong><br>
-Dieser Sektor hat vier Treffer.</p>
+<p><strong>Quartalsberichte sind kurzfristige Ereignisse mit hohem Kurspotenzial in beide Richtungen. Sie stellen ein signifikantes Risiko für eine prognostizierte Rally dar und sollten mit Vorsicht betrachtet werden.</strong></p>
+<h4>Top-Kandidaten für eine kurzfristige Rally</h4>
+<p>Unter Berücksichtigung der Signalstärke, der Liquidität und dem Fehlen unmittelbarer Earnings-Risiken konzentriert sich die Analyse auf die Titel mit dem überzeugendsten Profil für einen kurzfristigen Impuls. Die folgenden Aktien zeichnen sich durch hohe Meta-Wahrscheinlichkeit, solide Liquidität, starke technische Indikatoren (hoher 1-Tages-Return, positivem Momentum, Schließen am 20-Tages-Hoch) und oft überdurchschnittliches Volumen am Signaltag aus:</p>
 <ul class="analysis-ul">
-<li><strong>BNP.PA (BNP Paribas)</strong>: Hohe <code class="analysis-code">prob</code> (0.925), sehr hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 267,7 Mio. $). Earnings am 30.04.2026 (16 Handelstage).</li>
-<li><strong>CBK.DE (Commerzbank)</strong>: Hohe <code class="analysis-code">prob</code> (0.925), hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 126,9 Mio. $). Earnings am 08.05.2026 (22 Handelstage). Die Deutsche Bank (ebenfalls Finanzsektor) zeigte sich laut einer Meldung vom 3. April 2026 mit hoher Exposition gegenüber dem Technologiesektor und Private Lending, was zu Bedenken bei Investoren führte. Es ist denkbar, dass Commerzbank ähnlichen sektorspezifischen Trends unterliegt.</li>
-<li><strong>DBK.DE (Deutsche Bank)</strong>: <code class="analysis-code">prob</code> (0.874), hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 210,4 Mio. $). <strong>Earnings im Fenster</strong> am 29.04.2026 (15 Handelstage). Das Risiko durch die bevorstehenden Earnings ist hier direkt gegeben. News vom 3. April 2026 deuteten auf eine hohe Exposition gegenüber dem Technologiesektor und Private Lending hin, was Bedenken bei Investoren aufwarf.</li>
-<li><strong>HYQ.DE (Hypoport)</strong>: <code class="analysis-code">prob</code> (0.862), &quot;thin&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 3,6 Mio. $). Earnings am 11.05.2026 (23 Handelstage).</li>
+<li><strong>Infineon (IFX.DE)</strong></li>
+<li><strong>Stärke:</strong> Rang 1 im Meta-Ranking, sehr hohe Liquidität (&quot;ok&quot;, $184M ADV), sehr starker 1-Tages-Return (11.8%), positives 20-Tages-Momentum (9.8%), am 20-Tages-Hoch geschlossen. Hohes Volumen am Signaltag (<code class="analysis-code">volume_zscore_20d</code> 1.4).</li>
+<li><strong>Kontext:</strong> Teil des Tech-Sektors, der mit 9 Signalen ebenfalls stark repräsentiert ist. Die Daten deuten auf einen klaren und bestätigten Kaufimpuls hin.</li>
 </ul>
-<p>*News &amp; Kontext Finanzsektor:* Finanzinstitute könnten von der allgemeinen Marktstimmung und potenziell stabilen, wenn auch unveränderten, Zinsen im Euroraum profitieren. Die Zinsentscheidung der EZB Ende April könnte jedoch zu kurzfristiger Volatilität führen.</p>
-<p><strong>Automobil (Automotive)</strong><br>
-Drei Treffer in diesem Sektor.</p>
 <ul class="analysis-ul">
-<li><strong>CON.DE (Continental)</strong>: Hohe <code class="analysis-code">prob</code> (0.920), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 30,7 Mio. $). Earnings am 06.05.2026 (20 Handelstage).</li>
-<li><strong>DTG.DE (Daimler Truck)</strong>: <code class="analysis-code">prob</code> (0.910), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 54,8 Mio. $). Earnings am 06.05.2026 (20 Handelstage).</li>
-<li><strong>P911.DE (Porsche AG)</strong>: <code class="analysis-code">prob</code> (0.874), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 28,0 Mio. $). <strong>Earnings im Fenster</strong> am 29.04.2026 (15 Handelstage). Hier ist das Earnings-Risiko zu beachten.</li>
+<li><strong>Siemens Energy (ENR.DE)</strong></li>
+<li><strong>Stärke:</strong> Rang 5, höchste Liquidität im gesamten Datensatz ($467M ADV), herausragender 1-Tages-Return (11.9%), starkes 20-Tages-Momentum (11.1%), am 20-Tages-Hoch. Deutlich erhöhtes Volumen (<code class="analysis-code">volume_zscore_20d</code> 1.7).</li>
+<li><strong>Kontext:</strong> Energie-Sektor ist mit 4 Signalen vertreten. Die Kombination aus hoher Liquidität, starkem Impuls und Momentum macht ENR.DE zu einem Top-Kandidaten.</li>
 </ul>
-<p>*News &amp; Kontext Automobilsektor:* Die Automobilbranche könnte von der entspannten Stimmung nach den Ölpreisrückgängen profitieren, aber auch unter anhaltenden Lieferkettenproblemen oder einer schwächeren Konsumlaune leiden, sollte sich der makroökonomische Ausblick eintrüben.</p>
-<p><strong>Materialien (Materials)</strong><br>
-Drei Treffer.</p>
 <ul class="analysis-ul">
-<li><strong>BFSA.DE (Befesa)</strong>: Hohe <code class="analysis-code">prob</code> (0.925), aber &quot;thin&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 1,9 Mio. $). Earnings am 30.04.2026 (16 Handelstage).</li>
-<li><strong>WAF.DE (Siltronic)</strong>: <code class="analysis-code">prob</code> (0.920), &quot;thin&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 4,2 Mio. $). <strong>Earnings im Fenster</strong> am 29.04.2026 (15 Handelstage). Hier ist das Earnings-Risiko zu beachten.</li>
-<li><strong>ACT.DE (AlzChem)</strong>: <code class="analysis-code">prob</code> (0.843), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 4,9 Mio. $). Earnings am 30.04.2026 (16 Handelstage).</li>
+<li><strong>Commerzbank (CBK.DE)</strong></li>
+<li><strong>Stärke:</strong> Rang 4, sehr hohe Liquidität (&quot;ok&quot;, $127M ADV), starker 1-Tages-Return (9.0%), sehr hohes 20-Tages-Momentum (13.1%), am 20-Tages-Hoch. Erhöhtes Volumen (<code class="analysis-code">volume_zscore_20d</code> 1.1).</li>
+<li><strong>Kontext:</strong> Finanzsektor mit 5 Signalen. Die starke Bewegung, unterstützt durch Momentum und Volumen, ist vielversprechend.</li>
 </ul>
-<p>*News &amp; Kontext Materialien-Sektor:* Der Sektor reagiert oft sensibel auf globale Wachstums- und Industrietrends. Eine moderate Korrelation im Cluster ist hier typisch.</p>
-<p><strong>Energie (Energy)</strong><br>
-Zwei Treffer.</p>
 <ul class="analysis-ul">
-<li><strong>ENR.DE (Siemens Energy)</strong>: Mit einem <code class="analysis-code">prob</code> von 0.924 und einer sehr hohen Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 467,2 Mio. $) sticht Siemens Energy hervor. Earnings am 12.05.2026 (24 Handelstage). Siemens Energy war am 8. April ein Top-Performer im DAX mit einem Plus von 11,94%. Dies könnte auf eine Kombination aus der allgemeinen Markterholung und spezifischen Unternehmensaussichten zurückzuführen sein.</li>
-<li><strong>VH2.DE (Friedrich Vorwerk)</strong>: <code class="analysis-code">prob</code> (0.863), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 6,0 Mio. $). Earnings am 12.05.2026 (24 Handelstage).</li>
+<li><strong>Aixtron (AIXA.DE)</strong></li>
+<li><strong>Stärke:</strong> Rang 6, gute Liquidität (&quot;ok&quot;, $39M ADV), hoher 1-Tages-Return (10.9%), <strong>außerordentlich hohes 20-Tages-Momentum (31.6%)</strong>, am 20-Tages-Hoch. Das <code class="analysis-code">volume_zscore_20d</code> ist mit 0.015 jedoch relativ gering, was bei einem so starken Impuls unüblich ist und genauere Prüfung erfordert.</li>
+<li><strong>Kontext:</strong> Ebenfalls im Tech-Sektor. Trotz des geringen Volumens (im Vergleich zum Momentum und Kursanstieg) könnte das Momentum auf eine starke zugrundeliegende Stärke hindeuten.</li>
 </ul>
-<p>*News &amp; Kontext Energie-Sektor:* Trotz des kurzfristigen Rückgangs der Ölpreise am 8. April durch die Waffenruhe, bleiben die langfristigen Energiepreise aufgrund der geopolitischen Spannungen im Nahen Osten hoch. Unternehmen in diesem Sektor könnten von erhöhter Nachfrage oder Investitionen in erneuerbare Energien profitieren, aber auch von der Volatilität der Rohstoffpreise betroffen sein.</p>
-<p><strong>Immobilien (Real Estate)</strong><br>
-Drei Treffer.</p>
 <ul class="analysis-ul">
-<li><strong>GYC.DE (Grand City Prop.)</strong>: <code class="analysis-code">prob</code> (0.916), aber &quot;thin&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 3,7 Mio. $). Earnings am 12.05.2026 (24 Handelstage).</li>
-<li><strong>LEG.DE (LEG Immobilien)</strong>: <code class="analysis-code">prob</code> (0.860), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 29,3 Mio. $). Earnings am 13.05.2026 (25 Handelstage).</li>
-<li><strong>VNA.DE (Vonovia)</strong>: <code class="analysis-code">prob</code> (0.842), hohe Liquidität (&quot;ok&quot;, <code class="analysis-code">adv_20d_local</code> von ca. 127,2 Mio. $). Earnings am 07.05.2026 (21 Handelstage).</li>
+<li><strong>Siemens (SIE.DE)</strong></li>
+<li><strong>Stärke:</strong> Rang 7, sehr hohe Liquidität (&quot;ok&quot;, $344M ADV), starker 1-Tages-Return (10.2%), positives 20-Tages-Momentum (4.7%), nahe des 20-Tages-Hochs. Deutlich erhöhtes Volumen (<code class="analysis-code">volume_zscore_20d</code> 1.78).</li>
+<li><strong>Kontext:</strong> Als Schwergewicht im Industriesektor (16 Signale) bietet Siemens eine solide Basis für einen kurzfristigen Aufwärtstrend, untermauert durch den starken Impuls.</li>
 </ul>
-<p>*News &amp; Kontext Immobilien-Sektor:* Der Immobilienmarkt in Europa war in letzter Zeit von höheren Zinsen und Baukosten betroffen. Eine mögliche Stabilisierung der Zinsen könnte den Sektor unterstützen, aber die allgemeine Konsumstimmung und die Baukostenentwicklung bleiben entscheidend.</p>
-<p><strong>Konsumgüter (Consumer)</strong><br>
-Fünf Treffer.</p>
 <ul class="analysis-ul">
-<li><strong>PUM.DE (PUMA)</strong>: <code class="analysis-code">prob</code> (0.893), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 17,2 Mio. $). Earnings am 30.04.2026 (16 Handelstage).</li>
-<li><strong>HBH.DE (Hornbach)</strong>: <code class="analysis-code">prob</code> (0.879), &quot;thin&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 1,9 Mio. $). Earnings am 19.05.2026 (29 Handelstage).</li>
-<li><strong>DOU.DE (Douglas)</strong>: <code class="analysis-code">prob</code> (0.842), aber <strong>&quot;very_thin&quot; Liquidität</strong> (<code class="analysis-code">adv_20d_local</code> von ca. 1,6 Mio. $). Earnings am 12.05.2026 (24 Handelstage). Die sehr dünne Liquidität stellt ein hohes Risiko für Swing-Trades dar.</li>
-<li><strong>ZAL.DE (Zalando)</strong>: <code class="analysis-code">prob</code> (0.838), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 46,3 Mio. $). Earnings am 06.05.2026 (20 Handelstage).</li>
+<li><strong>Lufthansa (LHA.DE)</strong></li>
+<li><strong>Stärke:</strong> Rang 10, gute Liquidität (&quot;ok&quot;, $59M ADV), starker 1-Tages-Return (10.3%), positives 20-Tages-Momentum (6.8%), nahe des 20-Tages-Hochs. <strong>Extrem hohes Volumen (`volume_zscore_20d` 2.32)</strong>, was auf sehr starkes Interesse am Signaltag hindeutet.</li>
+<li><strong>Kontext:</strong> Ebenfalls im Industriesektor. Das außergewöhnliche Volumen signalisiert eine starke Marktteilnahme und könnte einen kurzfristigen Kursschub weiter befeuern.</li>
 </ul>
-<p>*News &amp; Kontext Konsumgüter-Sektor:* Die Konsumgüterbranche ist stark von der Konsumlaune und den makroökonomischen Bedingungen beeinflusst. Die angespannte Inflationslage könnte den Sektor belasten, während eine allgemeine Markterholung unterstützend wirken kann.</p>
-<p><strong>Heat Pump</strong></p>
+<h4>Weitere relevante Beobachtungen</h4>
 <ul class="analysis-ul">
-<li><strong>AALB.AS (Aalberts)</strong>: <code class="analysis-code">prob</code> (0.870), &quot;ok&quot; Liquidität (<code class="analysis-code">adv_20d_local</code> von ca. 9,6 Mio. $). Die Kategorie &quot;heat_pump&quot; ist ungewöhnlich und könnte auf eine spezielle Geschäftssparte hindeuten. Der nächste Earnings-Termin liegt weit zurück (26.02.2026), sodass keine unmittelbaren Earnings-Risiken bestehen. Das Unternehmen könnte von Initiativen zur Energiewende profitieren.</li>
+<li><strong>PUMA (PUM.DE):</strong> Rang 23, ordentliche Liquidität, 1-Tages-Return (5.1%) und Momentum (7.3%) solide. Auffällig ist das extrem hohe Volumen (<code class="analysis-code">volume_zscore_20d</code> 2.54), was trotz des niedrigeren Rangs und des geringeren 1-Tages-Returns im Vergleich zu den Top-Werten auf signifikante Aktivität und Potenzial hindeutet.</li>
 </ul>
-<h4>Synthese und Risikoabwägung</h4>
-<p>Die Meta-Classifier-Treffer am 8. April 2026 fielen in einen Tag starker Markterholung, angetrieben durch eine vorübergehende Entspannung der Nahost-Krise und fallende Ölpreise. Dies bot einen Rückenwind für fast alle Sektoren. Allerdings ist diese Erholung als potenziell fragil zu betrachten, da die geopolitischen Spannungen am Folgetag bereits wieder zunahmen und die Ölpreise erneut stiegen.</p>
-<p><strong>Positive Aspekte:</strong></p>
 <ul class="analysis-ul">
-<li><strong>Breite Markterholung</strong>: Der allgemeine Optimismus am Signaltag führte zu starken Kursgewinnen in vielen Sektoren.</li>
-<li><strong>Hohe Meta-Wahrscheinlichkeit</strong>: Alle Treffer liegen deutlich über der Schwelle von 0.7099, was auf ein starkes Signal hindeutet.</li>
-<li><strong>Starke Liquidität bei Top-Performern</strong>: Unternehmen wie Infineon, Siemens, Siemens Energy, BNP Paribas, Commerzbank, Deutsche Bank, Rheinmetall, DHL Group, Vonovia und Zalando weisen eine &quot;ok&quot; Liquidität und hohe Handelsvolumina auf, was die Ausführbarkeit von Swing-Trades erleichtert.</li>
-</ul>
-<p><strong>Negative Aspekte und Risiken:</strong></p>
-<ul class="analysis-ul">
-<li><strong>Geopolitische Unsicherheit</strong>: Die Volatilität im Nahen Osten und die damit verbundenen Ölpreisschwankungen stellen ein erhebliches Risiko dar und könnten die Marktstimmung schnell umkehren.</li>
-<li><strong>Earnings im 3-15-Tage-Fenster</strong>: Für <strong>WAF.DE (Siltronic)</strong>, <strong>AIR.DE (Airbus)</strong>, <strong>DBK.DE (Deutsche Bank)</strong> und <strong>P911.DE (Porsche AG)</strong> fallen die nächsten Earnings-Termine in den empfohlenen Haltezeitraum. Dies erhöht das Risiko erheblich, da Kursreaktionen auf Quartalszahlen unvorhersehbar sein können und die Swing-Trade-Strategie beeinträchtigen.</li>
-<li><strong>Dünne/sehr dünne Liquidität</strong>: Titel wie <strong>BFSA.DE (Befesa)</strong>, <strong>ELG.DE (Elmos Semiconductor)</strong>, <strong>DUE.DE (Dürr)</strong>, <strong>GYC.DE (Grand City Prop.)</strong>, <strong>HBH.DE (Hornbach)</strong>, <strong>HYQ.DE (Hypoport)</strong> weisen &quot;thin&quot; Liquidität auf. Noch kritischer sind <strong>YSN.DE (secunet)</strong>, <strong>KSB.DE (KSB)</strong>, <strong>SFQ.DE (SAF-Holland)</strong> und <strong>DOU.DE (Douglas)</strong> mit &quot;very_thin&quot; Liquidität. Bei diesen Titeln können bereits geringe Handelsvolumina zu starken Kursausschlägen führen, und die Positionierung für einen Swing-Trade gestaltet sich schwierig und risikoreich.</li>
-<li><strong>Fehlende Daten</strong>: Das Fehlen von detaillierten technischen Indikatoren und weiteren Ranking-Informationen aus der CSV erschwert eine umfassende technische Analyse und die genaue Einordnung der Stärke des Signals.</li>
-<li><strong>Erhöhte Korrelation</strong>: Die relativ hohe durchschnittliche Korrelation im Cluster (<code class="analysis-code">cluster_mean_corr_60d</code> ~0.46) bedeutet, dass viele Titel gemeinsam auf Marktbreite Bewegungen reagieren, was die Diversifikation innerhalb der Trefferliste reduziert.</li>
+<li><strong>Negative Momentum:</strong> Einige Aktien zeigen trotz des Signals negatives Momentum über 20 Tage (<code class="analysis-code">momentum_20d</code>), was für eine kurzfristige Rally kontraproduktiv sein kann (z.B. RHM.DE, MTX.DE, VNA.DE, BC8.DE). Für einen aggressiven Swing-Trade sind diese weniger geeignet, da der Trend gegen sie spricht.</li>
 </ul>
 <h4>Fazit</h4>
-<p>Nach Abwägung aller verfügbaren Informationen und unter Berücksichtigung des vorgegebenen Haltehorizonts von 3–15 Handelstagen lässt sich festhalten, dass die Mehrzahl der Treffer am Signaltag 2026-04-08 von einer positiven Marktstimmung profitieren konnte, die jedoch auf einer fragilen geopolitischen Entwicklung basierte.</p>
-<p><strong>Keine einzelne Aktie kommt am überzeugendsten für einen möglichen Einstieg in Frage, die alle Kriterien ohne signifikante Risiken erfüllt.</strong></p>
-<p>Die Hauptgründe für diese Einschätzung sind:</p>
+<p>Angesichts der definierten Zielsetzung, kurzfristige Kurs-Rallies und Impulse über wenige Handelstage zu identifizieren, und unter Abwägung aller verfügbaren Informationen, konzentriert sich die Empfehlung auf Titel mit klaren positiven Impulsen am Signaltag, solider Liquidität und ohne unmittelbare Risikofaktoren wie anstehende Earnings.</p>
+<p>Auf Basis dieser Kriterien kommen folgende Aktien am ehesten für einen möglichen, <strong>kurzfristigen</strong> Einstieg infrage:</p>
 <ol class="analysis-ol">
-<li><strong>Geopolitische Unsicherheit</strong>: Die kurzfristige Entspannung im Nahen Osten erwies sich schnell als fragil. Eine Eskalation könnte den Markt jederzeit stark belasten und die Rallye beenden.</li>
-<li><strong>Liquiditätsrisiken</strong>: Ein erheblicher Teil der Treffer weist eine &quot;thin&quot; oder sogar &quot;very_thin&quot; Liquidität auf. Für einen Swing-Trade, der eine schnelle Positionsöffnung und -schließung erfordert, stellt dies ein hohes Risiko dar, da es zu Schwierigkeiten bei der Orderausführung und starken Spreads kommen kann.</li>
-<li><strong>Earnings im Haltefenster</strong>: Mehrere Titel, darunter <strong>Deutsche Bank (DBK.DE)</strong>, <strong>Porsche AG (P911.DE)</strong>, <strong>Airbus (AIR.DE)</strong> und <strong>Siltronic (WAF.DE)</strong>, haben ihre nächsten Earnings-Termine innerhalb des 3- bis 15-Handelstage-Fensters. Dies führt zu einem erhöhten Risiko von starken Kursreaktionen, die einem Swing-Trade entgegenwirken können.</li>
+<li><strong>Infineon (IFX.DE)</strong></li>
+<li><strong>Siemens Energy (ENR.DE)</strong></li>
+<li><strong>Commerzbank (CBK.DE)</strong></li>
+<li><strong>Siemens (SIE.DE)</strong></li>
+<li><strong>Lufthansa (LHA.DE)</strong></li>
 </ol>
-<p>Trotz der starken Meta-Signale und der allgemeinen Markterholung am 8. April 2026 überwiegen die potenziellen Risiken, insbesondere die dünne Liquidität bei vielen Titeln und die bevorstehenden Quartalszahlen bei Schlüsselunternehmen. Die Fragilität des makroökonomischen Umfelds durch die geopolitischen Spannungen trägt zusätzlich zur Vorsicht bei.</p></div>
+<p>Diese Titel zeigen eine überzeugende Kombination aus starkem Kursimpuls am Signaltag, positiver technischer Verfassung, guter Liquidität und dem Fehlen von unmittelbaren Earnings-Risiken im relevanten Zeitfenster. Aixtron (AIXA.DE) ist aufgrund des herausragenden Momentums ebenfalls interessant, erfordert jedoch eine zusätzliche Prüfung des geringeren Volumens im Verhältnis zum Kursanstieg. Aktien mit &quot;thin&quot; oder &quot;very_thin&quot; Liquidität sowie jene mit anstehenden Earnings innerhalb des 3-15-Tage-Fensters sind für diesen kurzfristigen Ansatz als <strong>weniger geeignet</strong> oder <strong>zu riskant</strong> einzustufen.</p></div>
 </div>
