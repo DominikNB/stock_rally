@@ -11,13 +11,14 @@ Deine Aufgabe:
 2. Fundament & Nachrichten
    Pro Ticker: News und Konzernmitteilungen in einem sinnvollen Zeitfenster vor dem Signaltag und am Signaltag; makroökonomischer Rahmen (Zinsen, Indizes, Rohstoffe, Geopolitik, Branchenzyklen); mikroökonomische bzw. unternehmensspezifische Punkte (Guidance, Aufträge, Sektortrends, Wettbewerb).
 
-3. Strukturelle Informationen aus der Signal-CSV (soweit vorhanden)
-   • Cluster / Diversifikation: signals_same_day, signals_same_sector_same_day, sector_share_same_day
-   • Korrelationsrisiko: cluster_mean_corr_60d (ähnliche Bewegung der Titel am selben Signaltag über das Lookback-Fenster)
-   • Liquidität: adv_20d_local, adv_pctile_same_day, liquidity_tier (ok / thin / very_thin)
-   • Termine im Haltefenster: next_earnings_date, bdays_to_next_earnings, earnings_in_3_15_bday_window (Earnings im 3–15-Handelstage-Swing?)
-   • Optional: prob nur als grobe Reihenfolge unter den Hits, nicht als alleinige Begründung für einen Einstieg.
-   • Optional: Forward-Spalten (ret_*d, ret_mean_5, entry_date, fwd_error) nur als Kontext, keine Rückwärts-Optimierung.
+3. Strukturelle Informationen aus der Signal-CSV (soweit vorhanden — vorrechenbar, keine Web-Suche nötig)
+   • Cluster / Sektor: signals_same_day, signals_same_sector_same_day, sector_share_same_day, n_sectors_same_day, sector_hhi_same_day (Konzentration der Branchen am Signaltag)
+   • Korrelation: cluster_mean_corr_60d (mittlere paarweise Korrelation der Tagesrenditen, 60 HT Lookback bis Signaltag), cluster_corr_pairwise_valid (≥2 Titel im Cluster)
+   • Liquidität: adv_20d_local (≈$ Umsatz/Tag 20d), adv_pctile_same_day, adv_rank_same_day (1 = höchster Umsatz im Cluster), liquidity_tier (ok / thin / very_thin)
+   • Meta-Ranking je Signaltag: rank_prob_same_day, pct_rank_prob_same_day, prob_zscore_same_day, meta_prob_margin — prob nur als grobe Reihenfolge, nicht als alleinige Einstiegsbegründung
+   • Kurs/Technik (OHLCV): volatility_20d / volatility_60d / volatility_20d_ann, momentum_20d, momentum_60d, dist_from_20d_high_pct, dist_from_20d_low_pct, ret_1d_signal_day, avg_hl_range_pct_14d, volume_zscore_20d
+   • Termine: next_earnings_date, bdays_to_next_earnings, earnings_in_3_15_bday_window, earnings_date_known, earnings_beyond_swing_15b, earnings_too_soon_lt3b
+   • Hinweis: Für den tagesaktuellen Export (master_daily_update.csv) gibt es keine Forward-Spalten; in der Historie (master_complete.csv) ggf. ret_*d / ret_mean_5 / entry_date nur als Kontext, keine Rückwärts-Optimierung.
 
 4. Synthese
    News/Makro/Mikro mit den strukturellen CSV-Informationen abgleichen.
@@ -25,9 +26,11 @@ Deine Aufgabe:
 
 5. Rahmen
    • Haltedauer: 3–15 Handelstage (Swing).
-   • Keine Anlageberatung; keine Garantien; sachlich und nachvollziehbar formulieren.
+   • Sachlich und nachvollziehbar formulieren.
 
 Output (für die Website):
+
+• Format: Antwort in **klarem Markdown** (Überschriften mit ## oder ###, Aufzählungen mit - oder 1., **Fettdruck** für Kernthesen und das Fazit, kurze Absätze). So wird die Darstellung auf der Website gut lesbar strukturiert.
 
 • Struktur: Antwort nach Ticker und/oder nach Thema (Branche, Makro-Cluster, Liquidität, Termine …), für Leser ohne technischen Hintergrund verständlich.
 
