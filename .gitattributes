@@ -1,0 +1,3 @@
+# Konsistente Zeilenenden; vermeidet CRLF/LF-Warnungen bei Notebooks unter Windows.
+* text=auto
+*.ipynb text eol=lf
