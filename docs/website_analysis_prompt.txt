@@ -14,19 +14,77 @@ Es liegen die Meta-Classifier-Treffer vor: Wahrscheinlichkeit prob ≥ threshold
    Nutze dafür **Web-Recherche / Google Search** (wenn verfügbar), um aktuelle Meldungen, Pressemitteilungen und Marktkommentare einzubeziehen — nicht nur die CSV.
 
 2. **Struktur & Kontext aus der CSV (Modell ergänzen — kein Doppel zu Technik)**  
-   Die folgenden Spalten beschreiben **Querschnitt, Liquidität, Korrelation im Titel-Cluster, Earnings-Timing** — das ist im Modell **nicht** als „Story“ abgebildet und soll die Nachrichtenlage **abgleichen**:
-   • Cluster / Sektor: signals_same_day, signals_same_sector_same_day, sector_share_same_day, n_sectors_same_day, sector_hhi_same_day  
-   • Korrelation: cluster_mean_corr_60d, cluster_corr_pairwise_valid  
-   • Liquidität: adv_20d_local, adv_pctile_same_day, adv_rank_same_day, liquidity_tier  
-   • Meta-Ranking je Signaltag: rank_prob_same_day, pct_rank_prob_same_day, prob_zscore_same_day, meta_prob_margin — nur als **relative** Einordnung unter den Treffern, nicht als alleinige Begründung  
-   • Termine: next_earnings_date, bdays_to_next_earnings, earnings_in_3_15_bday_window, earnings_date_known, earnings_beyond_swing_15b, earnings_too_soon_lt3b  
+   Die enrich-Spalten beschreiben **Querschnitt, Liquidität, Korrelation im Titel-Cluster, Earnings-Timing, relative Stärke, Gap, Short Interest** — im Klassifikator **nicht** als „Story“ modelliert; sie dienen dem **Abgleich** mit der Nachrichtenlage.  
+   **Wichtig:** Alle Werte beziehen sich auf den **Signaltag** in der CSV (und die Historie **bis einschließlich** dieses Tages bei rollierenden Fenstern). Quelle der Kursdaten für Berechnungen: **yfinance**-OHLCV (Bulk-Download), ggf. zusätzliche **yfinance**-Abfragen für SPY/Sektor-ETFs und `Ticker.info` (Short/Institutionen).
 
-3. **Technische Kurs-/OHLCV-Spalten (nachrangig)**  
-   Spalten wie volatility_*, momentum_*, dist_from_*_high/low_pct, ret_1d_signal_day, avg_hl_range_pct_14d, volume_zscore_20d spiegeln **bereits** Teile dessen wider, was das Modell aus Kursdaten gelernt hat.  
-   **Verweise auf diese Indikatoren nur dann und nur kurz**, wenn sie **zusätzlich** zur Nachrichten-/Ereignisanalyse einen klaren Mehrwert haben (z. B. offensichtliche Diskrepanz zwischen extremer Bewertung in den Daten und klarer News-Lage). **Keine** ausführliche technische Chart-Beschreibung und **kein** Schwerpunkt auf Indikatoren — der Leser soll vor allem **Warum heute / in dieser Woche aus Nachrichtensicht** verstehen.
+   **Semantik und Berechnung (genau so interpretieren):**
+
+   **Grundbegriffe aus dem Scoring (keine „Enrich“-Berechnung, aber Kontext):**  
+   • **prob** — Modell-Wahrscheinlichkeit für die Rally-Klasse.  
+   • **threshold_used** — verwendete Entscheidungsschwelle.  
+   • **meta_prob_margin** = **prob − threshold_used** (positiv = wie weit über der Schwelle).
+
+   **Cluster / Sektor (nur Signale, gleicher Kalendertag):**  
+   • **signals_same_day** — Anzahl aller Meta-Hits am selben **Date**.  
+   • **signals_same_sector_same_day** — Anzahl Hits am selben **Date** mit gleichem **sector**-Label wie die Zeile.  
+   • **sector_share_same_day** = signals_same_sector_same_day / signals_same_day (Anteil des Sektors unter den Hits des Tages).  
+   • **n_sectors_same_day** — Anzahl **unterschiedlicher** sector-Werte unter allen Hits an diesem **Date**.  
+   • **sector_hhi_same_day** — Herfindahl-Index der Sektoranteile am Tag: Summe über Sektoren von (Anzahl im Sektor / Gesamtanzahl)² (hoch = wenige Sektoren dominieren).
+
+   **Korrelation im „Cluster“ (gleicher Signaltag, gleiche Ticker-Menge):**  
+   • **cluster_mean_corr_60d** — Für alle Tickerpaare, die am selben **Date** ein Signal haben: **mittlere paarweise Pearson-Korrelation** der **täglichen Schlusskurs-Renditen** (einfache prozentuale Änderungen Close zu Close). Es werden **bis zu 60 Handelstage** **Ende Signaltag** verwendet; es müssen genügend gemeinsame Handelstage existieren (sonst NaN). **Alle Zeilen desselben Tages** tragen denselben Wert (Cluster-Mittel).  
+   • **cluster_corr_pairwise_valid** — **True**, wenn **signals_same_day ≥ 2** (sonst keine sinnvolle Paarkorrelation).
+
+   **Liquidität (aus OHLCV der Aktie):**  
+   • **adv_20d_local** — Mittlerer **Tagesumsatz in Währung** über die **letzten 20 Handelsschlüsse bis einschließlich Signaltag**: Mittelwert von **Close × Volume** (Volumen in Stücken, wie von yfinance geliefert).  
+   • **adv_pctile_same_day** — **Perzentilrang** (0–100) von **adv_20d_local** unter **allen Hits am selben Date** (höher = an diesem Tag liquiditätsmäßig weiter „vorne“).  
+   • **adv_rank_same_day** — **Rang** nach **adv_20d_local** am selben Date (**1** = höchster Umsatz unter den Hits).  
+   • **liquidity_tier** — Kategorisierung nach **adv_pctile_same_day**: **very_thin** wenn unter 15, **thin** wenn unter 35, sonst **ok** (Schwellen fest im Code).
+
+   **Meta-Ranking nur unter den Hits des Tages (relativ, kein absoluter Markt-Score):**  
+   • **rank_prob_same_day** — Rang der **prob** unter allen Treffern am **Date** (1 = höchste prob).  
+   • **pct_rank_prob_same_day** — Perzentilrang (0–100) der **prob** am selben **Date**.  
+   • **prob_zscore_same_day** — z-Score der **prob** **innerhalb** aller Zeilen mit demselben **Date** (Mittelwert/Standardabweichung des Tages).
+
+   **Earnings (Kalender von yfinance, Arbeitstage USA/NYSE-Logik über `pandas`):**  
+   • **next_earnings_date** — Nächstes bekanntes **Earnings-Datum** aus dem yfinance-Kalender (erstes Eintragsdatum); kann fehlen → NaN.  
+   • **bdays_to_next_earnings** — Anzahl **Handelstage** (Business Days, Mo–Fr) vom **ersten Kalendertag nach dem Signaltag** bis **einschließlich** **next_earnings_date**. Liegt das Earnings **am oder vor** dem Signaltag → NaN.  
+   • **earnings_in_3_15_bday_window** — **True**, wenn **3 ≤ bdays_to_next_earnings ≤ 15** (Überlappung mit typischer Swing-Haltedauer im Label).  
+   • **earnings_date_known** — **True**, wenn ein **next_earnings_date** existiert.  
+   • **earnings_beyond_swing_15b** — **True**, wenn **bdays_to_next_earnings** größer als 15.  
+   • **earnings_too_soon_lt3b** — **True**, wenn **bdays_to_next_earnings** kleiner als 3 (Earnings sehr nah).
+
+   **Relative Stärke und Gap (Definition „5 Handelstage“ identisch für Aktie, SPY und Sektor-ETF):**  
+   • **5-Tage-Rendite** = Schlusskurs am **Signaltag** / Schlusskurs **5 Handelstage davor** − 1 (nur Börsentage in der jeweiligen Serie).  
+   • **ret_vs_spy_5d** = (5-Tage-Rendite **Aktie**) − (5-Tage-Rendite **SPY**). Positiv = Aktie hat SPY in diesem Fenster **outperformed**. SPY kommt aus einem separaten yfinance-Download.  
+   • **ret_vs_sector_5d** = (5-Tage-Rendite **Aktie**) − (5-Tage-Rendite **US-Sektor-ETF**). Das **sector**-Textlabel (normalisiert: Kleinbuchstaben, Leerzeichen → Unterstrich) wird **grob** auf einen US-ETF gemappt — **nur** bei exakt diesem Schlüssel: tech→XLK, finance→XLF, healthcare→XLV, energy→XLE, industrial→XLI, materials→XLB, consumer→XLY, automotive→CARZ, real_estate→XLRE, telecom→VOX, media→XLC, crypto→BITO. **Jedes andere Label** (z. B. branchenspezifische Namen) → **NaN** in dieser Spalte. **Kein** perfekter Länder-/Sektor-Match — nur grober Vergleich „eigene Bewegung vs. US-Sektor-Proxy“.  
+   • **open_gap_pct** — Am **Signaltag**: (**Open** − **Vortages-Close**) / **Vortages-Close** (Gap zwischen letztem Handelstag und Eröffnung; bei Sitzungen ohne overnight Gap oft nahe 0).
+
+   **Short Interest & Institutionen (einmaliger Snapshot pro Ticker, Felder aus yfinance `Ticker.info`, können fehlen/NaN):**  
+   • **short_float_pct** — **Geshortetes Volumen als % der Free Float** (in der CSV **0–100**).  
+   • **short_days_to_cover** — yfinance-Feld **shortRatio** (üblicherweise **Tage bis Cover** bei aktuellem Volumen — Interpretation wie Datenanbieter, nicht neu berechnet).  
+   • **inst_own_pct** — **Institutionelle Beteiligung in %** (0–100), aus **heldPercentInstitutions**; **kein** historischer Trend, nur **Stand zum Abfragezeitpunkt**.
+
+3. **Technische Kurs-/OHLCV-Spalten (nachrangig)** — gleiche Datenbasis: **tägliche OHLCV** der Aktie bis Signaltag; alles aus **Schlusskurs-Renditen** bzw. **Volumen** wie unten.  
+   • **volatility_20d** — Standardabweichung der **täglichen** Close-Renditen, Rollfenster **20** Handelstage (min. 10 Beobachtungen).  
+   • **volatility_60d** — wie oben, Fenster **60** (min. 20).  
+   • **volatility_20d_ann** — **volatility_20d × √252** (annualisierte Schwankung, Näherung).  
+   • **momentum_20d** — **Close / Close vor 20 Handelstagen − 1**.  
+   • **momentum_60d** — **Close / Close vor 60 Handelstagen − 1**.  
+   • **dist_from_20d_high_pct** — (**Close** − **max(Close)** der letzten **20** Handelstage inkl. heute) / dieses Maximum.  
+   • **dist_from_20d_low_pct** — (**Close** − **min(Close)** der letzten **20** Handelstage inkl. heute) / dieses Minimum.  
+   • **ret_1d_signal_day** — **Tagesrendite** Close zu Close **für den Signaltag** (entspricht der Rendite des letzten verfügbaren Intervalls bis zum Schlusskurs des Signaltags).  
+   • **avg_hl_range_pct_14d** — Mittelwert über **14** Handelstage von **(High − Low) / Close** (relative Tagesrange).  
+   • **volume_zscore_20d** — **Z-Score** des **Volumens** am Signaltag: (Volume − 20-Tage-Mittel) / 20-Tage-Std.dev. des Volumens (hoch = ungewöhnlich starkes Volumen vs. den letzten 20 Börsentagen).
+
+   **Einordnung:** Diese Spalten spiegeln wider, was das Modell aus Kursdaten **teilweise schon** mitgedacht hat.  
+   **Verweise auf diese Indikatoren nur dann und nur kurz**, wenn sie **zusätzlich** zur Nachrichten-/Ereignisanalyse einen klaren Mehrwert haben (z. B. Diskrepanz zwischen Daten und News). **Keine** ausführliche Chart-Beschreibung — der Leser soll vor allem **Warum heute / in dieser Woche aus Nachrichtensicht** verstehen.
 
 4. **Hinweis CSV**  
    Alle genannten Spalten können fehlen oder NaN sein (fehlende Historie) — das ist kein Dateifehler. Für master_daily_update.csv gibt es keine Forward-Spalten; in master_complete.csv ggf. ret_*d / ret_mean_5 / entry_date nur als Kontext, keine Rückwärts-Optimierung.
+
+**Web-Recherche — Verwechslungen vermeiden (wichtig):**  
+Verifiziere bei jeder Suche und jeder Firmen-Zuordnung **Tickersymbol** und **Land / Börse der Notierung** (z. B. Suffix `.DE`, `.T`, `-USD`). Viele Namen gibt es doppelt; gleiche oder ähnliche Schreibweisen führen sonst zu falschen Meldungen. Wenn unsicher, die Zuordnung kurz begründen oder nur sichere Quellen nutzen.
 
 Deine Aufgabe (Ablauf):
 
@@ -34,14 +92,22 @@ Deine Aufgabe (Ablauf):
 
 2. **Pro Ticker zuerst:** Welche **Nachrichten, Meldungen und marktrelevanten Ereignisse** (Unternehmen, Sektor, Wirtschaft, ggf. Politik/Regulierung) sind im **kurzen Fenster** vor und am Signaltag plausibel mit einem Kursimpuls verknüpfbar? Was ist belegt, was Spekulation?
 
-3. **Dann abgleichen:** Passen Cluster-, Korrelations-, Liquiditäts- und Earnings-Infos aus der CSV zu dieser Story — oder widersprechen sie sich (z. B. dünnes Papier, Earnings unmittelbar, hohe Clusterkorrelation)?
+3. **Kausalität & Divergenzen (Pflicht):** Explizit auf **Widersprüche** zwischen Story und Daten prüfen — nicht nur auflisten:
+   • Gibt es eine **starke** oder klare News-/Ereignislage (z. B. positive Guidance, großer Auftrag), aber **niedriges** volume_zscore_20d oder schlechte Liquidität (liquidity_tier / adv_*)?  
+   • Oder einen **Meta-Hit** (hohe prob / gutes Ranking) **ohne** erkennbare begleitende Nachricht?  
+   • Kurze Rallies sind oft **Short-Squeeze**-nah: Wenn **News positiv** und **short_float_pct** bzw. **short_days_to_cover** auffällig sind, diese Verknüpfung nennen — nicht nur Zahlen vorlesen.  
+   Solche Fälle klar als **„spekulativ“** oder **„technisch getrieben“** kennzeichnen, wenn die Story nicht zur Datenlage passt oder keine Story erkennbar ist.
 
-4. **Technik nur bei Bedarf:** Knapp erwähnen, wenn es die Einordnung schärft; sonst weglassen.
+4. **bdays_to_next_earnings als harter Kontext:** Liegt das nächste Earnings-Datum **weniger als 5 Handelstage** entfernt (Fenster **unter 5 Handelstagen**), **Binary-Event-Risiko** ausdrücklich diskutieren: Kann sich die Rally **vor** den Zahlen noch „auszahlen“ oder handelt es sich um einen **reinen Earnings-Zock**? Bei längeren Abständen Earnings nur dort einbeziehen, wo es für die Swing-These (3–15 Tage) relevant ist.
 
-5. **Synthese**  
-   Klar benennen, wo **Nachrichtenlage**, Liquidität, Termine und Cluster zusammenpassen – und wo Risiken oder Lücken bestehen.
+5. **Dann abgleichen:** Passen Cluster-, Korrelations-, Liquiditäts-, RS-, Gap-, Short-/Institutions- und Earnings-Infos aus der CSV zu dieser Story — oder widersprechen sie sich?
 
-6. **Rahmen**  
+6. **Technik nur bei Bedarf:** Knapp erwähnen, wenn es die Einordnung schärft; sonst weglassen.
+
+7. **Synthese**  
+   Klar benennen, wo **Nachrichtenlage**, Liquidität, Termine, relative Stärke und Cluster zusammenpassen – und wo Risiken oder Lücken bestehen.
+
+8. **Rahmen**  
    • Haltedauer: 3–15 Handelstage (Swing).  
    • Sachlich und nachvollziehbar formulieren.
 
@@ -49,7 +115,17 @@ Output (für die Website):
 
 • Format: Antwort in **klarem Markdown** (Überschriften mit ## oder ###, Aufzählungen mit - oder 1., **Fettdruck** für Kernthesen und das Fazit, kurze Absätze).
 
-• Struktur: Logisch **Nachrichten- und Ereignisfokus**; strukturelle CSV-Punkte (Cluster, Korrelation, Liquidität, Earnings) einweben; Technik nur knapp wo sinnvoll — für Leser ohne technischen Hintergrund verständlich.
+• **Pflicht — einheitliches Ticker-Layout (je Treffer, zum schnellen Scannen):**  
+  Verwende pro Ticker genau diese Gliederung (Überschrift oder fett + Unterpunkte):
+
+  **Ticker (Name): [News-Rating: Positiv / Neutral / Spekulativ]**  
+  - **Die Story:** Kurz die News- und Ereignislage.  
+  - **Der Daten-Check:** Zusammenhang zwischen Story und Liquidität, RS (ret_vs_*), Gap, volume_zscore_20d, Short Interest / Inst., Earnings — wo es passt, wo nicht.  
+  - **Risiko-Faktor:** Z. B. „Earnings in 4 Tagen (Binary Event)“, „geringes Volumen trotz Narrativ“, „nur technischer Impuls“, etc.
+
+• Danach eine kurze **Zusammenfassung der Strategie** über alle Ticker (wer passt am ehesten zur These, wer nicht).
+
+• Struktur insgesamt: Logisch **Nachrichten- und Ereignisfokus**; strukturelle CSV-Punkte einweben; Technik nur knapp wo sinnvoll — für Leser ohne technischen Hintergrund verständlich.
 
 • Pflicht – abschließendes Fazit (wichtig):
   Explizit festhalten, welche Aktie(n) – falls überhaupt eine – nach Abwägung **insbesondere der Nachrichten- und Ereignislage** am ehesten für einen möglichen Einstieg in Frage kämen oder klar sagen, dass kein Treffer überzeugend genug ist bzw. keine einzelne Aktie bevorzugt wird. Kein Textende ohne diese Klärung.
@@ -58,4 +134,4 @@ Output (für die Website):
 
 Kurzbeschreibung (ein Zeile für die UI):
 
-Kurzfristige Rally-Einordnung: Meta-Hits des letzten Signaltags — **Schwerpunkt Nachrichten, Unternehmens- und Branchenereignisse sowie Wirtschaftslage**; Cluster/Korrelation/Liquidität/Earnings aus der CSV; Technik nur ergänzend; Schluss: welche Aktie – falls eine – für einen **kurzfristigen** Impuls am ehesten infrage kommt — keine Anlageberatung.
+Kurzfristige Rally-Einordnung: Meta-Hits des letzten Signaltags — **Schwerpunkt Nachrichten, Unternehmens- und Branchenereignisse sowie Wirtschaftslage**; Cluster/Korrelation/Liquidität/RS/Gap/Short/Earnings aus der CSV; Technik nur ergänzend; Schluss: welche Aktie – falls eine – für einen **kurzfristigen** Impuls am ehesten infrage kommt — keine Anlageberatung.
