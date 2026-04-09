@@ -4,14 +4,17 @@ Prompt: Meta-Hits – Analyse für die Website
 Kontext:
 Es liegen die Meta-Classifier-Treffer vor: Wahrscheinlichkeit prob ≥ threshold_used (kalibrierte Schwelle). Alle Angaben und angereicherten Spalten beziehen sich auf den jeweils aktuellsten in den bereitgestellten Daten enthaltenen Signaltag („heute“ im Sinne der CSV/Website – kein frei wählbares historisches Datum).
 
+**Ausrichtung:** Das Modell zielt auf die Erkennung **kurzfristiger Kurs-Rallies** (Impulse über wenige Handelstage), nicht auf langfristige Trendwenden oder mehrmonatige Erholungsnarrative. Im automatisierten Lauf (Gemini / Notebook) wird **oberhalb dieses Textes** die konkrete Rally-/Label-Definition aus den gespeicherten Trainingsparametern (`models/scoring_artifacts.joblib`: z. B. `return_window`, `rally_threshold`, `lead_days`, …) eingefügt — bitte diese Einordnung mitdenken.
+
 Deine Aufgabe:
 
 1. Alle Hits dieses aktuellsten Signaltags betrachten und je Ticker einordnen.
 
-2. Fundament & Nachrichten
-   Pro Ticker: News und Konzernmitteilungen in einem sinnvollen Zeitfenster vor dem Signaltag und am Signaltag; makroökonomischer Rahmen (Zinsen, Indizes, Rohstoffe, Geopolitik, Branchenzyklen); mikroökonomische bzw. unternehmensspezifische Punkte (Guidance, Aufträge, Sektortrends, Wettbewerb).
+2. Fundament & Nachrichten (kurzfristiger Fokus)
+   Pro Ticker: News und Konzernmitteilungen in einem **kurzen** sinnvollen Fenster vor dem Signaltag und am Signaltag, das **nahe Kursimpulse** erklären kann; Makro/Mikro nur soweit es den **kommenden wenigen Handelstagen** (Swing) zuträglich ist — keine ausufernde Langfrist-Story.
 
 3. Strukturelle Informationen aus der Signal-CSV (soweit vorhanden — vorrechenbar, keine Web-Suche nötig)
+   Die CSV-Header enthalten alle folgenden Spaltennamen; fehlende oder nicht berechenbare Werte stehen als leer/NaN — das ist kein Dateifehler, sondern fehlende Marktdaten oder zu wenig Historie.
    • Cluster / Sektor: signals_same_day, signals_same_sector_same_day, sector_share_same_day, n_sectors_same_day, sector_hhi_same_day (Konzentration der Branchen am Signaltag)
    • Korrelation: cluster_mean_corr_60d (mittlere paarweise Korrelation der Tagesrenditen, 60 HT Lookback bis Signaltag), cluster_corr_pairwise_valid (≥2 Titel im Cluster)
    • Liquidität: adv_20d_local (≈$ Umsatz/Tag 20d), adv_pctile_same_day, adv_rank_same_day (1 = höchster Umsatz im Cluster), liquidity_tier (ok / thin / very_thin)
@@ -41,4 +44,4 @@ Output (für die Website):
 
 Kurzbeschreibung (ein Zeile für die UI):
 
-Analysiert die Meta-Hits des aktuellsten Signaltags inkl. News, Makro/Mikro sowie Liquidität, Cluster, Korrelation und Earnings im 3–15-HT-Fenster; Schluss: welche Aktie – falls eine – am ehesten infrage kommt — keine Anlageberatung.
+Kurzfristige Rally-Einordnung: Meta-Hits des letzten Signaltags, News/Makro im Swing-Horizont, Liquidität/Cluster/Earnings; Schluss: welche Aktie – falls eine – für einen **kurzfristigen** Impuls am ehesten infrage kommt — keine Anlageberatung.
