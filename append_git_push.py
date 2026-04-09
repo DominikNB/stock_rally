@@ -19,7 +19,16 @@ def _git(*args):
     return r.returncode
 
 print('\\nPushing docs/ to GitHub Pages ...')
-_git('add', 'docs/index.html', 'docs/signals.json')
+from pathlib import Path as _Path
+_git_docs = [
+    'docs/index.html', 'docs/signals.json', 'docs/website_analysis_prompt.txt',
+    'docs/analysis_llm_last.html', 'docs/analysis_llm_last.txt',
+]
+_git_to_add = [p for p in _git_docs if (_Path(_repo) / p.replace('/', _os.sep)).is_file()]
+if not _git_to_add:
+    print('No docs files to stage — skipping.')
+else:
+    _git('add', '--', *_git_to_add)
 
 # Only commit if there are staged changes
 _diff = _sp.run(['git', 'diff', '--cached', '--quiet'], cwd=_repo)

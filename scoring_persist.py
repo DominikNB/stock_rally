@@ -1,0 +1,109 @@
+"""
+Persist / load Meta-Scoring bundle (base models, meta_clf, threshold, FEAT_COLS, filters).
+Used by stock_rally_v10.ipynb Cell 2 and Cell 19; import works without running Cell 2 first.
+"""
+from __future__ import annotations
+
+import time
+from pathlib import Path
+from typing import Any, MutableMapping
+
+import joblib
+import numpy as np
+
+
+def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None) -> Path:
+    """Build bundle from notebook namespace ``g`` and joblib-dump to ``path``."""
+    path = Path(path or g.get("SCORING_ARTIFACT_PATH") or Path("models") / "scoring_artifacts.joblib")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    bundle = {
+        "base_models": g["base_models"],
+        "meta_clf": g["meta_clf"],
+        "best_threshold": float(g["best_threshold"]),
+        "FEAT_COLS": list(g["FEAT_COLS"]),
+        "topk_idx": np.asarray(g["topk_idx"]),
+        "topk_names": list(g["topk_names"]),
+        "best_params": dict(g["best_params"]),
+        "tickers_for_run": list(g.get("_tickers_for_run") or []),
+        "CONSECUTIVE_DAYS": int(g["CONSECUTIVE_DAYS"]),
+        "SIGNAL_COOLDOWN_DAYS": int(g["SIGNAL_COOLDOWN_DAYS"]),
+        "rsi_w": int(g["rsi_w"]),
+        "bb_w": int(g["bb_w"]),
+        "sma_w": int(g["sma_w"]),
+        "signal_skip_near_peak": bool(g.get("SIGNAL_SKIP_NEAR_PEAK", True)),
+        "peak_lookback_days": int(g.get("PEAK_LOOKBACK_DAYS", 20)),
+        "peak_min_dist_from_high_pct": float(g.get("PEAK_MIN_DIST_FROM_HIGH_PCT", 0.012)),
+        "signal_max_rsi": None
+        if g.get("SIGNAL_MAX_RSI") is None
+        else float(g["SIGNAL_MAX_RSI"]),
+    }
+    joblib.dump(bundle, path)
+    print(f"Gespeichert: {path}  (threshold={bundle['best_threshold']:.4f})")
+    return path
+
+
+def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None) -> Path:
+    """Load joblib bundle and write into notebook namespace ``g``; (re)defines build_meta_features."""
+    import xgboost as xgb
+
+    path = Path(path or g.get("SCORING_ARTIFACT_PATH") or Path("models") / "scoring_artifacts.joblib")
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"Artefakt fehlt: {path} — zuerst vollständig trainieren (SCORING_ONLY=False)."
+        )
+    b = joblib.load(path)
+    g["base_models"] = b["base_models"]
+    g["meta_clf"] = b["meta_clf"]
+    g["best_threshold"] = float(b["best_threshold"])
+    g["FEAT_COLS"] = list(b["FEAT_COLS"])
+    g["topk_idx"] = np.asarray(b["topk_idx"])
+    g["topk_names"] = list(b["topk_names"])
+    if b.get("best_params") is not None:
+        g["best_params"] = dict(b["best_params"])
+    g["CONSECUTIVE_DAYS"] = int(b.get("CONSECUTIVE_DAYS", 2))
+    g["SIGNAL_COOLDOWN_DAYS"] = int(b.get("SIGNAL_COOLDOWN_DAYS", 4))
+    g["rsi_w"] = int(b["rsi_w"])
+    g["bb_w"] = int(b["bb_w"])
+    g["sma_w"] = int(b["sma_w"])
+    g["SIGNAL_SKIP_NEAR_PEAK"] = bool(b.get("signal_skip_near_peak", True))
+    g["PEAK_LOOKBACK_DAYS"] = int(b.get("peak_lookback_days", 20))
+    g["PEAK_MIN_DIST_FROM_HIGH_PCT"] = float(b.get("peak_min_dist_from_high_pct", 0.012))
+    _sr = b.get("signal_max_rsi")
+    g["SIGNAL_MAX_RSI"] = None if _sr is None else float(_sr)
+    if b.get("tickers_for_run"):
+        g["_tickers_for_run"] = list(b["tickers_for_run"])
+
+    base_models = g["base_models"]
+    topk_idx = g["topk_idx"]
+
+    def _predict_base_logged(model_tuple, X, dataset_label=""):
+        name, model, mtype = model_tuple
+        t0 = time.time()
+        n = len(X)
+        print(f"  [{name}] scoring {n:,} Zeilen ({dataset_label})...", end="", flush=True)
+        if mtype == "xgb":
+            result = 1.0 / (1.0 + np.exp(-model.predict(xgb.DMatrix(X))))
+        elif mtype == "lgb":
+            result = 1.0 / (1.0 + np.exp(-model.predict(X)))
+        else:
+            result = model.predict_proba(X)[:, 1]
+        print(f" {time.time() - t0:.1f}s", flush=True)
+        return result
+
+    def build_meta_features(X_feat, dataset_label=""):
+        if dataset_label:
+            print(f"\n--- {dataset_label}: {len(X_feat):,} Samples ---")
+        base_preds = np.column_stack(
+            [_predict_base_logged(m, X_feat, dataset_label) for m in base_models]
+        )
+        topk_feats = X_feat[:, topk_idx]
+        result = np.hstack([base_preds, topk_feats]).astype(np.float32)
+        if dataset_label:
+            print(f"  Meta-Matrix Shape: {result.shape}")
+        return result
+
+    g["_predict_base_logged"] = _predict_base_logged
+    g["build_meta_features"] = build_meta_features
+    g["_SCORING_ARTIFACTS_LOADED"] = True
+    print(f"Geladen: {path}  threshold={g['best_threshold']:.4f}")
+    return path

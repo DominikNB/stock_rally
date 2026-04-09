@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 data/
+# Large ML artifacts — GitHub rejects files > 100 MB
+models/scoring_artifacts.joblib
