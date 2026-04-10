@@ -15,6 +15,9 @@ data/master_complete.csv / master_daily_update.csv vorrechenbar, damit ein LLM d
   • Relative Stärke: ret_vs_spy_5d (5 Handelstage vs. SPY), ret_vs_sector_5d (vs. grobem US-Sektor-ETF, falls gemappt)
   • Gap: open_gap_pct (Open vs. Vortages-Close am Signaltag)
   • yfinance info (Snapshot): short_float_pct, short_days_to_cover, inst_own_pct (jeweils % 0–100, kein Trend — nur Stand)
+  • Markt/Sektor (yfinance Index/ETF, dynamisch zur Notierung): market_bench_symbol, sector_bench_symbol,
+    market_ret_1d/2d/3d, sector_ret_1d/2d/3d (kumulativ über 1/2/3 Handelstage bis Signaltag)
+  • Platzhalter: news_sentiment (derzeit nicht befüllt — NaN)
 
 Keine harten externen Abhängigkeiten außer yfinance/pandas/numpy.
 """
@@ -80,6 +83,15 @@ _LLM_EXTRA_COLS = (
     "short_float_pct",
     "short_days_to_cover",
     "inst_own_pct",
+    "market_ret_1d",
+    "market_ret_2d",
+    "market_ret_3d",
+    "sector_ret_1d",
+    "sector_ret_2d",
+    "sector_ret_3d",
+    "market_bench_symbol",
+    "sector_bench_symbol",
+    "news_sentiment",
 )
 
 # Grobe US-Sektor-ETFs (Vergleich „eigene Story vs. Sektor“); unbekannte Sektoren → NaN in ret_vs_sector_5d
@@ -98,6 +110,168 @@ _SECTOR_TO_BENCH_ETF: dict[str, str] = {
     "crypto": "BITO",
 }
 _BENCH_SPY = "SPY"
+
+# Suffix → Leitindex, wenn yfinance `info` keine eindeutige Region liefert
+_LEAD_INDEX_BY_TICKER_SUFFIX: list[tuple[tuple[str, ...], str]] = [
+    ((".DE", ".F"), "^GDAXI"),
+    ((".PA",), "^FCHI"),
+    ((".L",), "^FTSE"),
+    ((".T",), "^N225"),
+    ((".MI",), "^STOXX50E"),
+    ((".SW",), "^SSMI"),
+    ((".AS",), "^AEX"),
+    ((".BR",), "^BFX"),
+    ((".VI",), "^ATX"),
+    ((".AX",), "^AXJO"),
+    ((".SA",), "^BVSP"),
+    ((".TO",), "^GSPTSE"),
+    ((".HK",), "^HSI"),
+    ((".KS",), "^KS11"),
+    ((".TW",), "^TWII"),
+    ((".ST",), "^OMX"),
+]
+
+# EU: iShares STOXX Europe 600 Sector UCITS (DE-Listing) — grobe Branchen-Zuordnung
+_EU_SECTOR_TO_BENCH_ETF: dict[str, str] = {
+    "tech": "EXV3.DE",
+    "finance": "EXH1.DE",
+    "healthcare": "EXV2.DE",
+    "energy": "EXV4.DE",
+    "industrial": "EXV1.DE",
+    "materials": "EXV5.DE",
+    "consumer": "EXV6.DE",
+    "automotive": "EXV1.DE",
+    "real_estate": "EXV7.DE",
+    "telecom": "EXV8.DE",
+    "media": "EXV9.DE",
+    "crypto": "BITO",
+}
+
+
+def _lead_index_from_suffix_only(ticker: str) -> str:
+    """Fallback: Leitindex nur aus Ticker-Suffix."""
+    t = str(ticker).upper().strip()
+    for suffixes, sym in _LEAD_INDEX_BY_TICKER_SUFFIX:
+        if any(t.endswith(s) for s in suffixes):
+            return sym
+    return "^GSPC"
+
+
+def _lead_index_from_info(ticker: str, info: dict | None) -> str:
+    """
+    Leitindex passend zur Notierung: zuerst Land/Börse aus yfinance ``info``,
+    sonst Suffix-Heuristik (nicht immer DAX — z. B. US → S&P 500).
+    """
+    inf = info or {}
+    t = str(ticker).upper().strip()
+    c = (inf.get("country") or "").strip().lower()
+    ex = (inf.get("exchange") or "").upper()
+
+    if c in ("united states", "usa"):
+        return "^GSPC"
+    if c in ("germany", "deutschland"):
+        return "^GDAXI"
+    if c in ("france",):
+        return "^FCHI"
+    if c in ("united kingdom", "uk"):
+        return "^FTSE"
+    if c in ("japan",):
+        return "^N225"
+    if c in ("switzerland",):
+        return "^SSMI"
+    if c in ("netherlands",):
+        return "^AEX"
+    if c in ("italy",):
+        return "^STOXX50E"
+    if c in ("belgium",):
+        return "^BFX"
+    if c in ("austria",):
+        return "^ATX"
+    if c in ("australia",):
+        return "^AXJO"
+    if c in ("canada",):
+        return "^GSPTSE"
+    if c in ("hong kong", "hong kong sar"):
+        return "^HSI"
+    if c in ("sweden",):
+        return "^OMX"
+    if c in ("south korea", "korea", "republic of korea"):
+        return "^KS11"
+    if c in ("taiwan",):
+        return "^TWII"
+    if c in ("brazil",):
+        return "^BVSP"
+
+    if any(x in ex for x in ("NMS", "NYSE", "NAS", "PCX", "NGM")):
+        return "^GSPC"
+    if any(x in ex for x in ("BER", "FRA", "XETRA", "HAN", "MUN", "DUS", "STU")):
+        return "^GDAXI"
+    if any(x in ex for x in ("PAR", "EPA")):
+        return "^FCHI"
+    if any(x in ex for x in ("LSE", "LON")):
+        return "^FTSE"
+    if "JPX" in ex or "TOKYO" in ex:
+        return "^N225"
+
+    return _lead_index_from_suffix_only(ticker)
+
+
+def _use_eu_stoxx_sector_bench(ticker: str, info: dict | None) -> bool:
+    """Europäische STOXX-600-Sektor-ETFs statt US-SPDR, wenn Notierung EU/CH/UK-nah."""
+    inf = info or {}
+    t = str(ticker).upper().strip()
+    if any(
+        t.endswith(s)
+        for s in (".DE", ".PA", ".MI", ".AS", ".BR", ".VI", ".F", ".SW", ".L")
+    ):
+        return True
+    c = (inf.get("country") or "").strip().lower()
+    eu = {
+        "germany",
+        "france",
+        "italy",
+        "spain",
+        "netherlands",
+        "belgium",
+        "austria",
+        "ireland",
+        "finland",
+        "portugal",
+        "greece",
+        "luxembourg",
+    }
+    if c in eu or c in ("switzerland", "united kingdom", "uk"):
+        return True
+    return False
+
+
+def _sector_bench_etf(
+    sector: str | float | None, ticker: str, info: dict | None
+) -> str | None:
+    """
+    Sektor-Benchmark-ETF zur Aktie: EU → STOXX Europe 600 Sector UCITS (DE),
+    sonst US-Sektor-ETF (XLK, …). Unbekanntes Label → None.
+    """
+    if sector is None or (isinstance(sector, float) and np.isnan(sector)):
+        return None
+    key = str(sector).strip().lower().replace(" ", "_")
+    if not key or key not in _SECTOR_TO_BENCH_ETF:
+        return None
+    if _use_eu_stoxx_sector_bench(ticker, info):
+        return _EU_SECTOR_TO_BENCH_ETF.get(key) or _SECTOR_TO_BENCH_ETF.get(key)
+    return _SECTOR_TO_BENCH_ETF.get(key)
+
+
+def _warm_ticker_info_cache(tickers: list[str], cache: dict[str, dict]) -> None:
+    """Lädt ``yf.Ticker(t).info`` je Ticker höchstens einmal (für Short, Benchmarks)."""
+    for t in tickers:
+        ts = str(t)
+        if ts in cache:
+            continue
+        try:
+            cache[ts] = yf.Ticker(ts).info or {}
+        except Exception:
+            cache[ts] = {}
 
 
 def ensure_llm_signal_columns(out: pd.DataFrame) -> pd.DataFrame:
@@ -121,6 +295,8 @@ def ensure_llm_signal_columns(out: pd.DataFrame) -> pd.DataFrame:
                 o[c] = False
             elif c == "next_earnings_date":
                 o[c] = pd.NaT
+            elif c in ("market_bench_symbol", "sector_bench_symbol"):
+                o[c] = ""
             else:
                 o[c] = np.nan
     for c in _OHLC_LLM_COLS:
@@ -375,8 +551,10 @@ def _merge_ticker_date_features(raw: pd.DataFrame, out: pd.DataFrame) -> pd.Data
     return o.merge(feat, on=["ticker", "Date"], how="left")
 
 
-def _pct_ret_last_n_trading_days(close: pd.Series, end: pd.Timestamp, n: int = 5) -> float:
+def _pct_ret_last_n_trading_days(close: pd.Series | None, end: pd.Timestamp, n: int = 5) -> float:
     """Kursrendite über die letzten n Handelstage bis einschließlich ``end`` (Close/PrevClose_n - 1)."""
+    if close is None:
+        return float("nan")
     end = pd.Timestamp(end).normalize()
     s = close.dropna().sort_index()
     s.index = pd.to_datetime(s.index).normalize()
@@ -470,7 +648,9 @@ def _yf_info_short_snapshot(ticker: str, cache: dict[str, dict]) -> tuple[float,
     return sf, sdc, inst
 
 
-def _add_rs_gap_short_columns(out: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFrame:
+def _add_rs_gap_short_columns(
+    out: pd.DataFrame, raw: pd.DataFrame, info_cache: dict[str, dict]
+) -> pd.DataFrame:
     """Relative Stärke vs. SPY/Sektor-ETF, Gap, Short Interest / Inst.-Quote (Snapshot)."""
     o = out.copy()
     o["Date"] = pd.to_datetime(o["Date"]).dt.normalize()
@@ -480,11 +660,16 @@ def _add_rs_gap_short_columns(out: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFr
     end_s = d_max.strftime("%Y-%m-%d")
 
     spy = _yf_close_series_single(_BENCH_SPY, start_s, end_s)
-    sector_etfs = {_sector_etf_for_label(s) for s in o["sector"].unique()}
-    sector_etfs.discard(None)
+    sector_etfs: set[str] = set()
+    for _, r in o.iterrows():
+        etf = _sector_bench_etf(
+            r.get("sector"), r["ticker"], info_cache.get(str(r["ticker"]), {})
+        )
+        if etf:
+            sector_etfs.add(etf)
     bench_series: dict[str, pd.Series | None] = {_BENCH_SPY: spy}
     for etf in sector_etfs:
-        if etf and etf not in bench_series:
+        if etf not in bench_series:
             bench_series[etf] = _yf_close_series_single(etf, start_s, end_s)
 
     ohlc_cache: dict[str, pd.DataFrame | None] = {}
@@ -514,7 +699,9 @@ def _add_rs_gap_short_columns(out: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFr
         else:
             ret_vs_spy.append(float("nan"))
 
-        etf = _sector_etf_for_label(r.get("sector"))
+        etf = _sector_bench_etf(
+            r.get("sector"), t, info_cache.get(str(t), {})
+        )
         rsec = float("nan")
         if etf:
             ser = bench_series.get(etf)
@@ -533,7 +720,6 @@ def _add_rs_gap_short_columns(out: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFr
     o["ret_vs_sector_5d"] = ret_vs_sec
     o["open_gap_pct"] = gap_pct
 
-    info_cache: dict[str, dict] = {}
     sf_l: list[float] = []
     sd_l: list[float] = []
     inst_l: list[float] = []
@@ -546,6 +732,77 @@ def _add_rs_gap_short_columns(out: pd.DataFrame, raw: pd.DataFrame) -> pd.DataFr
     o["short_days_to_cover"] = sd_l
     o["inst_own_pct"] = inst_l
 
+    return o
+
+
+def _add_market_sector_bench_columns(
+    out: pd.DataFrame, info_cache: dict[str, dict]
+) -> pd.DataFrame:
+    """
+    Leitindex und Sektor-ETF **passend zur Notierung** (``info`` + Fallback Suffix);
+    kumulierte Renditen über 1/2/3 Handelstage bis Signaltag (wie ``_pct_ret_last_n_trading_days``).
+    """
+    o = out.copy()
+    o["Date"] = pd.to_datetime(o["Date"]).dt.normalize()
+    d_min = o["Date"].min() - pd.Timedelta(days=21)
+    d_max = o["Date"].max() + pd.Timedelta(days=5)
+    start_s = d_min.strftime("%Y-%m-%d")
+    end_s = d_max.strftime("%Y-%m-%d")
+
+    lead_syms: set[str] = set()
+    sec_syms: set[str] = set()
+    for _, r in o.iterrows():
+        inf = info_cache.get(str(r["ticker"]), {})
+        lead_syms.add(_lead_index_from_info(r["ticker"], inf))
+        etf = _sector_bench_etf(r.get("sector"), r["ticker"], inf)
+        if etf:
+            sec_syms.add(etf)
+
+    all_syms = lead_syms | sec_syms
+    series_cache: dict[str, pd.Series | None] = {}
+    for sym in all_syms:
+        series_cache[sym] = _yf_close_series_single(sym, start_s, end_s)
+
+    m1: list[float] = []
+    m2: list[float] = []
+    m3: list[float] = []
+    s1: list[float] = []
+    s2: list[float] = []
+    s3: list[float] = []
+    mlab: list[str] = []
+    slab: list[str] = []
+    for _, r in o.iterrows():
+        d = pd.Timestamp(r["Date"]).normalize()
+        inf = info_cache.get(str(r["ticker"]), {})
+        li = _lead_index_from_info(r["ticker"], inf)
+        mlab.append(li)
+        ser_li = series_cache.get(li)
+        m1.append(_pct_ret_last_n_trading_days(ser_li, d, 1))
+        m2.append(_pct_ret_last_n_trading_days(ser_li, d, 2))
+        m3.append(_pct_ret_last_n_trading_days(ser_li, d, 3))
+
+        etf = _sector_bench_etf(r.get("sector"), r["ticker"], inf)
+        if etf:
+            slab.append(etf)
+            ser_etf = series_cache.get(etf)
+            s1.append(_pct_ret_last_n_trading_days(ser_etf, d, 1))
+            s2.append(_pct_ret_last_n_trading_days(ser_etf, d, 2))
+            s3.append(_pct_ret_last_n_trading_days(ser_etf, d, 3))
+        else:
+            slab.append("")
+            s1.append(float("nan"))
+            s2.append(float("nan"))
+            s3.append(float("nan"))
+
+    o["market_bench_symbol"] = mlab
+    o["sector_bench_symbol"] = slab
+    o["market_ret_1d"] = m1
+    o["market_ret_2d"] = m2
+    o["market_ret_3d"] = m3
+    o["sector_ret_1d"] = s1
+    o["sector_ret_2d"] = s2
+    o["sector_ret_3d"] = s3
+    o["news_sentiment"] = np.nan
     return o
 
 
@@ -563,6 +820,9 @@ def enrich_signal_frame(
     """
     out = sig.copy()
     out["Date"] = pd.to_datetime(out["Date"]).dt.normalize()
+
+    info_cache: dict[str, dict] = {}
+    _warm_ticker_info_cache(sorted(sig["ticker"].astype(str).unique().tolist()), info_cache)
 
     out["meta_prob_margin"] = [
         meta_prob_margin(p, t) for p, t in zip(out["prob"], out["threshold_used"])
@@ -646,6 +906,7 @@ def enrich_signal_frame(
     out["earnings_too_soon_lt3b"] = [bool(np.isfinite(b) and b < 3.0) for b in bd]
 
     out = _merge_ticker_date_features(raw, out)
-    out = _add_rs_gap_short_columns(out, raw)
+    out = _add_rs_gap_short_columns(out, raw, info_cache)
+    out = _add_market_sector_bench_columns(out, info_cache)
 
     return ensure_llm_signal_columns(out)

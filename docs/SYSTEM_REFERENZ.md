@@ -283,7 +283,8 @@ Berechnet **nur aus Signal-Tabelle + yfinance-Rohmatrix** erklärende Spalten (L
 7. Cross-Section: `rank_prob_same_day`, `pct_rank_prob_same_day`, `prob_zscore_same_day`.  
 8. Earnings: `next_earnings_date` (yfinance calendar, gecacht), `bdays_to_next_earnings`, Flags für Fenster 3–15 bdays, etc.  
 9. `_merge_ticker_date_features(raw, out)`: OHLCV-Features (Volatilität, Momentum, Abstand zu 20d-High/Low, …) per Ticker/Zeile.  
-10. `_add_rs_gap_short_columns`: `ret_vs_spy_5d`, `ret_vs_sector_5d` (5-Handelstage-Rendite vs. SPY bzw. grobem US-Sektor-ETF), `open_gap_pct`, sowie per `yf.Ticker(...).info` (gecacht) `short_float_pct`, `short_days_to_cover`, `inst_own_pct` (Prozent 0–100).
+10. `_add_rs_gap_short_columns`: `ret_vs_spy_5d`, `ret_vs_sector_5d` (5-Handelstage-Rendite vs. SPY bzw. grobem US-Sektor-ETF), `open_gap_pct`, sowie per `yf.Ticker(...).info` (gecacht) `short_float_pct`, `short_days_to_cover`, `inst_own_pct` (Prozent 0–100).  
+11. `_add_market_sector_bench_columns`: pro Zeile `market_bench_symbol` / `sector_bench_symbol` (Leitindex aus `Ticker.info` + Suffix-Fallback; Sektor-ETF US vs. EU-STOXX-600-UCITS je nach Notierung), `market_ret_1d/2d/3d` und `sector_ret_1d/2d/3d` (kumulierte Handelstags-Renditen), `news_sentiment` (Platzhalter NaN).
 
 **Ausgabe**: erweiterter DataFrame (linksbündig auf `sig`); abschließend `ensure_llm_signal_columns`.
 

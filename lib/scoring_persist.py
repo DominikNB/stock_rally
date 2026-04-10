@@ -4,6 +4,7 @@ Used by stock_rally_v10.ipynb (``save_scoring_artifacts`` aus Cell 2; automatisc
 """
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 from typing import Any, MutableMapping
@@ -25,6 +26,68 @@ def _max_date_iso_from_threshold_df(df: Any) -> str | None:
         return str(pd.to_datetime(df["Date"]).max().date())
     except Exception:
         return None
+
+
+def _news_sql_manifest_from_g(g: MutableMapping[str, Any]) -> dict[str, Any]:
+    """Alles, was BigQuery/GDELT-News für reproduzierbare Features braucht (ohne Exploration)."""
+    sec = g.get("SECTOR_BQ_THEME_WHERE")
+    if isinstance(sec, dict):
+        sector_where = {str(k): str(v) for k, v in sec.items()}
+    else:
+        sector_where = {}
+    macro = g.get("MACRO_BQ_THEME_WHERE")
+    return {
+        "NEWS_SOURCE": g.get("NEWS_SOURCE"),
+        "MACRO_BQ_THEME_WHERE": None if macro is None else str(macro),
+        "SECTOR_BQ_THEME_WHERE": sector_where,
+        "GDELT_BQ_EVENTS_TABLE": g.get("GDELT_BQ_EVENTS_TABLE"),
+        "BQ_USE_GKG_TABLE": g.get("BQ_USE_GKG_TABLE"),
+        "BQ_USE_PARTITION_FILTER": g.get("BQ_USE_PARTITION_FILTER"),
+        "BQ_SINGLE_SCAN": g.get("BQ_SINGLE_SCAN"),
+        "BQ_THEMES_COLUMN": g.get("BQ_THEMES_COLUMN"),
+        "BQ_MACRO_GEO_COUNTRIES": g.get("BQ_MACRO_GEO_COUNTRIES"),
+        "BQ_SECTOR_USE_GEO_FILTER": g.get("BQ_SECTOR_USE_GEO_FILTER"),
+        "BQ_SECTOR_GEO_COUNTRIES": list(g["BQ_SECTOR_GEO_COUNTRIES"])
+        if isinstance(g.get("BQ_SECTOR_GEO_COUNTRIES"), (list, tuple))
+        else g.get("BQ_SECTOR_GEO_COUNTRIES"),
+        "NEWS_BQ_START_DATE": g.get("NEWS_BQ_START_DATE"),
+        "NEWS_BQ_END_DATE": g.get("NEWS_BQ_END_DATE"),
+        "NEWS_EXTRA_HISTORY_YEARS_BEFORE": g.get("NEWS_EXTRA_HISTORY_YEARS_BEFORE"),
+        "NEWS_EXTRA_HISTORY_YEARS_AFTER": g.get("NEWS_EXTRA_HISTORY_YEARS_AFTER"),
+        "USE_NEWS_SENTIMENT": g.get("USE_NEWS_SENTIMENT"),
+        "GKG_AUTO_EXPLORE_THEMES": g.get("GKG_AUTO_EXPLORE_THEMES"),
+        "GKG_THEME_SELECTION_PATH": str(g.get("GKG_THEME_SELECTION_PATH") or ""),
+        "GKG_THEME_SQL_TRIPLES": [list(t) for t in (g.get("GKG_THEME_SQL_TRIPLES") or [])],
+    }
+
+
+def _read_gkg_theme_audit(g: MutableMapping[str, Any]) -> dict[str, Any] | None:
+    p = g.get("GKG_THEME_SELECTION_PATH")
+    if not p:
+        return None
+    path = Path(p)
+    if not path.is_file():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def _apply_news_sql_manifest(g: MutableMapping[str, Any], manifest: dict[str, Any] | None) -> None:
+    if not manifest:
+        return
+    for key, val in manifest.items():
+        if key == "SECTOR_BQ_THEME_WHERE" and isinstance(val, dict):
+            g["SECTOR_BQ_THEME_WHERE"] = {str(k): str(v) for k, v in val.items()}
+        elif key == "GKG_THEME_SQL_TRIPLES" and val is not None:
+            g["GKG_THEME_SQL_TRIPLES"] = [tuple(x) for x in val]
+        else:
+            g[key] = val
+    print(
+        "News-SQL-Manifest aus Artefakt geladen — GDELT/BigQuery-Filter entsprechen dem Trainingsstand.",
+        flush=True,
+    )
 
 
 def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None) -> Path:
@@ -59,6 +122,8 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         if g.get("SIGNAL_MAX_RSI") is None
         else float(g["SIGNAL_MAX_RSI"]),
         "threshold_calibration_end_date": g.get("threshold_calibration_end_date"),
+        "news_sql_manifest": _news_sql_manifest_from_g(g),
+        "gkg_theme_selection_audit": _read_gkg_theme_audit(g),
     }
     joblib.dump(bundle, path)
     print(f"Gespeichert: {path}  (threshold={bundle['best_threshold']:.4f})")
@@ -75,6 +140,9 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
             f"Artefakt fehlt: {path} — zuerst vollständig trainieren (SCORING_ONLY=False)."
         )
     b = joblib.load(path)
+    _apply_news_sql_manifest(g, b.get("news_sql_manifest"))
+    if b.get("gkg_theme_selection_audit") is not None:
+        g["_gkg_theme_selection_audit"] = b["gkg_theme_selection_audit"]
     g["base_models"] = b["base_models"]
     g["meta_clf"] = b["meta_clf"]
     g["best_threshold"] = float(b["best_threshold"])
