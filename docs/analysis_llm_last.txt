@@ -1,250 +1,55 @@
-## Europäische Märkte mit deutlicher Rallye am 8. April 2026 dank Nahost-Waffenruhe
+## Kurzfristige Rally-Einordnung: Gemischtes Marktumfeld am 9. April 2026
 
-Der 8. April 2026 war an den europäischen Aktienmärkten von einer starken Aufwärtsbewegung geprägt, die hauptsächlich durch die Ankündigung einer zweiwöchigen Waffenruhe zwischen den USA und dem Iran ausgelöst wurde. Diese von Pakistan vermittelte Vereinbarung schürte Hoffnungen auf eine Stabilisierung der Lage im Nahen Osten und eine Wiederaufnahme der Öl- und Gaslieferungen durch die Straße von Hormus.
+Am Signaltag, dem 9. April 2026, zeigte sich der globale Aktienmarkt von einer Mischung aus Hoffnung und Ernüchterung geprägt. Eine anfängliche "Erleichterungsrallye" wurde durch die Nachricht von einer zweiwöchigen Waffenruhe im Nahen Osten ausgelöst, was weltweit zu Kursgewinnen führte. Insbesondere die US-Märkte profitierten davon: Der S&P 500 (^GSPC) stieg um 0,62 %, der Nasdaq Composite (^IXIC) um 0,83 % und der Dow Jones Industrial Average (^DJI) um 0,58 %. Treibende Kräfte waren hier unter anderem Fortschritte im Bereich der Künstlichen Intelligenz, wie etwa Amazons Engagement bei eigenen AI-Chips und Intels erweiterte Partnerschaft mit Google Cloud.
 
-Die Ölpreise reagierten umgehend mit einem deutlichen Rückgang: Brent-Rohöl-Futures für Juni fielen um fast 14 % auf etwa 91 US-Dollar pro Barrel. Dies sorgte für eine breite "Erleichterungsrallye" an den Börsen.
+In Europa zeigte sich das Bild differenzierter. Während der deutsche Leitindex DAX am Vortag noch kräftig zugelegt hatte, verlor er am 9. April 0,7 % an Wert. Dies lag an aufkommenden Zweifeln an der Nachhaltigkeit der Feuerpause und wieder steigenden Ölpreisen. Auch der japanische Nikkei 225 (^N225) gab nach einem starken Mittwoch einen Teil seiner Gewinne ab und schloss mit einem Minus von etwa 0,56–0,73 %. Generell blieben auch Sorgen um Inflation und höhere Zinsen im Raum, da Anleger auf wichtige US-Wirtschaftsdaten warteten. Dieser gemischte Makro-Kontext ist entscheidend für die Bewertung der einzelnen Meta-Treffer.
 
-*   Der deutsche Leitindex **DAX** legte im frühen Handel um 4,9 % zu und schloss den Tag mit einem beeindruckenden Plus von 5,2 % ab.
-*   Der französische **CAC 40** stieg um 4,49 % und beendete den Handel bei 8.264 Punkten, wobei insbesondere Finanz-, Industrie- und Luxusgüterwerte Zugewinne verbuchten.
-*   Der niederländische **AEX** eröffnete ebenfalls mit deutlichen Gewinnen und schloss 3,22 % höher bei 1002,72 Punkten.
+### Ticker (Name): 6503.T (Mitsubishi)
+**News-Rating:** Neutral
+- **Die Story:** Es wurden keine spezifischen Nachrichten zu Mitsubishi Electric (6503.T) im relevanten Zeitfenster (9. April 2026 und die zwei Tage davor) identifiziert. Die positive Kursentwicklung des Unternehmens am Signaltag scheint daher eher datengetrieben oder technisch zu sein.
+- **Der Daten-Check:** Mitsubishi Electric verzeichnete am Signaltag eine positive Tagesrendite von 0,36 % (`ret_1d_signal_day`). Dies ist bemerkenswert, da der japanische Leitindex Nikkei 225 (^N225) am selben Tag Verluste zwischen 0,56 % und 0,73 % hinnehmen musste. Dies deutet auf eine relative Stärke (Alpha-Move) der Aktie im Vergleich zum Gesamtmarkt hin. Die Liquidität der Aktie ist mit einem `adv_pctile_same_day` von 100 und dem `liquidity_tier` "ok" sehr gut, was die Kursbewegung unterstützt. Die Korrelation innerhalb des Clusters (`cluster_mean_corr_60d` von 0,378) ist moderat.
+- **Risiko-Faktor:** Die fehlende spezifische Nachrichtenlage macht die Rally schwer zu begründen und möglicherweise spekulativ. Das nächste Earnings-Datum liegt am 28. April 2026 (`bdays_to_next_earnings` von 13), was innerhalb des typischen Swing-Handelsfensters liegt und ein binäres Ereignisrisiko darstellt.
 
-Begleitende Wirtschaftsdaten aus der Eurozone für Februar 2026 zeigten, dass die industriellen Erzeugerpreise gegenüber dem Vormonat um 0,7 % sanken, primär infolge fallender Energiepreise. Auch das Einzelhandelsvolumen ging leicht zurück. Diese Daten trugen tendenziell zur Entspannung bei, da sie den Inflationsdruck reduzierten. Die allgemeine Stimmung war somit von Optimismus geprägt, was vielen Aktien Auftrieb verlieh.
+### Ticker (Name): LII (Lennox)
+**News-Rating:** Neutral
+- **Die Story:** Für Lennox International (LII) konnten im relevanten Zeitfenster (9. April 2026 und die zwei Tage davor) keine unternehmensspezifischen Nachrichten gefunden werden, die die Kursbewegung erklären. Die Rally ist daher als rein technisch oder datengetrieben einzustufen.
+- **Der Daten-Check:** Lennox zeigte am Signaltag eine starke Tagesrendite von 2,22 % (`ret_1d_signal_day`). Dies stellt einen deutlichen Alpha-Move dar, da der S&P 500 (^GSPC) am selben Tag lediglich um 0,62 % stieg. Die Liquidität (`liquidity_tier`: thin, `adv_pctile_same_day`: 28.57) ist eher gering, was bei stärkeren Kursbewegungen auf eine erhöhte Volatilität hindeuten kann. Die Aktie weist einen `momentum_60d` von -0.0809 auf, was auf eine kurzfristige Erholung nach einer schwächeren Phase hindeuten könnte.
+- **Risiko-Faktor:** Die geringe Liquidität in Verbindung mit dem Fehlen von Nachrichten könnte auf eine spekulative Bewegung hindeuten. Die Veröffentlichung der nächsten Quartalszahlen am 29. April 2026 (`bdays_to_next_earnings` von 14) fällt ebenfalls in das Swing-Handelsfenster und birgt ein Binärereignis-Risiko.
 
----
+### Ticker (Name): SPG (Simon Property)
+**News-Rating:** Spekulativ
+- **Die Story:** Es wurden keine spezifischen positiven Unternehmensnachrichten zu Simon Property Group (SPG) im relevanten Zeitfenster gefunden. Der Immobilieninvestmentmarkt in Deutschland, der unter dem Iran-Krieg und steigenden Zinsen leidet, erhöht den Preis- und Handlungsdruck für Immobilieneigentümer. Obwohl dies den deutschen Markt betrifft, könnte es ein allgemeines negatives Sentiment für den Sektor widerspiegeln, was eine positive Kursbewegung von SPG (US-Immobilien-REIT) ohne spezifische positive News als widersprüchlich erscheinen lässt.
+- **Der Daten-Check:** SPG verbuchte am Signaltag eine beachtliche Tagesrendite von 2,54 % (`ret_1d_signal_day`), was eine signifikante Outperformance gegenüber dem S&P 500 (^GSPC) von 0,62 % darstellt. Die Liquidität ist mit `liquidity_tier` "ok" ausreichend. Die relative Stärke (`ret_vs_spy_5d` und `ret_vs_sector_5d` sind nicht direkt in der CSV für 1d ersichtlich, aber die 1d-Rendite ist stark).
+- **Risiko-Faktor:** Angesichts des negativen Sektorumfelds und fehlender positiver unternehmensspezifischer Nachrichten erscheint die starke Kursrally spekulativ und potenziell technisch getrieben. Das nächste Earnings-Datum liegt am 11. Mai 2026 (`bdays_to_next_earnings` von 22), was außerhalb des kurzfristigen Swing-Handelsfensters liegt, somit ist das binäre Ereignisrisiko für die Rally geringer, aber das allgemeine Sektorisiko bleibt bestehen.
 
-### **Einzelne Treffer — Analyse für die Website**
+### Ticker (Name): TT (Trane Tech)
+**News-Rating:** Neutral
+- **Die Story:** Es wurden keine spezifischen Nachrichten zu Trane Technologies (TT) im relevanten Zeitfenster gefunden. Die positive Kursentwicklung ist somit als datengetrieben oder technisch zu bewerten.
+- **Der Daten-Check:** Trane Technologies zeigte am Signaltag eine starke Tagesrendite von 2,37 % (`ret_1d_signal_day`), was ebenfalls einen klaren Alpha-Move gegenüber dem S&P 500 (^GSPC) von 0,62 % darstellt. Die Liquidität ist mit `liquidity_tier` "ok" gut. Das Volumen am Signaltag war leicht unterdurchschnittlich (`volume_zscore_20d` von -0.48), was bei einer starken Kursbewegung ohne Nachrichtenlage auf eine geringere Überzeugung hindeuten könnte.
+- **Risiko-Faktor:** Ähnlich wie bei Lennox, könnte die mangelnde Nachrichtenlage in Kombination mit einem starken Kursanstieg auf eine technische oder spekulative Rally hindeuten. Die Earnings am 30. April 2026 (`bdays_to_next_earnings` von 15) fallen genau auf die Grenze des Swing-Handelsfensters und stellen ein potenzielles Binärereignis dar.
 
-Für die nachfolgende Analyse wird darauf hingewiesen, dass spezifische Spalten wie `market_ret_1d`, `sector_ret_1d`, `market_bench_symbol`, `sector_bench_symbol` und `ret_vs_sector_5d` in der bereitgestellten CSV nicht enthalten waren. Die Einordnung bezüglich "Alpha vs. Beta" basiert daher auf dem Vergleich von `ret_1d_signal_day` mit der allgemeinen Marktentwicklung des jeweiligen Leitindex (DAX für deutsche, CAC 40 für französische, AEX für niederländische Aktien) am Signaltag und der `ret_vs_spy_5d` Kennzahl (basierend auf einer 5-Tages-Rendite des SPY von +3,17% vom 01.04.2026 bis 08.04.2026).
+### Ticker (Name): UNH (UnitedHealth)
+**News-Rating:** Neutral
+- **Die Story:** Für UnitedHealth Group (UNH) konnten im relevanten Zeitfenster keine spezifischen Nachrichten gefunden werden, die eine Kursbewegung erklären würden. Die Einordnung ist daher rein datengetrieben.
+- **Der Daten-Check:** UnitedHealth verzeichnete am Signaltag eine geringfügig positive Tagesrendite von 0,30 % (`ret_1d_signal_day`). Dies ist eine Underperformance gegenüber dem S&P 500 (^GSPC), der um 0,62 % stieg. Somit war dies eher ein Beta-Mitläufer, der nicht vollends von der Marktstärke profitieren konnte. Die Liquidität ist mit `liquidity_tier` "ok" sehr gut.
+- **Risiko-Faktor:** Die schwache relative Performance zum Gesamtmarkt trotz positiven Marktumfelds und fehlender Nachrichtenlage macht die Rally für eine kurzfristige Impulsstrategie weniger attraktiv. Das nächste Earnings-Datum am 21. April 2026 (`bdays_to_next_earnings` von 8) liegt im Swing-Handelsfenster und birgt ein Binärereignis-Risiko.
 
----
+### Ticker (Name): WDP.BR (WDP)
+**News-Rating:** Spekulativ
+- **Die Story:** Es wurden keine spezifischen Nachrichten zu WDP (WDP.BR) im relevanten Zeitfenster gefunden. Der allgemeine Immobilienmarkt in Europa, wie am Beispiel Deutschlands beschrieben, ist durch den Iran-Krieg und steigende Zinsen unter Druck geraten. Die positive Kursbewegung der Aktie könnte daher im Widerspruch zum breiteren Sektorumfeld stehen.
+- **Der Daten-Check:** WDP zeigte am Signaltag eine positive Tagesrendite von 0,50 % (`ret_1d_signal_day`). Da der DAX am selben Tag fiel, könnte dies eine relative Stärke darstellen, jedoch fehlt ein konkreter europäischer/belgischer Indexvergleich. Die Liquidität der Aktie ist mit `liquidity_tier` "very_thin" und einem `adv_pctile_same_day` von 14.29 extrem gering. Ein `volume_zscore_20d` von -0.85 deutet auf ein sehr niedriges Volumen hin.
+- **Risiko-Faktor:** Die extrem geringe Liquidität macht die Aktie sehr volatil und anfällig für starke Kursausschläge bei geringem Handelsvolumen, was sie für kurzfristige Swing-Trades riskant macht. Das Fehlen von Nachrichten und das potenziell schwierige Sektorumfeld verstärken den spekulativen Charakter der Bewegung. Das nächste Earnings-Datum am 24. April 2026 (`bdays_to_next_earnings` von 11) liegt im Swing-Handelsfenster und stellt ein Binärereignis-Risiko dar.
 
-**IFX.DE (Infineon): Positiv**
-- **Die Story:** Infineon gehörte am 8. April 2026 zu den Top-Performern im XETRA-Handel mit einem Anstieg von 11,3 % (oder 8,13 %). Das Unternehmen profitierte von einer positiven Stimmung im Halbleitersektor, gestützt durch die (am 6. April gemeldeten) Zollausnahmen für Elektronikprodukte in den USA. Zudem wurde der vorgezogene Start einer großen Chipfabrik in Dresden zur Deckung der Nachfrage nach KI-Halbleitern als positive Entwicklung hervorgehoben. Analysten von Jefferies bestätigten ihr "Buy"-Votum für Infineon.
-- **Der Daten-Check:** Mit einem `ret_1d_signal_day` von 11,83 % übertraf Infineon den DAX (+5,2 %) deutlich, was auf einen starken Alpha-Move hindeutet. Die Liquidität ist mit ca. 184 Mio. EUR (`adv_20d_local`) und einem `liquidity_tier` von "ok" (91. Perzentil) hervorragend. Ein `volume_zscore_20d` von 1.40 bestätigt ein überdurchschnittliches Handelsvolumen. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch an. Die nächsten Earnings liegen in 20 Handelstagen, außerhalb des unmittelbaren Risikofensters.
-- **Risiko-Faktor:** Die erwähnten Zollausnahmen sind als vorübergehend eingestuft, was zukünftig wieder Druck auf den Sektor ausüben könnte.
+### Strategie-Zusammenfassung
 
-**BFSA.DE (Befesa): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten für Befesa im relevanten Zeitfenster (06.04.-08.04.2026) identifiziert. Die Einordnung ist datengetrieben.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 10,24 % weist auf einen starken Alpha-Move gegenüber dem DAX (+5,2 %) hin. Die Liquidität ist mit ca. 1,94 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "thin" (20. Perzentil) eher gering. Das `volume_zscore_20d` von 0.54 ist leicht positiv, aber nicht herausragend. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 16 Handelstagen.
-- **Risiko-Faktor:** Der starke Alpha-Move ohne fundamentalen Nachrichten-Katalysator, gepaart mit geringerer Liquidität, macht diesen Wert spekulativ.
+Die Analyse zeigt eine Reihe von Meta-Treffern am 9. April 2026 in einem gemischten globalen Marktumfeld. Während die US-Märkte generell von der Waffenruhe und positiven Tech-Meldungen profitierten, zeigten europäische und japanische Indizes Anzeichen von Ernüchterung. Auffallend ist, dass für die meisten der identifizierten Ticker keine spezifischen unternehmensbezogenen Nachrichten gefunden wurden, die die kurzfristigen Kursbewegungen direkt erklären könnten. Dies deutet darauf hin, dass die Signale entweder technisch getrieben sind oder von übergeordneten Marktbewegungen (Beta-Effekt) stammen.
 
-**BNP.PA (BNP Paribas): Positiv**
-- **Die Story:** BNP Paribas profitierte am 8. April 2026 stark von der Markterholung und stieg um 7,5 %, da die Entspannung der geopolitischen Risiken den gesamten Bankensektor beflügelte. Zudem gab das Unternehmen am 8. April bekannt, dass es seine Beteiligung an Getlink auf über 5 % erhöht hat.
-- **Der Daten-Check:** Mit einem `ret_1d_signal_day` von 7,48 % übertraf BNP Paribas den CAC 40 (+4,49 %) deutlich und zeigte einen klaren Alpha-Move. Die Liquidität ist mit ca. 267 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (95. Perzentil) sehr hoch. Der `volume_zscore_20d` von 1.65 ist signifikant, was auf erhöhtes Interesse hindeutet. Die `dist_from_20d_high_pct` von 0.0 deutet auf ein 20-Tage-Hoch hin. Die nächsten Earnings sind in 16 Handelstagen.
-- **Risiko-Faktor:** Keine unmittelbaren Risikofaktoren; die positive Nachrichtenlage und hohe Liquidität stützen eine Fortsetzung des Impulses.
+Insbesondere Lennox (LII), Simon Property (SPG) und Trane Technologies (TT) zeigten starke Alpha-Moves relativ zum S&P 500, jedoch ohne klare Nachrichtenlage. SPG und WDP.BR im Immobiliensektor agieren in einem Umfeld, das laut Savills unter Druck steht, was ihre positiven Bewegungen spekulativ erscheinen lässt. UnitedHealth (UNH) zeigte eine Underperformance gegenüber dem Markt.
 
-**CBK.DE (Commerzbank): Positiv**
-- **Die Story:** Keine spezifischen Unternehmensnachrichten. Als Finanzinstitut dürfte die Commerzbank jedoch stark von der allgemeinen Entspannung am Markt profitiert haben, da fallende Energiepreise den Inflationsdruck mindern und Spielräume für Zinsanpassungen eröffnen, was den Bankensektor tendenziell stützt.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 9,05 % übertraf den DAX (+5,2 %) deutlich, was einen starken Alpha-Move im Branchenkontext signalisiert. Die Liquidität ist mit ca. 127 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (84. Perzentil) sehr gut. Ein `volume_zscore_20d` von 1.11 bestätigt erhöhtes Handelsvolumen. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 22 Handelstagen.
-- **Risiko-Faktor:** Das Fehlen einer direkten Meldung könnte die Nachhaltigkeit des Alpha-Moves ohne weiteren Trigger einschränken.
+### Abschließendes Fazit
 
-**ENR.DE (Siemens Energy): Neutral**
-- **Die Story:** Siemens Energy meldete am 7. April 2026, dass im Rahmen des Aktienrückkaufprogramms weitere 1,48 Millionen Aktien zurückgekauft wurden (Zeitraum 30. März bis 6. April). Während dies positive Kapitalmanagement-Nachrichten sind, wurde die Aktie am 7. April als Verlustbringer genannt. Der starke Anstieg am 8. April erfolgte im Zuge der breiten Marktrallye. Fallende Ölpreise könnten für ein Energieunternehmen ambivalente Auswirkungen haben, da sie zwar die Betriebskosten senken, aber auch den Druck auf den Umstieg zu erneuerbaren Energien kurzfristig mindern könnten.
-- **Der Daten-Check:** Siemens Energy zeigte einen `ret_1d_signal_day` von 11,94 %, eine deutliche Outperformance des DAX (+5,2 %). Die Liquidität ist mit ca. 467 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (100. Perzentil) extrem hoch. Ein `volume_zscore_20d` von 1.72 signalisiert stark erhöhtes Volumen. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 24 Handelstagen.
-- **Risiko-Faktor:** Trotz starker Performance und Liquidität ist die fehlende klare News-Verknüpfung für den Anstieg am 8. April und die potenziell gemischten Auswirkungen der Ölpreisentwicklung auf das Geschäftsmodell ein Unsicherheitsfaktor.
+Basierend auf der Nachrichten- und Daten-Synthese sowie dem CSV-Abgleich kommt **kein einziger Ticker** eindeutig als Favorit für einen kurzfristigen Rally-Impuls infrage, der durch eine überzeugende Nachrichtenlage gestützt wird.
 
-**AIXA.DE (Aixtron): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Halbleiterunternehmen profitierte Aixtron wahrscheinlich vom allgemeinen positiven Sektor-Sentiment, das auch Infineon Auftrieb gab. Eine Jefferies-Studie erwähnte Aixtron am 8. April im Kontext bevorstehender Quartalszahlen.
-- **Der Daten-Check:** Mit einem `ret_1d_signal_day` von 10,87 % übertraf Aixtron den DAX (+5,2 %) deutlich. Die Liquidität ist mit ca. 39,86 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (64. Perzentil) solide. Das `volume_zscore_20d` von 0.02 ist neutral. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 16 Handelstagen.
-- **Risiko-Faktor:** Der Alpha-Move ist wahrscheinlich sektorgetrieben. Das fehlende außergewöhnliche Volumen und spezifische News könnten die Nachhaltigkeit der Rallye ohne weiteren Katalysator beeinflussen.
+Die fehlende spezifische Nachrichtenlage bei allen Treffern, die die Kursbewegungen erklären könnte, ist ein erheblicher Faktor. Viele der positiven Bewegungen scheinen technisch getrieben zu sein oder sind als Alpha-Moves in einem positiven US-Marktumfeld aufgetreten, ohne dass ein konkreter Katalysator erkennbar wäre. Bei SPG und WDP.BR kommen widersprüchliche Sektor-Meldungen und bei WDP.BR eine extrem geringe Liquidität hinzu, die den spekulativen Charakter verstärken. Auch das anstehende Earnings-Risiko bei den meisten Titeln innerhalb des Swing-Fensters ist zu beachten.
 
-**SIE.DE (Siemens): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als breit aufgestelltes Industrieunternehmen profitierte Siemens stark von der allgemeinen Erleichterungsrallye und dem positiven Marktsentiment.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 10,24 % übertraf den DAX (+5,2 %) deutlich und deutet auf einen starken Alpha-Move hin. Die Liquidität ist mit ca. 344 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (96. Perzentil) sehr gut. Ein `volume_zscore_20d` von 1.78 bestätigt stark erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0028 zeigt an, dass die Aktie nahe ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 25 Handelstagen.
-- **Risiko-Faktor:** Der starke Anstieg ist primär marktgetrieben, das Fehlen unternehmensspezifischer News könnte die Dynamik ohne neue Impulse begrenzen.
-
-**DUE.DE (Dürr): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Industrieunternehmen profitierte Dürr wahrscheinlich von der allgemeinen Verbesserung des Wirtschaftsklimas durch die geopolitische Entspannung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 12,36 % war eine sehr starke Outperformance des DAX (+5,2 %), ein signifikanter Alpha-Move. Die Liquidität ist mit ca. 3,47 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "thin" (25. Perzentil) eher gering. Ein `volume_zscore_20d` von 1.83 deutet auf stark erhöhtes Handelsvolumen hin, trotz geringerer absoluter Liquidität. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 24 Handelstagen.
-- **Risiko-Faktor:** Die Kombination aus starkem Alpha-Move ohne spezifische News und der relativ geringen Liquidität, aber hohem Volumen, deutet auf einen spekulativen Impuls hin.
-
-**ELG.DE (Elmos Semiconductor): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Halbleiterunternehmen profitierte Elmos wahrscheinlich vom positiven Sektor-Sentiment.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 7,62 % ist eine Outperformance des DAX (+5,2 %), ein moderater Alpha-Move. Die Liquidität ist mit ca. 4,67 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "thin" (34. Perzentil) eher gering. Das `volume_zscore_20d` von -0.18 ist leicht negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 19 Handelstagen.
-- **Risiko-Faktor:** Moderater Alpha-Move ohne spezifische News und ohne erhöhtes Volumen bei geringer Liquidität macht die Rallye potenziell anfälliger.
-
-**LHA.DE (Lufthansa): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Luftfahrtunternehmen profitierte Lufthansa wahrscheinlich stark von der geopolitischen Entspannung und den fallenden Ölpreisen, die die Betriebskosten senken und die Reisebereitschaft erhöhen.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 10,27 % war eine sehr starke Outperformance des DAX (+5,2 %), ein signifikanter Alpha-Move. Die Liquidität ist mit ca. 59,34 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (75. Perzentil) gut. Ein `volume_zscore_20d` von 2.32 bestätigt außergewöhnlich starkes Volumen. Die `dist_from_20d_high_pct` von -0.01 zeigt an, dass die Aktie nahe ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 20 Handelstagen.
-- **Risiko-Faktor:** Trotz fehlender spezifischer News ist die positive Auswirkung des Makro-Umfelds auf die Branche plausibel und die Daten (Alpha, Liquidität, Volumen) überzeugen.
-
-**CON.DE (Continental): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Automobilzulieferer profitierte Continental wahrscheinlich von der allgemeinen Markterholung und reduzierten Unsicherheit.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 6,71 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 30,69 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (62. Perzentil) solide. Ein `volume_zscore_20d` von 1.98 bestätigt stark erhöhtes Handelsvolumen. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 20 Handelstagen.
-- **Risiko-Faktor:** Solider Alpha-Move mit sehr hohem Volumen, aber ohne spezifische News.
-
-**WAF.DE (Siltronic): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Halbleiterzulieferer profitierte Siltronic wahrscheinlich vom positiven Sektor-Sentiment.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 8,96 % übertraf den DAX (+5,2 %) deutlich, ein Alpha-Move. Die Liquidität ist mit ca. 4,16 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "thin" (32. Perzentil) eher gering. Ein `volume_zscore_20d` von 0.93 ist positiv. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 15 Handelstagen (`earnings_in_3_15_bday_window`).
-- **Risiko-Faktor:** Die geringe Liquidität und der bevorstehende Earnings-Termin (Binary Event Risiko) machen die Rallye spekulativ.
-
-**SMHN.DE (SÜSS MicroTec): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Technologieunternehmen profitierte SÜSS MicroTec wahrscheinlich vom positiven Sektor-Sentiment.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 10,54 % übertraf den DAX (+5,2 %) deutlich, ein Alpha-Move. Die Liquidität ist mit ca. 9,63 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (45. Perzentil) solide. Das `volume_zscore_20d` von -0.30 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0616 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 21 Handelstagen.
-- **Risiko-Faktor:** Alpha-Move ohne spezifische News und ohne erhöhtes Volumen könnte auf eine technische oder sektorgetriebene Bewegung hindeuten.
-
-**GYC.DE (Grand City Prop.): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Immobilienunternehmen könnte es von der Entspannung der Zins- und Inflationserwartungen profitieren.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 5,35 % entsprach in etwa der DAX-Performance (+5,2 %), eher ein Beta-Move. Die Liquidität ist mit ca. 3,69 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "thin" (30. Perzentil) eher gering. Das `volume_zscore_20d` von -0.27 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0157 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 24 Handelstagen.
-- **Risiko-Faktor:** Eher Beta-Move, mangels spezifischer News und hohem Volumen in einem Sektor mit moderatem Beta-Move weniger überzeugend.
-
-**RAA.DE (Rational): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Industrieunternehmen profitierte Rational wahrscheinlich von der allgemeinen Markterholung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 7,40 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 11,52 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (48. Perzentil) solide. Das `volume_zscore_20d` von -0.0008 ist neutral. Die `dist_from_20d_high_pct` von -0.0073 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 20 Handelstagen.
-- **Risiko-Faktor:** Alpha-Move ohne spezifische News und erhöhtes Volumen könnte eine rein technische oder vom Sektor getriebene Bewegung sein.
-
-**DTG.DE (Daimler Truck): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Nutzfahrzeughersteller profitierte Daimler Truck wahrscheinlich von der allgemeinen Verbesserung des Wirtschaftsklimas.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 7,21 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 54,86 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (73. Perzentil) gut. Ein `volume_zscore_20d` von 0.33 ist leicht positiv. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 20 Handelstagen.
-- **Risiko-Faktor:** Solider Alpha-Move ohne spezifische News, aber mit erhöhter Liquidität und positivem Marktumfeld.
-
-**MTX.DE (MTU Aero): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Aerospace-Zulieferer profitierte MTU von der allgemeinen Verbesserung des Geschäftsklimas und fallenden Ölpreisen.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 6,58 % übertraf den DAX (+5,2 %) leicht, ein moderater Alpha-Move. Die Liquidität ist mit ca. 62,74 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (79. Perzentil) gut. Ein `volume_zscore_20d` von 0.30 ist leicht positiv. Die `dist_from_20d_high_pct` von -0.0533 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 16 Handelstagen.
-- **Risiko-Faktor:** Eher Beta-Move, mangels spezifischer News und hohem Volumen, kombiniert mit bevorstehenden Earnings.
-
-**R3NK.DE (RENK Group): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Industrieunternehmen profitierte RENK wahrscheinlich von der allgemeinen Markterholung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 3,46 % war eine Underperformance des DAX (+5,2 %), ein schwacher Beta-Move. Die Liquidität ist mit ca. 41,60 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (68. Perzentil) solide. Das `volume_zscore_20d` von -0.35 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0288 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 20 Handelstagen.
-- **Risiko-Faktor:** Underperformance und fehlendes Volumen, kombiniert mit fehlenden Nachrichten, machen diesen Treffer unattraktiv.
-
-**KSB.DE (KSB): Positiv**
-- **Die Story:** Die KSB Vz. Aktie legte am 8. April 2026 um 9,40 % zu. Der starke Anstieg könnte eine Erleichterungsrallye darstellen, da das Unternehmen Ende März 2026 einen vorsichtigen Ausblick für 2026 aufgrund geopolitischer Spannungen im Nahen Osten gegeben hatte, was zu einem Kurssturz von 15 % führte. Die nun eingetretene Entspannung in der Region könnte die Ängste abgebaut haben.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 10,83 % war eine sehr starke Outperformance des DAX (+5,2 %), ein signifikanter Alpha-Move, der durch die Nachrichtenlage plausibel untermauert wird. Die Liquidität ist mit ca. 0,44 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "very_thin" (2. Perzentil) extrem gering. Ein `volume_zscore_20d` von 0.41 ist leicht positiv. Die `dist_from_20d_high_pct` von -0.17 zeigt an, dass die Aktie trotz des Anstiegs noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 19 Handelstagen.
-- **Risiko-Faktor:** Die extrem geringe Liquidität ist ein erhebliches Risiko für das Management einer kurzfristigen Position. Dieser Treffer ist hochspekulativ.
-
-**FRA.DE (Fraport): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Flughafenbetreiber profitierte Fraport wahrscheinlich stark von der geopolitischen Entspannung und den fallenden Ölpreisen, da dies die Reisebereitschaft und Betriebskosten positiv beeinflusst.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 7,07 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 11,51 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (46. Perzentil) solide. Das `volume_zscore_20d` von -0.48 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 19 Handelstagen.
-- **Risiko-Faktor:** Die positive Auswirkung der Makro-Entwicklung ist plausibel. Das Fehlen von spezifischen News und erhöhtem Volumen dämpft jedoch die Überzeugungskraft.
-
-**KBX.DE (Knorr-Bremse): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Zulieferer für Schienen- und Nutzfahrzeuge profitierte Knorr-Bremse wahrscheinlich von der allgemeinen Verbesserung des Wirtschaftsklimas.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 7,20 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 18,29 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (55. Perzentil) solide. Ein `volume_zscore_20d` von 1.18 ist positiv. Die `dist_from_20d_high_pct` von -0.0057 zeigt an, dass die Aktie nahe ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 21 Handelstagen.
-- **Risiko-Faktor:** Solider Alpha-Move mit erhöhtem Volumen und positivem Marktumfeld, aber ohne spezifische unternehmensbezogene News.
-
-**RHM.DE (Rheinmetall): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Rüstungs- und Automobilzulieferer könnte die Reaktion auf die geopolitische Entspannung ambivalent sein; Rüstungsaktien könnten tendenziell belastet werden. Die Aktie stieg am 8. April um 3,07 %.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 3,07 % war eine Underperformance des DAX (+5,2 %). Die Liquidität ist mit ca. 417,54 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (98. Perzentil) sehr hoch. Das `volume_zscore_20d` von -0.26 ist leicht negativ. Die `dist_from_20d_high_pct` von -0.0454 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 21 Handelstagen.
-- **Risiko-Faktor:** Underperformance gegenüber dem Gesamtmarkt und fehlender klarer positiver Nachrichten-Katalysator, trotz hoher Liquidität.
-
-**PUM.DE (PUMA): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Konsumgüterhersteller profitierte PUMA wahrscheinlich von einer verbesserten Konsumstimmung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 5,11 % lag leicht unter der DAX-Performance (+5,2 %), eher ein Beta-Move. Die Liquidität ist mit ca. 17,22 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (54. Perzentil) solide. Ein `volume_zscore_20d` von 2.54 ist sehr hoch, deutet auf außergewöhnlich starkes Volumen hin. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 16 Handelstagen.
-- **Risiko-Faktor:** Eher Beta-Move, hohes Volumen könnte kurzfristiges spekulatives Interesse signalisieren.
-
-**DHL.DE (DHL Group): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Logistikunternehmen profitierte DHL wahrscheinlich von einer allgemeinen Belebung des Welthandels durch die geopolitische Entspannung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 5,69 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 130,84 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (88. Perzentil) sehr gut. Ein `volume_zscore_20d` von 0.22 ist leicht positiv. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 16 Handelstagen.
-- **Risiko-Faktor:** Solider Alpha-Move mit guter Liquidität, aber ohne spezifische News.
-
-**AIR.DE (Airbus): Positiv**
-- **Die Story:** Airbus-Aktien stiegen am 8. April 2026 um 7,8 % im Zuge der breiten Marktrallye im CAC 40, angetrieben durch die Entspannung der Nahost-Spannungen und fallende Ölpreise.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 7,90 % war eine deutliche Outperformance sowohl des DAX (+5,2 %) als auch des CAC 40 (+4,49 %), ein starker Alpha-Move. Die Liquidität ist mit ca. 60,69 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (77. Perzentil) gut. Ein `volume_zscore_20d` von 1.43 ist positiv. Die `dist_from_20d_high_pct` von -0.0137 zeigt an, dass die Aktie nahe ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 14 Handelstagen (`earnings_in_3_15_bday_window`).
-- **Risiko-Faktor:** Der bevorstehende Earnings-Termin ist ein relevantes Binary Event Risiko.
-
-**HBH.DE (Hornbach): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Einzelhändler könnte Hornbach von einer verbesserten Konsumstimmung profitieren.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 6,31 % übertraf den DAX (+5,2 %) moderat, ein Alpha-Move. Die Liquidität ist mit ca. 1,92 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "thin" (16. Perzentil) eher gering. Das `volume_zscore_20d` von -0.41 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 29 Handelstagen.
-- **Risiko-Faktor:** Moderater Alpha-Move ohne spezifische News und erhöhtes Volumen bei geringer Liquidität.
-
-**DBK.DE (Deutsche Bank): Positiv**
-- **Die Story:** Keine spezifischen Unternehmensnachrichten. Ähnlich wie BNP Paribas dürfte die Deutsche Bank stark von der allgemeinen Entspannung am Markt und den fallenden Energiepreisen profitiert haben, was den Bankensektor tendenziell stützt.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 7,30 % übertraf den DAX (+5,2 %) deutlich, ein starker Alpha-Move. Die Liquidität ist mit ca. 210,42 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (93. Perzentil) sehr gut. Ein `volume_zscore_20d` von 1.63 ist signifikant. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 15 Handelstagen (`earnings_in_3_15_bday_window`).
-- **Risiko-Faktor:** Der bevorstehende Earnings-Termin (Binary Event Risiko) ist ein wichtiger Faktor für kurzfristige Trader.
-
-**P911.DE (Porsche AG): Positiv**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Luxusautomobilhersteller profitierte Porsche wahrscheinlich von einer allgemein verbesserten Wirtschaftsstimmung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 2,70 % war eine Underperformance des DAX (+5,2 %), ein schwacher Beta-Move. Die Liquidität ist mit ca. 28,03 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (59. Perzentil) solide. Ein `volume_zscore_20d` von 0.71 ist positiv. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 15 Handelstagen (`earnings_in_3_15_bday_window`).
-- **Risiko-Faktor:** Underperformance gegenüber dem Gesamtmarkt und bevorstehende Earnings machen diesen Treffer weniger attraktiv.
-
-**SFQ.DE (SAF-Holland): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Zulieferer für die Nutzfahrzeugindustrie profitierte SAF-Holland wahrscheinlich von der allgemeinen Verbesserung des Wirtschaftsklimas.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 8,90 % übertraf den DAX (+5,2 %) deutlich, ein Alpha-Move. Die Liquidität ist mit ca. 1,83 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "very_thin" (14. Perzentil) extrem gering. Ein `volume_zscore_20d` von 0.64 ist leicht positiv. Die `dist_from_20d_high_pct` von -0.0244 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 21 Handelstagen.
-- **Risiko-Faktor:** Extrem geringe Liquidität ist ein erhebliches Risiko.
-
-**AALB.AS (Aalberts): Neutral / Datengetrieben**
-- **Die Story:** Aalberts meldete am 7. April 2026 den Fortschritt seines Aktienrückkaufprogramms (30. März bis 3. April). Dies ist eine Routinemeldung und kein direkter kurzfristiger Kurstreiber für eine Rallye.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 6,50 % übertraf den AEX (+3,22 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 9,61 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (43. Perzentil) solide. Ein `volume_zscore_20d` von 0.31 ist leicht positiv. Die `dist_from_20d_high_pct` von -0.0305 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die Earnings-Daten sind veraltet (26. Februar 2026).
-- **Risiko-Faktor:** Das Fehlen einer frischen, kurzfristig kursrelevanten Story und das veraltete Earnings-Datum reduzieren die Überzeugungskraft.
-
-**VH2.DE (Friedrich Vorwerk): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Energieunternehmen könnten die Auswirkungen der fallenden Ölpreise ambivalent sein.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 11,73 % war eine sehr starke Outperformance des DAX (+5,2 %), ein signifikanter Alpha-Move. Die Liquidität ist mit ca. 5,97 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (41. Perzentil) solide. Das `volume_zscore_20d` von -0.14 ist leicht negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0796 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 24 Handelstagen.
-- **Risiko-Faktor:** Starker Alpha-Move ohne spezifische News und erhöhtes Volumen, sowie die Notierung unter dem 20-Tage-Hoch, deutet auf eine technisch getriebene, spekulative Bewegung hin.
-
-**HYQ.DE (Hypoport): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Finanzdienstleister profitierte Hypoport wahrscheinlich von einer verbesserten Stimmung im Finanzsektor.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 11,21 % war eine sehr starke Outperformance des DAX (+5,2 %), ein signifikanter Alpha-Move. Die Liquidität ist mit ca. 3,57 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "thin" (29. Perzentil) eher gering. Das `volume_zscore_20d` von -0.59 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0869 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 23 Handelstagen.
-- **Risiko-Faktor:** Starker Alpha-Move ohne spezifische News und erhöhtes Volumen, bei geringer Liquidität und Notierung unter dem 20-Tage-Hoch, deutet auf einen hochspekulativen, technisch getriebenen Impuls hin.
-
-**LEG.DE (LEG Immobilien): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Immobilienunternehmen könnte LEG Immobilien von einer Entspannung der Zins- und Inflationserwartungen profitieren.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 5,97 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move, der nahe am Gesamtmarkt liegt. Die Liquidität ist mit ca. 29,29 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (61. Perzentil) solide. Ein `volume_zscore_20d` von 0.72 ist positiv. Die `dist_from_20d_high_pct` von -0.0607 zeigt an, dass die Aktie noch unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 25 Handelstagen.
-- **Risiko-Faktor:** Moderater Alpha-Move ohne spezifische News, stark vom allgemeinen Marktsentiment getragen.
-
-**ACT.DE (AlzChem): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Chemieunternehmen profitierte AlzChem wahrscheinlich von der allgemeinen Verbesserung des Wirtschaftsklimas.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 0,56 % war eine deutliche Underperformance des DAX (+5,2 %), ein schwacher Beta-Move. Die Liquidität ist mit ca. 4,88 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (36. Perzentil) solide. Das `volume_zscore_20d` von -0.21 ist leicht negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0175 zeigt an, dass die Aktie nahe ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 16 Handelstagen.
-- **Risiko-Faktor:** Deutliche Underperformance und fehlendes Volumen, kombiniert mit fehlenden Nachrichten, machen diesen Treffer unattraktiv.
-
-**JUN3.DE (Jungheinrich): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Industrieunternehmen profitierte Jungheinrich wahrscheinlich von der allgemeinen Verbesserung des Wirtschaftsklimas.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 6,79 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 5,36 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (39. Perzentil) solide. Ein `volume_zscore_20d` von 0.45 ist leicht positiv. Die `dist_from_20d_high_pct` von -0.0826 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 21 Handelstagen.
-- **Risiko-Faktor:** Solider Alpha-Move ohne spezifische News und mit moderatem Volumen. Notierung unter dem 20-Tage-Hoch könnte auf eine stärkere Hürde hindeuten.
-
-**VNA.DE (Vonovia): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Immobilienunternehmen könnte Vonovia von einer Entspannung der Zins- und Inflationserwartungen profitieren.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 6,11 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move, der nahe am Gesamtmarkt liegt. Die Liquidität ist mit ca. 127,18 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (86. Perzentil) sehr gut. Das `volume_zscore_20d` von 0.03 ist neutral. Die `dist_from_20d_high_pct` von -0.0956 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 21 Handelstagen.
-- **Risiko-Faktor:** Moderater Alpha-Move ohne spezifische News und erhöhtes Volumen, stark vom allgemeinen Marktsentiment getragen.
-
-**DOU.DE (Douglas): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Einzelhändler profitierte Douglas wahrscheinlich von einer verbesserten Konsumstimmung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 5,34 % entsprach in etwa der DAX-Performance (+5,2 %), eher ein leichter Alpha-Move. Die Liquidität ist mit ca. 1,55 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "very_thin" (11. Perzentil) extrem gering. Ein `volume_zscore_20d` von 1.82 ist sehr hoch, deutet auf stark erhöhtes Volumen hin. Die `dist_from_20d_high_pct` von 0.0 zeigt ein 20-Tage-Hoch. Die nächsten Earnings sind in 24 Handelstagen.
-- **Risiko-Faktor:** Extrem geringe Liquidität und nur moderater Alpha-Move mit hohem Volumen, kombiniert mit fehlenden News, macht diesen Titel hochspekulativ.
-
-**BC8.DE (Bechtle): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als IT-Dienstleister profitierte Bechtle wahrscheinlich von einer allgemeinen Verbesserung des Wirtschaftsklimas.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 3,12 % war eine deutliche Underperformance des DAX (+5,2 %). Die Liquidität ist mit ca. 12,83 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (52. Perzentil) solide. Das `volume_zscore_20d` von -0.35 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0704 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 22 Handelstagen.
-- **Risiko-Faktor:** Underperformance und fehlendes Volumen, kombiniert mit fehlenden Nachrichten, machen diesen Treffer unattraktiv.
-
-**ZAL.DE (Zalando): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als Online-Modehändler profitierte Zalando wahrscheinlich von einer verbesserten Konsumstimmung.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 6,63 % übertraf den DAX (+5,2 %) leicht, ein Alpha-Move. Die Liquidität ist mit ca. 46,31 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "ok" (70. Perzentil) gut. Das `volume_zscore_20d` von -0.39 ist negativ, kein erhöhtes Volumen. Die `dist_from_20d_high_pct` von -0.0842 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 20 Handelstagen.
-- **Risiko-Faktor:** Solider Alpha-Move ohne spezifische News und Volumen, Notierung unter dem 20-Tage-Hoch.
-
-**YSN.DE (secunet): Neutral / Datengetrieben**
-- **Die Story:** Keine spezifischen unternehmensbezogenen Nachrichten. Als IT-Sicherheitsunternehmen profitierte secunet wahrscheinlich von einer allgemeinen Verbesserung des Wirtschaftsklimas.
-- **Der Daten-Check:** Der `ret_1d_signal_day` von 4,95 % war eine Underperformance des DAX (+5,2 %). Die Liquidität ist mit ca. 0,71 Mio. EUR (`adv_20d_local`) und `liquidity_tier` "very_thin" (7. Perzentil) extrem gering. Das `volume_zscore_20d` von -0.06 ist neutral. Die `dist_from_20d_high_pct` von -0.0633 zeigt an, dass die Aktie noch deutlich unter ihrem 20-Tage-Hoch notierte. Die nächsten Earnings sind in 19 Handelstagen.
-- **Risiko-Faktor:** Extrem geringe Liquidität, Underperformance und fehlendes Volumen machen diesen Treffer unattraktiv und hochspekulativ.
-
----
-
-### **Strategie-Zusammenfassung**
-
-Der Signaltag 08.04.2026 war von einer breit angelegten Erleichterungsrallye an den europäischen Märkten geprägt, die durch positive geopolitische Nachrichten und fallende Ölpreise ausgelöst wurde. Viele der hier gelisteten Aktien zeigten eine positive Performance, oft als Beta-Mitläufer der allgemeinen Marktbewegung. Für eine kurzfristige Rallye sind insbesondere jene Titel vielversprechend, die eine **deutliche Outperformance (Alpha-Move) mit hohem Volumen und unterstützender Nachrichtenlage** aufwiesen.
-
-**Die vielversprechendsten Kandidaten für eine kurzfristige Rallye sind:**
-
-*   **Infineon (IFX.DE):** Starker Alpha-Move, hervorragende Liquidität, hohes Volumen und konkrete, unterstützende Nachrichten im Halbleitersektor.
-*   **BNP Paribas (BNP.PA):** Deutlicher Alpha-Move, sehr hohe Liquidität, signifikantes Volumen und positive Meldungen für den Bankensektor.
-*   **Airbus (AIR.DE):** Starker Alpha-Move, gute Liquidität, hohes Volumen und direkte Erwähnung als Profiteur der Marktrallye.
-
-Diese Unternehmen kombinieren eine überzeugende Performance am Signaltag mit robusten Fundamentaldaten (Liquidität) und klaren positiven Nachrichten oder branchenweiten Rückenwind.
-
-**Titel mit Potenzial, aber zu beachtenden Risikofaktoren sind:**
-
-*   **Commerzbank (CBK.DE) und Deutsche Bank (DBK.DE):** Zeigten starke Alpha-Moves und hohe Liquidität im profitierenden Bankensektor, doch fehlende spezifische Unternehmensmeldungen sowie bevorstehende Earnings (Binary Event Risiko) sind zu beachten.
-*   **Lufthansa (LHA.DE), Dürr (DUE.DE) und Siemens (SIE.DE):** Wiesen starke Alpha-Moves und hohes Volumen auf, profitierten plausibel vom positiven Makro-Umfeld, jedoch ohne spezifische Unternehmensnews.
-*   **Continental (CON.DE), DHL Group (DHL.DE) und Siltronic (WAF.DE):** Zeigten solide Alpha-Moves mit guten Daten, aber ohne spezifische Nachrichten. Siltronic hat zudem einen bevorstehenden Earnings-Termin.
-*   **PUMA (PUM.DE):** Eher ein Beta-Move, jedoch mit sehr hohem Volumen, was spekulatives Interesse signalisieren könnte.
-
-**Weniger geeignet für eine kurzfristige Rallye** sind Titel mit extrem geringer Liquidität (z.B. KSB, SAF-Holland, Douglas, secunet), deutlicher Underperformance gegenüber dem Gesamtmarkt oder fehlendem Volumenanstieg ohne spezifischen Newstrigger.
-
----
-
-### **Abschließendes Fazit**
-
-Basierend auf der umfassenden Analyse von Nachrichtenlage, Performance im Verhältnis zum Gesamtmarkt und Liquiditätsdaten erscheint **Infineon (IFX.DE)** als der überzeugendste Kandidat für einen kurzfristigen Kursimpuls. Das Unternehmen profitiert von einer starken Nachrichtenlage im wichtigen Halbleitersektor, einer deutlichen Outperformance des Gesamtmarktes, gepaart mit hoher Liquidität und einem signifikant erhöhten Handelsvolumen. **BNP Paribas (BNP.PA)** und **Airbus (AIR.DE)** sind ebenfalls als starke Favoriten zu nennen, die von der allgemeinen Marktentspannung überproportional profitieren konnten und dies durch solide Fundamentaldaten untermauern.
-
-Titel mit extrem geringer Liquidität wie **KSB (KSB.DE)** und **SAF-Holland (SFQ.DE)** sind trotz teils plausibler News oder starker Kurssprünge aufgrund des hohen Risikos durch geringe Handelbarkeit für eine kurzfristige Rallye-Strategie **abzulehnen**.
+Daher wird an dieser Stelle **bewusst keiner der Treffer als bevorzugte Wahl** für eine kurzfristige Rally benannt. Die Evidenz für einen fundamental gestützten Impuls, der im Sinne der Prompt-Definition eine kurzfristige Rally tragen könnte, ist zu schwach.
