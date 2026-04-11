@@ -264,14 +264,17 @@ def _sector_bench_etf(
 
 def _warm_ticker_info_cache(tickers: list[str], cache: dict[str, dict]) -> None:
     """Lädt ``yf.Ticker(t).info`` je Ticker höchstens einmal (für Short, Benchmarks)."""
-    for t in tickers:
+    n = len(tickers)
+    step = max(1, n // 10)
+    for i, t in enumerate(tickers, 1):
         ts = str(t)
-        if ts in cache:
-            continue
-        try:
-            cache[ts] = yf.Ticker(ts).info or {}
-        except Exception:
-            cache[ts] = {}
+        if ts not in cache:
+            try:
+                cache[ts] = yf.Ticker(ts).info or {}
+            except Exception:
+                cache[ts] = {}
+        if i == 1 or i % step == 0 or i == n:
+            print(f"  … Zusatzfilter: yfinance `.info` {i}/{n} Ticker", flush=True)
 
 
 def ensure_llm_signal_columns(out: pd.DataFrame) -> pd.DataFrame:
@@ -822,7 +825,13 @@ def enrich_signal_frame(
     out["Date"] = pd.to_datetime(out["Date"]).dt.normalize()
 
     info_cache: dict[str, dict] = {}
+    print(
+        "  … Zusatzfilter: `yf.Ticker(...).info` je eindeutigem Ticker "
+        "(Netzwerk; oft1–10+ Min bei ~200 Ticker) …",
+        flush=True,
+    )
     _warm_ticker_info_cache(sorted(sig["ticker"].astype(str).unique().tolist()), info_cache)
+    print("  … Zusatzfilter: `.info`-Phase fertig.", flush=True)
 
     out["meta_prob_margin"] = [
         meta_prob_margin(p, t) for p, t in zip(out["prob"], out["threshold_used"])
@@ -853,9 +862,13 @@ def enrich_signal_frame(
 
     out["cluster_corr_pairwise_valid"] = out["signals_same_day"].fillna(0).astype(int) >= 2
 
+    n_rows = len(out)
+    step_r = max(1, n_rows // 10)
     adv = []
-    for _, r in out.iterrows():
+    for i, (_, r) in enumerate(out.iterrows(), 1):
         adv.append(adv_currency_20d(raw, r["ticker"], r["Date"]))
+        if i % step_r == 0 or i == n_rows:
+            print(f"  … Zusatzfilter: ADV/Umsatz je Zeile {i}/{n_rows}", flush=True)
     out["adv_20d_local"] = adv
 
     # Perzentil-Rang des Umsatzes pro Signaltag (höher = liquid)
@@ -890,7 +903,13 @@ def enrich_signal_frame(
             cache[t] = next_earnings_date(t)
         return cache[t]
 
-    out["next_earnings_date"] = [_ed(t) for t in out["ticker"]]
+    print("  … Zusatzfilter: Earnings-Kalender (yfinance; je Ticker gecacht) …", flush=True)
+    _ne: list[date | None] = []
+    for i, t in enumerate(out["ticker"].astype(str), 1):
+        _ne.append(_ed(t))
+        if i % step_r == 0 or i == n_rows:
+            print(f"  … Zusatzfilter: Earnings je Zeile {i}/{n_rows}", flush=True)
+    out["next_earnings_date"] = _ne
     bd = [
         bdays_from_signal_to(sd, ed)
         for sd, ed in zip(out["Date"], out["next_earnings_date"])

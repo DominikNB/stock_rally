@@ -10,7 +10,7 @@ Datei-Gliederung (alles in Lesereihenfolge von oben nach unten):
   1. Pfade, Google-ADC, Kalenderdaten
   2. Scoring-Artefakt (SCORING_ONLY, load/save)
   3. Pipeline: CV/Optuna, Labels, Anti-Peak, Split, Indikator-Grids, SEED_PARAMS
-  4. News: GDELT/BigQuery, GKG-Explore, Geo, Theme-SQL, API-Stichwörter
+  4. News: GDELT/BigQuery, GKG-Kanäle, Geo, V2Themes-SQL, API-Stichwörter
   5. Universum: TICKERS_BY_SECTOR, Ableitungen, COMPANY_NAMES
   6. Hilfsfunktionen (Feature-Spalten, Rename-Map)
 """
@@ -51,6 +51,10 @@ print(f'Training:  {START_DATE} → {TRAIN_END_DATE}  (bis zum aktuellen Datum)'
 # False → volles Training; Artefakt wird nach Meta/Threshold-Phase automatisch geschrieben.
 SCORING_ONLY = True
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
+# Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
+PHASE17_SIGNAL_FILTER_JOBS = -1
+# Fortschrittslog alle N Ticker; 0 = ca. 10 Stufen (nt//10).
+PHASE17_SIGNAL_FILTER_PROGRESS_BATCH = 0
 # Wird von save_scoring_artifacts / load_scoring_artifacts gesetzt, wenn in dieser Session gespeichert wurde.
 _SCORING_ARTIFACT_SAVED_THIS_SESSION = False
 
@@ -144,7 +148,7 @@ SIGNAL_MAX_RSI = 78.0                 # kein Kauf-Signal wenn RSI darüber; None
 # Empfehlung: 30–60. Höher = langsamer, aber potenziell besseres Modell.
 MAX_TRAIN_TICKERS   = 45
 # Schneller Run: nur einen zufälligen Anteil der geladenen Ticker (nach assemble_features)
-UNIVERSE_FRACTION = 1  # 1.0 = alle; <1 wählt Tickers VOR Download/Features (nicht erst danach)
+UNIVERSE_FRACTION = 0.05  # 1.0 = alle; <1 wählt Tickers VOR Download/Features (nicht erst danach)
 UNIVERSE_SAMPLE_SEED = 42
 # Train/Test-Split: "time" = gleiches Ticker-Universum, disjunkte Zeiträume (empfohlen).
 # "ticker" = Legacy: verschiedene Ticker pro Stufe, gleicher Kalender bis TRAIN_END_DATE.
@@ -202,7 +206,7 @@ SEED_PARAMS = dict(
 )
 
 # =============================================================================
-# 4. News / GDELT / BigQuery / GKG (Zeitreihen + Theme-Filter)
+# 4. News / GDELT / BigQuery / GKG (Zeitreihen + Kanal-SQL auf V2Themes)
 # =============================================================================
 
 # ── News / GDELT grids (Optuna wählt ein Tag-Tripel) ─────────────────────────
@@ -246,40 +250,50 @@ BQ_SINGLE_SCAN = True          # True: GKG-Query mit IF/COUNTIF pro Kanal (nicht
 # 0 = ein einziger Scan über [a,b]; sonst höchstens so viele Kalendertage pro Teil-Query (Ergebnisse werden aneinandergehängt).
 BQ_SINGLE_SCAN_CHUNK_DAYS = 120
 
-# ── GKG Theme-Exploration (BigQuery) ─────────────────────────────────────────
-# True: vor News-Download automatisch Top-Themes (Lift vs. Makro) ermitteln, nach
-# GKG_THEME_SELECTION_PATH schreiben und MACRO/SECTOR_SQL per OR erweitern.
-# False: keine neue Exploration — wenn JSON existiert, wird sie geladen und wie oben angewendet.
-# SCORING_ONLY: unverändert news_sql_manifest aus Artefakt (kein Explore / keine JSON).
-GKG_AUTO_EXPLORE_THEMES = True
-GKG_THEME_SELECTION_PATH = Path("data") / "gkg_theme_selection.json"
-# (Kanal, Alias, Roh-Token) — nach Theme-JSON/Manifest; steuert BQ COUNTIF/AVG pro Theme + Feature-Namen.
+# Feste GKG-Theme-Tripel für SQL (leer = keine zusätzlichen Theme-Spalten).
 GKG_THEME_SQL_TRIPLES = []
-GKG_EXPLORE_DAYS = 180
-GKG_EXPLORE_UNIVERSE = "filtered"  # filtered: cfg Theme-WHERE; open: nur Geo+Partition (teurer)
-GKG_EXPLORE_TOP_N_QUERY = 200
-GKG_EXPLORE_MIN_LIFT_SECTOR = 1.08
-GKG_EXPLORE_MAX_EXTRA_TOKENS_MACRO = 25
-GKG_EXPLORE_MAX_EXTRA_TOKENS_SECTOR = 25
-# Lift-Stabilisierung (ohne manuelle Theme-Listen): Anteile P(sektor), P(makro) mit α geglättet,
-# fehlende Makro-Rankings nicht als „0“ behandelt. Reduziert künstlich hohe Billionen-Lifts.
-GKG_EXPLORE_LIFT_ALPHA_BASE = 1e-8
-# α = max(BASE, BLEND × kleinster Makro-Anteil im Top-Ranking); skaliert mit Datenlage.
-GKG_EXPLORE_LIFT_BLEND_MIN_MACRO_SHARE = 0.25
-# Sektor-Token nur, wenn es im Makro-Top-Ranking vorkommt (fairerer Lift; kann Nischenthemes streichen).
-GKG_EXPLORE_LIFT_ONLY_IN_MACRO_TOP = False
-# Gespeicherten Lift deckeln (Lesbarkeit); None = kein Cap.
-GKG_EXPLORE_MAX_LIFT_CAP = 5000.0
-# Mindest-GKG-Zeilen mit diesem Token im Sektor-Fenster (filtert Extrem-Rauschen).
-GKG_EXPLORE_SECTOR_MIN_ROW_HITS = 2
-# Inter-Sektor-Dekorrelation (gegen „Background-Themes“ in fast jedem Sektor-Top):
-# TF-IDF-Score = Lift × log(n_Sektoren / k) mit k = in wie vielen Sektor-Top-N die Token vorkommen.
-GKG_EXPLORE_DECORR_SECTOR_TF_IDF = True
-# True: Token, die in jedem Sektor-Top vorkommen (k == n), ganz streichen — kann ganze Sektoren leeren.
-# False: nur TF-IDF-Penalty (Lift×log(n/k)); Fallback in gkg_theme_explore füllt leere Sektoren ohnehin.
-GKG_EXPLORE_DECORR_DROP_UNIVERSAL_TOP = False
-# Lift ≥ Faktor × Mittel(Lift in anderen Sektoren), sonst weg — streng; None = aus (weniger leere Sektoren).
-GKG_EXPLORE_MIN_EXCESS_VS_OTHER_SECTORS = None
+
+# GCAM-Schlüssel: nicht leer = feste Liste (überschreibt Auto). Sonst: Must-Have + optional Datei/Exploration.
+# GKG_GCAM_EXPLORE_KEYS=True: BigQuery holt zusätzliche Top-c* (Beifang), ohne Must-Haves zu duplizieren.
+# Keys mit Doppelpunkt (z. B. vnt:success): Regex in news._bq_gcam_regexp_for_key (RE2) — Wert als :<zahl>.
+GKG_GCAM_METRIC_KEYS: tuple[str, ...] = ()
+GKG_GCAM_MUST_HAVE_KEYS: tuple[str, ...] = (
+    "c18.158",  # LMT_Negative
+    "c18.159",  # LMT_Positive
+    "c18.161",  # LMT_Uncertainty
+    "c12.152",  # Harvard_Weakness
+    "c12.1",  # Harvard_Negative
+    "vnt:success",  # Lasswell_Success (Kontext Erfolg / Meilensteine)
+    "c12.181",  # Harvard_Active (Dynamik / Momentum im Text)
+)
+GKG_GCAM_AUTO_RESOLVE = True
+GKG_GCAM_EXPLORE_KEYS = True
+# Zusätzliche explorative c*-Keys (nach Häufigkeit), Must-Haves nicht gezählt.
+GKG_GCAM_EXPLORE_EXTRA_N = 8
+GKG_GCAM_AUTO_TOP_N = 8  # Fallback wenn GKG_GCAM_EXPLORE_EXTRA_N fehlt
+GKG_GCAM_KEYS_PATH = Path("data") / "gkg_gcam_metric_keys.json"
+
+# Abgeleitete GCAM-Differenzen (features.py): nur wenn beide Basis-Spalten in sentiment_df existieren.
+# (slug, minuend_key, subtrahend_key) — z. B. fin. Positivität − Negativität; Erfolg − Unsicherheit.
+GCAM_INTERACTION_DIFFS: tuple[tuple[str, str, str], ...] = (
+    ("inter_fin_spread", "c18.159", "c18.158"),
+    ("inter_confidence", "vnt:success", "c18.161"),
+)
+
+
+def gcam_series_colname(key: str) -> str:
+    """Spaltenname in sentiment_df / BQ-Alias-Suffix: gcam_c12_1, gcam_vnt_success."""
+    k = str(key).strip().replace(".", "_").replace("-", "_").replace(":", "_")
+    return "gcam_" + k
+
+
+def _gkg_gcam_keys_clean() -> tuple[str, ...]:
+    return tuple(str(k).strip() for k in (GKG_GCAM_METRIC_KEYS or ()) if str(k).strip())
+
+
+def _gkg_gcam_must_have_keys_clean() -> tuple[str, ...]:
+    return tuple(str(k).strip() for k in (GKG_GCAM_MUST_HAVE_KEYS or ()) if str(k).strip())
+
 
 # Makro: meist weltweit. Sektor-Geo: nur Events-Tabellen (ActionGeo_*), nicht GKG.
 # AUTO: Wenn ≥ BQ_SECTOR_GEO_MAJORITY_THRESHOLD der Ticker derselben Region (EU/US-Heuristik
@@ -577,11 +591,60 @@ COMPANY_NAMES = {
     'SMHN.DE': 'SÜSS MicroTec', 'SANT.DE': 'Kontron',
 }
 
+# Rollierende Anker-Ticker (Top-N nach Marktkap): Spillover-Signal, weniger GDELT-Rauschen.
+# Zeitplan: JSON mit Vierteljahres-Zeilen (siehe scripts/build_sector_anchor_schedule.py).
+# BigQuery nutzt Chunk-Enddatum ``ref_date`` — bei sehr großen Zeitscheiben ggf. Chunk-Dauer < Quartal.
+NEWS_ANCHOR_ORG_FILTER = False
+NEWS_ANCHOR_SCHEDULE_PATH = Path("data") / "sector_anchor_quarters.json"
+NEWS_ANCHOR_TOP_N = 3
+
 # =============================================================================
 # 6. Hilfsfunktionen (Feature-Spalten, Rename-Map)
 # =============================================================================
-# Optional: Firmen-Attention (V2Organizations) z. B. Nibe/Daikin — eigene Query, nicht im Merge,
-# bis Kanäle/Ticker-Join im Modell vorgesehen sind (kleine SDAX-Namen: oft zu wenig Volumen).
+
+
+def sector_news_theme_sql(sector_key: str, ref_date) -> str:
+    """Sektor-``V2Themes``-Block; optional zusätzlich ``V2Organizations`` (Ankerliste zum Datum)."""
+    base = str(SECTOR_BQ_THEME_WHERE.get(sector_key) or "(1=0)")
+    if not NEWS_ANCHOR_ORG_FILTER:
+        return base
+    from lib.stock_rally_v10.anchor_tickers import (
+        load_anchor_schedule,
+        tickers_for_sector_on_date,
+        v2organizations_or_clause,
+    )
+
+    sched = load_anchor_schedule(NEWS_ANCHOR_SCHEDULE_PATH)
+    if not sched:
+        return base
+    if isinstance(ref_date, datetime.datetime):
+        d = ref_date.date()
+    elif isinstance(ref_date, datetime.date):
+        d = ref_date
+    elif isinstance(ref_date, str) and len(ref_date) >= 10:
+        d = datetime.date.fromisoformat(ref_date[:10])
+    else:
+        d = datetime.date.today()
+    tks = tickers_for_sector_on_date(sched, sector_key, d)
+    if not tks:
+        return base
+    org = v2organizations_or_clause(tks, COMPANY_NAMES)
+    if not org:
+        return base
+    return f"(({base}) AND ({org}))"
+
+
+def sector_anchor_org_active(sector_key: str, ref_date) -> bool:
+    """True, wenn für den Sektor eine echte V2Organizations-Ankerbedingung aktiv ist."""
+    if not NEWS_ANCHOR_ORG_FILTER:
+        return False
+    base = str(SECTOR_BQ_THEME_WHERE.get(sector_key) or "(1=0)")
+    return sector_news_theme_sql(sector_key, ref_date) != base
+
+
+# Für ``anchor_quality_idx``: Mittelwert dieser Anker-GCAM-Rohwerte als eine „Tone“-Serie.
+GCAM_ANCHOR_QUALITY_MEAN_KEYS: tuple[str, ...] = ("c18.159", "c18.158", "c18.161")
+
 
 def news_feat_tag(mom_w, vol_ma, tone_roll):
     return f"{int(mom_w)}_{int(vol_ma)}_{int(tone_roll)}"
@@ -615,6 +678,101 @@ def _news_sec_variant_cols(mid: str):
 
 def _news_base_cols(tag):
     return _news_macro_variant_cols(tag) + _news_sec_variant_cols(tag)
+
+
+def _append_gcam_news_cols(out, tag, zscore_w, use_accel):
+    zw = int(zscore_w) if zscore_w is not None else 0
+    for gk in _gkg_gcam_keys_clean():
+        mid = f"{tag}_{gcam_series_colname(gk)}"
+        out.extend(_news_macro_variant_cols(mid))
+        out.extend(_news_sec_variant_cols(mid))
+        if zw > 0:
+            sw = f"_w{zw}"
+            out.extend(
+                [
+                    f"news_macro_{mid}_tone_z{sw}",
+                    f"news_macro_{mid}_vol_z{sw}",
+                    f"news_sec_{mid}_tone_z{sw}",
+                    f"news_sec_{mid}_vol_z{sw}",
+                ]
+            )
+        if use_accel:
+            out.extend([f"news_macro_{mid}_tone_accel", f"news_sec_{mid}_tone_accel"])
+
+
+def _append_gcam_interaction_news_cols(out, tag, zscore_w, use_accel):
+    zw = int(zscore_w) if zscore_w is not None else 0
+    for slug, _a, _b in GCAM_INTERACTION_DIFFS:
+        mid = f"{tag}_gcam_{slug}"
+        out.extend(_news_macro_variant_cols(mid))
+        out.extend(_news_sec_variant_cols(mid))
+        if zw > 0:
+            sw = f"_w{zw}"
+            out.extend(
+                [
+                    f"news_macro_{mid}_tone_z{sw}",
+                    f"news_macro_{mid}_vol_z{sw}",
+                    f"news_sec_{mid}_tone_z{sw}",
+                    f"news_sec_{mid}_vol_z{sw}",
+                ]
+            )
+        if use_accel:
+            out.extend([f"news_macro_{mid}_tone_accel", f"news_sec_{mid}_tone_accel"])
+
+
+def _append_anchor_gcam_sec_cols(out, tag, zscore_w, use_accel):
+    """Nur Sektor: GCAM aus Anker-Zeilen (Theme ∧ Orgs), gleiche Keys wie Sektor-GCAM."""
+    zw = int(zscore_w) if zscore_w is not None else 0
+    for gk in _gkg_gcam_keys_clean():
+        cn = gcam_series_colname(gk)
+        mid = f"{tag}_anchor_{cn}"
+        out.extend(_news_sec_variant_cols(mid))
+        if zw > 0:
+            sw = f"_w{zw}"
+            out.extend(
+                [
+                    f"news_sec_{mid}_tone_z{sw}",
+                    f"news_sec_{mid}_vol_z{sw}",
+                ]
+            )
+        if use_accel:
+            out.append(f"news_sec_{mid}_tone_accel")
+
+
+def _append_gcam_div_sec_cols(out, tag, zscore_w, use_accel):
+    """Sektor: Anker-GCAM minus breites Sektor-GCAM (Divergenz pro Key)."""
+    zw = int(zscore_w) if zscore_w is not None else 0
+    for gk in _gkg_gcam_keys_clean():
+        cn = gcam_series_colname(gk)
+        mid = f"{tag}_div_{cn}"
+        out.extend(_news_sec_variant_cols(mid))
+        if zw > 0:
+            sw = f"_w{zw}"
+            out.extend(
+                [
+                    f"news_sec_{mid}_tone_z{sw}",
+                    f"news_sec_{mid}_vol_z{sw}",
+                ]
+            )
+        if use_accel:
+            out.append(f"news_sec_{mid}_tone_accel")
+
+
+def _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel):
+    """Sektor: Mittelwert der Anker-GCAM-Rohwerte (LMT-Kern) als eine Zeitreihe."""
+    zw = int(zscore_w) if zscore_w is not None else 0
+    mid = f"{tag}_anchor_quality_idx"
+    out.extend(_news_sec_variant_cols(mid))
+    if zw > 0:
+        sw = f"_w{zw}"
+        out.extend(
+            [
+                f"news_sec_{mid}_tone_z{sw}",
+                f"news_sec_{mid}_vol_z{sw}",
+            ]
+        )
+    if use_accel:
+        out.append(f"news_sec_{mid}_tone_accel")
 
 
 def _append_gkg_theme_news_cols(out, tag, zscore_w, use_accel):
@@ -655,6 +813,12 @@ def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
         out.extend([f'news_macro_{tag}_tone_accel', f'news_sec_{tag}_tone_accel'])
     if use_cross:
         out.append(f'news_cross_{tag}_macro_minus_sec_tone')
+    _append_gcam_news_cols(out, tag, zscore_w, use_accel)
+    _append_gcam_interaction_news_cols(out, tag, zscore_w, use_accel)
+    if NEWS_ANCHOR_ORG_FILTER:
+        _append_anchor_gcam_sec_cols(out, tag, zscore_w, use_accel)
+        _append_gcam_div_sec_cols(out, tag, zscore_w, use_accel)
+        _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel)
     _append_gkg_theme_news_cols(out, tag, zscore_w, use_accel)
     return out
 
@@ -678,6 +842,91 @@ def all_news_model_cols():
                     cols.extend([f'news_macro_{tag}_tone_accel', f'news_sec_{tag}_tone_accel'])
                 if True in NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
                     cols.append(f'news_cross_{tag}_macro_minus_sec_tone')
+                for gk in _gkg_gcam_keys_clean():
+                    mid = f"{tag}_{gcam_series_colname(gk)}"
+                    cols.extend(_news_macro_variant_cols(mid))
+                    cols.extend(_news_sec_variant_cols(mid))
+                    for z in NEWS_EXTRA_ZSCORE_WINDOWS:
+                        if z > 0:
+                            sw = f'_w{int(z)}'
+                            cols.extend(
+                                [
+                                    f'news_macro_{mid}_tone_z{sw}',
+                                    f'news_macro_{mid}_vol_z{sw}',
+                                    f'news_sec_{mid}_tone_z{sw}',
+                                    f'news_sec_{mid}_vol_z{sw}',
+                                ]
+                            )
+                    if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
+                        cols.extend(
+                            [f'news_macro_{mid}_tone_accel', f'news_sec_{mid}_tone_accel']
+                        )
+                for slug, _ka, _kb in GCAM_INTERACTION_DIFFS:
+                    mid_i = f"{tag}_gcam_{slug}"
+                    cols.extend(_news_macro_variant_cols(mid_i))
+                    cols.extend(_news_sec_variant_cols(mid_i))
+                    for z in NEWS_EXTRA_ZSCORE_WINDOWS:
+                        if z > 0:
+                            sw = f'_w{int(z)}'
+                            cols.extend(
+                                [
+                                    f'news_macro_{mid_i}_tone_z{sw}',
+                                    f'news_macro_{mid_i}_vol_z{sw}',
+                                    f'news_sec_{mid_i}_tone_z{sw}',
+                                    f'news_sec_{mid_i}_vol_z{sw}',
+                                ]
+                            )
+                    if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
+                        cols.extend(
+                            [
+                                f'news_macro_{mid_i}_tone_accel',
+                                f'news_sec_{mid_i}_tone_accel',
+                            ]
+                        )
+                if NEWS_ANCHOR_ORG_FILTER:
+                    for gk in _gkg_gcam_keys_clean():
+                        cn = gcam_series_colname(gk)
+                        mid_a = f"{tag}_anchor_{cn}"
+                        cols.extend(_news_sec_variant_cols(mid_a))
+                        for z in NEWS_EXTRA_ZSCORE_WINDOWS:
+                            if z > 0:
+                                sw = f'_w{int(z)}'
+                                cols.extend(
+                                    [
+                                        f'news_sec_{mid_a}_tone_z{sw}',
+                                        f'news_sec_{mid_a}_vol_z{sw}',
+                                    ]
+                                )
+                        if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
+                            cols.append(f'news_sec_{mid_a}_tone_accel')
+                    for gk in _gkg_gcam_keys_clean():
+                        cn = gcam_series_colname(gk)
+                        mid_d = f"{tag}_div_{cn}"
+                        cols.extend(_news_sec_variant_cols(mid_d))
+                        for z in NEWS_EXTRA_ZSCORE_WINDOWS:
+                            if z > 0:
+                                sw = f'_w{int(z)}'
+                                cols.extend(
+                                    [
+                                        f'news_sec_{mid_d}_tone_z{sw}',
+                                        f'news_sec_{mid_d}_vol_z{sw}',
+                                    ]
+                                )
+                        if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
+                            cols.append(f'news_sec_{mid_d}_tone_accel')
+                    mid_q = f"{tag}_anchor_quality_idx"
+                    cols.extend(_news_sec_variant_cols(mid_q))
+                    for z in NEWS_EXTRA_ZSCORE_WINDOWS:
+                        if z > 0:
+                            sw = f'_w{int(z)}'
+                            cols.extend(
+                                [
+                                    f'news_sec_{mid_q}_tone_z{sw}',
+                                    f'news_sec_{mid_q}_vol_z{sw}',
+                                ]
+                            )
+                    if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
+                        cols.append(f'news_sec_{mid_q}_tone_accel')
                 for ch, alias, _ in trips:
                     mid = f"{tag}_th_{alias}"
                     if ch == "macro":

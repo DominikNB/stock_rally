@@ -171,25 +171,37 @@ def summarize_filtered_signals_vs_target(df, filtered_signals, tickers=None):
     return out
 
 
-def apply_signal_filters(df_ticker_prob, threshold,
-                         consecutive_days=None, signal_cooldown_days=None):
+def apply_signal_filters(
+    df_ticker_prob,
+    threshold,
+    consecutive_days=None,
+    signal_cooldown_days=None,
+    *,
+    rsi_window=None,
+    signal_skip_near_peak=None,
+    peak_lookback_days=None,
+    peak_min_dist_from_high_pct=None,
+    signal_max_rsi=None,
+):
     """
     Apply consecutive filter then cooldown filter for a single ticker.
     consecutive_days / signal_cooldown_days default to the global constants
     (which are updated after Optuna with the optimised values).
     Optional: skip signals at local price peaks (near N-day high) and/or very high RSI.
+    Keyword-Args rsi_window / signal_skip_near_peak / …: wenn gesetzt, statt ``cfg``
+    (nötig für ``joblib``-Worker, die ein frisches ``config``-Modul laden).
     Returns array of Date values where filtered signals fire.
     """
-    cd  = cfg.CONSECUTIVE_DAYS     if consecutive_days     is None else consecutive_days
+    cd = cfg.CONSECUTIVE_DAYS if consecutive_days is None else consecutive_days
     scd = cfg.SIGNAL_COOLDOWN_DAYS if signal_cooldown_days is None else signal_cooldown_days
 
     df_s = df_ticker_prob.sort_values('Date').reset_index(drop=True)
-    raw  = (df_s['prob'].values >= threshold).astype(np.int8)
-    n    = len(raw)
+    raw = (df_s['prob'].values >= threshold).astype(np.int8)
+    n = len(raw)
 
     consec = np.zeros(n, dtype=np.int8)
     for i in range(2, n):
-        if raw[i-2] + raw[i-1] + raw[i] >= cd:
+        if raw[i - 2] + raw[i - 1] + raw[i] >= cd:
             consec[i] = 1
 
     final = np.zeros(n, dtype=np.int8)
@@ -200,17 +212,38 @@ def apply_signal_filters(df_ticker_prob, threshold,
             last_signal = i
 
     if 'close' in df_s.columns:
-        rw = getattr(cfg, 'rsi_w', None)
-        if rw is None:
-            rw = int(cfg.SEED_PARAMS.get('rsi_window', 14))
+        if rsi_window is not None:
+            rw = int(rsi_window)
+        else:
+            rw = getattr(cfg, 'rsi_w', None)
+            if rw is None:
+                rw = int(cfg.SEED_PARAMS.get('rsi_window', 14))
         rsi_series = _rsi_from_close_1d(df_s['close'].values, rw)
+        skip_peak = (
+            bool(signal_skip_near_peak)
+            if signal_skip_near_peak is not None
+            else bool(getattr(cfg, 'SIGNAL_SKIP_NEAR_PEAK', True))
+        )
+        n_peak = (
+            int(peak_lookback_days)
+            if peak_lookback_days is not None
+            else int(getattr(cfg, 'PEAK_LOOKBACK_DAYS', 20))
+        )
+        min_dist = (
+            float(peak_min_dist_from_high_pct)
+            if peak_min_dist_from_high_pct is not None
+            else float(getattr(cfg, 'PEAK_MIN_DIST_FROM_HIGH_PCT', 0.012))
+        )
+        max_rsi = (
+            signal_max_rsi if signal_max_rsi is not None else getattr(cfg, 'SIGNAL_MAX_RSI', None)
+        )
         mask_ok = _peak_rsi_mask_1d(
             df_s['close'].values,
             rsi_series,
-            bool(getattr(cfg, 'SIGNAL_SKIP_NEAR_PEAK', True)),
-            int(getattr(cfg, 'PEAK_LOOKBACK_DAYS', 20)),
-            float(getattr(cfg, 'PEAK_MIN_DIST_FROM_HIGH_PCT', 0.012)),
-            getattr(cfg, 'SIGNAL_MAX_RSI', None),
+            skip_peak,
+            n_peak,
+            min_dist,
+            max_rsi,
         )
         for i in range(n):
             if final[i] == 1 and not mask_ok[i]:

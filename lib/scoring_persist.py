@@ -4,7 +4,6 @@ Used by stock_rally_v10.ipynb (``save_scoring_artifacts`` aus Cell 2; automatisc
 """
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 from typing import Any, MutableMapping
@@ -55,23 +54,12 @@ def _news_sql_manifest_from_g(g: MutableMapping[str, Any]) -> dict[str, Any]:
         "NEWS_EXTRA_HISTORY_YEARS_BEFORE": g.get("NEWS_EXTRA_HISTORY_YEARS_BEFORE"),
         "NEWS_EXTRA_HISTORY_YEARS_AFTER": g.get("NEWS_EXTRA_HISTORY_YEARS_AFTER"),
         "USE_NEWS_SENTIMENT": g.get("USE_NEWS_SENTIMENT"),
-        "GKG_AUTO_EXPLORE_THEMES": g.get("GKG_AUTO_EXPLORE_THEMES"),
-        "GKG_THEME_SELECTION_PATH": str(g.get("GKG_THEME_SELECTION_PATH") or ""),
         "GKG_THEME_SQL_TRIPLES": [list(t) for t in (g.get("GKG_THEME_SQL_TRIPLES") or [])],
+        "GKG_GCAM_METRIC_KEYS": list(g.get("GKG_GCAM_METRIC_KEYS") or []),
+        "NEWS_ANCHOR_ORG_FILTER": g.get("NEWS_ANCHOR_ORG_FILTER"),
+        "NEWS_ANCHOR_SCHEDULE_PATH": str(g.get("NEWS_ANCHOR_SCHEDULE_PATH") or ""),
+        "NEWS_ANCHOR_TOP_N": g.get("NEWS_ANCHOR_TOP_N"),
     }
-
-
-def _read_gkg_theme_audit(g: MutableMapping[str, Any]) -> dict[str, Any] | None:
-    p = g.get("GKG_THEME_SELECTION_PATH")
-    if not p:
-        return None
-    path = Path(p)
-    if not path.is_file():
-        return None
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
 
 
 def _apply_news_sql_manifest(g: MutableMapping[str, Any], manifest: dict[str, Any] | None) -> None:
@@ -82,6 +70,11 @@ def _apply_news_sql_manifest(g: MutableMapping[str, Any], manifest: dict[str, An
             g["SECTOR_BQ_THEME_WHERE"] = {str(k): str(v) for k, v in val.items()}
         elif key == "GKG_THEME_SQL_TRIPLES" and val is not None:
             g["GKG_THEME_SQL_TRIPLES"] = [tuple(x) for x in val]
+        elif key == "GKG_GCAM_METRIC_KEYS" and val is not None:
+            g["GKG_GCAM_METRIC_KEYS"] = tuple(
+                str(x).strip() for x in val if str(x).strip()
+            )
+            g.pop("_gkg_gcam_keys_user_snapshot", None)
         else:
             g[key] = val
     print(
@@ -123,7 +116,6 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         else float(g["SIGNAL_MAX_RSI"]),
         "threshold_calibration_end_date": g.get("threshold_calibration_end_date"),
         "news_sql_manifest": _news_sql_manifest_from_g(g),
-        "gkg_theme_selection_audit": _read_gkg_theme_audit(g),
     }
     joblib.dump(bundle, path)
     print(f"Gespeichert: {path}  (threshold={bundle['best_threshold']:.4f})")
@@ -141,8 +133,6 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         )
     b = joblib.load(path)
     _apply_news_sql_manifest(g, b.get("news_sql_manifest"))
-    if b.get("gkg_theme_selection_audit") is not None:
-        g["_gkg_theme_selection_audit"] = b["gkg_theme_selection_audit"]
     g["base_models"] = b["base_models"]
     g["meta_clf"] = b["meta_clf"]
     g["best_threshold"] = float(b["best_threshold"])

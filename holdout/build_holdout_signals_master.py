@@ -1,7 +1,7 @@
 """
 Baut eine einzige CSV mit allen Holdout-Signal-Daten (keine Joins nötig):
 
-  • Meta/Metadaten (ticker, Date, prob, threshold_used, company, sector) aus CSV oder DataFrame
+  • Meta/Metadaten inkl. Yahoo sector/industry + Merge-Keys (equity_classification.CLASSIFICATION_COLUMN_KEYS)
   • Forward-Renditen (2/4/6/8/10 Handelstage, ret_mean_5) — gleiche Timing-Logik wie bisher
   • Trainings-Label-Eval (train_target, rally, eval_note) aus models/scoring_artifacts.joblib, falls vorhanden
   • Zusätzliche Filter (Liquidität, Cluster, Sektor-HHI, Korrelation, Cross-Section-Ranks,
@@ -21,6 +21,7 @@ python -m holdout.build_holdout_signals_master --no-filters
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
 # Anreicherung standardmäßig aktiv (auch wenn main() von analyze_holdout_*.py importiert wird).
@@ -35,6 +36,8 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
+from lib.stock_rally_v10.equity_classification import CLASSIFICATION_COLUMN_KEYS as _CLASSIFICATION_META_COLS
+
 HOLDOUT_CSV = ROOT / "data" / "holdout_signals.csv"
 MASTER_COMPLETE_CSV = ROOT / "data" / "master_complete.csv"
 MASTER_DAILY_CSV = ROOT / "data" / "master_daily_update.csv"
@@ -42,6 +45,13 @@ META_EXPORT_CSV = ROOT / "data" / "meta_holdout_signals.csv"
 ARTIFACT = ROOT / "models" / "scoring_artifacts.joblib"
 HORIZONS = (2, 4, 6, 8, 10)
 YF_START = "2018-01-01"
+
+
+def _progress_step(n: int, parts: int = 10) -> int:
+    """Schrittweite für Logs: etwa ``parts`` Meldungen über ``n`` Elemente."""
+    if n <= 0:
+        return 1
+    return max(1, n // parts)
 
 
 def _ticker_ohlc(raw: pd.DataFrame, ticker: str) -> pd.DataFrame | None:
@@ -142,13 +152,28 @@ def _build_daily_update(full: pd.DataFrame, ret_cols: list[str]) -> pd.DataFrame
 
 def main(holdout_df: pd.DataFrame | None = None) -> None:
     """
-    holdout_df: optional DataFrame mit Spalten ticker, Date, prob, threshold_used, company, sector
-                (wie nach Meta-Classifier). Wenn None: zuerst data/holdout_signals.csv, sonst
-                schmale Spalten aus data/meta_holdout_signals.csv (Rebuild ohne Notebook).
+    holdout_df: optional DataFrame inkl. Klassifikationsspalten (s. _CLASSIFICATION_META_COLS).
+                Wenn None: data/holdout_signals.csv oder Rebuild aus master/meta CSV.
     """
+
+    def _ensure_classification_columns(frame: pd.DataFrame) -> pd.DataFrame:
+        for c in _CLASSIFICATION_META_COLS:
+            if c not in frame.columns:
+                frame[c] = ""
+        return frame
+
     if holdout_df is None:
         if HOLDOUT_CSV.is_file():
             sig = pd.read_csv(HOLDOUT_CSV)
+            miss = [c for c in _MIN_META_COLS if c not in sig.columns]
+            if miss:
+                print(
+                    f"Fehlt {HOLDOUT_CSV} Spalten {miss}.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            sig = _ensure_classification_columns(sig)
+            sig = sig[list(_MIN_META_COLS) + list(_CLASSIFICATION_META_COLS)].copy()
         elif MASTER_COMPLETE_CSV.is_file():
             sig = pd.read_csv(MASTER_COMPLETE_CSV)
             miss = [c for c in _MIN_META_COLS if c not in sig.columns]
@@ -158,7 +183,8 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
                     file=sys.stderr,
                 )
                 sys.exit(1)
-            sig = sig[list(_MIN_META_COLS)].copy()
+            sig = _ensure_classification_columns(sig)
+            sig = sig[list(_MIN_META_COLS) + list(_CLASSIFICATION_META_COLS)].copy()
         elif META_EXPORT_CSV.is_file():
             sig = pd.read_csv(META_EXPORT_CSV)
             miss = [c for c in _MIN_META_COLS if c not in sig.columns]
@@ -168,7 +194,8 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
                     file=sys.stderr,
                 )
                 sys.exit(1)
-            sig = sig[list(_MIN_META_COLS)].copy()
+            sig = _ensure_classification_columns(sig)
+            sig = sig[list(_MIN_META_COLS) + list(_CLASSIFICATION_META_COLS)].copy()
         else:
             print(
                 f"Fehlt {HOLDOUT_CSV}, {MASTER_COMPLETE_CSV} oder {META_EXPORT_CSV}.",
@@ -176,7 +203,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
             )
             sys.exit(1)
     else:
-        sig = holdout_df.copy()
+        sig = _ensure_classification_columns(holdout_df.copy())
 
     sig["Date"] = pd.to_datetime(sig["Date"]).dt.normalize()
     sig["signal_date"] = sig["Date"]
@@ -184,7 +211,8 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
     end_d = (sig["signal_date"].max() + pd.Timedelta(days=40)).strftime("%Y-%m-%d")
     tickers = sorted(sig["ticker"].unique())
 
-    print(f"Download {len(tickers)} Ticker ({YF_START} … {end_d}) …")
+    print(f"Download {len(tickers)} Ticker ({YF_START} … {end_d}) …", flush=True)
+    _t_dl = time.perf_counter()
     raw = yf.download(
         list(tickers),
         start=YF_START,
@@ -193,17 +221,29 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
         threads=False,
         progress=False,
     )
+    _n_bar = int(len(raw)) if raw is not None and hasattr(raw, "__len__") else 0
+    print(
+        f"  … Download fertig ({time.perf_counter() - _t_dl:.1f}s, {_n_bar} Handelszeilen gesamt). "
+        "OHLC pro Ticker …",
+        flush=True,
+    )
 
     dfs: dict[str, pd.DataFrame] = {}
-    for t in tickers:
+    _nt = len(tickers)
+    _step_t = _progress_step(_nt, 10)
+    for _ti, t in enumerate(tickers, 1):
         df = _ticker_ohlc(raw, t)
         if df is not None and len(df) >= 20:
             dfs[t] = df
+        if _ti % _step_t == 0 or _ti == _nt:
+            print(f"  … Ticker-Serien {_ti}/{_nt} (davon {len(dfs)} mit ≥20 Tagen)", flush=True)
 
     ret_cols = [f"ret_{h}d" for h in HORIZONS]
     rows_fwd: list[dict] = []
 
-    for _, r in sig.iterrows():
+    _nsig = len(sig)
+    _step_s = _progress_step(_nsig, 10)
+    for _si, (_, r) in enumerate(sig.iterrows(), 1):
         t = r["ticker"]
         sig_d = r["signal_date"]
         df = dfs.get(t)
@@ -214,6 +254,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
             "threshold_used": r.get("threshold_used", np.nan),
             "company": r.get("company", ""),
             "sector": r.get("sector", ""),
+            **{k: r.get(k, "") for k in _CLASSIFICATION_META_COLS},
         }
         if df is None:
             row = {**base, "entry_date": "", "fwd_error": "keine Kursreihe"}
@@ -277,6 +318,8 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
         else:
             row["ret_mean_5"] = np.nan
         rows_fwd.append(row)
+        if _si % _step_s == 0 or _si == _nsig:
+            print(f"  … Forward-Renditen {_si}/{_nsig} Signale", flush=True)
 
     out = pd.DataFrame(rows_fwd)
 
@@ -294,42 +337,69 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
         mt = int(bp["min_rally_tail_days"])
         print(
             f"Train-Label-Eval: return_window={rw}, rally_threshold={rt:.4f}, "
-            f"lead_days={ld}, entry_days={ed}, min_rally_tail_days={mt}"
+            f"lead_days={ld}, entry_days={ed}, min_rally_tail_days={mt}",
+            flush=True,
+        )
+        print(
+            "  … Rally/Target je Ticker (erste Meldung gleich; danach ca. alle 5 Ticker) …",
+            flush=True,
         )
 
         per_ticker: dict[str, tuple[dict, dict]] = {}
-        for t in tickers:
+        _step_lab = max(5, _progress_step(len(tickers), 20))
+        for _k, t in enumerate(tickers, 1):
+            close = None
             try:
                 close = _close_series(raw, t)
             except Exception:
-                continue
-            if len(close) < 30:
-                continue
-            dates = pd.to_datetime(close.index).tz_localize(None).normalize()
-            c = close.values.astype(np.float64)
-            rally_arr, target_arr = create_target_one_ticker(c, rw, rt, ld, ed, mt)
-            date_to_r = {dates[j]: int(rally_arr[j]) for j in range(len(dates))}
-            date_to_t = {dates[j]: int(target_arr[j]) for j in range(len(dates))}
-            per_ticker[t] = (date_to_t, date_to_r)
+                pass
+            if close is not None and len(close) >= 30:
+                dates = pd.to_datetime(close.index).tz_localize(None).normalize()
+                c = close.values.astype(np.float64)
+                rally_arr, target_arr = create_target_one_ticker(c, rw, rt, ld, ed, mt)
+                date_to_r = {dates[j]: int(rally_arr[j]) for j in range(len(dates))}
+                date_to_t = {dates[j]: int(target_arr[j]) for j in range(len(dates))}
+                per_ticker[t] = (date_to_t, date_to_r)
+            if _k == 1 or _k % _step_lab == 0 or _k == len(tickers):
+                print(
+                    f"  … Train-Labels {_k}/{len(tickers)} Ticker "
+                    f"({len(per_ticker)} Serien)",
+                    flush=True,
+                )
 
         sig_r = sig.reset_index(drop=True)
-        for i in range(len(out)):
-            t = out.at[i, "ticker"]
-            d = pd.Timestamp(sig_r.at[i, "Date"]).normalize()
+        print("  … Labels den Holdout-Zeilen zuordnen (vektorisiert) …", flush=True)
+        _no = len(out)
+        _step_o = _progress_step(_no, 10)
+        _tick = out["ticker"].to_numpy()
+        _dts = pd.to_datetime(sig_r["Date"]).dt.normalize().to_numpy()
+        _ev = np.array([""] * _no, dtype=object)
+        _tt = np.full(_no, np.nan, dtype=float)
+        _rv = np.full(_no, np.nan, dtype=float)
+        for i in range(_no):
+            t = _tick[i]
+            d = pd.Timestamp(_dts[i]).normalize()
             if t not in per_ticker:
-                out.at[i, "eval_note"] = "kein close"
-                continue
-            date_to_t, date_to_r = per_ticker[t]
-            if d not in date_to_t:
-                out.at[i, "eval_note"] = "kein Handelstag in Serie"
-                continue
-            out.at[i, "train_target"] = date_to_t[d]
-            out.at[i, "rally"] = date_to_r[d]
+                _ev[i] = "kein close"
+            else:
+                date_to_t, date_to_r = per_ticker[t]
+                if d not in date_to_t:
+                    _ev[i] = "kein Handelstag in Serie"
+                else:
+                    _tt[i] = float(date_to_t[d])
+                    _rv[i] = float(date_to_r[d])
+            if (i + 1) % _step_o == 0 or i + 1 == _no:
+                print(f"  … Label-Zuordnung {i + 1}/{_no} Zeilen", flush=True)
+        out["eval_note"] = _ev
+        out["train_target"] = _tt
+        out["rally"] = _rv
     else:
         print(f"Hinweis: {ARTIFACT} fehlt — train_target/rally bleiben leer.")
 
     # Spaltenreihenfolge
-    meta = ["ticker", "Date", "prob", "threshold_used", "company", "sector"]
+    meta = ["ticker", "Date", "prob", "threshold_used", "company", "sector"] + list(
+        _CLASSIFICATION_META_COLS
+    )
     fwd_meta = ["entry_date", "fwd_error"] + ret_cols + ["ret_mean_5"]
     lab = ["train_target", "rally", "eval_note"]
     for c in meta + fwd_meta + lab:
@@ -342,7 +412,10 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
         try:
             from lib.signal_extra_filters import enrich_signal_frame, ensure_llm_signal_columns
 
+            print("  … Zusatzfilter (Cross-Section, Technik, …) …", flush=True)
+            _t_f = time.perf_counter()
             fil = enrich_signal_frame(sig, raw)
+            print(f"  … Zusatzfilter fertig ({time.perf_counter() - _t_f:.1f}s)", flush=True)
             for c in fil.columns:
                 if c not in out.columns:
                     out[c] = fil[c].values

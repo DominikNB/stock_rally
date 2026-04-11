@@ -14,6 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from joblib import Parallel, delayed
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -25,6 +27,19 @@ import yfinance as yf
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
 warnings.filterwarnings("ignore")
+
+
+def _phase17_apply_signals_one(
+    ticker: str,
+    sub: pd.DataFrame,
+    threshold: float,
+    fkw: dict[str, Any],
+) -> tuple[str, np.ndarray]:
+    """Pickelbar für joblib/loky: alle Filterkonstanten in ``fkw`` (nicht globales cfg im Worker)."""
+    from lib.stock_rally_v10.holdout_plot import apply_signal_filters
+
+    sig_dates = apply_signal_filters(sub, threshold, **fkw)
+    return ticker, sig_dates
 
 
 def run_phase_daily_scoring_html(cfg_mod: Any) -> None:
@@ -96,28 +111,92 @@ def _run_phase17(c: Any) -> None:
     X_meta_all = c.build_meta_features(feat_arr, dataset_label="FULL HISTORY")
     probs_all = c.meta_clf.predict_proba(X_meta_all)[:, 1]
     df_s["prob"] = probs_all
-    print("  Scoring done.")
+    print("  Scoring done.", flush=True)
 
-    apply_signal_filters = c.apply_signal_filters
     _rows_for_signal_calendar_day = c._rows_for_signal_calendar_day
     best_threshold = c.best_threshold
     COMPANY_NAMES = c.COMPANY_NAMES
     TICKER_TO_SECTOR = c.TICKER_TO_SECTOR
     df_final = c.df_final
 
+    _tickers_sorted = sorted(df_s["ticker"].unique())
+    _nt = len(_tickers_sorted)
+    print(
+        "  Branchenklassifikation (Yahoo sector + industry via yfinance) für Website & Holdout-CSV …",
+        flush=True,
+    )
+    from lib.stock_rally_v10.equity_classification import (
+        CLASSIFICATION_COLUMN_KEYS,
+        build_classification_cache,
+    )
+
+    _class_cache = build_classification_cache(_tickers_sorted)
+    _rw = getattr(c, "rsi_w", None)
+    if _rw is None:
+        _rw = int(c.SEED_PARAMS.get("rsi_window", 14))
+    else:
+        _rw = int(_rw)
+    _fkw: dict[str, Any] = {
+        "consecutive_days": c.CONSECUTIVE_DAYS,
+        "signal_cooldown_days": c.SIGNAL_COOLDOWN_DAYS,
+        "rsi_window": _rw,
+        "signal_skip_near_peak": bool(c.SIGNAL_SKIP_NEAR_PEAK),
+        "peak_lookback_days": int(c.PEAK_LOOKBACK_DAYS),
+        "peak_min_dist_from_high_pct": float(c.PEAK_MIN_DIST_FROM_HIGH_PCT),
+        "signal_max_rsi": getattr(c, "SIGNAL_MAX_RSI", None),
+    }
+    _tasks = [
+        (t, df_s[df_s["ticker"] == t].sort_values("Date").reset_index(drop=True))
+        for t in _tickers_sorted
+    ]
+    _n_jobs = int(getattr(c, "PHASE17_SIGNAL_FILTER_JOBS", -1))
+    _pbatch = int(getattr(c, "PHASE17_SIGNAL_FILTER_PROGRESS_BATCH", 0) or 0)
+    _step = _pbatch if _pbatch > 0 else max(1, _nt // 10)
+    if _n_jobs != 1 and len(_tasks) >= 4:
+        print(
+            f"  Signale filtern: {_nt} Ticker parallel (joblib loky, n_jobs={_n_jobs}, "
+            f"Fortschritt alle {_step}) …",
+            flush=True,
+        )
+        _pairs: list[tuple[str, np.ndarray]] = []
+        for i in range(0, len(_tasks), _step):
+            batch = _tasks[i : i + _step]
+            chunk = Parallel(n_jobs=_n_jobs, backend="loky", verbose=0)(
+                delayed(_phase17_apply_signals_one)(t, sub, float(best_threshold), _fkw)
+                for t, sub in batch
+            )
+            _pairs.extend(chunk)
+            done = min(i + len(batch), len(_tasks))
+            print(f"    … {done}/{_nt} Ticker (Signal-Filter)", flush=True)
+    else:
+        print(
+            f"  Signale filtern: {_nt} Ticker seriell "
+            f"(PHASE17_SIGNAL_FILTER_JOBS=1 oder <4 Ticker), Fortschritt alle {_step} …",
+            flush=True,
+        )
+        _pairs = []
+        for i in range(0, len(_tasks), _step):
+            batch = _tasks[i : i + _step]
+            for t, sub in batch:
+                _pairs.append(_phase17_apply_signals_one(t, sub, float(best_threshold), _fkw))
+            done = min(i + len(batch), len(_tasks))
+            print(f"    … {done}/{_nt} Ticker (Signal-Filter)", flush=True)
+
     all_hist_signals = []
-    for ticker in sorted(df_s["ticker"].unique()):
+    for ticker, sig_dates in _pairs:
         sub = df_s[df_s["ticker"] == ticker].sort_values("Date").reset_index(drop=True)
-        sig_dates = apply_signal_filters(sub, best_threshold)
         for d in sig_dates:
             match = _rows_for_signal_calendar_day(sub, d)
             if match.empty:
                 continue
+            _cl = _class_cache.get(ticker) or {}
+            _cls = {k: _cl.get(k, "") for k in CLASSIFICATION_COLUMN_KEYS}
             all_hist_signals.append(
                 {
                     "ticker": ticker,
                     "company": COMPANY_NAMES.get(ticker, ticker),
                     "sector": TICKER_TO_SECTOR.get(ticker, "—"),
+                    **_cls,
                     "date": str(d)[:10],
                     "prob": float(match["prob"].values[0]),
                 }
@@ -141,6 +220,7 @@ def _run_phase17(c: Any) -> None:
             "threshold_used": float(best_threshold),
             "company": s["company"],
             "sector": s["sector"],
+            **{k: s.get(k, "") for k in CLASSIFICATION_COLUMN_KEYS},
         }
         for s in signals_holdout_final
     ]
@@ -298,7 +378,7 @@ def _run_phase17(c: Any) -> None:
             plt.close("all")
             return None
 
-    print("Generating charts …")
+    print("Generating charts (yfinance + matplotlib, bis zu 600 Signale) …", flush=True)
     _chart_yf_failures.clear()
     chart_cache = {}
     for s in all_hist_signals[:600]:
@@ -378,6 +458,21 @@ def _run_phase17(c: Any) -> None:
             if b64
             else ""
         )
+        _gics_bits = [x for x in (s.get("gics_sector"), s.get("gics_industry")) if x]
+        _gics_line = " · ".join(str(x) for x in _gics_bits) if _gics_bits else ""
+        _gics_std = (s.get("classification_standard") or "").strip()
+        _gics_html = ""
+        if _gics_line or _gics_std:
+            if _gics_line and _gics_std:
+                _body = f"{_html_std.escape(_gics_std)} — {_html_std.escape(_gics_line)}"
+            elif _gics_line:
+                _body = _html_std.escape(_gics_line)
+            else:
+                _body = _html_std.escape(_gics_std)
+            _gics_html = (
+                f'<p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">'
+                f"{_body}</p>"
+            )
         return f"""
       <div class="sig-card">
         <div class="sig-head">
@@ -387,6 +482,7 @@ def _run_phase17(c: Any) -> None:
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> {s['date']}</span>
           <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
         </div>
+        {_gics_html}
         {_yf_note}
         {chart_html}
         {chart_note}
@@ -516,6 +612,7 @@ def _run_phase17(c: Any) -> None:
     .sig-ticker{{font-weight:700;color:#81d4fa;font-size:.95em;min-width:70px}}
     .sig-company{{color:#90a4ae;font-size:.82em;flex:1;min-width:100px}}
     .sig-sector{{background:#1e2a3a;color:#64b5f6;font-size:.72em;padding:2px 7px;border-radius:10px;white-space:nowrap;align-self:center}}
+    .sig-gics{{font-size:.74em;color:#90a4ae;line-height:1.45;margin:6px 0 0;padding:0 2px;max-width:100%}}
     .sig-date{{color:#546e7a;font-size:.78em;white-space:nowrap}}
     .sig-date-pre{{font-size:.68em;color:#78909c;margin-right:5px}}
     .score-bar-bg{{background:#1a1a2e;border-radius:4px;overflow:hidden;min-width:70px;max-width:110px}}

@@ -14,7 +14,6 @@ from lib.stock_rally_v10 import config as cfg
 from lib.stock_rally_v10.config import load_scoring_artifacts
 from lib.stock_rally_v10.data import load_stock_data
 from lib.stock_rally_v10.features import assemble_features
-from lib.stock_rally_v10 import gkg_theme_explore as _gkg_theme
 from lib.stock_rally_v10.indicators import add_technical_indicators
 from lib.stock_rally_v10.news import fetch_news_sentiment
 from lib.stock_rally_v10.target import create_target
@@ -54,8 +53,6 @@ def run_data_download_and_split() -> None:
                 "(vor Download, Target, Indikatoren, News, Features)."
             )
     cfg._tickers_for_run = _tickers_for_run
-
-    _gkg_theme.maybe_run_gkg_theme_pipeline(cfg, getattr(cfg, "SCORING_ONLY", False))
 
     df_raw = load_stock_data(tickers=_tickers_for_run)
     df_with_target = create_target(df_raw)

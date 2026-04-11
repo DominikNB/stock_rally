@@ -42,30 +42,220 @@ def _compute_news_block(ch_df, mom_w, vol_ma_w, tone_roll, col_prefix):
     return out
 
 
-def _apply_gkg_theme_news_blocks(df, s_all, mom_w, vol_ma, tone_roll):
-    """Pro-Theme-Zeitreihen aus Cache-Kanälen ``sektor##alias`` → ``news_*_{tag}_th_{alias}_*``."""
-    trips = getattr(cfg, "GKG_THEME_SQL_TRIPLES", None) or []
-    if not trips:
-        return df
-    tag = cfg.news_feat_tag(mom_w, vol_ma, tone_roll)
-    for tch, alias, _ in trips:
-        cache_ch = f"{tch}##{alias}"
-        sub = s_all[s_all["channel"] == cache_ch][["Date", "tone", "vol"]]
-        if sub.empty:
+def _merge_gcam_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
+    """GCAM-Tagesmittel wie „tone“ pro Kanal; Vol bleibt Artikelzahl (wie V2Tone-Pfad)."""
+    for gk in cfg._gkg_gcam_keys_clean():
+        cn = cfg.gcam_series_colname(gk)
+        if cn not in s.columns:
             continue
-        if tch == "macro":
-            pref = f"news_macro_{tag}_th_{alias}_"
-            blk = _compute_news_block(sub, mom_w, vol_ma, tone_roll, pref)
+        mid = f"{tag}_{cn}"
+        msub = s[s["channel"] == "macro"]
+        if not msub.empty:
+            macro = msub[["Date", "vol", cn]].copy()
+            macro = macro.rename(columns={cn: "tone"})
+            macro["tone"] = macro["tone"].fillna(0.0)
+            blk = _compute_news_block(
+                macro, mom_w, vol_ma, tone_roll, f"news_macro_{mid}_"
+            )
             if not blk.empty:
                 df = df.merge(blk, on="Date", how="left")
-        else:
-            pref = f"news_sec_{tag}_th_{alias}_"
-            blk = _compute_news_block(sub, mom_w, vol_ma, tone_roll, pref)
-            if blk.empty:
+        sec_parts = []
+        for sector in cfg.TICKERS_BY_SECTOR.keys():
+            sub = s[s["channel"] == sector]
+            if sub.empty:
                 continue
-            blk = blk.copy()
-            blk["sector"] = tch
-            df = df.merge(blk, on=["Date", "sector"], how="left")
+            sec = sub[["Date", "vol", cn]].copy()
+            sec = sec.rename(columns={cn: "tone"})
+            sec["tone"] = sec["tone"].fillna(0.0)
+            blk_s = _compute_news_block(
+                sec, mom_w, vol_ma, tone_roll, f"news_sec_{mid}_"
+            )
+            if blk_s.empty:
+                continue
+            blk_s = blk_s.copy()
+            blk_s["sector"] = sector
+            sec_parts.append(blk_s)
+        if sec_parts:
+            sec_wide = pd.concat(sec_parts, ignore_index=True)
+            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+    return df
+
+
+def _merge_gcam_interaction_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
+    """Differenzen aus GCAM-Basisspalten (z. B. fin. Spread, Confidence) wie eigenes „tone“-Serie."""
+    for _slug, k_hi, k_lo in cfg.GCAM_INTERACTION_DIFFS:
+        cn_a = cfg.gcam_series_colname(k_hi)
+        cn_b = cfg.gcam_series_colname(k_lo)
+        if cn_a not in s.columns or cn_b not in s.columns:
+            continue
+        mid = f"{tag}_gcam_{_slug}"
+        msub = s[s["channel"] == "macro"]
+        if not msub.empty:
+            macro = msub[["Date", "vol", cn_a, cn_b]].copy()
+            macro["tone"] = (macro[cn_a] - macro[cn_b]).fillna(0.0)
+            macro = macro[["Date", "vol", "tone"]]
+            blk = _compute_news_block(
+                macro, mom_w, vol_ma, tone_roll, f"news_macro_{mid}_"
+            )
+            if not blk.empty:
+                df = df.merge(blk, on="Date", how="left")
+        sec_parts = []
+        for sector in cfg.TICKERS_BY_SECTOR.keys():
+            sub = s[s["channel"] == sector]
+            if sub.empty:
+                continue
+            sec = sub[["Date", "vol", cn_a, cn_b]].copy()
+            sec["tone"] = (sec[cn_a] - sec[cn_b]).fillna(0.0)
+            sec = sec[["Date", "vol", "tone"]]
+            blk_s = _compute_news_block(
+                sec, mom_w, vol_ma, tone_roll, f"news_sec_{mid}_"
+            )
+            if blk_s.empty:
+                continue
+            blk_s = blk_s.copy()
+            blk_s["sector"] = sector
+            sec_parts.append(blk_s)
+        if sec_parts:
+            sec_wide = pd.concat(sec_parts, ignore_index=True)
+            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+    return df
+
+
+def _merge_gcam_anchor_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
+    """GCAM nur aus Anker-Zeilen (Spalten anchor_*); gleiche Keys, nur Sektor-Kanäle."""
+    if not getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False):
+        return df
+    for gk in cfg._gkg_gcam_keys_clean():
+        cn = cfg.gcam_series_colname(gk)
+        ac = f"anchor_{cn}"
+        if ac not in s.columns or "anchor_vol" not in s.columns:
+            continue
+        mid = f"{tag}_anchor_{cn}"
+        sec_parts = []
+        for sector in cfg.TICKERS_BY_SECTOR.keys():
+            sub = s[s["channel"] == sector]
+            if sub.empty:
+                continue
+            sec = sub[["Date", "anchor_vol", ac]].copy()
+            sec = sec.rename(columns={"anchor_vol": "vol", ac: "tone"})
+            sec["tone"] = sec["tone"].fillna(0.0)
+            blk_s = _compute_news_block(
+                sec, mom_w, vol_ma, tone_roll, f"news_sec_{mid}_"
+            )
+            if blk_s.empty:
+                continue
+            blk_s = blk_s.copy()
+            blk_s["sector"] = sector
+            sec_parts.append(blk_s)
+        if sec_parts:
+            sec_wide = pd.concat(sec_parts, ignore_index=True)
+            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+    return df
+
+
+def _merge_gcam_div_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
+    """Anker-GCAM minus breites Sektor-GCAM (Divergenz)."""
+    if not getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False):
+        return df
+    for gk in cfg._gkg_gcam_keys_clean():
+        cn = cfg.gcam_series_colname(gk)
+        ac = f"anchor_{cn}"
+        if (
+            ac not in s.columns
+            or cn not in s.columns
+            or "anchor_vol" not in s.columns
+        ):
+            continue
+        mid = f"{tag}_div_{cn}"
+        sec_parts = []
+        for sector in cfg.TICKERS_BY_SECTOR.keys():
+            sub = s[s["channel"] == sector]
+            if sub.empty:
+                continue
+            sec = sub[["Date", "anchor_vol", cn, ac]].copy()
+            sec["tone"] = (sec[ac] - sec[cn]).fillna(0.0)
+            sec["vol"] = sec["anchor_vol"].fillna(0.0)
+            sec = sec[["Date", "vol", "tone"]]
+            blk_s = _compute_news_block(
+                sec, mom_w, vol_ma, tone_roll, f"news_sec_{mid}_"
+            )
+            if blk_s.empty:
+                continue
+            blk_s = blk_s.copy()
+            blk_s["sector"] = sector
+            sec_parts.append(blk_s)
+        if sec_parts:
+            sec_wide = pd.concat(sec_parts, ignore_index=True)
+            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+    return df
+
+
+def _merge_anchor_quality_idx_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
+    """Mittelwert ausgewählter Anker-GCAM-Metriken (LMT-Kern) als eine Zeitreihe."""
+    if not getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False):
+        return df
+    acols = [
+        f"anchor_{cfg.gcam_series_colname(k)}"
+        for k in cfg.GCAM_ANCHOR_QUALITY_MEAN_KEYS
+    ]
+    if "anchor_vol" not in s.columns or any(c not in s.columns for c in acols):
+        return df
+    mid = f"{tag}_anchor_quality_idx"
+    sec_parts = []
+    for sector in cfg.TICKERS_BY_SECTOR.keys():
+        sub = s[s["channel"] == sector]
+        if sub.empty:
+            continue
+        sec = sub[["Date", "anchor_vol"] + acols].copy()
+        sec["tone"] = sec[acols].mean(axis=1, skipna=True).fillna(0.0)
+        sec["vol"] = sec["anchor_vol"].fillna(0.0)
+        sec = sec[["Date", "vol", "tone"]]
+        blk_s = _compute_news_block(
+            sec, mom_w, vol_ma, tone_roll, f"news_sec_{mid}_"
+        )
+        if blk_s.empty:
+            continue
+        blk_s = blk_s.copy()
+        blk_s["sector"] = sector
+        sec_parts.append(blk_s)
+    if sec_parts:
+        sec_wide = pd.concat(sec_parts, ignore_index=True)
+        df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+    return df
+
+
+def _merge_gkg_theme_triples_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
+    """Theme-Split-Kanäle ``sector##alias`` aus ``GKG_THEME_SQL_TRIPLES`` wie V2Tone-Pfad."""
+    for ch, alias, _ in cfg._gkg_theme_triples():
+        mid = f"{tag}_th_{alias}"
+        cache_ch = f"{ch}##{alias}"
+        sub = s[s["channel"] == cache_ch]
+        if sub.empty:
+            continue
+        if ch == "macro":
+            macro = sub[["Date", "tone", "vol"]].copy()
+            blk = _compute_news_block(
+                macro, mom_w, vol_ma, tone_roll, f"news_macro_{mid}_"
+            )
+            if not blk.empty:
+                df = df.merge(blk, on="Date", how="left")
+            continue
+        sec_parts = []
+        for sector in cfg.TICKERS_BY_SECTOR.keys():
+            if sector != ch:
+                continue
+            sec = sub[["Date", "tone", "vol"]].copy()
+            blk_s = _compute_news_block(
+                sec, mom_w, vol_ma, tone_roll, f"news_sec_{mid}_"
+            )
+            if blk_s.empty:
+                continue
+            blk_s = blk_s.copy()
+            blk_s["sector"] = sector
+            sec_parts.append(blk_s)
+        if sec_parts:
+            sec_wide = pd.concat(sec_parts, ignore_index=True)
+            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
     return df
 
 
@@ -153,6 +343,23 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                     sc = f"news_sec_{tag}_tone"
                     if mc in df.columns and sc in df.columns:
                         df[f"news_cross_{tag}_macro_minus_sec_tone"] = df[mc] - df[sc]
+                df = _merge_gcam_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag)
+                df = _merge_gcam_interaction_news_for_tag(
+                    df, s, mom_w, vol_ma, tone_roll, tag
+                )
+                if cfg.NEWS_ANCHOR_ORG_FILTER:
+                    df = _merge_gcam_anchor_news_for_tag(
+                        df, s, mom_w, vol_ma, tone_roll, tag
+                    )
+                    df = _merge_gcam_div_news_for_tag(
+                        df, s, mom_w, vol_ma, tone_roll, tag
+                    )
+                    df = _merge_anchor_quality_idx_news_for_tag(
+                        df, s, mom_w, vol_ma, tone_roll, tag
+                    )
+                df = _merge_gkg_theme_triples_for_tag(
+                    df, s, mom_w, vol_ma, tone_roll, tag
+                )
                 for c in cfg.FEAT_COLS:
                     if not str(c).startswith("news_"):
                         continue
@@ -185,7 +392,25 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                             if sec_parts:
                                 sec_wide = pd.concat(sec_parts, ignore_index=True)
                                 df = df.merge(sec_wide, on=["Date", "sector"], how="left")
-                            df = _apply_gkg_theme_news_blocks(df, s, mom_w, vol_ma, tone_roll)
+                            df = _merge_gcam_news_for_tag(
+                                df, s, mom_w, vol_ma, tone_roll, tag
+                            )
+                            df = _merge_gcam_interaction_news_for_tag(
+                                df, s, mom_w, vol_ma, tone_roll, tag
+                            )
+                            if cfg.NEWS_ANCHOR_ORG_FILTER:
+                                df = _merge_gcam_anchor_news_for_tag(
+                                    df, s, mom_w, vol_ma, tone_roll, tag
+                                )
+                                df = _merge_gcam_div_news_for_tag(
+                                    df, s, mom_w, vol_ma, tone_roll, tag
+                                )
+                                df = _merge_anchor_quality_idx_news_for_tag(
+                                    df, s, mom_w, vol_ma, tone_roll, tag
+                                )
+                            df = _merge_gkg_theme_triples_for_tag(
+                                df, s, mom_w, vol_ma, tone_roll, tag
+                            )
                 if True in cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
                     for mom_w in cfg.NEWS_MOM_WINDOWS:
                         for vol_ma in cfg.NEWS_VOL_MA_WINDOWS:
