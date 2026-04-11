@@ -263,6 +263,10 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
     # Assemble feature matrix: sector/month, btc, breadth, optional news sentiment, dropna on technical worst-case
     # meta_only=True: nur Fenster rsi_w/bb_w/sma_w + ein News-Tripel aus cfg.best_params (wie cfg.FEAT_COLS) — für OOS.
     df = df.copy()
+    print(
+        f"assemble_features: start — Kursmatrix {len(df):,} Zeilen × {df['ticker'].nunique()} Ticker.",
+        flush=True,
+    )
 
     df["sector"] = df["ticker"].map(cfg.TICKER_TO_SECTOR)
     df["sector_id"] = df["sector"].map(cfg.SECTOR_LABELS).astype(float)
@@ -294,6 +298,11 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
 
     for rw in rsi_loop:
         df[f"sector_avg_rsi_{rw}"] = df.groupby(["Date", "sector"])[f"rsi_{rw}"].transform("mean")
+
+    print(
+        "assemble_features: Breadth/Sektor-RSI fertig — optional News-Merges (kann bei vollem Grid mehrere Minuten dauern) …",
+        flush=True,
+    )
 
     if cfg.USE_NEWS_SENTIMENT:
         if sentiment_df is None or sentiment_df.empty:
@@ -368,10 +377,25 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                     else:
                         df[c] = df[c].fillna(0.0)
             else:
-                for mom_w in cfg.NEWS_MOM_WINDOWS:
-                    for vol_ma in cfg.NEWS_VOL_MA_WINDOWS:
-                        for tone_roll in cfg.NEWS_TONE_ROLL_WINDOWS:
+                _mw = list(cfg.NEWS_MOM_WINDOWS)
+                _vma = list(cfg.NEWS_VOL_MA_WINDOWS)
+                _tr = list(cfg.NEWS_TONE_ROLL_WINDOWS)
+                _n_news = len(_mw) * len(_vma) * len(_tr)
+                print(
+                    f"assemble_features: News-Grid {_n_news} Kombinationen "
+                    f"({_mw} × {_vma} × {_tr}) — Fortschritt pro tag …",
+                    flush=True,
+                )
+                _i_news = 0
+                for mom_w in _mw:
+                    for vol_ma in _vma:
+                        for tone_roll in _tr:
+                            _i_news += 1
                             tag = cfg.news_feat_tag(mom_w, vol_ma, tone_roll)
+                            print(
+                                f"  assemble_features: news {_i_news}/{_n_news}  tag={tag} …",
+                                flush=True,
+                            )
                             macro = s[s["channel"] == "macro"][["Date", "tone", "vol"]]
                             blk = _compute_news_block(
                                 macro, mom_w, vol_ma, tone_roll, f"news_macro_{tag}_"

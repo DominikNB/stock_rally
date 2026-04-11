@@ -6,13 +6,13 @@ als Attribute dieses Moduls gesetzt (gemeinsamer Namespace für alle Schritte).
 ``save_scoring_artifacts`` / ``load_scoring_artifacts`` delegieren an ``lib.scoring_persist``
 und verwenden ``globals()`` dieses Moduls, solange die Pipeline über dieses Paket läuft.
 
-Datei-Gliederung (alles in Lesereihenfolge von oben nach unten):
-  1. Pfade, Google-ADC, Kalenderdaten
-  2. Scoring-Artefakt (SCORING_ONLY, load/save)
+Datei-Gliederung (Lesereihenfolge):
+  1. GCP-Auth (optional), Kalender & Laufmodus
+  2. Scoring-Artefakt (SCORING_ONLY, save/load, Phase-17-Jobs)
   3. Pipeline: CV/Optuna, Labels, Anti-Peak, Split, Indikator-Grids, SEED_PARAMS
-  4. News: GDELT/BigQuery, GKG-Kanäle, Geo, V2Themes-SQL, API-Stichwörter
-  5. Universum: TICKERS_BY_SECTOR, Ableitungen, COMPANY_NAMES
-  6. Hilfsfunktionen (Feature-Spalten, Rename-Map)
+  4. News: BigQuery/GKG, Kanäle, Geo, GCAM, GDELT-API-Fallback
+  5. Universum: TICKERS_BY_SECTOR, COMPANY_NAMES
+  6. Hilfsfunktionen (News-/Technik-Spalten, Rename-Map)
 """
 
 import datetime
@@ -24,16 +24,50 @@ _PROJECT_ROOT = Path.cwd().resolve()
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-# ── Google Cloud / BigQuery: ADC + Projekt (vor BQ_PROJECT_ID) ────────────
-ADC_PATH = r"C:\Users\HP\AppData\Roaming\gcloud\application_default_credentials.json"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ADC_PATH
-os.environ["GOOGLE_CLOUD_PROJECT"] = "gedelt-calls"
-print(f"Credentials geladen von: {ADC_PATH}")
-if not os.path.isfile(ADC_PATH):
-    print("WARNUNG: Datei nicht gefunden — Pfad prüfen oder gcloud auth application-default login")
+# Live-Terminal-Logs (Windows/IDE): sonst bleiben viele print-Ausgaben blockgepuffert.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(line_buffering=True)
+    except (AttributeError, OSError, ValueError):
+        pass
+
+# ── Google Cloud / BigQuery: ADC (optional, vor BQ_PROJECT_ID) ───────────
+def _default_application_default_credentials_path() -> Path | None:
+    """Typische gcloud-ADC-Pfade (Windows: %APPDATA%\\gcloud\\…, sonst ~/.config/gcloud/…)."""
+    appdata = os.environ.get("APPDATA", "").strip()
+    if appdata:
+        p = Path(appdata) / "gcloud" / "application_default_credentials.json"
+        if p.is_file():
+            return p
+    for candidate in (Path.home() / ".config" / "gcloud" / "application_default_credentials.json",):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+_cred = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+if _cred:
+    if os.path.isfile(_cred):
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = _cred
+        print(f"Credentials: GOOGLE_APPLICATION_CREDENTIALS → {_cred}")
+    else:
+        print(
+            "WARNUNG: GOOGLE_APPLICATION_CREDENTIALS gesetzt, Datei fehlt —",
+            _cred,
+        )
+else:
+    _adc = _default_application_default_credentials_path()
+    if _adc is not None:
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(_adc)
+        print(f"Credentials: ADC → {_adc}")
+    else:
+        print(
+            "Hinweis: Keine ADC-JSON gefunden — für BigQuery: gcloud auth application-default login "
+            "oder GOOGLE_APPLICATION_CREDENTIALS setzen."
+        )
 
 # =============================================================================
-# 1. Kalender & Laufmodus (Kurse / Training)
+# 1. Kalender & Laufmodus (Kurse / Training; GCP-Auth siehe oben)
 # =============================================================================
 # ── Dates ──────────────────────────────────────────────────────────────────
 # Walk-forward: BASE → META → THRESHOLD → FINAL = disjunkte Zeitfenster (Purge zwischen Stufen).
@@ -45,10 +79,12 @@ print(f'Download:  {START_DATE} → {END_DATE}')
 print(f'Training:  {START_DATE} → {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 
 
+# =============================================================================
+# 2. Scoring-Artefakt & parallele Filter (Phase 17)
+# =============================================================================
 # ── SCORING_ONLY: gespeicherte Modelle + Threshold, ohne Neu-Training ───────
-# (gehört logisch zu Abschnitt 1 — Laufmodus)
-# True  → Datenpfad + Scoring/HTML; Training (Phasen 12–16) wird übersprungen.
-# False → volles Training; Artefakt wird nach Meta/Threshold-Phase automatisch geschrieben.
+# True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
+# False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 SCORING_ONLY = True
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
@@ -81,13 +117,13 @@ def load_scoring_artifacts(path=None):
 # =============================================================================
 # 3. Pipeline: CV, Optuna, Zielvariablen, Split, Indikatoren, SEED_PARAMS
 # =============================================================================
-# (Ticker-Universum steht unten in Abschnitt 5 — hier nur Hyperparameter & Grids.)
+# (Ticker-Universum: Abschnitt 5 — hier nur Hyperparameter & Grids.)
 
 # ── Fixed pipeline constants ─────────────────────────────────────────────────────
 N_WF_SPLITS           = 5     # Walk-forward CV folds
-GDELT_CHUNK_DAYS      = 45    # GDELT API: kürzere Sub-Chunks (vorher fest 90d)
+GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
 OPT_MIN_PRECISION_BASE   = 0.6   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.7   # Phase 4 Meta-Learner
+OPT_MIN_PRECISION_META   = 0.75   # Phase 4 Meta-Learner
 OPT_MIN_PRECISION_THRESHOLD = 0.95  # Phase 5 Threshold-Kalibrierung / PR-Plots
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_THRESHOLD  # Alias: find_precision_threshold, Reports
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
@@ -110,19 +146,19 @@ FIXED_Y_RALLY_THRESHOLD = 0.06
 FIXED_Y_SEGMENT_SPLIT = 5
 EARLY_STOPPING_ROUNDS = 30
 N_OPTUNA_TRIALS       = 300  # erhöht wegen News-Feature-Grid
-# Nur Phase-1-Studie (Base-XGB): hier drosseln, wenn Optuna trotz kleinem Universum langsam ist.
+# Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt Datenpipeline; jeder Trial kostet noch rebuild_target + WF×XGB.
 OPTUNA_TRIALS         = None  # None → N_OPTUNA_TRIALS; z.B. 40 für schnelle Tests
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
 N_META_TRIALS         = 300
-# Cell 13a: SHAP → Meta-Stacking — Top-K Roh-Features neben Base-Probabilities (Cell 14)
+# Meta-Stacking: Top-K Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``)
 META_SHAP_TOP_K       = 10
 RANDOM_STATE          = 42
 N_WORKERS             = os.cpu_count()
 
-# ── Optuna initial values (überschrieben durch Cell 13 nach Optimierung) ─────────
-# create_target() in Cell 11 läuft VOR Optuna — Werte sollten mit SEED_PARAMS konsistent sein.
-RETURN_WINDOW        = 4     # zuletzt: Optuna trial 154 (Base-XGB)
+# ── Optuna-Startwerte (vor Phase 1; nach Optimierung durch ``best_params`` / Artefakt ersetzt) ──
+# ``create_target()`` in der Datenpipeline läuft vor Optuna — mit SEED_PARAMS abstimmen.
+RETURN_WINDOW        = 4     # Startwert; Optuna Phase 1 (Base-XGB) kann überschreiben
 RALLY_THRESHOLD      = 0.07423891180366396
 # „Early-only“-Label: positives = Vorlauf (LEAD_DAYS) + kurze Einstiegszone (ENTRY_DAYS),
 # nicht die gesamte grüne Rally. Optuna sucht entry_days in [1, ENTRY_DAYS_OPT_MAX].
@@ -166,7 +202,7 @@ BB_WINDOWS   = [15, 20, 25]
 SMA_WINDOWS  = [30, 50, 70]
 
 # ── Seed params für enqueue_trial (Optuna Base-XGB) ─────────────────────────
-# Referenz-Seed für enqueue_trial (früherer Optuna-Lauf, z. B. Trial 154).
+# Referenz-Trial / Reproduktion; wird von Optuna bei erfolgreicher Suche übertroffen.
 SEED_PARAMS = dict(
     return_window=4,
     rally_threshold=0.07423891180366396,
@@ -206,7 +242,7 @@ SEED_PARAMS = dict(
 )
 
 # =============================================================================
-# 4. News / GDELT / BigQuery / GKG (Zeitreihen + Kanal-SQL auf V2Themes)
+# 4. News / BigQuery (GKG) / GDELT-API-Fallback (V2Themes, GCAM, optional Anker-Orgs)
 # =============================================================================
 
 # ── News / GDELT grids (Optuna wählt ein Tag-Tripel) ─────────────────────────
@@ -225,10 +261,9 @@ NEWS_CACHE_DIR = os.path.join(os.getcwd(), 'data')
 NEWS_CACHE_FILE = os.path.join(NEWS_CACHE_DIR, 'news_gdelt_cache.pkl')
 # News: BigQuery (GDELT events, kein API-Rate-Limit) oder Legacy HTTP-Doc-API
 NEWS_SOURCE = "bigquery"  # "bigquery" | "gdelt_api"
-# GCP-Projekt mit BigQuery-Billing. Auth: gcloud auth application-default login
-# oder GOOGLE_APPLICATION_CREDENTIALS. Projekt sonst über gcloud/ADC.
-BQ_PROJECT_ID = "gedelt-calls"
-os.environ["GOOGLE_CLOUD_PROJECT"] = "gedelt-calls"
+# GCP-Projekt mit BigQuery-Billing (Abrechnung). Auth siehe Modulkopf.
+BQ_PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "gedelt-calls").strip() or "gedelt-calls"
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", BQ_PROJECT_ID)
 # Öffentliches GDELT (Projekt gdelt-bq). **events** hat keine Theme-Spalten — News-Features nutzen **GKG**.
 BQ_USE_GKG_TABLE = True
 GDELT_BQ_EVENTS_TABLE = "`gdelt-bq.gdeltv2.gkg_partitioned`"
@@ -267,7 +302,7 @@ GKG_GCAM_MUST_HAVE_KEYS: tuple[str, ...] = (
     "c12.181",  # Harvard_Active (Dynamik / Momentum im Text)
 )
 GKG_GCAM_AUTO_RESOLVE = True
-GKG_GCAM_EXPLORE_KEYS = True
+GKG_GCAM_EXPLORE_KEYS = False
 # Zusätzliche explorative c*-Keys (nach Häufigkeit), Must-Haves nicht gezählt.
 GKG_GCAM_EXPLORE_EXTRA_N = 8
 GKG_GCAM_AUTO_TOP_N = 8  # Fallback wenn GKG_GCAM_EXPLORE_EXTRA_N fehlt
@@ -568,7 +603,7 @@ COMPANY_NAMES = {
     'TLX.DE': 'Talanx',
     # Finance (SDAX)
     'MLP.DE': 'MLP', 'GLJ.DE': 'GRENKE', 'PBB.DE': 'Deutsche Pfandbriefbank',
-    'HABA.DE': 'Hamborner REIT', 'WUW.DE': 'Wüstenrot & W.',
+    'WUW.DE': 'Wüstenrot & W.',
     'DBAG.DE': 'Deutsche Beteiligungs', 'HYQ.DE': 'Hypoport',
     # Healthcare (DAX additions)
     'FME.DE': 'Fresenius Med.', 'SHL.DE': 'Siemens Healthineers',
