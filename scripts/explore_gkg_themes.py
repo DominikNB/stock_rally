@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
 
 from lib.stock_rally_v10 import config as cfg
 from lib.stock_rally_v10.gkg_theme_explore import (
+    _explore_geo_sql,
     partition_params,
     parse_day,
     run_bq_query,
@@ -32,7 +33,6 @@ from lib.stock_rally_v10.gkg_theme_explore import (
     table_sql,
     theme_where_for_channel,
 )
-from lib.stock_rally_v10.news import _bq_geo_sql
 from lib.stock_rally_v10.theme_hints import MACRO_THEME_HINTS, SECTOR_THEME_HINTS, hint_hits_for_token
 
 
@@ -92,13 +92,18 @@ def main() -> None:
 
     print(f"Fenster: {start.date()} … {end.date()}  |  Tabelle: `{table}`")
 
-    macro_total_sql = sql_total_rows(theme_where_for_channel(cfg, "macro", uni), _bq_geo_sql(True), table)
+    macro_total_sql = sql_total_rows(
+        theme_where_for_channel(cfg, "macro", uni), _explore_geo_sql(cfg, "macro"), table
+    )
     macro_total = int(run_bq_query(macro_total_sql, params)[0]["n"])
 
     macro_tokens: dict[str, tuple[int, float]] = {}
     if not args.no_macro_baseline:
         macro_sql = sql_top_tokens(
-            theme_where_for_channel(cfg, "macro", uni), _bq_geo_sql(True), table, max(args.top, 400)
+            theme_where_for_channel(cfg, "macro", uni),
+            _explore_geo_sql(cfg, True),
+            table,
+            max(args.top, 400),
         )
         for row in run_bq_query(macro_sql, params):
             macro_tokens[str(row["theme_token"])] = (
@@ -108,7 +113,7 @@ def main() -> None:
 
     for channel in args.channels:
         tw = theme_where_for_channel(cfg, channel, uni)
-        geo = _bq_geo_sql(channel == "macro")
+        geo = _explore_geo_sql(cfg, channel)
         print(f"\n=== Channel: {channel} ===")
         tot_sql = sql_total_rows(tw, geo, table)
         n_rows = int(run_bq_query(tot_sql, params)[0]["n"])

@@ -49,7 +49,7 @@ print(f'Training:  {START_DATE} → {TRAIN_END_DATE}  (bis zum aktuellen Datum)'
 # (gehört logisch zu Abschnitt 1 — Laufmodus)
 # True  → Datenpfad + Scoring/HTML; Training (Phasen 12–16) wird übersprungen.
 # False → volles Training; Artefakt wird nach Meta/Threshold-Phase automatisch geschrieben.
-SCORING_ONLY = False
+SCORING_ONLY = True
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Wird von save_scoring_artifacts / load_scoring_artifacts gesetzt, wenn in dieser Session gespeichert wurde.
 _SCORING_ARTIFACT_SAVED_THIS_SESSION = False
@@ -241,28 +241,57 @@ NEWS_BQ_END_DATE = None    # z.B. None oder gleiches END_DATE
 BQ_EVENT_DATE_FIELD = "SQLDATE"
 BQ_THEMES_COLUMN = "V2Themes"
 BQ_USE_PARTITION_FILTER = True  # Pflicht: _PARTITIONTIME — sonst Full-Table-Scan
-BQ_SINGLE_SCAN = True          # True: 1× GKG-Query mit IF/COUNTIF pro Kanal (nicht 14×)
+BQ_SINGLE_SCAN = True          # True: GKG-Query mit IF/COUNTIF pro Kanal (nicht 14×)
+# Größere Fenster + viele Theme-Spalten → BigQuery „Query too big“ / Ressourcenlimit.
+# 0 = ein einziger Scan über [a,b]; sonst höchstens so viele Kalendertage pro Teil-Query (Ergebnisse werden aneinandergehängt).
+BQ_SINGLE_SCAN_CHUNK_DAYS = 120
 
 # ── GKG Theme-Exploration (BigQuery) ─────────────────────────────────────────
 # True: vor News-Download automatisch Top-Themes (Lift vs. Makro) ermitteln, nach
 # GKG_THEME_SELECTION_PATH schreiben und MACRO/SECTOR_SQL per OR erweitern.
 # False: keine neue Exploration — wenn JSON existiert, wird sie geladen und wie oben angewendet.
 # SCORING_ONLY: unverändert news_sql_manifest aus Artefakt (kein Explore / keine JSON).
-GKG_AUTO_EXPLORE_THEMES = False
+GKG_AUTO_EXPLORE_THEMES = True
 GKG_THEME_SELECTION_PATH = Path("data") / "gkg_theme_selection.json"
 # (Kanal, Alias, Roh-Token) — nach Theme-JSON/Manifest; steuert BQ COUNTIF/AVG pro Theme + Feature-Namen.
 GKG_THEME_SQL_TRIPLES = []
-GKG_EXPLORE_DAYS = 14
+GKG_EXPLORE_DAYS = 180
 GKG_EXPLORE_UNIVERSE = "filtered"  # filtered: cfg Theme-WHERE; open: nur Geo+Partition (teurer)
 GKG_EXPLORE_TOP_N_QUERY = 200
 GKG_EXPLORE_MIN_LIFT_SECTOR = 1.08
 GKG_EXPLORE_MAX_EXTRA_TOKENS_MACRO = 25
-GKG_EXPLORE_MAX_EXTRA_TOKENS_SECTOR = 30
+GKG_EXPLORE_MAX_EXTRA_TOKENS_SECTOR = 25
+# Lift-Stabilisierung (ohne manuelle Theme-Listen): Anteile P(sektor), P(makro) mit α geglättet,
+# fehlende Makro-Rankings nicht als „0“ behandelt. Reduziert künstlich hohe Billionen-Lifts.
+GKG_EXPLORE_LIFT_ALPHA_BASE = 1e-8
+# α = max(BASE, BLEND × kleinster Makro-Anteil im Top-Ranking); skaliert mit Datenlage.
+GKG_EXPLORE_LIFT_BLEND_MIN_MACRO_SHARE = 0.25
+# Sektor-Token nur, wenn es im Makro-Top-Ranking vorkommt (fairerer Lift; kann Nischenthemes streichen).
+GKG_EXPLORE_LIFT_ONLY_IN_MACRO_TOP = False
+# Gespeicherten Lift deckeln (Lesbarkeit); None = kein Cap.
+GKG_EXPLORE_MAX_LIFT_CAP = 5000.0
+# Mindest-GKG-Zeilen mit diesem Token im Sektor-Fenster (filtert Extrem-Rauschen).
+GKG_EXPLORE_SECTOR_MIN_ROW_HITS = 2
+# Inter-Sektor-Dekorrelation (gegen „Background-Themes“ in fast jedem Sektor-Top):
+# TF-IDF-Score = Lift × log(n_Sektoren / k) mit k = in wie vielen Sektor-Top-N die Token vorkommen.
+GKG_EXPLORE_DECORR_SECTOR_TF_IDF = True
+# True: Token, die in jedem Sektor-Top vorkommen (k == n), ganz streichen — kann ganze Sektoren leeren.
+# False: nur TF-IDF-Penalty (Lift×log(n/k)); Fallback in gkg_theme_explore füllt leere Sektoren ohnehin.
+GKG_EXPLORE_DECORR_DROP_UNIVERSAL_TOP = False
+# Lift ≥ Faktor × Mittel(Lift in anderen Sektoren), sonst weg — streng; None = aus (weniger leere Sektoren).
+GKG_EXPLORE_MIN_EXCESS_VS_OTHER_SECTORS = None
 
-# Makro: meist weltweit. Sektor: EU+US (Tipps) — None oder [] = kein Länderfilter
+# Makro: meist weltweit. Sektor-Geo: nur Events-Tabellen (ActionGeo_*), nicht GKG.
+# AUTO: Wenn ≥ BQ_SECTOR_GEO_MAJORITY_THRESHOLD der Ticker derselben Region (EU/US-Heuristik
+# über Kürzel/Suffix) zugeordnet sind → nur diese Region; sonst kein Sektor-Geo-Filter.
+# Bei AUTO=False: fest BQ_SECTOR_GEO_COUNTRIES für alle Sektoren (Legacy).
 BQ_MACRO_GEO_COUNTRIES = None
 BQ_SECTOR_USE_GEO_FILTER = True
+BQ_SECTOR_GEO_AUTO = True
+BQ_SECTOR_GEO_MAJORITY_THRESHOLD = 0.5
 BQ_SECTOR_GEO_COUNTRIES = ["EU", "US"]
+# Optional: Ticker ohne passendes Suffix manuell — Werte 'EU' oder 'US'.
+TICKER_BQ_GEO_OVERRIDES = {}
 GDELT_REQUEST_DELAY_SEC = 6.0  # nur gdelt_api: ~1 Request / 5s
 NEWS_GDELT_SECONDS_PER_CALL = 6.0  # nur gdelt_api: Throttle + Zeit-Schätzung
 
@@ -548,264 +577,9 @@ COMPANY_NAMES = {
     'SMHN.DE': 'SÜSS MicroTec', 'SANT.DE': 'Kontron',
 }
 
-# ── Fixed pipeline constants ─────────────────────────────────────────────────────
-N_WF_SPLITS           = 5     # Walk-forward CV folds
-GDELT_CHUNK_DAYS      = 45    # GDELT API: kürzere Sub-Chunks (vorher fest 90d)
-OPT_MIN_PRECISION_BASE   = 0.6   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.7   # Phase 4 Meta-Learner
-OPT_MIN_PRECISION_THRESHOLD = 0.95  # Phase 5 Threshold-Kalibrierung / PR-Plots
-OPT_MIN_PRECISION = OPT_MIN_PRECISION_THRESHOLD  # Alias: find_precision_threshold, Reports
-# Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
-PHASE5_MIN_SIGNALS    = 5
-
-# ── Optuna mode toggle ────────────────────────────────────────────────────────
-# True  (Option A): Optuna also searches XGBoost model hyperparameters.
-#                   More expressive search, but only XGBoost is tuned — other
-#                   base models (LGB/RF/ET/LR) are not — asymmetric optimisation.
-# False (Option B): Optuna only searches target/filter params (ohne threshold — der kommt in Phase 5).
-#                   All base models use fixed SEED_PARAMS — consistent and faster.
-OPT_MODEL_HYPERPARAMS = True
-# True: Phase-1-Optuna optimiert Rally-/Label-Parameter (return_window, rally_threshold, …).
-# False: feste Regel — grüner Bereich = Rendite > FIXED_Y_RALLY_THRESHOLD innerhalb von
-# FIXED_Y_WINDOW_MIN..FIXED_Y_WINDOW_MAX Handelstagen; Targets nur nach fester Vorschrift.
-OPT_OPTIMIZE_Y_TARGETS = False
-FIXED_Y_WINDOW_MIN = 3
-FIXED_Y_WINDOW_MAX = 10
-FIXED_Y_RALLY_THRESHOLD = 0.06
-FIXED_Y_SEGMENT_SPLIT = 5
-EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 300  # erhöht wegen News-Feature-Grid
-# Nur Phase-1-Studie (Base-XGB): hier drosseln, wenn Optuna trotz kleinem Universum langsam ist.
-# UNIVERSE_FRACTION verkürzt Datenpipeline; jeder Trial kostet noch rebuild_target + WF×XGB.
-OPTUNA_TRIALS         = None  # None → N_OPTUNA_TRIALS; z.B. 40 für schnelle Tests
-OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
-N_META_TRIALS         = 300
-# Cell 13a: SHAP → Meta-Stacking — Top-K Roh-Features neben Base-Probabilities (Cell 14)
-META_SHAP_TOP_K       = 10
-RANDOM_STATE          = 42
-N_WORKERS             = os.cpu_count()
-
-# ── Optuna initial values (überschrieben durch Cell 13 nach Optimierung) ─────────
-# create_target() in Cell 11 läuft VOR Optuna — Werte sollten mit SEED_PARAMS konsistent sein.
-RETURN_WINDOW        = 4     # zuletzt: Optuna trial 154 (Base-XGB)
-RALLY_THRESHOLD      = 0.07423891180366396
-# „Early-only“-Label: positives = Vorlauf (LEAD_DAYS) + kurze Einstiegszone (ENTRY_DAYS),
-# nicht die gesamte grüne Rally. Optuna sucht entry_days in [1, ENTRY_DAYS_OPT_MAX].
-ENTRY_DAYS_OPT_MAX   = 4
-LEAD_DAYS            = 4
-ENTRY_DAYS           = 3
-# Positives Label nur, wenn ab diesem Tag noch mind. so viele Rally-Handelstage „übrig“ sind
-# (inkl. heute bis Segmentende) — kurze grüne Reste / Rally-Ende werden nicht als Ziel markiert.
-MIN_RALLY_TAIL_DAYS  = 5
-CONSECUTIVE_DAYS     = 2
-SIGNAL_COOLDOWN_DAYS = 4
-
-# ── Anti-Peak (nur apply_signal_filters / Website — nicht in Optuna-CV) ─────
-# Viele Fehlsignale sitzen direkt am lokalen Kurs-High; Filter verlangt Abstand zum N-Tage-High.
-SIGNAL_SKIP_NEAR_PEAK = True
-PEAK_LOOKBACK_DAYS = 20
-PEAK_MIN_DIST_FROM_HIGH_PCT = 0.012   # mind. 1.2 % unter Rolling-High (tunable 0.008–0.02)
-SIGNAL_MAX_RSI = 78.0                 # kein Kauf-Signal wenn RSI darüber; None = aus
-
-# ── Trainings-Universum ─────────────────────────────────────────────────────
-# Maximale Anzahl Wertpapiere im TRAIN_BASE-Set — nur bei SPLIT_MODE="ticker" (Legacy).
-# Bei SPLIT_MODE="time" nutzen alle Stufen dieselben Ticker (TIME_SPLIT_FRAC_*).
-# Empfehlung: 30–60. Höher = langsamer, aber potenziell besseres Modell.
-MAX_TRAIN_TICKERS   = 45
-# Schneller Run: nur einen zufälligen Anteil der geladenen Ticker (nach assemble_features)
-UNIVERSE_FRACTION = 1  # 1.0 = alle; <1 wählt Tickers VOR Download/Features (nicht erst danach)
-UNIVERSE_SAMPLE_SEED = 42
-# Train/Test-Split: "time" = gleiches Ticker-Universum, disjunkte Zeiträume (empfohlen).
-# "ticker" = Legacy: verschiedene Ticker pro Stufe, gleicher Kalender bis TRAIN_END_DATE.
-SPLIT_MODE = "time"
-# Anteile auf allen Handelstagen [START … TRAIN_END_DATE]; walk-forward, keine Überlappung der Stufen (Purge Base→Meta).
-TIME_SPLIT_FRAC_BASE = 0.45
-TIME_SPLIT_FRAC_META = 0.25
-TIME_SPLIT_FRAC_THRESHOLD = 0.15
-# Rest = FINAL: letztes Fenster = eigentlicher Final-Test bis zum Kalenderende (s. TRAIN_END_DATE).
-TIME_PURGE_TRADING_DAYS = 5
-
-# ── Indicator parameter grids ───────────────────────────────────────────────
-RSI_WINDOWS  = [7, 10, 14, 21]
-BB_WINDOWS   = [15, 20, 25]
-SMA_WINDOWS  = [30, 50, 70]
-
-# ── Seed params für enqueue_trial (Optuna Base-XGB) ─────────────────────────
-# Referenz-Seed für enqueue_trial (früherer Optuna-Lauf, z. B. Trial 154).
-SEED_PARAMS = dict(
-    return_window=4,
-    rally_threshold=0.07423891180366396,
-    lead_days=4,
-    entry_days=3,
-    min_rally_tail_days=5,
-    consecutive_days=2,
-    signal_cooldown_days=4,
-    threshold=0.6338651351186617,
-    rsi_window=14,
-    bb_window=25,
-    sma_window=50,
-    news_mom_w=3,
-    news_vol_ma=20,
-    news_tone_roll=0,
-    news_extra_zscore_w=20,
-    news_extra_tone_accel=True,
-    news_extra_macro_sec_diff=True,
-    grow_policy='depthwise',
-    max_leaves=910,
-    max_bin=64,
-    max_depth=6,
-    min_child_weight=9,
-    gamma=5.7204046577916365,
-    reg_alpha=0.00044267707418928947,
-    reg_lambda=1.1663163488001458,
-    learning_rate=0.013316606543583374,
-    n_estimators=1263,
-    subsample=0.5896905968497552,
-    colsample_bytree=0.5602711933350929,
-    focal_gamma=0.5063350144294034,
-    focal_alpha=0.38191769324282254,
-    signal_skip_near_peak=True,
-    peak_lookback_days=20,
-    peak_min_dist_from_high_pct=0.012,
-    signal_max_rsi=78.0,
-)
-
-# ── News / GDELT grids (Optuna wählt ein Tag-Tripel) ─────────────────────────
-USE_NEWS_SENTIMENT = True
-# Momentum auf geglätteter Ton-Serie; Vol-MA für Spike; zusätzliche Ton-Glättung vor Momentum
-NEWS_MOM_WINDOWS = [3, 5, 7]
-NEWS_VOL_MA_WINDOWS = [10, 20]
-NEWS_TONE_ROLL_WINDOWS = [0, 3]  # 0 = keine zusätzliche Ton-Glättung
-
-# Zusätzliche News-Spalten — Optuna Phase 1 wählt je Trial ein Tripel (wie news_mom_w …)
-NEWS_EXTRA_ZSCORE_WINDOWS = [0, 10, 20, 30]   # 0 = keine tone_z/vol_z; >0 → Spalten …_tone_z_w{w}
-NEWS_EXTRA_TONE_ACCEL_OPTIONS = [False, True]
-NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS = [False, True]
-
-NEWS_CACHE_DIR = os.path.join(os.getcwd(), 'data')
-NEWS_CACHE_FILE = os.path.join(NEWS_CACHE_DIR, 'news_gdelt_cache.pkl')
-# News: BigQuery (GDELT events, kein API-Rate-Limit) oder Legacy HTTP-Doc-API
-NEWS_SOURCE = "bigquery"  # "bigquery" | "gdelt_api"
-# GCP-Projekt mit BigQuery-Billing. Auth: gcloud auth application-default login
-# oder GOOGLE_APPLICATION_CREDENTIALS. Projekt sonst über gcloud/ADC.
-BQ_PROJECT_ID = "gedelt-calls"
-os.environ["GOOGLE_CLOUD_PROJECT"] = "gedelt-calls"
-# Öffentliches GDELT (Projekt gdelt-bq). **events** hat keine Theme-Spalten — News-Features nutzen **GKG**.
-BQ_USE_GKG_TABLE = True
-GDELT_BQ_EVENTS_TABLE = "`gdelt-bq.gdeltv2.gkg_partitioned`"
-# Kosten: GKG + BQ_SINGLE_SCAN → 1 Query pro Lauf (Vereinigung der Lücken); sonst 1 Query pro Kanal/Lücke.
-# News vs. Kurs: optional länger (Kalenderjahre). Überschreibt NEWS_EXTRA_* wenn gesetzt.
-# Vor Kurs-Start: Warmup für Rollings/Lags/Z-Scores am ersten Kurstag (empfohlen: 1).
-NEWS_EXTRA_HISTORY_YEARS_BEFORE = 1
-# Nach Kurs-Ende: selten nötig; z. B. wenn Nachrichtenlage mit Verzug zur letzten Kurszeile passen soll.
-NEWS_EXTRA_HISTORY_YEARS_AFTER = 0
-# Explizite Grenzen (setzt NEWS_EXTRA_* außer Kraft): None = automatisch wie oben + Kurs-START/END
-NEWS_BQ_START_DATE = None  # z.B. "2023-01-01" — kürzer = weniger gescannte GB
-NEWS_BQ_END_DATE = None    # z.B. None oder gleiches END_DATE
-# Nur wenn BQ_USE_GKG_TABLE False und du eine andere Tabelle meinst (Legacy):
-BQ_EVENT_DATE_FIELD = "SQLDATE"
-BQ_THEMES_COLUMN = "V2Themes"
-BQ_USE_PARTITION_FILTER = True  # Pflicht: _PARTITIONTIME — sonst Full-Table-Scan
-BQ_SINGLE_SCAN = True          # True: 1× GKG-Query mit IF/COUNTIF pro Kanal (nicht 14×)
-
-# ── GKG Theme-Exploration (BigQuery) ─────────────────────────────────────────
-# True: vor News-Download automatisch Top-Themes (Lift vs. Makro) ermitteln, nach
-# GKG_THEME_SELECTION_PATH schreiben und MACRO/SECTOR_SQL per OR erweitern.
-# False: keine neue Exploration — wenn JSON existiert, wird sie geladen und wie oben angewendet.
-# SCORING_ONLY: unverändert news_sql_manifest aus Artefakt (kein Explore / keine JSON).
-GKG_AUTO_EXPLORE_THEMES = False
-GKG_THEME_SELECTION_PATH = Path("data") / "gkg_theme_selection.json"
-# (Kanal, Alias, Roh-Token) — nach Theme-JSON/Manifest; steuert BQ COUNTIF/AVG pro Theme + Feature-Namen.
-GKG_THEME_SQL_TRIPLES = []
-GKG_EXPLORE_DAYS = 14
-GKG_EXPLORE_UNIVERSE = "filtered"  # filtered: cfg Theme-WHERE; open: nur Geo+Partition (teurer)
-GKG_EXPLORE_TOP_N_QUERY = 200
-GKG_EXPLORE_MIN_LIFT_SECTOR = 1.08
-GKG_EXPLORE_MAX_EXTRA_TOKENS_MACRO = 25
-GKG_EXPLORE_MAX_EXTRA_TOKENS_SECTOR = 30
-
-# Makro: meist weltweit. Sektor: EU+US (Tipps) — None oder [] = kein Länderfilter
-BQ_MACRO_GEO_COUNTRIES = None
-BQ_SECTOR_USE_GEO_FILTER = True
-BQ_SECTOR_GEO_COUNTRIES = ["EU", "US"]
-GDELT_REQUEST_DELAY_SEC = 6.0  # nur gdelt_api: ~1 Request / 5s
-NEWS_GDELT_SECONDS_PER_CALL = 6.0  # nur gdelt_api: Throttle + Zeit-Schätzung
-
-MACRO_NEWS_QUERY = "heat pump OR HVAC OR refrigerant OR air conditioning"
-SECTOR_KEYWORDS = {
-    'heat_pump':  ['heat pump', 'HVAC', 'refrigerant', 'air conditioning', 'Daikin', 'Carrier'],
-    'tech':       ['semiconductor', 'AI chip', 'cloud computing', 'software'],
-    'finance':    ['interest rate', 'bank earnings', 'Fed', 'credit'],
-    'healthcare': ['FDA approval', 'clinical trial', 'pharma', 'biotech'],
-    'consumer':   ['consumer spending', 'retail sales', 'inflation'],
-    'industrial': ['manufacturing PMI', 'industrial output', 'capex'],
-    'energy':     ['oil price', 'crude', 'OPEC', 'natural gas'],
-    'crypto':     ['Bitcoin', 'Ethereum', 'crypto regulation', 'DeFi'],
-    'automotive': ['automotive industry', 'electric vehicle', 'car manufacturing'],
-    'materials':  ['chemical industry', 'steel', 'commodities'],
-    'real_estate': ['real estate', 'mortgage rates', 'housing market'],
-    'telecom':    ['telecom', '5G', 'broadband'],
-    'media':      ['media earnings', 'streaming', 'advertising'],
-}
-
-# Makro-Kanal: Zinsen/Inflation (alle Ticker) — eigene WHERE-Clause
-MACRO_BQ_THEME_WHERE = (
-    "(V2Themes LIKE '%ECON_INTERESTRATES%' OR V2Themes LIKE '%ECON_INFLATION%' "
-    "OR V2Themes LIKE '%MONETARY%' OR V2Themes LIKE '%ECON_CENTRALBANK%')"
-)
-
-# V2Themes-Filter pro Sektor-Kanal (ohne macro)
-SECTOR_BQ_THEME_WHERE = {
-    'heat_pump': (
-        "(V2Themes LIKE '%ENV_GREEN_ENERGY%' OR V2Themes LIKE '%ECON_SUBSIDIES%' "
-        "OR V2Themes LIKE '%ENV_ENERGY%')"
-    ),
-    'tech': (
-        "(V2Themes LIKE '%TECH%' OR V2Themes LIKE '%ECON_%' OR V2Themes LIKE '%AI_%' "
-        "OR V2Themes LIKE '%SEMICONDUCTOR%')"
-    ),
-    'finance': (
-        "(V2Themes LIKE '%ECON_%' OR V2Themes LIKE '%FINANCE%' OR V2Themes LIKE '%BANK%' "
-        "OR V2Themes LIKE '%MONETARY%' OR V2Themes LIKE '%INFLATION%')"
-    ),
-    'healthcare': (
-        "(V2Themes LIKE '%HEALTH%' OR V2Themes LIKE '%MEDICAL%' OR V2Themes LIKE '%FDA%' "
-        "OR V2Themes LIKE '%PHARMACEUTICAL%')"
-    ),
-    'consumer': (
-        "(V2Themes LIKE '%CONSUMER%' OR V2Themes LIKE '%RETAIL%' OR V2Themes LIKE '%ECON_%' "
-        "OR V2Themes LIKE '%INFLATION%')"
-    ),
-    'industrial': (
-        "(V2Themes LIKE '%MANUFACTURING%' OR V2Themes LIKE '%ECON_%' OR V2Themes LIKE '%INDUSTRY%')"
-    ),
-    'energy': (
-        "(V2Themes LIKE '%ENERGY%' OR V2Themes LIKE '%OIL%' OR V2Themes LIKE '%GAS%' "
-        "OR V2Themes LIKE '%PETROLEUM%' OR V2Themes LIKE '%OPEC%')"
-    ),
-    'crypto': (
-        "(V2Themes LIKE '%CRYPTO%' OR V2Themes LIKE '%BITCOIN%' OR V2Themes LIKE '%BLOCKCHAIN%' "
-        "OR V2Themes LIKE '%ETHEREUM%')"
-    ),
-    'automotive': (
-        "(V2Themes LIKE '%AUTO%' OR V2Themes LIKE '%VEHICLE%' OR V2Themes LIKE '%ELECTRIC%' "
-        "OR V2Themes LIKE '%AUTOMOTIVE%')"
-    ),
-    'materials': (
-        "(V2Themes LIKE '%STEEL%' OR V2Themes LIKE '%COMMODITY%' OR V2Themes LIKE '%CHEMICAL%')"
-    ),
-    'real_estate': (
-        "(V2Themes LIKE '%REALESTATE%' OR V2Themes LIKE '%HOUSING%' OR V2Themes LIKE '%MORTGAGE%' "
-        "OR V2Themes LIKE '%PROPERTY%')"
-    ),
-    'telecom': (
-        "(V2Themes LIKE '%TELECOM%' OR V2Themes LIKE '%5G%' OR V2Themes LIKE '%BROADBAND%')"
-    ),
-    'media': (
-        "(V2Themes LIKE '%MEDIA%' OR V2Themes LIKE '%STREAMING%' OR V2Themes LIKE '%ADVERTISING%')"
-    ),
-}
-
+# =============================================================================
+# 6. Hilfsfunktionen (Feature-Spalten, Rename-Map)
+# =============================================================================
 # Optional: Firmen-Attention (V2Organizations) z. B. Nibe/Daikin — eigene Query, nicht im Merge,
 # bis Kanäle/Ticker-Join im Modell vorgesehen sind (kleine SDAX-Namen: oft zu wenig Volumen).
 

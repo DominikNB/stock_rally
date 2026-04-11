@@ -7,6 +7,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 from lib.stock_rally_v10 import config as cfg
+from lib.stock_rally_v10.optuna_train import _peak_rsi_mask_1d, _rsi_from_close_1d
 
 def plot_holdout_results(df_final, final_tickers, filtered_signals, title='FINAL Holdout'):
     """
@@ -199,15 +200,17 @@ def apply_signal_filters(df_ticker_prob, threshold,
             last_signal = i
 
     if 'close' in df_s.columns:
-        rw = cfg.__dict__.get('rsi_w')
+        rw = getattr(cfg, 'rsi_w', None)
+        if rw is None:
+            rw = int(cfg.SEED_PARAMS.get('rsi_window', 14))
         rsi_series = _rsi_from_close_1d(df_s['close'].values, rw)
         mask_ok = _peak_rsi_mask_1d(
             df_s['close'].values,
             rsi_series,
-            bool(cfg.__dict__.get('cfg.SIGNAL_SKIP_NEAR_PEAK', False)),
-            int(cfg.__dict__.get('cfg.PEAK_LOOKBACK_DAYS', 20)),
-            float(cfg.__dict__.get('cfg.PEAK_MIN_DIST_FROM_HIGH_PCT', 0.012)),
-            cfg.__dict__.get('cfg.SIGNAL_MAX_RSI', None),
+            bool(getattr(cfg, 'SIGNAL_SKIP_NEAR_PEAK', True)),
+            int(getattr(cfg, 'PEAK_LOOKBACK_DAYS', 20)),
+            float(getattr(cfg, 'PEAK_MIN_DIST_FROM_HIGH_PCT', 0.012)),
+            getattr(cfg, 'SIGNAL_MAX_RSI', None),
         )
         for i in range(n):
             if final[i] == 1 and not mask_ok[i]:

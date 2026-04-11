@@ -4,7 +4,7 @@ Orchestrierung der V10-Pipeline (reine Python-Module).
 1. ``bind_step_functions()`` — registriert Hilfsfunktionen auf ``config`` (ein gemeinsamer
    Namespace für Pipeline-Schritte und eingebettete Phasen).
 2. ``run_data_download_and_split()`` — Daten & Split (``data_and_split``).
-3. ``run_training_scoring_and_export()`` — Training & Export (``post_split_embedded`` → ``post_split_phases``).
+3. ``run_training_scoring_and_export()`` — Training & Export (``training_phases`` / ``post_split_embedded``).
 
 Direkt ausführbar (Play-Button): Projektroot wird automatisch auf ``sys.path`` gelegt.
 Alternativ: ``python -m lib.stock_rally_v10.pipeline_runner`` aus dem Projektroot.
@@ -33,6 +33,7 @@ def bind_step_functions() -> None:
     from lib.stock_rally_v10.helpers import _strip_tz, make_focal_objective, make_focal_objective_lgb
     from lib.stock_rally_v10.holdout_plot import (
         _rows_for_signal_calendar_day,
+        apply_signal_filters,
         plot_holdout_results,
         summarize_filtered_signals_vs_target,
     )
@@ -56,6 +57,7 @@ def bind_step_functions() -> None:
     g["assemble_features"] = assemble_features
     g["optimize_xgb"] = optimize_xgb
     g["plot_holdout_results"] = plot_holdout_results
+    g["apply_signal_filters"] = apply_signal_filters
     g["_rows_for_signal_calendar_day"] = _rows_for_signal_calendar_day
     g["summarize_filtered_signals_vs_target"] = summarize_filtered_signals_vs_target
     g["_apply_filters_cv"] = _apply_filters_cv

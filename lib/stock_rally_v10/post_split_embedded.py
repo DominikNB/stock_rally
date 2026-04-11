@@ -1,31 +1,41 @@
 """
 Training, Meta-Modelle, Kalibrierung, Plots und HTML-Export.
 
-Logisch identisch zur Nach-Split-Pipeline (Phasen 12–17). Der Code liegt in
-``post_split_phases/cell_12.py`` … ``cell_17.py``; jede Datei wird wie zuvor mit
-gemeinsamem Namespace ausgeführt (``exec(..., vars(config), vars(config))``), sodass
-``globals().get('SCORING_ONLY', …)`` unverändert funktioniert.
-
-Änderungen an der Logik: die Dateien ``post_split_phases/cell_*.py`` direkt bearbeiten.
+Implementierung: ``training_phases`` (benannte Funktionen). Dieses Modul re-exportiert
+dieselbe API für bestehende Imports (``from post_split_embedded import run_training_...``).
 """
 from __future__ import annotations
 
-from pathlib import Path
+from lib.stock_rally_v10.training_phases import (
+    run_phase_daily_scoring_html,
+    run_phase_holdout_visualization,
+    run_phase_meta_learner_and_threshold,
+    run_phase_optuna_base_models,
+    run_phase_regime_benchmark_report,
+    run_phase_threshold_pr_and_filters,
+    run_training_scoring_and_export,
+)
 
-from lib.stock_rally_v10 import config as cfg
+# Kurz-Aliasse (optional)
+run_optuna_base_models = run_phase_optuna_base_models
+run_meta_learner_and_threshold = run_phase_meta_learner_and_threshold
+run_regime_benchmark_report = run_phase_regime_benchmark_report
+run_threshold_pr_and_filters = run_phase_threshold_pr_and_filters
+run_holdout_visualization = run_phase_holdout_visualization
+run_daily_scoring_html = run_phase_daily_scoring_html
 
-_PHASE_DIR = Path(__file__).resolve().parent / "post_split_phases"
-_CELL_NUMS = tuple(range(12, 18))
-
-
-def run_training_scoring_and_export() -> None:
-    """Optuna, Base-Modelle, Meta, Threshold, Diagnose, Daily-Scoring/HTML."""
-    ns = vars(cfg)
-    for num in _CELL_NUMS:
-        path = _PHASE_DIR / f"cell_{num}.py"
-        if not path.is_file():
-            raise FileNotFoundError(f"Missing phase file {path}.")
-        src = path.read_text(encoding="utf-8")
-        exec(compile(src, str(path), "exec"), ns, ns)
-
-
+__all__ = [
+    "run_training_scoring_and_export",
+    "run_phase_optuna_base_models",
+    "run_phase_meta_learner_and_threshold",
+    "run_phase_regime_benchmark_report",
+    "run_phase_threshold_pr_and_filters",
+    "run_phase_holdout_visualization",
+    "run_phase_daily_scoring_html",
+    "run_optuna_base_models",
+    "run_meta_learner_and_threshold",
+    "run_regime_benchmark_report",
+    "run_threshold_pr_and_filters",
+    "run_holdout_visualization",
+    "run_daily_scoring_html",
+]
