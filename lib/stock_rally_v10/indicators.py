@@ -58,9 +58,14 @@ def _compute_indicators_one_ticker(df_t):
     df['vol_ratio']     = vol_5d_mean / (vol_20d_mean + 1e-10)
     df['volume_zscore'] = (vol_5d_mean - vol_60d_mean) / (vol_60d_std + 1e-10)
 
-    # ── Momentum 20d (needed for momentum_accel + cross-asset) ─────────────
+    # ── Momentum (20d für Accel/BTC; weitere Fenster für rel_momentum_* in assemble) ─
     df['momentum_20d'] = close.pct_change(20)
     df['momentum_accel'] = df['momentum_20d'].diff(5)
+    for _mw in cfg.REL_MOMENTUM_WINDOWS:
+        _mw = int(_mw)
+        if _mw == 20:
+            continue
+        df[f'momentum_{_mw}d'] = close.pct_change(_mw)
 
     # ── Regime features ────────────────────────────────────────────────────
     sma200 = close.rolling(200, min_periods=150).mean()
@@ -145,6 +150,11 @@ def _compute_indicators_one_ticker_for_meta(df_t, rsi_w, bb_w, sma_w):
     df["volume_zscore"] = (vol_5d_mean - vol_60d_mean) / (vol_60d_std + 1e-10)
     df["momentum_20d"] = close.pct_change(20)
     df["momentum_accel"] = df["momentum_20d"].diff(5)
+    for _mw in cfg.REL_MOMENTUM_WINDOWS:
+        _mw = int(_mw)
+        if _mw == 20:
+            continue
+        df[f"momentum_{_mw}d"] = close.pct_change(_mw)
     sma200 = close.rolling(200, min_periods=150).mean()
     df["close_vs_sma200"] = close / sma200
     df["sma200_delta_5d"] = df["close_vs_sma200"].diff(5)

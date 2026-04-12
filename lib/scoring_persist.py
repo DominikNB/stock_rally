@@ -94,6 +94,12 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         g["threshold_calibration_end_date"] = _thr_end[:10]
     else:
         g["threshold_calibration_end_date"] = _thr_end
+    try:
+        from lib.stock_rally_v10 import config as _cfg
+
+        _opt_y_default = bool(getattr(_cfg, "OPT_OPTIMIZE_Y_TARGETS", True))
+    except Exception:
+        _opt_y_default = True
     bundle = {
         "base_models": g["base_models"],
         "meta_clf": g["meta_clf"],
@@ -116,6 +122,7 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         else float(g["SIGNAL_MAX_RSI"]),
         "threshold_calibration_end_date": g.get("threshold_calibration_end_date"),
         "news_sql_manifest": _news_sql_manifest_from_g(g),
+        "OPT_OPTIMIZE_Y_TARGETS": bool(g.get("OPT_OPTIMIZE_Y_TARGETS", _opt_y_default)),
     }
     joblib.dump(bundle, path)
     print(f"Gespeichert: {path}  (threshold={bundle['best_threshold']:.4f})")
@@ -133,6 +140,13 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         )
     b = joblib.load(path)
     _apply_news_sql_manifest(g, b.get("news_sql_manifest"))
+    try:
+        from lib.stock_rally_v10 import config as _cfg
+
+        _opt_y_default = bool(getattr(_cfg, "OPT_OPTIMIZE_Y_TARGETS", True))
+    except Exception:
+        _opt_y_default = True
+    g["OPT_OPTIMIZE_Y_TARGETS"] = bool(b.get("OPT_OPTIMIZE_Y_TARGETS", _opt_y_default))
     g["base_models"] = b["base_models"]
     g["meta_clf"] = b["meta_clf"]
     g["best_threshold"] = float(b["best_threshold"])

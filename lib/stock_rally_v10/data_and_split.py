@@ -41,6 +41,11 @@ def run_data_download_and_split() -> None:
     else:
         _tickers_for_run = list(cfg.ALL_TICKERS)
         _uf = float(getattr(cfg, "UNIVERSE_FRACTION", 1.0))
+        if _uf > 1.0:
+            raise ValueError(
+                "UNIVERSE_FRACTION muss ≤ 1.0 sein (Anteil des Universums). "
+                "Für 2.5 % bitte 0.025 setzen — nicht 2.5 (sonst wird nicht untergeteilt)."
+            )
         if _uf < 1.0:
             _rng_u = np.random.RandomState(
                 int(getattr(cfg, "UNIVERSE_SAMPLE_SEED", cfg.RANDOM_STATE))

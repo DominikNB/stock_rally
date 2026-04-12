@@ -1,0 +1,4 @@
+{
+  "python.terminal.executeInFileDir": false,
+  "python.analysis.extraPaths": ["${workspaceFolder}"]
+}

@@ -12,6 +12,8 @@ import shap
 import xgboost as xgb
 from sklearn.metrics import precision_recall_curve, precision_score
 
+from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+
 
 def run_phase_meta_learner_and_threshold(cfg_mod: Any) -> None:
     if getattr(cfg_mod, "SCORING_ONLY", False):
@@ -66,6 +68,11 @@ def _run_phase13(c: Any) -> None:
         rename_map.get(n, n) for n in topk_names
     ]
     print(f"Meta-Feature-Namen: {meta_feature_names}")
+
+    if c.USE_NEWS_SENTIMENT:
+        df_test = merge_news_shard_from_best_params(df_test, c.best_params)
+        df_final = merge_news_shard_from_best_params(df_final, c.best_params)
+        df_threshold = merge_news_shard_from_best_params(df_threshold, c.best_params)
 
     X_test_feat = df_test[FEAT_COLS].values.astype(np.float32)
     y_test = df_test["target"].values.astype(np.int8)
@@ -345,12 +352,6 @@ def _run_phase13(c: Any) -> None:
     df_final["prob"] = y_prob_final
     df_test["prob"] = meta_clf.predict_proba(X_meta_test)[:, 1]
     print("\nPhase 5 complete.")
-    c.save_scoring_artifacts()
-    print(
-        "\n[Artefakt] Automatisch gespeichert (models/scoring_artifacts.joblib). "
-        "Zelle 18 nur n\u00f6tig, wenn du ohne diese Zelle erneut speichern willst.",
-        flush=True,
-    )
 
     c.SIGNAL_SKIP_NEAR_PEAK = SIGNAL_SKIP_NEAR_PEAK
     c.PEAK_LOOKBACK_DAYS = PEAK_LOOKBACK_DAYS
@@ -363,3 +364,10 @@ def _run_phase13(c: Any) -> None:
     c.df_test = df_test
     c.df_threshold = df_threshold
     c.df_final = df_final
+
+    c.save_scoring_artifacts()
+    print(
+        "\n[Artefakt] Automatisch gespeichert (models/scoring_artifacts.joblib). "
+        "Zelle 18 nur n\u00f6tig, wenn du ohne diese Zelle erneut speichern willst.",
+        flush=True,
+    )

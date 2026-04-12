@@ -12,6 +12,7 @@ import xgboost as xgb
 from sklearn.metrics import average_precision_score
 
 from lib.stock_rally_v10 import config as cfg
+from lib.stock_rally_v10.features import merge_news_shard_into_df
 from lib.stock_rally_v10.helpers import make_focal_objective
 from lib.stock_rally_v10.target import rebuild_target_for_train
 
@@ -132,10 +133,11 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     """
     Hyperparameter optimisation via Optuna with Walk-Forward temporal CV.
 
-    Jointly optimises (depending on cfg.OPT_MODEL_HYPERPARAMS in Cell 2):
-      always:               rally definition, target-shaping (inkl. min_rally_tail_days), consecutive/cooldown
-      cfg.OPT_MODEL_HYPERPARAMS=True:  also XGBoost model hyperparameters (Option A)
-      cfg.OPT_MODEL_HYPERPARAMS=False: model hyperparameters fixed to cfg.SEED_PARAMS (Option B)
+    Jointly optimises (depending on cfg.OPT_MODEL_HYPERPARAMS):
+      wenn cfg.opt_optimize_y_targets(): Rally-/Label-Parameter (return_window, …); sonst feste Band-Regel
+      immer (je nach cfg): consecutive/cooldown, ggf. Feature-Fenster inkl. News
+      cfg.OPT_MODEL_HYPERPARAMS=True:  auch XGBoost-Hyperparameter (Option A)
+      cfg.OPT_MODEL_HYPERPARAMS=False: Modell-HPs aus cfg.SEED_PARAMS (Option B)
 
     Nicht optimiert hier (wird später überschrieben — siehe Cell 12/13):
       - Schwelle ``threshold`` für CV: fest aus ``seed_params`` (Phase 5 setzt ``best_threshold``).
@@ -149,11 +151,17 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     Returns best_params dict.
     """
     if n_trials is None:
-        _ot = cfg.__dict__.get('cfg.OPTUNA_TRIALS', None)
+        # getattr: echte Attribute auf ``config`` (OPTUNA_TRIALS = None → N_OPTUNA_TRIALS).
+        # Legacy: Notebooks setzen manchmal cfg.__dict__["cfg.OPTUNA_TRIALS"].
+        _ot = getattr(cfg, "OPTUNA_TRIALS", None)
+        if _ot is None:
+            _ot = cfg.__dict__.get("cfg.OPTUNA_TRIALS")
         n_trials = int(_ot) if _ot is not None else cfg.N_OPTUNA_TRIALS
     else:
         n_trials = int(n_trials)
-    wf = cfg.__dict__.get('cfg.OPTUNA_WF_SPLITS', None)
+    wf = getattr(cfg, "OPTUNA_WF_SPLITS", None)
+    if wf is None:
+        wf = cfg.__dict__.get("cfg.OPTUNA_WF_SPLITS")
     wf = int(wf) if wf is not None else cfg.N_WF_SPLITS
     if wf < 1:
         wf = cfg.N_WF_SPLITS
@@ -161,19 +169,40 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     n_dates   = len(all_dates)
     min_train = int(n_dates * 0.40)
     fold_size = max(1, (n_dates - min_train) // wf)
+    _opt_y = cfg.opt_optimize_y_targets()
+    if _opt_y:
+        _trial_hint = (
+            f"pro Trial: Rally-/Label-Parameter variabel → rebuild_target, dann {wf}× WF-XGB"
+        )
+    else:
+        _trial_hint = (
+            f"pro Trial: OPT_OPTIMIZE_Y_TARGETS=False (feste Target-Band-Regel); "
+            f"rebuild_target wendet dieselbe Regel an, dann {wf}× WF-XGB"
+        )
+    _ntr = getattr(cfg, "_tickers_for_run", None)
+    _ntr_n = len(_ntr) if _ntr is not None else None
+    _nu_df = int(df_train["ticker"].nunique())
     print(
-        f'Optuna Phase 1: TRAIN {len(df_train):,} Zeilen, {df_train["ticker"].nunique()} Ticker, '
+        f'Optuna Phase 1: TRAIN {len(df_train):,} Zeilen, {_nu_df} Ticker, '
         f'{n_dates} Kalendertage → {n_trials} Trials × {wf} WF-Folds '
-        f'(pro Trial: rebuild_target + {wf}× XGB; das dominiert oft die Laufzeit).'
+        f"({_trial_hint}; oft dominiert das die Laufzeit).",
+        flush=True,
     )
+    if _ntr_n is not None:
+        print(
+            f"  → Abgleich Universum: cfg._tickers_for_run = {_ntr_n} Ticker "
+            f"(wenn << ALL_TICKERS, sollten Zeilen hier ~ proportional kleiner sein).",
+            flush=True,
+        )
+    if not _opt_y:
+        print(cfg.describe_target_rule_text(), flush=True)
 
     date_to_idx = {d: i for i, d in enumerate(all_dates)}
     df_base = df_train.copy()
     df_base['_date_idx'] = df_base['Date'].map(date_to_idx)
-    _opt_y = cfg.__dict__.get('cfg.OPT_OPTIMIZE_Y_TARGETS', True)
 
     def objective(trial):
-        # ── Rally-/Label-Params (nur wenn cfg.OPT_OPTIMIZE_Y_TARGETS True) ────────
+        # ── Rally-/Label-Params (nur wenn opt_optimize_y_targets() True) ──────────
         if _opt_y:
             return_window   = trial.suggest_int(  'return_window',   3,    15)
             rally_threshold = trial.suggest_float('rally_threshold', 0.07, 0.30)
@@ -210,6 +239,15 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         rsi_w = trial.suggest_categorical('rsi_window', cfg.RSI_WINDOWS)
         bb_w  = trial.suggest_categorical('bb_window',  cfg.BB_WINDOWS)
         sma_w = trial.suggest_categorical('sma_window', cfg.SMA_WINDOWS)
+        btc_momentum_z_window = trial.suggest_categorical(
+            'btc_momentum_z_window', cfg.BTC_MOMENTUM_Z_WINDOWS
+        )
+        market_breadth_z_window = trial.suggest_categorical(
+            'market_breadth_z_window', cfg.MARKET_BREADTH_Z_WINDOWS
+        )
+        rel_momentum_window = trial.suggest_categorical(
+            'rel_momentum_window', cfg.REL_MOMENTUM_WINDOWS
+        )
         if cfg.USE_NEWS_SENTIMENT:
             news_mom_w = trial.suggest_categorical('news_mom_w', cfg.NEWS_MOM_WINDOWS)
             news_vol_ma = trial.suggest_categorical('news_vol_ma', cfg.NEWS_VOL_MA_WINDOWS)
@@ -227,6 +265,9 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             news_extra_tone_accel = None
             news_extra_macro_sec_diff = None
 
+        if cfg.USE_NEWS_SENTIMENT and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
+            _tag = cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)
+            df_trial = merge_news_shard_into_df(df_trial, _tag)
 
         # ── Model params: optimised (Option A) or fixed from cfg.SEED_PARAMS (Option B) ─
         if cfg.OPT_MODEL_HYPERPARAMS:
@@ -264,6 +305,9 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             rsi_w, bb_w, sma_w,
             news_mom_w, news_vol_ma, news_tone_roll,
             news_extra_zscore_w, news_extra_tone_accel, news_extra_macro_sec_diff,
+            btc_momentum_z_window=int(btc_momentum_z_window),
+            market_breadth_z_window=int(market_breadth_z_window),
+            rel_momentum_window=int(rel_momentum_window),
         )
         focal_obj = make_focal_objective(focal_gamma, focal_alpha)
 
@@ -370,13 +414,16 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     study   = optuna.create_study(direction='maximize', sampler=sampler, pruner=pruner)
 
     _seed_enq = dict(seed_params)
-    if not cfg.__dict__.get('cfg.OPT_OPTIMIZE_Y_TARGETS', True):
+    if not cfg.opt_optimize_y_targets():
         for _k in ('return_window', 'rally_threshold', 'lead_days', 'entry_days', 'min_rally_tail_days'):
             _seed_enq.pop(_k, None)
     study.enqueue_trial(_seed_enq)
     # Nur tqdm-Fortschritt (eine Zeile); Optuna-INFO würde jeden Trial doppelt loggen
     optuna.logging.set_verbosity(optuna.logging.WARNING)
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
+    _spb = getattr(cfg, "OPTUNA_SHOW_PROGRESS_BAR", None)
+    if _spb is None:
+        _spb = True
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=bool(_spb))
 
     best = study.best_params
     # Ensure all model hyperparameters are present — if cfg.OPT_MODEL_HYPERPARAMS=False
@@ -385,7 +432,7 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         if k not in best:
             best[k] = v
 
-    if not cfg.__dict__.get('cfg.OPT_OPTIMIZE_Y_TARGETS', True):
+    if not cfg.opt_optimize_y_targets():
         best['return_window'] = cfg.FIXED_Y_WINDOW_MAX
         best['rally_threshold'] = cfg.FIXED_Y_RALLY_THRESHOLD
         best['lead_days'] = 3

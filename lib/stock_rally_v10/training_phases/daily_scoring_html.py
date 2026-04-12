@@ -26,6 +26,9 @@ import pandas as pd
 import yfinance as yf
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
+from lib.stock_rally_v10 import config as cfg
+from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+
 warnings.filterwarnings("ignore")
 
 
@@ -100,6 +103,7 @@ def _run_phase17(c: Any) -> None:
 
     print("Preparing full-history feature matrix …")
     df_s = c.df_features.copy()
+    df_s = merge_news_shard_from_best_params(df_s, c.best_params)
     feat_arr = df_s[c.FEAT_COLS].values.astype(np.float32)
     valid_mask = ~np.isnan(feat_arr).any(axis=1)
     df_s = df_s[valid_mask].reset_index(drop=True)
@@ -119,7 +123,13 @@ def _run_phase17(c: Any) -> None:
     TICKER_TO_SECTOR = c.TICKER_TO_SECTOR
     df_final = c.df_final
 
-    _tickers_sorted = sorted(df_s["ticker"].unique())
+    _tickers_sorted = sorted(
+        {
+            s
+            for s in df_s["ticker"].dropna().astype(str).str.strip().unique()
+            if s and s.lower() != "nan"
+        }
+    )
     _nt = len(_tickers_sorted)
     print(
         "  Branchenklassifikation (Yahoo sector + industry via yfinance) für Website & Holdout-CSV …",
@@ -589,6 +599,7 @@ def _run_phase17(c: Any) -> None:
         else '<div class="chip" title="Artefakt mit Zelle 18 neu speichern (nach Training) — dann steht das Datum der THRESHOLD-Stichprobe im Bundle.">'
         "Threshold-Kalibrierung: Stichprobe bis <strong>—</strong> (nicht im Artefakt)</div>"
     )
+    _target_section = cfg.html_target_definition_section(c)
 
     html = f"""<!DOCTYPE html>
 <html lang="de">
@@ -635,6 +646,8 @@ def _run_phase17(c: Any) -> None:
     .model-chips{{display:flex;flex-wrap:wrap;gap:8px}}
     .chip{{background:#0d1117;border-radius:6px;padding:5px 10px;font-size:.8em;color:#90a4ae}}
     .chip strong{{color:#e0e0e0}}
+    .target-def-body p{{font-size:.84em;color:#b0bec5;line-height:1.58;margin-bottom:10px}}
+    .target-def-body p:last-child{{margin-bottom:0}}
     .empty{{color:#546e7a;font-size:.85em;padding:10px 0}}
     details summary{{cursor:pointer;color:#81d4fa;font-size:.9em;padding:4px 0;user-select:none;list-style:none}}
     details summary::before{{content:'&#9654; '}}
@@ -682,6 +695,8 @@ def _run_phase17(c: Any) -> None:
       <div class="chip">Run <strong>{today_str}</strong></div>
     </div>
   </div>
+
+  {_target_section}
 
   <div class="section">
     <details>

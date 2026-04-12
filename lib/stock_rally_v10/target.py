@@ -86,10 +86,7 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
         L < cfg.FIXED_Y_SEGMENT_SPLIT: Target = 3 Tage vor start + erste 2 grüne Tage.
         L >= cfg.FIXED_Y_SEGMENT_SPLIT: Target = 3 Tage vor start + alle grünen Tage außer den letzten 3.
     """
-    w_lo = int(cfg.__dict__.get("cfg.FIXED_Y_WINDOW_MIN", 3))
-    w_hi = int(cfg.__dict__.get("cfg.FIXED_Y_WINDOW_MAX", 10))
-    rt = float(cfg.__dict__.get("cfg.FIXED_Y_RALLY_THRESHOLD", 0.06))
-    split = int(cfg.__dict__.get("cfg.FIXED_Y_SEGMENT_SPLIT", 5))
+    w_lo, w_hi, rt, split = cfg.fixed_y_rule_params()
 
     close = df_ticker["close"].values.astype(np.float64)
     n = len(close)
@@ -157,7 +154,7 @@ def rebuild_target_for_train(df, lead_days, entry_days,
     Sonst: parametrisierte _create_target_one_ticker.
     """
     df = df.copy()
-    use_opt_y = cfg.__dict__.get("cfg.OPT_OPTIMIZE_Y_TARGETS", True)
+    use_opt_y = cfg.opt_optimize_y_targets()
     for ticker, sub in df.groupby('ticker'):
         sub_r = sub.reset_index(drop=True)
         if not use_opt_y:
@@ -182,7 +179,7 @@ def create_target(df):
 
     def process(args):
         idx, sub = args
-        use_opt_y = cfg.__dict__.get("cfg.OPT_OPTIMIZE_Y_TARGETS", True)
+        use_opt_y = cfg.opt_optimize_y_targets()
         if use_opt_y:
             r, t = _create_target_one_ticker(sub.reset_index(drop=True))
         else:
@@ -198,7 +195,7 @@ def create_target(df):
 
     # Re-assign in correct row order
     for ticker_name, sub in df.groupby('ticker'):
-        use_opt_y = cfg.__dict__.get("cfg.OPT_OPTIMIZE_Y_TARGETS", True)
+        use_opt_y = cfg.opt_optimize_y_targets()
         if use_opt_y:
             r, t = _create_target_one_ticker(sub.reset_index(drop=True))
         else:

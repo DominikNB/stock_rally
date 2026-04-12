@@ -85,7 +85,7 @@ print(f'Training:  {START_DATE} → {TRAIN_END_DATE}  (bis zum aktuellen Datum)'
 # ── SCORING_ONLY: gespeicherte Modelle + Threshold, ohne Neu-Training ───────
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
-SCORING_ONLY = True
+SCORING_ONLY = False
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
@@ -124,7 +124,7 @@ N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
 OPT_MIN_PRECISION_BASE   = 0.6   # Phase 1 Base-XGB
 OPT_MIN_PRECISION_META   = 0.75   # Phase 4 Meta-Learner
-OPT_MIN_PRECISION_THRESHOLD = 0.95  # Phase 5 Threshold-Kalibrierung / PR-Plots
+OPT_MIN_PRECISION_THRESHOLD = 0.90  # Phase 5 Threshold-Kalibrierung / PR-Plots
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_THRESHOLD  # Alias: find_precision_threshold, Reports
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
 PHASE5_MIN_SIGNALS    = 5
@@ -140,17 +140,209 @@ OPT_MODEL_HYPERPARAMS = True
 # False: feste Regel — grüner Bereich = Rendite > FIXED_Y_RALLY_THRESHOLD innerhalb von
 # FIXED_Y_WINDOW_MIN..FIXED_Y_WINDOW_MAX Handelstagen; Targets nur nach fester Vorschrift.
 OPT_OPTIMIZE_Y_TARGETS = False
+
+
+def opt_optimize_y_targets() -> bool:
+    """True = Optuna sucht Rally-/Label-Parameter. Override: ``cfg.__dict__['cfg.OPT_OPTIMIZE_Y_TARGETS']`` (Notebook)."""
+    g = globals()
+    if "cfg.OPT_OPTIMIZE_Y_TARGETS" in g:
+        return bool(g["cfg.OPT_OPTIMIZE_Y_TARGETS"])
+    return bool(g.get("OPT_OPTIMIZE_Y_TARGETS", True))
+
+
 FIXED_Y_WINDOW_MIN = 3
 FIXED_Y_WINDOW_MAX = 10
-FIXED_Y_RALLY_THRESHOLD = 0.06
+FIXED_Y_RALLY_THRESHOLD = 0.08
 FIXED_Y_SEGMENT_SPLIT = 5
+
+
+def fixed_y_rule_params() -> tuple[int, int, float, int]:
+    """(w_min, w_max, rally_threshold, segment_split) wie ``target._create_target_one_ticker_fixed_bands``."""
+    m = sys.modules[__name__]
+    d = m.__dict__
+    w_lo = int(d.get("cfg.FIXED_Y_WINDOW_MIN", getattr(m, "FIXED_Y_WINDOW_MIN", 3)))
+    w_hi = int(d.get("cfg.FIXED_Y_WINDOW_MAX", getattr(m, "FIXED_Y_WINDOW_MAX", 10)))
+    rt = float(d.get("cfg.FIXED_Y_RALLY_THRESHOLD", getattr(m, "FIXED_Y_RALLY_THRESHOLD", 0.06)))
+    split = int(d.get("cfg.FIXED_Y_SEGMENT_SPLIT", getattr(m, "FIXED_Y_SEGMENT_SPLIT", 5)))
+    return w_lo, w_hi, rt, split
+
+
+def describe_target_rule_fixed_bands() -> str:
+    """Feste Band-Regel (OPT_OPTIMIZE_Y_TARGETS=False); Zahlen = ``fixed_y_rule_params()`` wie in der Pipeline."""
+    w_lo, w_hi, rt, split = fixed_y_rule_params()
+    return (
+        "Zieldefinition (feste Band-Regel — dieselben Konstanten wie in der Pipeline):\n\n"
+        "(1) Grüne Rally-Phase: Ein Handelstag ist „grün“, wenn es mindestens ein Fenster "
+        "mit Länge w ∈ [{w_lo}, {w_hi}] Handelstagen gibt, über das die kumulierte Rendite "
+        "(Produkt der Tagesrenditen) mindestens {rt_str} beträgt; alle Tage solcher Fenster werden "
+        "zu grünen Segmenten vereinigt.\n\n"
+        "(2) Positives Klassenlabel: Am ersten Tag eines neuen grünen Segments sei L die "
+        "Segmentlänge in Handelstagen. Label 1 erhalten die drei Handelstage unmittelbar vor "
+        "Segmentbeginn; bei L < {split} zusätzlich die ersten zwei grünen Tage des Segments; "
+        "bei L ≥ {split} alle grünen Tage des Segments außer den letzten drei."
+    ).format(w_lo=w_lo, w_hi=w_hi, rt_str=f"{rt:.2%}", split=split)
+
+
+def describe_fixed_y_target_rule() -> str:
+    """Alias für ``describe_target_rule_fixed_bands`` (Logs, Optuna)."""
+    return describe_target_rule_fixed_bands()
+
+
+def resolved_opt_y_label_params(c=None) -> dict[str, int | float]:
+    """Rally-/Label-Parameter wie beim Training: aus ``c.best_params``, sonst Modul-Defaults."""
+    m = sys.modules[__name__]
+    bp = getattr(c, "best_params", None) or {} if c is not None else {}
+    return {
+        "return_window": int(bp.get("return_window", getattr(m, "RETURN_WINDOW", 4))),
+        "rally_threshold": float(bp.get("rally_threshold", getattr(m, "RALLY_THRESHOLD", 0.06))),
+        "lead_days": int(bp.get("lead_days", getattr(m, "LEAD_DAYS", 3))),
+        "entry_days": int(bp.get("entry_days", getattr(m, "ENTRY_DAYS", 2))),
+        "min_rally_tail_days": int(
+            bp.get("min_rally_tail_days", getattr(m, "MIN_RALLY_TAIL_DAYS", 5))
+        ),
+    }
+
+
+def describe_target_rule_opt_y_from_params(p: dict[str, int | float]) -> str:
+    """Parametrische Regel (OPT_OPTIMIZE_Y_TARGETS=True); Werte = tatsächlich genutzte Parameter."""
+    rw = int(p["return_window"])
+    rt = float(p["rally_threshold"])
+    ld = int(p["lead_days"])
+    ed = int(p["entry_days"])
+    mt = int(p["min_rally_tail_days"])
+    rt_str = f"{rt:.2%}"
+    return (
+        "Zieldefinition (parametrische Rally-/Label-Regel — dieselbe Logik wie "
+        "``target._create_target_one_ticker``; Werte = tatsächlich verwendete Parameter):\n\n"
+        "(1) Rally: An einem Tag endet ein Fenster von genau {rw} aufeinanderfolgenden Handelstagen, "
+        "über das die kumulierte Rendite (Produkt der Tagesrenditen) mindestens {rt_str} beträgt; "
+        "dann markiert dieses Fenster eine Rally-Phase, und alle Tage darin werden zur "
+        "zusammenhängenden grünen Phase vereinigt (wie im Code über das Ende des Fensters iteriert).\n\n"
+        "(2) Positives Klassenlabel: Am ersten Handelstag eines neuen Rally-Segments (nach Rally-Pause) "
+        "sei das Segment [start … end]. Nur wenn die Segmentlänge mindestens {mt} Rally-Tage beträgt, "
+        "erhalten die bis zu {ld} Handelstage unmittelbar vor „start“ Label 1 (Vorlauf). "
+        "Innerhalb des Segments erhalten höchstens die ersten {ed} Tage ab „start“ Label 1, "
+        "jeweils nur wenn vom jeweiligen Tag bis zum Segmentende noch mindestens {mt} Rally-Tage "
+        "übrig sind (kein positives Label am Rally-Ende).\n\n"
+        "Konkret verwendet: return_window={rw}, rally_threshold={rt_str}, "
+        "lead_days={ld}, entry_days={ed}, min_rally_tail_days={mt}."
+    ).format(
+        rw=rw,
+        rt_str=rt_str,
+        ld=ld,
+        ed=ed,
+        mt=mt,
+    )
+
+
+def _target_rule_use_opt_y(c=None) -> bool:
+    if c is not None and getattr(c, "OPT_OPTIMIZE_Y_TARGETS", None) is not None:
+        return bool(getattr(c, "OPT_OPTIMIZE_Y_TARGETS"))
+    return opt_optimize_y_targets()
+
+
+def describe_target_rule_text(c=None) -> str:
+    """
+    Beschreibung der Label-Regel so, wie sie zur Laufzeit gilt: feste Bände oder Werte aus ``best_params``.
+    Für die Website ``c`` übergeben (Namespace mit ``best_params``, ``OPT_OPTIMIZE_Y_TARGETS``).
+    """
+    if not _target_rule_use_opt_y(c):
+        return describe_target_rule_fixed_bands()
+    return describe_target_rule_opt_y_from_params(resolved_opt_y_label_params(c))
+
+
+def describe_target_rule_narrative_for_website(c=None) -> str:
+    """
+    Verständliche Fließtexte für docs/index.html: was „positives Label“ bedeutet und wie es gebaut wird;
+    Parameter nur eingebettet, kein reiner Parameterblock.
+    """
+    if not _target_rule_use_opt_y(c):
+        return _describe_target_rule_fixed_bands_narrative()
+    return _describe_target_rule_opt_y_narrative(resolved_opt_y_label_params(c))
+
+
+def _describe_target_rule_fixed_bands_narrative() -> str:
+    w_lo, w_hi, rt, split = fixed_y_rule_params()
+    rt_str = f"{rt:.2%}"
+    return (
+        "Was das Modell vorhersagen soll: Das Klassenlabel „positiv“ markiert Tage, an denen sich ein "
+        "Einstieg vor oder am Anfang einer späteren Kursaufwertsphase lohnt — nicht die gesamte Rally, "
+        "sondern Vorlauf und frühe grüne Tage. Die Regel ist fest (ohne Optuna für Rally-Parameter) "
+        "und entspricht exakt der Pipeline.\n\n"
+        "Zuerst wird festgelegt, wann der Kurs in einer „grünen“ Rally-Phase steht: Ein Tag zählt dazu, "
+        "wenn es mindestens ein Fenster aus {w_lo} bis {w_hi} aufeinanderfolgenden Handelstagen gibt, "
+        "über das die kumulierte Rendite (Produkt der Tagesrenditen) mindestens {rt_str} beträgt. "
+        "Alle Tage, die in ein solches Fenster fallen, werden zu zusammenhängenden grünen Segmenten "
+        "vereinigt — so entsteht die Rally-Spur.\n\n"
+        "Daraus werden die Trainings-Labels abgeleitet: Betrachtet wird jeweils der erste Tag "
+        "eines neuen grünen Segments (nach einer Rally-Pause). Seine Länge sei L Handelstage. "
+        "Dann erhalten die drei Handelstage unmittelbar vor Segmentbeginn das positive Label; "
+        "zusätzlich — je nach Länge — entweder nur die ersten zwei grünen Tage des Segments "
+        "(wenn L kleiner als {split} ist), oder alle grünen Tage des Segments außer "
+        "den letzten drei (wenn L mindestens {split} beträgt). So werden frühe Einstiege "
+        "bevorzugt und sehr späte Rally-Tage nicht als Trainingsziel geführt."
+    ).format(w_lo=w_lo, w_hi=w_hi, rt_str=rt_str, split=split)
+
+
+def _describe_target_rule_opt_y_narrative(p: dict[str, int | float]) -> str:
+    rw = int(p["return_window"])
+    rt = float(p["rally_threshold"])
+    ld = int(p["lead_days"])
+    ed = int(p["entry_days"])
+    mt = int(p["min_rally_tail_days"])
+    rt_str = f"{rt:.2%}"
+    return (
+        "Was das Modell vorhersagen soll: Das positive Label steht für Tage, an denen ein Einstieg "
+        "in eine beginnende oder anhaltende Rally sinnvoll erscheint — mit Vorlauf vor dem Rally-Start "
+        "und einer begrenzten Einstiegszone am Anfang der grünen Phase. Die Schwellen stammen aus Optuna "
+        "(ein Satz gewählter Parameter) und werden beim Training und in diesem Artefakt genau so verwendet.\n\n"
+        "Die Rally wird so definiert: Liegt an einem Tag die kumulierte Rendite über genau {rw} "
+        "aufeinanderfolgende Handelstage mindestens bei {rt_str}, markiert dieses Fenster grüne Tage; "
+        "alle solchen Fenster werden zu durchgehenden Rally-Segmenten zusammengezogen.\n\n"
+        "Das positive Klassenlabel setzt nur dann, wenn das Rally-Segment lang genug ist: "
+        "Mindestens {mt} Rally-Handelstage müssen im Segment noch „übrig“ sein, damit Vorlauf und "
+        "Einstieg nicht am Ende einer kurzen Erholung hängen. Konkret: Bis zu {ld} Handelstage "
+        "vor dem ersten grünen Tag eines neuen Segments erhalten Label 1; innerhalb des Segments "
+        "höchstens die ersten {ed} Tage — aber jeweils nur, wenn vom jeweiligen Tag bis zum "
+        "Rally-Ende noch mindestens {mt} grüne Tage folgen. So werden Späteinsteige am Rally-Ende "
+        "vermieden. Die genannten Werte sind die optimierten Parameter (Rally-Fenster, Schwelle, "
+        "Vorlauf, Einstiegs-Tage, Mindest-Rally-Rest) und entsprechen den im Artefakt gespeicherten "
+        "Einträgen return_window, rally_threshold, lead_days, entry_days und min_rally_tail_days."
+    ).format(
+        rw=rw,
+        rt_str=rt_str,
+        ld=ld,
+        ed=ed,
+        mt=mt,
+    )
+
+
+def html_target_definition_section(c=None) -> str:
+    """HTML-Block für docs/index.html: Zieldefinition (Trainings-Labels), sicher escaped."""
+    import html as html_module
+
+    raw = describe_target_rule_narrative_for_website(c)
+    inner = "".join(
+        f"<p>{html_module.escape(b.strip())}</p>"
+        for b in raw.split("\n\n")
+        if b.strip()
+    )
+    return (
+        '<div class="section target-def"><h2>Zieldefinition (Trainings-Labels)</h2>'
+        f'<div class="target-def-body">{inner}</div></div>'
+    )
+
+
 EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 300  # erhöht wegen News-Feature-Grid
+N_OPTUNA_TRIALS       = 5  # erhöht wegen News-Feature-Grid
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
-# UNIVERSE_FRACTION verkürzt Datenpipeline; jeder Trial kostet noch rebuild_target + WF×XGB.
+# UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
+# OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
 OPTUNA_TRIALS         = None  # None → N_OPTUNA_TRIALS; z.B. 40 für schnelle Tests
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
-N_META_TRIALS         = 500
+# tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
+OPTUNA_SHOW_PROGRESS_BAR = None
+N_META_TRIALS         = 25
 # Meta-Stacking: Top-K Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``)
 META_SHAP_TOP_K       = 10
 RANDOM_STATE          = 42
@@ -184,6 +376,7 @@ SIGNAL_MAX_RSI = 78.0                 # kein Kauf-Signal wenn RSI darüber; None
 # Empfehlung: 30–60. Höher = langsamer, aber potenziell besseres Modell.
 MAX_TRAIN_TICKERS   = 45
 # Schneller Run: nur einen zufälligen Anteil der geladenen Ticker (nach assemble_features)
+# 2.5 % = 0.025 (nicht 2.5 — sonst greift die Auswahl nicht).
 UNIVERSE_FRACTION = 1  # 1.0 = alle; <1 wählt Tickers VOR Download/Features (nicht erst danach)
 UNIVERSE_SAMPLE_SEED = 42
 # Train/Test-Split: "time" = gleiches Ticker-Universum, disjunkte Zeiträume (empfohlen).
@@ -221,6 +414,9 @@ SEED_PARAMS = dict(
     news_extra_zscore_w=20,
     news_extra_tone_accel=True,
     news_extra_macro_sec_diff=True,
+    btc_momentum_z_window=60,
+    market_breadth_z_window=60,
+    rel_momentum_window=20,
     grow_policy='depthwise',
     max_leaves=910,
     max_bin=64,
@@ -257,9 +453,20 @@ NEWS_EXTRA_ZSCORE_WINDOWS = [0, 10, 20, 30]   # 0 = keine tone_z/vol_z; >0 → S
 NEWS_EXTRA_TONE_ACCEL_OPTIONS = [False, True]
 NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS = [False, True]
 # assemble_features: welche News-Spalten am Ende per Fillna/0 angelegt werden.
-# "optuna_union" = nur Vereinigung über dasselbe Raster wie Optuna (build_news_model_cols) — deutlich weniger Spalten/RAM als all_news_model.
-# "all_news_model" = alle Namen aus all_news_model_cols() (Legacy / maximale Breite).
-FEATURE_ASSEMBLE_NEWS_FILL = "optuna_union"  # "all_news_model" | "optuna_union"
+# "optuna_union" = Vereinigung wie Optuna-Raster (bei gleicher Config oft gleiche Anzahl wie all_news_model).
+# "all_news_model" = alle Namen aus all_news_model_cols() (Legacy).
+# "none" = keinen News-Fill (nur was die Merges liefern; für Experten).
+FEATURE_ASSEMBLE_NEWS_FILL = "optuna_union"  # "all_news_model" | "optuna_union" | "none"
+
+# Kontext-Features: Optuna wählt je Trial ein Fenster (Indizes siehe SEED_PARAMS).
+BTC_MOMENTUM_Z_WINDOWS = [20, 40, 60, 120]
+MARKET_BREADTH_Z_WINDOWS = [20, 40, 60, 120]
+REL_MOMENTUM_WINDOWS = [10, 20, 60]
+
+# Volles News-Fenster-Grid: News liegt nur in Shard-Dateien (FEATURE_SHARD_DIR), nicht als breite Spalten in df_features.
+FEATURE_SHARD_DIR = os.path.join(os.getcwd(), "data", "feature_shards_news")
+NEWS_SHARD_MANIFEST: dict[str, str] = {}
+_FEATURE_NEWS_SHARDS_ACTIVE = False
 
 NEWS_CACHE_DIR = os.path.join(os.getcwd(), 'data')
 NEWS_CACHE_FILE = os.path.join(NEWS_CACHE_DIR, 'news_gdelt_cache.pkl')
@@ -289,7 +496,8 @@ BQ_SINGLE_SCAN = True          # True: GKG-Query mit IF/COUNTIF pro Kanal (nicht
 # 0 = ein einziger Scan über [a,b]; sonst höchstens so viele Kalendertage pro Teil-Query (Ergebnisse werden aneinandergehängt).
 BQ_SINGLE_SCAN_CHUNK_DAYS = 120
 
-# Feste GKG-Theme-Tripel für SQL (leer = keine zusätzlichen Theme-Spalten).
+# Feste GKG-Theme-Tripel für SQL (leer = keine zusätzlichen Theme-Kanäle im GKG-Scan).
+# Hinweis: Es werden keine ``news_*_th_*``-Modellspalten mehr gebaut — nur V2 Macro/Sektor + Sektor-GCAM.
 GKG_THEME_SQL_TRIPLES = []
 
 # GCAM-Schlüssel: nicht leer = feste Liste (überschreibt Auto). Sonst: Must-Have + optional Datei/Exploration.
@@ -323,13 +531,6 @@ GKG_GCAM_KEYS_PATH = Path("data") / "gkg_gcam_metric_keys.json"
 # Z. B. 8 in der Datei exploriert, hier 2 → nur Must-Haves + 2 Extras. None = keine Kürzung; 0 = nur Must-Haves.
 # Nur *schmalere* Key-Liste löst keinen News-BigQuery-Neu-Scan aus, solange der Pickle-Cache die Keys schon kennt.
 GKG_GCAM_USE_EXTRA_N = 2  # schlankere Feature-Matrix; None = alle Extras aus Datei
-
-# Abgeleitete GCAM-Differenzen (features.py): nur wenn beide Basis-Spalten in sentiment_df existieren.
-# (slug, minuend_key, subtrahend_key) — z. B. fin. Positivität − Negativität; Erfolg − Unsicherheit.
-GCAM_INTERACTION_DIFFS: tuple[tuple[str, str, str], ...] = (
-    ("inter_fin_spread", "c18.159", "c18.158"),
-    ("inter_confidence", "vnt:success", "c18.161"),
-)
 
 
 def gcam_series_colname(key: str) -> str:
@@ -443,8 +644,9 @@ SECTOR_BQ_THEME_WHERE = {
 # 5. Universum: Ticker, Modell-Cluster / News-Kanäle, Anzeigenamen
 # =============================================================================
 # Die Keys von TICKERS_BY_SECTOR sind **keine** Yahoo-GICS-Sektoren. Sie bündeln Ticker für:
-#   • ``sector_id`` / Modell-Features, • je einen GDELT/BigQuery-Newskanal,  • Cluster in Holdout-CSV.
-# Yahoo liefert echte Branchen über ``equity_classification`` (gics_sector / gics_industry) — z. B. auf der Website.
+#   • ``sector_id`` (Modell-Cluster), • je einen GDELT/BigQuery-Newskanal, • Cluster in Holdout-CSV.
+# Yahoo liefert **zwei Hierarchiestufen** (yfinance): ``gics_sector`` + ``gics_industry`` — in ``assemble_features``
+# als ``gics_sector_id`` / ``gics_industry_id`` (s. ``equity_classification``); Website nutzt dieselben Strings.
 # ``heat_pump`` ist ein **thematisches Research-Basket** (HVAC), kein GICS-Label; Yahoo ordnet diese Titel meist
 # „Industrials“ / „Building Products“ o. ä. zu.
 # (Keys müssen zu SECTOR_BQ_THEME_WHERE / SECTOR_KEYWORDS passen.)
@@ -709,10 +911,6 @@ def news_feat_tag(mom_w, vol_ma, tone_roll):
     return f"{int(mom_w)}_{int(vol_ma)}_{int(tone_roll)}"
 
 
-def _gkg_theme_triples() -> list[tuple[str, str, str]]:
-    return list(GKG_THEME_SQL_TRIPLES or [])
-
-
 def _news_macro_variant_cols(mid: str):
     return [
         f'news_macro_{mid}_tone',
@@ -740,43 +938,21 @@ def _news_base_cols(tag):
 
 
 def _append_gcam_news_cols(out, tag, zscore_w, use_accel):
+    """Nur Sektor-GCAM pro Key (kein news_macro_* auf GCAM-Ebene — Macro bleibt V2-Basis)."""
     zw = int(zscore_w) if zscore_w is not None else 0
     for gk in _gkg_gcam_keys_clean():
         mid = f"{tag}_{gcam_series_colname(gk)}"
-        out.extend(_news_macro_variant_cols(mid))
         out.extend(_news_sec_variant_cols(mid))
         if zw > 0:
             sw = f"_w{zw}"
             out.extend(
                 [
-                    f"news_macro_{mid}_tone_z{sw}",
-                    f"news_macro_{mid}_vol_z{sw}",
                     f"news_sec_{mid}_tone_z{sw}",
                     f"news_sec_{mid}_vol_z{sw}",
                 ]
             )
         if use_accel:
-            out.extend([f"news_macro_{mid}_tone_accel", f"news_sec_{mid}_tone_accel"])
-
-
-def _append_gcam_interaction_news_cols(out, tag, zscore_w, use_accel):
-    zw = int(zscore_w) if zscore_w is not None else 0
-    for slug, _a, _b in GCAM_INTERACTION_DIFFS:
-        mid = f"{tag}_gcam_{slug}"
-        out.extend(_news_macro_variant_cols(mid))
-        out.extend(_news_sec_variant_cols(mid))
-        if zw > 0:
-            sw = f"_w{zw}"
-            out.extend(
-                [
-                    f"news_macro_{mid}_tone_z{sw}",
-                    f"news_macro_{mid}_vol_z{sw}",
-                    f"news_sec_{mid}_tone_z{sw}",
-                    f"news_sec_{mid}_vol_z{sw}",
-                ]
-            )
-        if use_accel:
-            out.extend([f"news_macro_{mid}_tone_accel", f"news_sec_{mid}_tone_accel"])
+            out.append(f"news_sec_{mid}_tone_accel")
 
 
 def _append_anchor_gcam_sec_cols(out, tag, zscore_w, use_accel):
@@ -834,30 +1010,6 @@ def _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel):
         out.append(f"news_sec_{mid}_tone_accel")
 
 
-def _append_gkg_theme_news_cols(out, tag, zscore_w, use_accel):
-    zw = int(zscore_w) if zscore_w is not None else 0
-    for ch, alias, _ in _gkg_theme_triples():
-        mid = f"{tag}_th_{alias}"
-        if ch == "macro":
-            out.extend(_news_macro_variant_cols(mid))
-            if zw > 0:
-                sw = f'_w{zw}'
-                out.extend([
-                    f'news_macro_{mid}_tone_z{sw}', f'news_macro_{mid}_vol_z{sw}',
-                ])
-            if use_accel:
-                out.append(f'news_macro_{mid}_tone_accel')
-        else:
-            out.extend(_news_sec_variant_cols(mid))
-            if zw > 0:
-                sw = f'_w{zw}'
-                out.extend([
-                    f'news_sec_{mid}_tone_z{sw}', f'news_sec_{mid}_vol_z{sw}',
-                ])
-            if use_accel:
-                out.append(f'news_sec_{mid}_tone_accel')
-
-
 def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
     """Spaltenliste für ein gewähltes Tag-Tripel; zscore_w=0 schließt tone_z/vol_z aus."""
     out = _news_base_cols(tag)
@@ -873,12 +1025,10 @@ def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
     if use_cross:
         out.append(f'news_cross_{tag}_macro_minus_sec_tone')
     _append_gcam_news_cols(out, tag, zscore_w, use_accel)
-    _append_gcam_interaction_news_cols(out, tag, zscore_w, use_accel)
     if NEWS_ANCHOR_ORG_FILTER:
         _append_anchor_gcam_sec_cols(out, tag, zscore_w, use_accel)
         _append_gcam_div_sec_cols(out, tag, zscore_w, use_accel)
         _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel)
-    _append_gkg_theme_news_cols(out, tag, zscore_w, use_accel)
     return out
 
 
@@ -912,7 +1062,6 @@ def optuna_training_news_column_union() -> list[str]:
 
 def all_news_model_cols():
     cols = []
-    trips = _gkg_theme_triples()
     for m in NEWS_MOM_WINDOWS:
         for v in NEWS_VOL_MA_WINDOWS:
             for r in NEWS_TONE_ROLL_WINDOWS:
@@ -931,45 +1080,18 @@ def all_news_model_cols():
                     cols.append(f'news_cross_{tag}_macro_minus_sec_tone')
                 for gk in _gkg_gcam_keys_clean():
                     mid = f"{tag}_{gcam_series_colname(gk)}"
-                    cols.extend(_news_macro_variant_cols(mid))
                     cols.extend(_news_sec_variant_cols(mid))
                     for z in NEWS_EXTRA_ZSCORE_WINDOWS:
                         if z > 0:
                             sw = f'_w{int(z)}'
                             cols.extend(
                                 [
-                                    f'news_macro_{mid}_tone_z{sw}',
-                                    f'news_macro_{mid}_vol_z{sw}',
                                     f'news_sec_{mid}_tone_z{sw}',
                                     f'news_sec_{mid}_vol_z{sw}',
                                 ]
                             )
                     if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
-                        cols.extend(
-                            [f'news_macro_{mid}_tone_accel', f'news_sec_{mid}_tone_accel']
-                        )
-                for slug, _ka, _kb in GCAM_INTERACTION_DIFFS:
-                    mid_i = f"{tag}_gcam_{slug}"
-                    cols.extend(_news_macro_variant_cols(mid_i))
-                    cols.extend(_news_sec_variant_cols(mid_i))
-                    for z in NEWS_EXTRA_ZSCORE_WINDOWS:
-                        if z > 0:
-                            sw = f'_w{int(z)}'
-                            cols.extend(
-                                [
-                                    f'news_macro_{mid_i}_tone_z{sw}',
-                                    f'news_macro_{mid_i}_vol_z{sw}',
-                                    f'news_sec_{mid_i}_tone_z{sw}',
-                                    f'news_sec_{mid_i}_vol_z{sw}',
-                                ]
-                            )
-                    if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
-                        cols.extend(
-                            [
-                                f'news_macro_{mid_i}_tone_accel',
-                                f'news_sec_{mid_i}_tone_accel',
-                            ]
-                        )
+                        cols.append(f'news_sec_{mid}_tone_accel')
                 if NEWS_ANCHOR_ORG_FILTER:
                     for gk in _gkg_gcam_keys_clean():
                         cn = gcam_series_colname(gk)
@@ -1014,31 +1136,47 @@ def all_news_model_cols():
                             )
                     if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
                         cols.append(f'news_sec_{mid_q}_tone_accel')
-                for ch, alias, _ in trips:
-                    mid = f"{tag}_th_{alias}"
-                    if ch == "macro":
-                        cols.extend(_news_macro_variant_cols(mid))
-                    else:
-                        cols.extend(_news_sec_variant_cols(mid))
-                    for z in NEWS_EXTRA_ZSCORE_WINDOWS:
-                        if z > 0:
-                            sw = f'_w{int(z)}'
-                            if ch == "macro":
-                                cols.extend([
-                                    f'news_macro_{mid}_tone_z{sw}', f'news_macro_{mid}_vol_z{sw}',
-                                ])
-                            else:
-                                cols.extend([
-                                    f'news_sec_{mid}_tone_z{sw}', f'news_sec_{mid}_vol_z{sw}',
-                                ])
-                    if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
-                        if ch == "macro":
-                            cols.append(f'news_macro_{mid}_tone_accel')
-                        else:
-                            cols.append(f'news_sec_{mid}_tone_accel')
     return cols
 
-def build_technical_cols(rsi_w, bb_w, sma_w):
+def _default_btc_momentum_z_window():
+    w = BTC_MOMENTUM_Z_WINDOWS
+    return int(w[len(w) // 2])
+
+
+def _default_market_breadth_z_window():
+    w = MARKET_BREADTH_Z_WINDOWS
+    return int(w[len(w) // 2])
+
+
+def _default_rel_momentum_window():
+    w = REL_MOMENTUM_WINDOWS
+    return int(w[len(w) // 2])
+
+
+def build_technical_cols(
+    rsi_w,
+    bb_w,
+    sma_w,
+    *,
+    btc_momentum_z_window=None,
+    market_breadth_z_window=None,
+    rel_momentum_window=None,
+):
+    bz = int(
+        btc_momentum_z_window
+        if btc_momentum_z_window is not None
+        else _default_btc_momentum_z_window()
+    )
+    brz = int(
+        market_breadth_z_window
+        if market_breadth_z_window is not None
+        else _default_market_breadth_z_window()
+    )
+    rm = int(
+        rel_momentum_window
+        if rel_momentum_window is not None
+        else _default_rel_momentum_window()
+    )
     return [
         f'rsi_{rsi_w}',
         f'bb_pband_{bb_w}',
@@ -1059,19 +1197,56 @@ def build_technical_cols(rsi_w, bb_w, sma_w):
         'sma200_delta_5d',
         'drawdown_252d',
         f'market_breadth_{sma_w}',
+        f'market_breadth_z_{sma_w}_w{brz}',
         'volume_zscore',
         f'sector_avg_rsi_{rsi_w}',
         'btc_momentum',
+        f'btc_momentum_z_w{bz}',
+        f'rel_momentum_{rm}d',
         'month',
         'sector_id',
+        'gics_sector_id',
+        'gics_industry_id',
     ]
+
+
+def all_model_tech_col_names_for_assemble_dropna() -> list[str]:
+    """Alle technischen Modell-Spaltennamen über RSI/BB/SMA- und Kontext-Fenster-Raster (für dropna nach assemble)."""
+    names: set[str] = set()
+    for rw in RSI_WINDOWS:
+        for bw in BB_WINDOWS:
+            for sw in SMA_WINDOWS:
+                for bz in BTC_MOMENTUM_Z_WINDOWS:
+                    for brz in MARKET_BREADTH_Z_WINDOWS:
+                        for relm in REL_MOMENTUM_WINDOWS:
+                            for c in build_technical_cols(
+                                rw,
+                                bw,
+                                sw,
+                                btc_momentum_z_window=bz,
+                                market_breadth_z_window=brz,
+                                rel_momentum_window=relm,
+                            ):
+                                names.add(c)
+    return sorted(names)
+
 
 def build_feature_cols(
     rsi_w, bb_w, sma_w,
     news_mom_w=None, news_vol_ma=None, news_tone_roll=None,
     news_extra_zscore_w=None, news_extra_tone_accel=None, news_extra_macro_sec_diff=None,
+    btc_momentum_z_window=None,
+    market_breadth_z_window=None,
+    rel_momentum_window=None,
 ):
-    out = build_technical_cols(rsi_w, bb_w, sma_w)
+    out = build_technical_cols(
+        rsi_w,
+        bb_w,
+        sma_w,
+        btc_momentum_z_window=btc_momentum_z_window,
+        market_breadth_z_window=market_breadth_z_window,
+        rel_momentum_window=rel_momentum_window,
+    )
     if USE_NEWS_SENTIMENT:
         if news_mom_w is None:
             news_mom_w = NEWS_MOM_WINDOWS[len(NEWS_MOM_WINDOWS) // 2]
@@ -1097,13 +1272,32 @@ def build_rename_map(
     rsi_w, bb_w, sma_w,
     news_mom_w=None, news_vol_ma=None, news_tone_roll=None,
     news_extra_zscore_w=None, news_extra_tone_accel=None, news_extra_macro_sec_diff=None,
+    btc_momentum_z_window=None,
+    market_breadth_z_window=None,
+    rel_momentum_window=None,
 ):
+    bz = int(
+        btc_momentum_z_window
+        if btc_momentum_z_window is not None
+        else _default_btc_momentum_z_window()
+    )
+    brz = int(
+        market_breadth_z_window
+        if market_breadth_z_window is not None
+        else _default_market_breadth_z_window()
+    )
+    rm = int(
+        rel_momentum_window
+        if rel_momentum_window is not None
+        else _default_rel_momentum_window()
+    )
     m = {
         f'rsi_{rsi_w}':              f'RSI ({rsi_w}d)',
         f'bb_pband_{bb_w}':          f'Bollinger %B ({bb_w}d)',
         f'bb_x_rsi_{bb_w}_{rsi_w}': f'BB({bb_w}) × RSI({rsi_w})',
         f'sma_cross_20_{sma_w}':     f'SMA20 / SMA{sma_w}',
         f'market_breadth_{sma_w}':   f'Breadth (SMA{sma_w})',
+        f'market_breadth_z_{sma_w}_w{brz}': f'Breadth Z SMA{sma_w} roll{brz}',
         f'sector_avg_rsi_{rsi_w}':   f'Sector Avg RSI ({rsi_w}d)',
         f'rsi_delta_3d_{rsi_w}':     f'RSI Δ3d ({rsi_w}d)',
         f'bb_slope_5d_{bb_w}':       f'BB Slope 5d ({bb_w}d)',
@@ -1121,8 +1315,12 @@ def build_rename_map(
         'drawdown_252d':   'Drawdown 252d',
         'volume_zscore':   'Volume Z-Score',
         'btc_momentum':    'BTC Momentum',
+        f'btc_momentum_z_w{bz}': f'BTC Mom Z roll{bz}',
+        f'rel_momentum_{rm}d': f'Rel. Mom {rm}d vs sector',
         'month':           'Month',
-        'sector_id':       'Sector ID',
+        'sector_id':          'Sector ID (Research-Cluster)',
+        'gics_sector_id':     'Yahoo GICS Sector ID',
+        'gics_industry_id':   'Yahoo GICS Industry ID',
     }
     if USE_NEWS_SENTIMENT and news_mom_w is not None and news_vol_ma is not None and news_tone_roll is not None:
         if news_extra_zscore_w is None:

@@ -14,6 +14,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+
 
 def run_phase_optuna_base_models(cfg_mod: Any) -> None:
     if getattr(cfg_mod, "SCORING_ONLY", False):
@@ -99,6 +101,11 @@ def _run_phase12(c: Any) -> None:
     df_test = c.rebuild_target_for_train(c.df_test, LEAD_DAYS, ENTRY_DAYS, **_rebuild_kw)
     df_threshold = c.rebuild_target_for_train(c.df_threshold, LEAD_DAYS, ENTRY_DAYS, **_rebuild_kw)
     df_final = c.rebuild_target_for_train(c.df_final, LEAD_DAYS, ENTRY_DAYS, **_rebuild_kw)
+    if c.USE_NEWS_SENTIMENT:
+        df_train = merge_news_shard_from_best_params(df_train, best_params)
+        df_test = merge_news_shard_from_best_params(df_test, best_params)
+        df_threshold = merge_news_shard_from_best_params(df_threshold, best_params)
+        df_final = merge_news_shard_from_best_params(df_final, best_params)
     for _name, _df in [
         ("df_train", df_train),
         ("df_test", df_test),
@@ -110,6 +117,9 @@ def _run_phase12(c: Any) -> None:
     rsi_w = best_params["rsi_window"]
     bb_w = best_params["bb_window"]
     sma_w = best_params["sma_window"]
+    _btc_z = int(best_params.get("btc_momentum_z_window", sp.get("btc_momentum_z_window", 60)))
+    _brd_z = int(best_params.get("market_breadth_z_window", sp.get("market_breadth_z_window", 60)))
+    _rel_m = int(best_params.get("rel_momentum_window", sp.get("rel_momentum_window", 20)))
     if c.USE_NEWS_SENTIMENT:
         FEAT_COLS = c.build_feature_cols(
             rsi_w,
@@ -121,10 +131,23 @@ def _run_phase12(c: Any) -> None:
             best_params.get("news_extra_zscore_w", sp.get("news_extra_zscore_w")),
             best_params.get("news_extra_tone_accel", sp.get("news_extra_tone_accel")),
             best_params.get("news_extra_macro_sec_diff", sp.get("news_extra_macro_sec_diff")),
+            btc_momentum_z_window=_btc_z,
+            market_breadth_z_window=_brd_z,
+            rel_momentum_window=_rel_m,
         )
     else:
-        FEAT_COLS = c.build_feature_cols(rsi_w, bb_w, sma_w)
-    print(f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}  ({len(FEAT_COLS)} features)")
+        FEAT_COLS = c.build_feature_cols(
+            rsi_w,
+            bb_w,
+            sma_w,
+            btc_momentum_z_window=_btc_z,
+            market_breadth_z_window=_brd_z,
+            rel_momentum_window=_rel_m,
+        )
+    print(
+        f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, "
+        f"BTCz={_btc_z}, BreadthZ={_brd_z}, relMom={_rel_m}d  ({len(FEAT_COLS)} features)"
+    )
 
     focal_gamma = best_params["focal_gamma"]
     focal_alpha = best_params["focal_alpha"]
@@ -144,6 +167,9 @@ def _run_phase12(c: Any) -> None:
             "news_extra_zscore_w",
             "news_extra_tone_accel",
             "news_extra_macro_sec_diff",
+            "btc_momentum_z_window",
+            "market_breadth_z_window",
+            "rel_momentum_window",
             "focal_gamma",
             "focal_alpha",
             "return_window",
@@ -311,6 +337,9 @@ def _run_phase12(c: Any) -> None:
         best_params.get("news_extra_zscore_w"),
         best_params.get("news_extra_tone_accel"),
         best_params.get("news_extra_macro_sec_diff"),
+        btc_momentum_z_window=_btc_z,
+        market_breadth_z_window=_brd_z,
+        rel_momentum_window=_rel_m,
     )
     feat_display = [rename_map.get(col, col) for col in FEAT_COLS]
 
@@ -385,6 +414,7 @@ def _run_phase12(c: Any) -> None:
     c.PEAK_LOOKBACK_DAYS = PEAK_LOOKBACK_DAYS
     c.PEAK_MIN_DIST_FROM_HIGH_PCT = PEAK_MIN_DIST_FROM_HIGH_PCT
     c.SIGNAL_MAX_RSI = SIGNAL_MAX_RSI
+    c.best_params = best_params
     c.df_train = df_train
     c.df_test = df_test
     c.df_threshold = df_threshold

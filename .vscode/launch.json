@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Pipeline: pipeline_runner",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/lib/stock_rally_v10/pipeline_runner.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
