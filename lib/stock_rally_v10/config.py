@@ -150,7 +150,7 @@ N_OPTUNA_TRIALS       = 300  # erhöht wegen News-Feature-Grid
 # UNIVERSE_FRACTION verkürzt Datenpipeline; jeder Trial kostet noch rebuild_target + WF×XGB.
 OPTUNA_TRIALS         = None  # None → N_OPTUNA_TRIALS; z.B. 40 für schnelle Tests
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
-N_META_TRIALS         = 300
+N_META_TRIALS         = 500
 # Meta-Stacking: Top-K Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``)
 META_SHAP_TOP_K       = 10
 RANDOM_STATE          = 42
@@ -184,7 +184,7 @@ SIGNAL_MAX_RSI = 78.0                 # kein Kauf-Signal wenn RSI darüber; None
 # Empfehlung: 30–60. Höher = langsamer, aber potenziell besseres Modell.
 MAX_TRAIN_TICKERS   = 45
 # Schneller Run: nur einen zufälligen Anteil der geladenen Ticker (nach assemble_features)
-UNIVERSE_FRACTION = 0.05  # 1.0 = alle; <1 wählt Tickers VOR Download/Features (nicht erst danach)
+UNIVERSE_FRACTION = 1  # 1.0 = alle; <1 wählt Tickers VOR Download/Features (nicht erst danach)
 UNIVERSE_SAMPLE_SEED = 42
 # Train/Test-Split: "time" = gleiches Ticker-Universum, disjunkte Zeiträume (empfohlen).
 # "ticker" = Legacy: verschiedene Ticker pro Stufe, gleicher Kalender bis TRAIN_END_DATE.
@@ -256,6 +256,10 @@ NEWS_TONE_ROLL_WINDOWS = [0, 3]  # 0 = keine zusätzliche Ton-Glättung
 NEWS_EXTRA_ZSCORE_WINDOWS = [0, 10, 20, 30]   # 0 = keine tone_z/vol_z; >0 → Spalten …_tone_z_w{w}
 NEWS_EXTRA_TONE_ACCEL_OPTIONS = [False, True]
 NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS = [False, True]
+# assemble_features: welche News-Spalten am Ende per Fillna/0 angelegt werden.
+# "optuna_union" = nur Vereinigung über dasselbe Raster wie Optuna (build_news_model_cols) — deutlich weniger Spalten/RAM als all_news_model.
+# "all_news_model" = alle Namen aus all_news_model_cols() (Legacy / maximale Breite).
+FEATURE_ASSEMBLE_NEWS_FILL = "optuna_union"  # "all_news_model" | "optuna_union"
 
 NEWS_CACHE_DIR = os.path.join(os.getcwd(), 'data')
 NEWS_CACHE_FILE = os.path.join(NEWS_CACHE_DIR, 'news_gdelt_cache.pkl')
@@ -290,6 +294,12 @@ GKG_THEME_SQL_TRIPLES = []
 
 # GCAM-Schlüssel: nicht leer = feste Liste (überschreibt Auto). Sonst: Must-Have + optional Datei/Exploration.
 # GKG_GCAM_EXPLORE_KEYS=True: BigQuery holt zusätzliche Top-c* (Beifang), ohne Must-Haves zu duplizieren.
+# Nach abgeschlossener Exploration: GKG_GCAM_EXPLORE_KEYS=False stellen — dann KEIN erneutes BQ-Scouting;
+# die ermittelten Keys bleiben in GKG_GCAM_KEYS_PATH (Must-Haves + Datei). GKG_GCAM_EXPLORE_EXTRA_N wird
+# nur bei EXPLORE_KEYS=True gelesen; auf „8 → 3“ zu ändern löst ohne Exploration nichts aus und kürzt
+# die gespeicherte Liste nicht automatisch. Zum harten Einfrieren: volle Tuple hier in GKG_GCAM_METRIC_KEYS.
+# GKG_GCAM_USE_EXTRA_N: nach Resolve nur so viele *Nicht-Must-Have*-Keys nutzen (weniger Features/Optuna).
+# Unterscheidet sich von GKG_GCAM_EXPLORE_EXTRA_N (nur BQ-Exploration). None = alle Extras aus Datei.
 # Keys mit Doppelpunkt (z. B. vnt:success): Regex in news._bq_gcam_regexp_for_key (RE2) — Wert als :<zahl>.
 GKG_GCAM_METRIC_KEYS: tuple[str, ...] = ()
 GKG_GCAM_MUST_HAVE_KEYS: tuple[str, ...] = (
@@ -302,11 +312,17 @@ GKG_GCAM_MUST_HAVE_KEYS: tuple[str, ...] = (
     "c12.181",  # Harvard_Active (Dynamik / Momentum im Text)
 )
 GKG_GCAM_AUTO_RESOLVE = True
+# True = BigQuery holt *neue* zusätzliche c*-Keys (Key-Exploration). False = nur Must-Haves + JSON, kein BQ-Scout.
+# (Lange BQ-Läufe bei False kommen vom News-GKG-Cache — nicht von GCAM-Key-Exploration.)
 GKG_GCAM_EXPLORE_KEYS = False
-# Zusätzliche explorative c*-Keys (nach Häufigkeit), Must-Haves nicht gezählt.
+# Nur wenn GKG_GCAM_EXPLORE_KEYS True: Anzahl der zusätzlichen Top-c*-Keys (Must-Haves extra).
 GKG_GCAM_EXPLORE_EXTRA_N = 8
 GKG_GCAM_AUTO_TOP_N = 8  # Fallback wenn GKG_GCAM_EXPLORE_EXTRA_N fehlt
 GKG_GCAM_KEYS_PATH = Path("data") / "gkg_gcam_metric_keys.json"
+# Nach Resolve (Must-Haves + JSON): höchstens so viele *zusätzliche* GCAM-Keys für Features/Training.
+# Z. B. 8 in der Datei exploriert, hier 2 → nur Must-Haves + 2 Extras. None = keine Kürzung; 0 = nur Must-Haves.
+# Nur *schmalere* Key-Liste löst keinen News-BigQuery-Neu-Scan aus, solange der Pickle-Cache die Keys schon kennt.
+GKG_GCAM_USE_EXTRA_N = 2  # schlankere Feature-Matrix; None = alle Extras aus Datei
 
 # Abgeleitete GCAM-Differenzen (features.py): nur wenn beide Basis-Spalten in sentiment_df existieren.
 # (slug, minuend_key, subtrahend_key) — z. B. fin. Positivität − Negativität; Erfolg − Unsicherheit.
@@ -362,7 +378,11 @@ SECTOR_KEYWORDS = {
     'media':      ['media earnings', 'streaming', 'advertising'],
 }
 
-# BigQuery GKG: V2Themes-Filter (Makro + pro Sektor-Kanal)
+# BigQuery GKG: grober V2Themes-Filter pro Kanal (Makro + Sektor).
+# Wird von news.py in jeder Tagesaggregation mitbenutzt — nicht durch GCAM/GKG_THEME_SQL_TRIPLES
+# „ersetzt“; Tripel/GCAM/Anker-Orgs sind zusätzliche Schichten auf derselben Pipeline.
+# Bei load_scoring_artifacts() kann SECTOR_BQ_THEME_WHERE aus dem Artefakt-Manifest überschrieben werden
+# (Trainingsstand) — dann ist dieser Block in der Datei nur Default vor dem Laden.
 MACRO_BQ_THEME_WHERE = (
     "(V2Themes LIKE '%ECON_INTERESTRATES%' OR V2Themes LIKE '%ECON_INFLATION%' "
     "OR V2Themes LIKE '%MONETARY%' OR V2Themes LIKE '%ECON_CENTRALBANK%')"
@@ -420,13 +440,17 @@ SECTOR_BQ_THEME_WHERE = {
 }
 
 # =============================================================================
-# 5. Universum: Ticker, Sektoren, Anzeigenamen
+# 5. Universum: Ticker, Modell-Cluster / News-Kanäle, Anzeigenamen
 # =============================================================================
-# DAX40 / MDAX50 / SDAX70 vollständig + internationale Referenzwerte
-# (Keys müssen zu SECTOR_BQ_THEME_WHERE passen.)
+# Die Keys von TICKERS_BY_SECTOR sind **keine** Yahoo-GICS-Sektoren. Sie bündeln Ticker für:
+#   • ``sector_id`` / Modell-Features, • je einen GDELT/BigQuery-Newskanal,  • Cluster in Holdout-CSV.
+# Yahoo liefert echte Branchen über ``equity_classification`` (gics_sector / gics_industry) — z. B. auf der Website.
+# ``heat_pump`` ist ein **thematisches Research-Basket** (HVAC), kein GICS-Label; Yahoo ordnet diese Titel meist
+# „Industrials“ / „Building Products“ o. ä. zu.
+# (Keys müssen zu SECTOR_BQ_THEME_WHERE / SECTOR_KEYWORDS passen.)
 
 TICKERS_BY_SECTOR = {
-    # ── Wärmepumpen & HVAC ─────────────────────────────────────────────────
+    # ── Wärmepumpen & HVAC (thematisches Basket, nicht GICS) ────────────────
     'heat_pump':  ['NIBE-B.ST', '6367.T', 'CARR', 'TT', 'JCI', 'LII',
                    'AOS', 'WSO', '6503.T', 'AALB.AS'],
 
@@ -856,6 +880,34 @@ def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
         _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel)
     _append_gkg_theme_news_cols(out, tag, zscore_w, use_accel)
     return out
+
+
+def optuna_training_news_column_union() -> list[str]:
+    """Alle ``news_*``-Spalten, die Optuna je Trial höchstens anfasst (Superset wie ``optuna_train``).
+
+    Unterscheidet sich von ``all_news_model_cols()``: dort werden pro Tag u. a. **alle**
+    ``NEWS_EXTRA_ZSCORE_WINDOWS`` gleichzeitig in der Namensliste geführt; Optuna wählt aber nur **ein**
+    Z-Score-Fenster pro Trial — die Union über das Raster ist schmaler und vermeidet tausende Null-Spalten.
+    """
+    if not USE_NEWS_SENTIMENT:
+        return []
+    names: set[str] = set()
+    for mom in NEWS_MOM_WINDOWS:
+        for vma in NEWS_VOL_MA_WINDOWS:
+            for tr in NEWS_TONE_ROLL_WINDOWS:
+                tag = news_feat_tag(mom, vma, tr)
+                for z in NEWS_EXTRA_ZSCORE_WINDOWS:
+                    zw = int(z) if z is not None else 0
+                    for acc in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
+                        for cr in NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
+                            for c in build_news_model_cols(
+                                tag,
+                                zscore_w=zw,
+                                use_accel=bool(acc),
+                                use_cross=bool(cr),
+                            ):
+                                names.add(c)
+    return sorted(names)
 
 
 def all_news_model_cols():

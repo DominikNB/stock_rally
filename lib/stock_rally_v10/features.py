@@ -6,6 +6,63 @@ import pandas as pd
 
 from lib.stock_rally_v10 import config as cfg
 
+
+def _news_fill_column_list() -> list[str]:
+    """Spalten für ``assemble_features``-Fill (News): Optuna-Superset oder volle ``all_news_model``-Liste."""
+    mode = str(getattr(cfg, "FEATURE_ASSEMBLE_NEWS_FILL", "optuna_union")).strip().lower()
+    if mode in ("optuna_union", "optuna", "union"):
+        return cfg.optuna_training_news_column_union()
+    if mode in ("all_news_model", "all", "legacy"):
+        return cfg.all_news_model_cols()
+    raise ValueError(
+        f"cfg.FEATURE_ASSEMBLE_NEWS_FILL={mode!r} — nutze 'optuna_union' oder 'all_news_model'"
+    )
+
+
+def _assign_join_columns(
+    df: pd.DataFrame,
+    right: pd.DataFrame,
+    on: list[str] | str,
+) -> None:
+    """Weist Spalten aus ``right`` per Left-Join auf ``on`` zu — **ohne** ``df.merge`` auf der breiten Matrix.
+
+    Ein vollständiges ``df.merge(klein)`` lässt pandas alle linken Blöcke mit dem Join-Ergebnis
+    konkatenieren (~GB bei ~400k Zeilen × tausende Spalten) und kann ``MemoryError`` auslösen.
+
+    Auch ``df[keys].merge(right)`` kann intern große Blöcke konsolidieren — daher bevorzugt:
+    ``right.set_index(keys).reindex(MultiIndex aus df[keys])`` (kein ``merge``).
+    """
+    if right is None or right.empty:
+        return
+    keys = [on] if isinstance(on, str) else list(on)
+    if not all(k in df.columns for k in keys):
+        raise KeyError(f"_assign_join_columns: fehlende Keys {keys}")
+    extra = [c for c in right.columns if c not in keys]
+    if not extra:
+        return
+    r = right.drop_duplicates(subset=keys, keep="last").copy()
+    if "Date" in keys:
+        r["Date"] = pd.to_datetime(r["Date"]).dt.normalize()
+    key_df = df[keys].copy()
+    if "Date" in keys:
+        key_df["Date"] = pd.to_datetime(key_df["Date"]).dt.normalize()
+    idx = pd.MultiIndex.from_frame(key_df)
+    r_ix = r.set_index(keys)
+    if r_ix.index.has_duplicates:
+        r_ix = r_ix[~r_ix.index.duplicated(keep="last")]
+    aligned = r_ix.reindex(idx)
+    if len(aligned) != len(df):
+        raise RuntimeError(
+            f"_assign_join_columns: reindex Länge {len(aligned)} != df {len(df)}"
+        )
+    for c in extra:
+        ser = aligned[c]
+        if pd.api.types.is_float_dtype(ser.dtype):
+            df[c] = ser.astype(np.float32).to_numpy()
+        else:
+            df[c] = ser.to_numpy()
+
+
 def _compute_news_block(ch_df, mom_w, vol_ma_w, tone_roll, col_prefix):
     # ch_df: Date, tone, vol (one row per day)
     if ch_df is None or ch_df.empty:
@@ -58,7 +115,7 @@ def _merge_gcam_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
                 macro, mom_w, vol_ma, tone_roll, f"news_macro_{mid}_"
             )
             if not blk.empty:
-                df = df.merge(blk, on="Date", how="left")
+                _assign_join_columns(df, blk, "Date")
         sec_parts = []
         for sector in cfg.TICKERS_BY_SECTOR.keys():
             sub = s[s["channel"] == sector]
@@ -77,7 +134,7 @@ def _merge_gcam_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
             sec_parts.append(blk_s)
         if sec_parts:
             sec_wide = pd.concat(sec_parts, ignore_index=True)
-            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+            _assign_join_columns(df, sec_wide, ["Date", "sector"])
     return df
 
 
@@ -98,7 +155,7 @@ def _merge_gcam_interaction_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
                 macro, mom_w, vol_ma, tone_roll, f"news_macro_{mid}_"
             )
             if not blk.empty:
-                df = df.merge(blk, on="Date", how="left")
+                _assign_join_columns(df, blk, "Date")
         sec_parts = []
         for sector in cfg.TICKERS_BY_SECTOR.keys():
             sub = s[s["channel"] == sector]
@@ -117,7 +174,7 @@ def _merge_gcam_interaction_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
             sec_parts.append(blk_s)
         if sec_parts:
             sec_wide = pd.concat(sec_parts, ignore_index=True)
-            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+            _assign_join_columns(df, sec_wide, ["Date", "sector"])
     return df
 
 
@@ -149,7 +206,7 @@ def _merge_gcam_anchor_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
             sec_parts.append(blk_s)
         if sec_parts:
             sec_wide = pd.concat(sec_parts, ignore_index=True)
-            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+            _assign_join_columns(df, sec_wide, ["Date", "sector"])
     return df
 
 
@@ -186,7 +243,7 @@ def _merge_gcam_div_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
             sec_parts.append(blk_s)
         if sec_parts:
             sec_wide = pd.concat(sec_parts, ignore_index=True)
-            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+            _assign_join_columns(df, sec_wide, ["Date", "sector"])
     return df
 
 
@@ -220,7 +277,7 @@ def _merge_anchor_quality_idx_news_for_tag(df, s, mom_w, vol_ma, tone_roll, tag)
         sec_parts.append(blk_s)
     if sec_parts:
         sec_wide = pd.concat(sec_parts, ignore_index=True)
-        df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+        _assign_join_columns(df, sec_wide, ["Date", "sector"])
     return df
 
 
@@ -238,7 +295,7 @@ def _merge_gkg_theme_triples_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
                 macro, mom_w, vol_ma, tone_roll, f"news_macro_{mid}_"
             )
             if not blk.empty:
-                df = df.merge(blk, on="Date", how="left")
+                _assign_join_columns(df, blk, "Date")
             continue
         sec_parts = []
         for sector in cfg.TICKERS_BY_SECTOR.keys():
@@ -255,7 +312,7 @@ def _merge_gkg_theme_triples_for_tag(df, s, mom_w, vol_ma, tone_roll, tag):
             sec_parts.append(blk_s)
         if sec_parts:
             sec_wide = pd.concat(sec_parts, ignore_index=True)
-            df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+            _assign_join_columns(df, sec_wide, ["Date", "sector"])
     return df
 
 
@@ -275,7 +332,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
     btc = df[df["ticker"] == "BTC-USD"][["Date", "momentum_20d"]].rename(
         columns={"momentum_20d": "btc_momentum"}
     )
-    df = df.merge(btc, on="Date", how="left")
+    _assign_join_columns(df, btc, "Date")
     df["btc_momentum"] = df["btc_momentum"].fillna(0.0)
 
     if meta_only:
@@ -293,7 +350,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             .apply(lambda x: (x > 1.0).mean())
             .rename(f"market_breadth_{sw}")
         )
-        df = df.merge(breadth, on="Date", how="left")
+        _assign_join_columns(df, breadth.reset_index(), "Date")
         df[f"market_breadth_{sw}"] = df[f"market_breadth_{sw}"].fillna(0.5)
 
     for rw in rsi_loop:
@@ -314,7 +371,13 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                     if str(c).startswith("news_"):
                         df[c] = 0.0
             else:
-                for c in cfg.all_news_model_cols():
+                _fill_news = _news_fill_column_list()
+                print(
+                    f"assemble_features: News-Fill-Modus {getattr(cfg, 'FEATURE_ASSEMBLE_NEWS_FILL', '?')!r} "
+                    f"— {len(_fill_news):,} Spalten (kein Sentiment).",
+                    flush=True,
+                )
+                for c in _fill_news:
                     df[c] = 0.0
         else:
             s = sentiment_df.copy()
@@ -328,7 +391,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                 macro = s[s["channel"] == "macro"][["Date", "tone", "vol"]]
                 blk = _compute_news_block(macro, mom_w, vol_ma, tone_roll, f"news_macro_{tag}_")
                 if not blk.empty:
-                    df = df.merge(blk, on="Date", how="left")
+                    _assign_join_columns(df, blk, "Date")
                 sec_parts = []
                 for sector in cfg.TICKERS_BY_SECTOR.keys():
                     sec = s[s["channel"] == sector][["Date", "tone", "vol"]]
@@ -340,7 +403,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                     sec_parts.append(blk_s)
                 if sec_parts:
                     sec_wide = pd.concat(sec_parts, ignore_index=True)
-                    df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+                    _assign_join_columns(df, sec_wide, ["Date", "sector"])
                 use_cross = bool(
                     bp.get(
                         "news_extra_macro_sec_diff",
@@ -401,7 +464,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                                 macro, mom_w, vol_ma, tone_roll, f"news_macro_{tag}_"
                             )
                             if not blk.empty:
-                                df = df.merge(blk, on="Date", how="left")
+                                _assign_join_columns(df, blk, "Date")
                             sec_parts = []
                             for sector in cfg.TICKERS_BY_SECTOR.keys():
                                 sec = s[s["channel"] == sector][["Date", "tone", "vol"]]
@@ -415,7 +478,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                                 sec_parts.append(blk_s)
                             if sec_parts:
                                 sec_wide = pd.concat(sec_parts, ignore_index=True)
-                                df = df.merge(sec_wide, on=["Date", "sector"], how="left")
+                                _assign_join_columns(df, sec_wide, ["Date", "sector"])
                             df = _merge_gcam_news_for_tag(
                                 df, s, mom_w, vol_ma, tone_roll, tag
                             )
@@ -444,7 +507,13 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                                 sc = f"news_sec_{tag}_tone"
                                 if mc in df.columns and sc in df.columns:
                                     df[f"news_cross_{tag}_macro_minus_sec_tone"] = df[mc] - df[sc]
-                for c in cfg.all_news_model_cols():
+                _fill_news = _news_fill_column_list()
+                print(
+                    f"assemble_features: News-Fill-Modus {getattr(cfg, 'FEATURE_ASSEMBLE_NEWS_FILL', '?')!r} "
+                    f"— {len(_fill_news):,} News-Spalten für Fill/fillna.",
+                    flush=True,
+                )
+                for c in _fill_news:
                     if c not in df.columns:
                         df[c] = 0.0
                     else:
@@ -465,5 +534,8 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         f"Feature matrix assembled{_suffix}. Shape: {df.shape}, "
         f"positive rate: {df['target'].mean():.1%}"
     )
-    return df.reset_index(drop=True)
+    # reset_index(copy) konsolidiert alle Spaltenblöcke — bei ~7k Features × ~400k Zeilen
+    # oft >10 GiB RAM (MemoryError). RangeIndex reicht für Downstream.
+    df.index = pd.RangeIndex(len(df))
+    return df
 

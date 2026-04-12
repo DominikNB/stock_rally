@@ -109,6 +109,10 @@ _SECTOR_TO_BENCH_ETF: dict[str, str] = {
     "media": "XLC",
     "crypto": "BITO",
 }
+# Interne Modell-Labels ohne SPDR-Zeile (Yahoo-GICS i.d.R. „Industrials“ o.ä.)
+_INTERNAL_MODEL_SECTOR_BENCH_ALIAS: dict[str, str] = {
+    "heat_pump": "industrial",
+}
 _BENCH_SPY = "SPY"
 
 # Suffix → Leitindex, wenn yfinance `info` keine eindeutige Region liefert
@@ -251,15 +255,19 @@ def _sector_bench_etf(
     """
     Sektor-Benchmark-ETF zur Aktie: EU → STOXX Europe 600 Sector UCITS (DE),
     sonst US-Sektor-ETF (XLK, …). Unbekanntes Label → None.
+    Interne Modell-Labels (z. B. heat_pump) → Alias für ETF-Wahl (s. _INTERNAL_MODEL_SECTOR_BENCH_ALIAS).
     """
     if sector is None or (isinstance(sector, float) and np.isnan(sector)):
         return None
     key = str(sector).strip().lower().replace(" ", "_")
-    if not key or key not in _SECTOR_TO_BENCH_ETF:
+    if not key:
+        return None
+    bench_key = _INTERNAL_MODEL_SECTOR_BENCH_ALIAS.get(key, key)
+    if bench_key not in _SECTOR_TO_BENCH_ETF:
         return None
     if _use_eu_stoxx_sector_bench(ticker, info):
-        return _EU_SECTOR_TO_BENCH_ETF.get(key) or _SECTOR_TO_BENCH_ETF.get(key)
-    return _SECTOR_TO_BENCH_ETF.get(key)
+        return _EU_SECTOR_TO_BENCH_ETF.get(bench_key) or _SECTOR_TO_BENCH_ETF.get(bench_key)
+    return _SECTOR_TO_BENCH_ETF.get(bench_key)
 
 
 def _warm_ticker_info_cache(tickers: list[str], cache: dict[str, dict]) -> None:
@@ -596,7 +604,8 @@ def _sector_etf_for_label(sector: str | float | None) -> str | None:
     if sector is None or (isinstance(sector, float) and np.isnan(sector)):
         return None
     key = str(sector).strip().lower().replace(" ", "_")
-    return _SECTOR_TO_BENCH_ETF.get(key)
+    bench_key = _INTERNAL_MODEL_SECTOR_BENCH_ALIAS.get(key, key)
+    return _SECTOR_TO_BENCH_ETF.get(bench_key)
 
 
 def _open_gap_pct_ohlc(df: pd.DataFrame | None, d: pd.Timestamp) -> float:

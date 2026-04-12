@@ -374,17 +374,44 @@ def _load_news_cache(path):
     return empty, {}
 
 
-def _save_news_cache(df, path, meta=None):
+def _save_news_cache(df, path, meta=None, *, log_label: str | None = None):
     import pickle
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    tmp = path + ".tmp"
+
+    abs_path = os.path.abspath(str(path))
+    tmp = abs_path + ".tmp"
+    os.makedirs(os.path.dirname(abs_path) or ".", exist_ok=True)
+    n_rows = len(df) if df is not None else 0
+    n_ch = (
+        int(df["channel"].nunique())
+        if df is not None and not df.empty and "channel" in df.columns
+        else 0
+    )
+    _lbl = f" — {log_label}" if log_label else ""
+    print(
+        f"[News-Cache] Schreibe Pickle{_lbl}\n"
+        f"             → {tmp}\n"
+        f"             | {n_rows:,} Zeilen, {n_ch} Kanäle (atomar per os.replace) …",
+        flush=True,
+    )
     m = dict(meta or {})
-    m["gcam_keys"] = list(cfg._gkg_gcam_keys_clean())
+    # Vereinigung: nie Meta auf „nur USE_EXTRA_N-Kappung“ schrumpfen — sonst wirkt später ein
+    # erweitertes Key-Set wie fehlende Spalten und löst unnötig BigQuery aus.
+    _prev_g = set(_gcam_keys_meta_tuple(m.get("gcam_keys")))
+    _cur_g = set(cfg._gkg_gcam_keys_clean())
+    m["gcam_keys"] = sorted(_prev_g | _cur_g)
     m["news_anchor_gcam_dual"] = bool(getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False))
     payload = {"df": df, "meta": m}
     with open(tmp, "wb") as f:
         pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
-    os.replace(tmp, path)
+    os.replace(tmp, abs_path)
+    try:
+        sz_mb = os.path.getsize(abs_path) / (1024 * 1024)
+    except OSError:
+        sz_mb = 0.0
+    print(
+        f"[News-Cache] Pickle fertig{_lbl}: {abs_path} | {sz_mb:.2f} MiB | {n_rows:,} Zeilen",
+        flush=True,
+    )
 
 
 def _merge_news_cache_rows(old_df, new_df):
@@ -433,6 +460,24 @@ def _gcam_keys_meta_tuple(meta_keys) -> tuple[str, ...]:
     return tuple(sorted(str(k).strip() for k in meta_keys if str(k).strip()))
 
 
+def _needs_full_gcam_news_refetch(
+    meta_prev: tuple[str, ...], meta_cur: tuple[str, ...]
+) -> bool:
+    """Voll-Nachladen (BQ/API) wegen GCAM nur wenn der Cache **zusätzliche** Keys braucht.
+
+    ``meta_prev`` = beim letzten Speichern im Pickle notierte Key-Menge (Superset der geladenen Spalten).
+    ``meta_cur`` = aktuell aktive Keys (inkl. ``GKG_GCAM_USE_EXTRA_N``-Kürzung).
+
+    Ist ``meta_cur`` eine **Teilmenge** von ``meta_prev``, reichen die vorhandenen Cache-Spalten — kein
+    teurer Re-Scan nur wegen weniger Keys fürs Training.
+    """
+    if not meta_cur:
+        return False
+    if not meta_prev:
+        return True
+    return not set(meta_cur).issubset(set(meta_prev))
+
+
 def _read_gcam_keys_file(path: Path, max_age_days: int) -> tuple[str, ...] | None:
     import json
     from datetime import datetime, timezone
@@ -476,6 +521,10 @@ def _write_gcam_keys_file(path: Path, keys: tuple[str, ...]) -> None:
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
     os.replace(tmp, path)
+    print(
+        f"[GCAM] Keys-JSON geschrieben: {path.resolve()} | {len(keys)} Keys",
+        flush=True,
+    )
 
 
 def _bq_fetch_extra_gcam_c_keys(extra_limit: int, exclude: frozenset[str]) -> tuple[str, ...]:
@@ -550,26 +599,71 @@ def _merge_gcam_key_order(must: tuple[str, ...], *more: tuple[str, ...]) -> tupl
     return tuple(out)
 
 
+def _cap_gcam_keys_use_extra_n(
+    keys: tuple[str, ...],
+    must: tuple[str, ...],
+    use_extra_n: int | None,
+) -> tuple[str, ...]:
+    """Alle Must-Haves behalten; danach höchstens ``use_extra_n`` weitere Keys (Reihenfolge wie in ``keys``).
+
+    ``use_extra_n is None`` → keine Kürzung. ``0`` → nur Must-Haves.
+    """
+    if use_extra_n is None:
+        return keys
+    cap = int(use_extra_n)
+    if cap < 0:
+        return keys
+    must_set = frozenset(str(k).strip() for k in must if str(k).strip())
+    must_part = [k for k in keys if k in must_set]
+    extras = [k for k in keys if k not in must_set]
+    return tuple(must_part + extras[:cap])
+
+
 def resolve_gkg_gcam_metric_keys(*, allow_bigquery_refresh: bool = True) -> None:
     """
     Setzt ``cfg.GKG_GCAM_METRIC_KEYS`` für diesen Lauf.
+    - ``allow_bigquery_refresh``: nur wirksam wenn ``GKG_GCAM_EXPLORE_KEYS=True`` — dann darf ein
+      BigQuery-Job **zusätzliche c*-Keys** scouten. Ohne dieses Flag keine GCAM-Key-Exploration, nur
+      Datei/Must-Haves (unabhängig von späteren News-GKG-Queries zum Cache-Füllen).
     - Nicht-leeres Snapshot (erster Aufruf): feste User-Liste aus ``GKG_GCAM_METRIC_KEYS``.
     - Sonst: immer ``GKG_GCAM_MUST_HAVE_KEYS``, plus bei Exploration zusätzliche Top-c*,
       ohne Datei: nur Must-Haves; mit Datei: Must-Haves zuerst, dann übrige Keys aus JSON.
+    - Wenn ``GKG_GCAM_USE_EXTRA_N`` gesetzt (nicht ``None``): nach dem Resolve höchstens so viele
+      *zusätzliche* Keys wie angegeben (Must-Haves bleiben vollständig). JSON bleibt unverändert.
+      Gilt auch für Snapshot (explizite ``GKG_GCAM_METRIC_KEYS`` in ``config``).
     """
     if not hasattr(cfg, "_gkg_gcam_keys_user_snapshot"):
         cfg._gkg_gcam_keys_user_snapshot = tuple(
             str(k).strip() for k in (cfg.GKG_GCAM_METRIC_KEYS or ()) if str(k).strip()
         )
     snap = getattr(cfg, "_gkg_gcam_keys_user_snapshot", tuple())
+    must = cfg._gkg_gcam_must_have_keys_clean()
+    use_n = getattr(cfg, "GKG_GCAM_USE_EXTRA_N", None)
+
+    def _apply_cap_and_assign(keys: tuple[str, ...], src: str) -> None:
+        if keys and use_n is not None:
+            n_before = len(keys)
+            keys = _cap_gcam_keys_use_extra_n(keys, must, use_n)
+            if len(keys) != n_before:
+                print(
+                    f"[GCAM] GKG_GCAM_USE_EXTRA_N={use_n}: {n_before} → {len(keys)} Keys "
+                    f"(Must-Haves + höchstens {int(use_n)} Extras für Features/Training).",
+                    flush=True,
+                )
+        if keys:
+            print(
+                f"[GCAM] {len(keys)} Keys ({src}): {list(keys)[:14]}{'…' if len(keys) > 14 else ''}",
+                flush=True,
+            )
+        cfg.GKG_GCAM_METRIC_KEYS = keys
+
     if snap:
-        cfg.GKG_GCAM_METRIC_KEYS = snap
+        _apply_cap_and_assign(snap, "explizit GKG_GCAM_METRIC_KEYS (Snapshot)")
         return
     if not getattr(cfg, "GKG_GCAM_AUTO_RESOLVE", True):
         cfg.GKG_GCAM_METRIC_KEYS = tuple()
         return
     path = Path(str(getattr(cfg, "GKG_GCAM_KEYS_PATH", Path("data") / "gkg_gcam_metric_keys.json")))
-    must = cfg._gkg_gcam_must_have_keys_clean()
     extra_n = int(
         getattr(cfg, "GKG_GCAM_EXPLORE_EXTRA_N", None)
         or getattr(cfg, "GKG_GCAM_AUTO_TOP_N", 8)
@@ -615,12 +709,7 @@ def resolve_gkg_gcam_metric_keys(*, allow_bigquery_refresh: bool = True) -> None
         elif must:
             keys = must
             src = "nur Must-Have (keine JSON / Exploration aus)"
-    if keys:
-        print(
-            f"[GCAM] {len(keys)} Keys ({src}): {list(keys)[:14]}{'…' if len(keys) > 14 else ''}",
-            flush=True,
-        )
-    cfg.GKG_GCAM_METRIC_KEYS = keys
+    _apply_cap_and_assign(keys, src)
 
 
 def _strip_legacy_gcam_columns(cache_df: pd.DataFrame) -> pd.DataFrame:
@@ -1220,7 +1309,13 @@ def _fetch_news_sentiment_bigquery(df, start, end):
     cur_ch = _current_channels()
     meta_cur = _gcam_keys_meta_tuple(cfg._gkg_gcam_keys_clean())
     meta_prev = _gcam_keys_meta_tuple(meta.get("gcam_keys"))
-    force_gcam_refetch = meta_cur != meta_prev
+    force_gcam_refetch = _needs_full_gcam_news_refetch(meta_prev, meta_cur)
+    if meta_cur != meta_prev and not force_gcam_refetch and (meta_cur or meta_prev):
+        print(
+            "[GCAM] Aktive Key-Liste ist Teilmenge des Caches (z. B. GKG_GCAM_USE_EXTRA_N) — "
+            "kein BigQuery-Neu-Scan; vorhandene GCAM-Spalten werden genutzt.",
+            flush=True,
+        )
     cfg_anchor_dual = bool(getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False))
     cache_anchor_dual = bool(meta.get("news_anchor_gcam_dual"))
     force_anchor_refetch = cfg_anchor_dual != cache_anchor_dual
@@ -1232,7 +1327,7 @@ def _fetch_news_sentiment_bigquery(df, start, end):
         cache_df = _strip_legacy_gcam_columns(cache_df)
     if force_gcam_refetch and (meta_cur or meta_prev):
         print(
-            f"[GCAM] Key-Liste weicht vom News-Cache ab ({list(meta_prev)!r} → {list(meta_cur)!r}) — "
+            f"[GCAM] Cache deckt nicht alle benötigten GCAM-Keys ab ({list(meta_prev)!r} → {list(meta_cur)!r}) — "
             "Zeilen werden für den angefragten Zeitraum neu geladen.",
             flush=True,
         )
@@ -1400,7 +1495,12 @@ def _fetch_news_sentiment_bigquery(df, start, end):
                 meta["last_run_end_date"] = str(end_t.date())
                 meta["saved_at"] = pd.Timestamp.now().isoformat()
                 meta["source"] = "bigquery"
-                _save_news_cache(cache_df, cache_path, meta)
+                _save_news_cache(
+                    cache_df,
+                    cache_path,
+                    meta,
+                    log_label="BigQuery Single-Scan (Zwischenspeicher)",
+                )
                 print(
                     f"[BigQuery] Zwischenspeicher: {len(cache_df)} Zeilen (Kanal=alle, Single-Scan).",
                     flush=True,
@@ -1494,7 +1594,12 @@ def _fetch_news_sentiment_bigquery(df, start, end):
                 meta["last_run_end_date"] = str(end_t.date())
                 meta["saved_at"] = pd.Timestamp.now().isoformat()
                 meta["source"] = "bigquery"
-                _save_news_cache(cache_df, cache_path, meta)
+                _save_news_cache(
+                    cache_df,
+                    cache_path,
+                    meta,
+                    log_label=f"BigQuery Kanal {ch!r} Lücke {gi}/{gn}",
+                )
                 print(
                     f"[BigQuery] Zwischenspeicher: {len(cache_df)} Zeilen (Kanal={ch!r}).",
                     flush=True,
@@ -1556,7 +1661,12 @@ def _fetch_news_sentiment_bigquery(df, start, end):
                 meta["last_run_end_date"] = str(end_t.date())
                 meta["saved_at"] = pd.Timestamp.now().isoformat()
                 meta["source"] = "bigquery"
-                _save_news_cache(cache_df, cache_path, meta)
+                _save_news_cache(
+                    cache_df,
+                    cache_path,
+                    meta,
+                    log_label=f"BigQuery Theme {cache_ch!r} Lücke {gi}/{gn}",
+                )
                 print(
                     f"[BigQuery] Zwischenspeicher: {len(cache_df)} Zeilen (Kanal={cache_ch!r}).",
                     flush=True,
@@ -1566,7 +1676,9 @@ def _fetch_news_sentiment_bigquery(df, start, end):
     meta["last_run_end_date"] = str(end_t.date())
     meta["saved_at"] = pd.Timestamp.now().isoformat()
     meta["source"] = "bigquery"
-    _save_news_cache(cache_df, cache_path, meta)
+    _save_news_cache(
+        cache_df, cache_path, meta, log_label="BigQuery Lauf Abschluss"
+    )
     if total_bytes:
         print(f"[BigQuery] Summe gescannt (letzter Lauf): {total_bytes / 1e9:.3f} GB", flush=True)
     if len(cache_df) > n_rows_before:
@@ -1630,7 +1742,13 @@ def _fetch_news_sentiment_gdelt_api(df, start=cfg.START_DATE, end=cfg.END_DATE):
 
     meta_cur = _gcam_keys_meta_tuple(cfg._gkg_gcam_keys_clean())
     meta_prev = _gcam_keys_meta_tuple(meta.get("gcam_keys"))
-    force_gcam_refetch = meta_cur != meta_prev
+    force_gcam_refetch = _needs_full_gcam_news_refetch(meta_prev, meta_cur)
+    if meta_cur != meta_prev and not force_gcam_refetch and (meta_cur or meta_prev):
+        print(
+            "[GCAM] Aktive Key-Liste ist Teilmenge des Caches (z. B. GKG_GCAM_USE_EXTRA_N) — "
+            "kein API-Neu-Fetch wegen GCAM-Keys.",
+            flush=True,
+        )
     cfg_anchor_dual = bool(getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False))
     cache_anchor_dual = bool(meta.get("news_anchor_gcam_dual"))
     force_anchor_refetch = cfg_anchor_dual != cache_anchor_dual
@@ -1642,7 +1760,7 @@ def _fetch_news_sentiment_gdelt_api(df, start=cfg.START_DATE, end=cfg.END_DATE):
         cache_df = _strip_legacy_gcam_columns(cache_df)
     if force_gcam_refetch and (meta_cur or meta_prev):
         print(
-            f"[GCAM] Key-Liste weicht vom News-Cache ab ({list(meta_prev)!r} → {list(meta_cur)!r}) — "
+            f"[GCAM] Cache deckt nicht alle benötigten GCAM-Keys ab ({list(meta_prev)!r} → {list(meta_cur)!r}) — "
             "GDELT-API-Zeilen werden neu geladen (ohne GCAM-Werte).",
             flush=True,
         )
@@ -1691,7 +1809,12 @@ def _fetch_news_sentiment_gdelt_api(df, start=cfg.START_DATE, end=cfg.END_DATE):
             meta["tickers"] = sorted(cfg.ALL_TICKERS)
             meta["last_run_end_date"] = str(end_t.date())
             meta["saved_at"] = pd.Timestamp.now().isoformat()
-            _save_news_cache(cache_df, cache_path, meta)
+            _save_news_cache(
+                cache_df,
+                cache_path,
+                meta,
+                log_label=f"GDELT Sub-Chunk Kanal={chh!r}",
+            )
             print(
                 f"[GDELT] Zwischenspeicher: Pickle {len(cache_df)} Zeilen (Kanal={chh!r}, nach Sub-Chunk).",
                 flush=True,
@@ -1734,7 +1857,7 @@ def _fetch_news_sentiment_gdelt_api(df, start=cfg.START_DATE, end=cfg.END_DATE):
     meta["tickers"] = sorted(cfg.ALL_TICKERS)
     meta["last_run_end_date"] = str(end_t.date())
     meta["saved_at"] = pd.Timestamp.now().isoformat()
-    _save_news_cache(cache_df, cache_path, meta)
+    _save_news_cache(cache_df, cache_path, meta, log_label="GDELT Lauf Abschluss")
     n_added = len(cache_df) - n_rows_before
     if n_added > 0:
         print(
@@ -1768,8 +1891,11 @@ def fetch_news_sentiment(df, start=cfg.START_DATE, end=cfg.END_DATE):
     if not cfg.USE_NEWS_SENTIMENT:
         print("News sentiment disabled (cfg.USE_NEWS_SENTIMENT=False). Returning empty.")
         return pd.DataFrame()
-    allow_bq_gcam = _c("NEWS_SOURCE", "bigquery") == "bigquery" and _c("BQ_USE_GKG_TABLE", True)
-    resolve_gkg_gcam_metric_keys(allow_bigquery_refresh=allow_bq_gcam)
+    # Nur bei GKG_GCAM_EXPLORE_KEYS=True: BQ für *zusätzliche* GCAM-c*-Keys; sonst nur JSON/Must-Haves.
+    allow_bq_gcam_scout = bool(getattr(cfg, "GKG_GCAM_EXPLORE_KEYS", False)) and (
+        _c("NEWS_SOURCE", "bigquery") == "bigquery" and _c("BQ_USE_GKG_TABLE", True)
+    )
+    resolve_gkg_gcam_metric_keys(allow_bigquery_refresh=allow_bq_gcam_scout)
     price_start, price_end = start, end
     ns = _c("NEWS_BQ_START_DATE")
     ne = _c("NEWS_BQ_END_DATE")

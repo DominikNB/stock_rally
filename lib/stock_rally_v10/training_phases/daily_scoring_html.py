@@ -473,12 +473,26 @@ def _run_phase17(c: Any) -> None:
                 f'<p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">'
                 f"{_body}</p>"
             )
+        _gics_sec = (s.get("gics_sector") or "").strip()
+        _internal_cluster = str(s.get("sector") or "").strip()
+        if _gics_sec:
+            _badge_label = _gics_sec
+            _badge_title = (
+                f"Modell-Cluster (News/Features): {_internal_cluster}"
+                if _internal_cluster
+                else ""
+            )
+        else:
+            _badge_label = _internal_cluster.replace("_", " ").title() if _internal_cluster else "—"
+            _badge_title = "Kein Yahoo-GICS — nur internes Modell-Label"
+        _badge_title_esc = _html_std.escape(_badge_title) if _badge_title else ""
+        _badge_title_attr = f' title="{_badge_title_esc}"' if _badge_title_esc else ""
         return f"""
       <div class="sig-card">
         <div class="sig-head">
           <span class="sig-ticker">{s['ticker']}</span>
           <span class="sig-company">{s['company']}</span>
-          <span class="sig-sector">{s['sector'].replace('_',' ').title()}</span>
+          <span class="sig-sector"{_badge_title_attr}>{_html_std.escape(_badge_label)}</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> {s['date']}</span>
           <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
         </div>
