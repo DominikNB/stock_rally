@@ -11,7 +11,7 @@ Die Tabelle enthält **Meta-Classifier-Treffer**, die die Bedingung **prob ≥ t
 1. **Makro-Kontext & Index-Grounding (zwingender Start)**  
    **Bevor** du Einzelaktien im Detail bewertest, das **Marktumfeld am Signaltag** klären.  
    **Pflicht-Check (Web):** Recherchiere die **prägenden Markt- und Top-Meldungen** des Signaltags (z. B. Zinsentscheidungen, wichtige Makro-Daten, geopolitische Ereignisse, außergewöhnliche Index-Bewegungen), **soweit** die Suche **verlässliche Quellen** liefert — keine erfundenen Makro-Geschichten.  
-   **Relativität (CSV + Logik):** Nutze **market_bench_symbol**, **market_ret_1d** und **sector_ret_1d** (bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**) zusammen mit **ret_1d_signal_day**: Ist der Move eher ein **Beta-Mitläufer** in einem starken Markt/Sektor (z. B. Erleichterungsrallye), oder ein **Alpha-Move** (Aktie deutlich stärker/schwächer als Index/Sektor)? Bei vermutetem **Alpha** gezielt nach **unternehmensspezifischen** Treibern mit **Quelle** suchen.
+   **Relativität (CSV + Logik):** Nutze **market_bench_symbol**, **market_ret_1d** und **sector_ret_1d** (bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**) zusammen mit **ret_1d_signal_day** sowie **alpha_mkt_5d** / **alpha_sec_5d** (Beta-adjustierte 5-Tage-Outperformance vs. Leitindex bzw. Sektor-ETF): Ist der Move eher ein **Beta-Mitläufer** in einem starken Markt/Sektor (z. B. Erleichterungsrallye), oder ein **Alpha-Move** (Aktie deutlich stärker/schwächer als Index/Sektor)? Bei vermutetem **Alpha** gezielt nach **unternehmensspezifischen** Treibern mit **Quelle** suchen.
 
 2. **Nachrichten & Ereignisse (Hauptfokus mit Belegpflicht)**  
    Kurzfristige Rallies entstehen oft aus **konkreten Anlässen**: Unternehmensmitteilungen (Guidance, Aufträge, Produkte, Management), **Branchen- und Sektorereignisse**, **Makro- und Wirtschaftsdaten**, regulatorische oder politische Meldungen, relevante **Markt- und Medienberichte** im **kurzen Fenster vor und am Signaltag**.  
@@ -61,6 +61,10 @@ Die Tabelle enthält **Meta-Classifier-Treffer**, die die Bedingung **prob ≥ t
    • **5-Tage-Rendite** = Schlusskurs am **Signaltag** / Schlusskurs **5 Handelstage davor** − 1 (nur Börsentage in der jeweiligen Serie).  
    • **ret_vs_spy_5d** = (5-Tage-Rendite **Aktie**) − (5-Tage-Rendite **SPY**). Positiv = Aktie hat SPY in diesem Fenster **outperformed**. SPY kommt aus einem separaten yfinance-Download.  
    • **ret_vs_sector_5d** = (5-Tage-Rendite **Aktie**) − (5-Tage-Rendite **Sektor-Benchmark-ETF**). Das **sector**-Label wird auf einen ETF gemappt (siehe **sector_bench_symbol**): bei **EU-/CH-/UK-typischer Notierung** i. d. R. **STOXX Europe 600 Sector** (UCITS, z. B. EXV3.DE Tech, EXH1.DE Finance, …), sonst **US-SPDR** (XLK, XLF, …). **Jedes nicht gemappte Label** → **NaN**. Grober Vergleich „eigene Bewegung vs. Sektor-Proxy“, nicht perfektes Branchen-Matching.  
+   • **ret_vs_spy_20d**, **ret_vs_sector_20d** — dieselbe Logik wie **5d**, aber über **20 Handelstage**.  
+   • **beta_mkt_60d**, **alpha_mkt_5d** — **Beta** aus Rolling-Kovarianz (Aktie vs. **Leitindex** **market_bench_symbol**, 60 Handelstage tägliche Renditen); **alpha_mkt_5d** = 5-Tage-Aktienrendite − Beta × 5-Tage-Indexrendite (idiosynkratische Komponente relativ zum gewählten Markt-Proxy).  
+   • **beta_sec_60d**, **alpha_sec_5d** — analog zum **Sektor-ETF** (**sector_bench_symbol**).  
+   • **prob_z_within_sector** — Z-Score von **prob** am **Date** nur innerhalb desselben **sector** (wie andere prob-Rankings **nicht** zur narrativen „Stärke“ verwenden).  
    • **open_gap_pct** — Am **Signaltag**: (**Open** − **Vortages-Close**) / **Vortages-Close** (Gap zwischen letztem Handelstag und Eröffnung; bei Sitzungen ohne overnight Gap oft nahe 0).
 
    **Short Interest & Institutionen (einmaliger Snapshot pro Ticker, Felder aus yfinance `Ticker.info`, können fehlen/NaN):**  
@@ -95,7 +99,11 @@ Die Tabelle enthält **Meta-Classifier-Treffer**, die die Bedingung **prob ≥ t
    • **dist_from_20d_low_pct** — (**Close** − **min(Close)** der letzten **20** Handelstage inkl. heute) / dieses Minimum.  
    • **ret_1d_signal_day** — **Tagesrendite** Close zu Close **für den Signaltag** (entspricht der Rendite des letzten verfügbaren Intervalls bis zum Schlusskurs des Signaltags).  
    • **avg_hl_range_pct_14d** — Mittelwert über **14** Handelstage von **(High − Low) / Close** (relative Tagesrange).  
-   • **volume_zscore_20d** — **Z-Score** des **Volumens** am Signaltag: (Volume − 20-Tage-Mittel) / 20-Tage-Std.dev. des Volumens (hoch = ungewöhnlich starkes Volumen vs. den letzten 20 Börsentagen).
+   • **volume_zscore_20d** — **Z-Score** des **Volumens** am Signaltag: (Volume − 20-Tage-Mittel) / 20-Tage-Std.dev. des Volumens (hoch = ungewöhnlich starkes Volumen vs. den letzten 20 Börsentagen).  
+   • **dist_ma200_pct** — (**Close** − **200-Tage-SMA**) / **200-Tage-SMA** (min. 60 Beobachtungen).  
+   • **bb_width_20** — Bollinger-Bandbreite: **4 ×** (20-Tage-Std der Close-Renditen) / **20-Tage-SMA** (Squeeze-Proxy).  
+   • **trend_efficiency_20d** — **|Close − Close(−20)|** / Summe **|Tagesrendite|** über 20 Tage (Kaufman-Efficiency-ähnlich: Trend vs. „Zickzack“).  
+   • **amihud_illiq_20d** — Mittelwert **|Tagesrendite| / (Close×Volume)** über 20 Tage (Illiquiditäts-Proxy).
 
    **Einordnung:** Diese Spalten spiegeln wider, was das Modell aus Kursdaten **teilweise schon** mitgedacht hat.  
    **Verweise auf diese Indikatoren nur dann und nur kurz**, wenn sie **zusätzlich** zur Nachrichten-/Ereignisanalyse einen klaren Mehrwert haben (z. B. Diskrepanz zwischen Daten und News). **Keine** ausführliche Chart-Beschreibung — der Leser soll vor allem **Warum heute / in dieser Woche aus Nachrichtensicht** verstehen.
