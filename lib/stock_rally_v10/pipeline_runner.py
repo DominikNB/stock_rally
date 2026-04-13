@@ -12,6 +12,7 @@ Alternativ: ``python -m lib.stock_rally_v10.pipeline_runner`` aus dem Projektroo
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Direktlauf: sys.path zeigt sonst nur auf dieses Verzeichnis — Paket ``lib`` liegt im Projektroot.
@@ -69,9 +70,44 @@ def bind_step_functions() -> None:
     g["make_focal_objective_lgb"] = make_focal_objective_lgb
 
 
+def _log_loaded_config_snapshot() -> None:
+    """Pfad + mtime der geladenen ``config`` — prüft, ob der Lauf wirklich die bearbeitete Datei nutzt."""
+    p = Path(cfg.__file__).resolve()
+    mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    _opt_y = cfg.opt_optimize_y_targets()
+    if _opt_y:
+        _rw = getattr(cfg, "RETURN_WINDOW", None)
+        _rt = getattr(cfg, "RALLY_THRESHOLD", None)
+        _ld = getattr(cfg, "LEAD_DAYS", None)
+        _ed = getattr(cfg, "ENTRY_DAYS", None)
+        _mt = getattr(cfg, "MIN_RALLY_TAIL_DAYS", None)
+        _y_line = (
+            f"Y: parametric (labels per Optuna trial); cfg module defaults "
+            f"rw={_rw} rt={_rt!r} lead={_ld} entry={_ed} min_rally_tail={_mt}"
+        )
+    else:
+        _rt = getattr(cfg, "FIXED_Y_RALLY_THRESHOLD", None)
+        _y_line = (
+            f"Y: fixed band [{getattr(cfg, 'FIXED_Y_WINDOW_MIN', '?')},"
+            f"{getattr(cfg, 'FIXED_Y_WINDOW_MAX', '?')}] rt={_rt!r} "
+            f"split={getattr(cfg, 'FIXED_Y_SEGMENT_SPLIT', None)} "
+            f"lead={getattr(cfg, 'FIXED_Y_LEAD_DAYS', None)} "
+            f"entry={getattr(cfg, 'FIXED_Y_ENTRY_DAYS', None)} "
+            f"tail_excl={getattr(cfg, 'FIXED_Y_TAIL_EXCLUDE_DAYS', None)}"
+        )
+    print(
+        f"Pipeline: config = {p}  (mtime {mtime})\n"
+        f"  OPT_OPTIMIZE_Y_TARGETS={_opt_y}  SCORING_ONLY={getattr(cfg, 'SCORING_ONLY', None)}  "
+        f"UNIVERSE_FRACTION={getattr(cfg, 'UNIVERSE_FRACTION', None)}\n"
+        f"  {_y_line}",
+        flush=True,
+    )
+
+
 def run_pipeline_default() -> None:
     """Voller Lauf: Daten/Split, Training, Scoring und HTML-Export."""
     bind_step_functions()
+    _log_loaded_config_snapshot()
     run_data_download_and_split()
     run_training_scoring_and_export()
 

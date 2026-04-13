@@ -211,7 +211,7 @@ Die Tabelle mappt den **Index im `cells`-Array** der Notebook-JSON-Datei auf die
 
 - `HORIZONS = (2, 4, 6, 8, 10)` Handelstage.  
 - `YF_START = "2018-01-01"`.  
-- Pfade: `data/holdout_signals.csv`, `data/master_complete.csv`, `data/master_daily_update.csv`, `data/meta_holdout_signals.csv`, `models/scoring_artifacts.joblib`.
+- Pfade: `data/holdout_signals.csv`, `data/master_complete.csv`, `data/master_daily_update.csv`, `models/scoring_artifacts.joblib`.
 
 ### 7.2 `next_trading_day_after(signal_d, dates)`
 
@@ -252,9 +252,8 @@ Rückgabe: `(rally, target)` als `int8`-Arrays.
 
 ### 7.7 Ausgabe
 
-- `master_complete.csv` = volle Tabelle.  
-- `meta_holdout_signals.csv` = Kopie.  
-- `master_daily_update.csv` = nur Zeilen mit **max(Date)**; Spalten ohne Forward-Renditen und ohne Trainingslabels (siehe `_columns_to_drop_for_daily`).
+- `master_complete.csv` = volle Tabelle.
+- `master_daily_update.csv` = nur Zeilen mit **max(Date)**; feste LLM-Spaltenliste (ohne Forward-Renditen und ohne Trainingslabels).
 
 ---
 
@@ -300,7 +299,7 @@ Berechnet **nur aus Signal-Tabelle + yfinance-Rohmatrix** erklärende Spalten (L
 
 ### 10.1 `scripts/website_analysis_common.py`
 
-- Konstanten: `ROOT = Path(__file__).parents[1]`; Pfade zu `docs/`, `data/master_daily_update.csv`, `master_complete.csv`, `meta_holdout_signals.csv`, `holdout_signals.csv`, Ausgabe `analysis_llm_last.txt/html`.  
+- Konstanten: `ROOT = Path(__file__).parents[1]`; Pfade zu `docs/`, `data/master_daily_update.csv`, `master_complete.csv`, `holdout_signals.csv`, Ausgabe `analysis_llm_last.txt/html`.  
 - **`read_signals_for_latest_day()`**: Liest erste vorhandene CSV-Priorität `DAILY` → `COMPLETE` → `META_LEGACY` → `HOLDOUT`; nimmt **neuestes Datum**; filtert `prob >= threshold_used`; kappt auf `ANALYSIS_MAX_TICKER_ROWS` (nach `prob` sortiert).  
 - **`llm_answer_to_fragment_html`**: Markdown-ähnlicher Text → HTML-Fragment (Überschriften, Listen, Code, Zitate).  
 - **`analysis_text_to_html(text, provider_line)`**: Wrapper mit `<div class="section analysis-llm">`, Disclaimer.

@@ -54,8 +54,10 @@ def run_data_download_and_split() -> None:
             _n_keep = max(1, int(round(len(_tickers_for_run) * _uf)))
             _tickers_for_run = _tickers_for_run[:_n_keep]
             print(
-                f"UNIVERSE_FRACTION={_uf}: nutze {len(_tickers_for_run)}/{len(cfg.ALL_TICKERS)} Ticker "
-                "(vor Download, Target, Indikatoren, News, Features)."
+                f"UNIVERSE_FRACTION={_uf} (Ticker-Anteil): "
+                f"{len(_tickers_for_run)}/{len(cfg.ALL_TICKERS)} Symbole "
+                "(vor Download, Target, Indikatoren, News, Features). "
+                "Zeit-Split-Anteile sind TIME_SPLIT_FRAC_* — nicht dasselbe."
             )
     cfg._tickers_for_run = _tickers_for_run
 
@@ -240,6 +242,11 @@ def run_data_download_and_split() -> None:
     cfg.df_final = df_final
     cfg.df_train = df_train_base
     cfg.df_test = df_train_meta
+
+    if len(df_final) > 0 and len(final_tickers) == 0:
+        raise ValueError(
+            "Split: df_final ist nicht leer, aber final_tickers leer — Ticker-Zuweisung prüfen (SPLIT_MODE)."
+        )
 
     print(
         f"\nZeilenanzahl — TRAIN_BASE: {len(df_train_base):,}  TRAIN_META: {len(df_train_meta):,}  "

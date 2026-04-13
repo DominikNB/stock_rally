@@ -15,6 +15,9 @@ def plot_holdout_results(df_final, final_tickers, filtered_signals, title='FINAL
     target days, and model buy signals.
     """
     n = len(final_tickers)
+    if n == 0:
+        print(f"plot_holdout_results: keine Ticker — überspringe Plot ({title!r}).", flush=True)
+        return
     fig, axes = plt.subplots(n, 1, figsize=(18, 5 * n))
     if n == 1:
         axes = [axes]
@@ -250,3 +253,86 @@ def apply_signal_filters(
                 final[i] = 0
 
     return df_s.loc[final == 1, 'Date'].values
+
+
+def diagnose_signal_filter_stages(
+    df_ticker_prob: pd.DataFrame,
+    threshold: float,
+    consecutive_days: int | None = None,
+    signal_cooldown_days: int | None = None,
+    *,
+    rsi_window: int | None = None,
+    signal_skip_near_peak: bool | None = None,
+    peak_lookback_days: int | None = None,
+    peak_min_dist_from_high_pct: float | None = None,
+    signal_max_rsi: float | None = None,
+) -> dict[str, int | bool]:
+    """
+    Gleiche Stufen wie ``apply_signal_filters``, aber nur Zähler (ein Ticker).
+    Hilft zu klären, ob0 Signale durch Konsekutiv/Cooldown oder Anti-Peak/RSI entstehen.
+    """
+    cd = cfg.CONSECUTIVE_DAYS if consecutive_days is None else consecutive_days
+    scd = cfg.SIGNAL_COOLDOWN_DAYS if signal_cooldown_days is None else signal_cooldown_days
+    df_s = df_ticker_prob.sort_values("Date").reset_index(drop=True)
+    raw = (df_s["prob"].values >= threshold).astype(np.int8)
+    n = len(raw)
+    consec = np.zeros(n, dtype=np.int8)
+    for i in range(2, n):
+        if raw[i - 2] + raw[i - 1] + raw[i] >= cd:
+            consec[i] = 1
+    pre_peak = np.zeros(n, dtype=np.int8)
+    last_signal = -999
+    for i in range(n):
+        if consec[i] == 1 and (i - last_signal) >= scd:
+            pre_peak[i] = 1
+            last_signal = i
+    n_pre_peak = int(pre_peak.sum())
+    post = pre_peak.copy()
+    killed_peak = 0
+    if "close" in df_s.columns:
+        if rsi_window is not None:
+            rw = int(rsi_window)
+        else:
+            rw = getattr(cfg, "rsi_w", None)
+            if rw is None:
+                rw = int(cfg.SEED_PARAMS.get("rsi_window", 14))
+        rsi_series = _rsi_from_close_1d(df_s["close"].values, rw)
+        skip_peak = (
+            bool(signal_skip_near_peak)
+            if signal_skip_near_peak is not None
+            else bool(getattr(cfg, "SIGNAL_SKIP_NEAR_PEAK", True))
+        )
+        n_peak = (
+            int(peak_lookback_days)
+            if peak_lookback_days is not None
+            else int(getattr(cfg, "PEAK_LOOKBACK_DAYS", 20))
+        )
+        min_dist = (
+            float(peak_min_dist_from_high_pct)
+            if peak_min_dist_from_high_pct is not None
+            else float(getattr(cfg, "PEAK_MIN_DIST_FROM_HIGH_PCT", 0.012))
+        )
+        max_rsi = (
+            signal_max_rsi if signal_max_rsi is not None else getattr(cfg, "SIGNAL_MAX_RSI", None)
+        )
+        mask_ok = _peak_rsi_mask_1d(
+            df_s["close"].values,
+            rsi_series,
+            skip_peak,
+            n_peak,
+            min_dist,
+            max_rsi,
+        )
+        for i in range(n):
+            if post[i] == 1 and not mask_ok[i]:
+                killed_peak += 1
+                post[i] = 0
+    return {
+        "n_rows": n,
+        "n_raw_prob_ge_thr": int(raw.sum()),
+        "n_consec_slots": int(consec.sum()),
+        "n_after_cooldown_pre_peak": n_pre_peak,
+        "n_killed_by_peak_or_rsi": killed_peak,
+        "n_final_signals": int(post.sum()),
+        "has_close": bool("close" in df_s.columns),
+    }

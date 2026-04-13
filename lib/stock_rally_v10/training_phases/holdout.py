@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from lib.stock_rally_v10.training_phases.threshold_pr_filters import _effective_final_tickers
+
 
 def run_phase_holdout_visualization(cfg_mod: Any | None = None) -> None:
     if cfg_mod is None:
@@ -13,7 +15,7 @@ def run_phase_holdout_visualization(cfg_mod: Any | None = None) -> None:
         return
 
     df_final = cfg_mod.df_final
-    final_tickers = cfg_mod.final_tickers
+    final_tickers = _effective_final_tickers(df_final, cfg_mod.final_tickers)
     best_threshold = cfg_mod.best_threshold
     apply_signal_filters = cfg_mod.apply_signal_filters
     plot_holdout_results = cfg_mod.plot_holdout_results
@@ -21,7 +23,7 @@ def run_phase_holdout_visualization(cfg_mod: Any | None = None) -> None:
 
     filtered_signals_final = {}
     for ticker in final_tickers:
-        sub = df_final[df_final["ticker"] == ticker]
+        sub = df_final[df_final["ticker"].astype(str).str.strip() == str(ticker)]
         filtered_signals_final[ticker] = apply_signal_filters(sub, best_threshold)
 
     cfg_mod.signal_target_diag = summarize_filtered_signals_vs_target(

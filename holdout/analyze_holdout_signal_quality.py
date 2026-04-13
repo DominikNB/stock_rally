@@ -1,5 +1,5 @@
 """
-Erzeugt data/master_complete.csv (+ meta_holdout_signals.csv Kopie) und data/master_daily_update.csv;
+Erzeugt data/master_complete.csv und data/master_daily_update.csv (LLM-Spalten);
 Meta, Forward-Renditen, train_target/rally,
 plus Zusatzfilter aus signal_extra_filters — wie in build_holdout_signals_master).
 

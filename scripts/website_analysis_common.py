@@ -8,11 +8,12 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 DOCS = ROOT / "docs"
 PROMPT_FILE = DOCS / "website_analysis_prompt.txt"
 DAILY_CSV = ROOT / "data" / "master_daily_update.csv"
 COMPLETE_CSV = ROOT / "data" / "master_complete.csv"
-META_LEGACY_CSV = ROOT / "data" / "meta_holdout_signals.csv"
 HOLDOUT_CSV = ROOT / "data" / "holdout_signals.csv"
 OUT_TXT = DOCS / "analysis_llm_last.txt"
 OUT_HTML = DOCS / "analysis_llm_last.html"
@@ -32,11 +33,6 @@ def read_signals_for_latest_day():
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
         latest = df["Date"].max()
         sub = df[df["Date"] == latest].copy()
-    elif META_LEGACY_CSV.is_file():
-        df = pd.read_csv(META_LEGACY_CSV)
-        df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
-        latest = df["Date"].max()
-        sub = df[df["Date"] == latest].copy()
     elif HOLDOUT_CSV.is_file():
         df = pd.read_csv(HOLDOUT_CSV)
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
@@ -44,10 +40,16 @@ def read_signals_for_latest_day():
         sub = df[df["Date"] == latest].copy()
     else:
         print(
-            f"Fehlt: {DAILY_CSV}, {COMPLETE_CSV}, {META_LEGACY_CSV} oder {HOLDOUT_CSV}",
+            f"Fehlt: {DAILY_CSV}, {COMPLETE_CSV} oder {HOLDOUT_CSV}",
             file=sys.stderr,
         )
         sys.exit(1)
+
+    from lib.signal_extra_filters import ordered_llm_daily_columns
+    from lib.stock_rally_v10.equity_classification import CLASSIFICATION_COLUMN_KEYS
+
+    sub = sub.reindex(columns=ordered_llm_daily_columns(CLASSIFICATION_COLUMN_KEYS))
+
     if "prob" in sub.columns and "threshold_used" in sub.columns:
         sub = sub[
             pd.to_numeric(sub["prob"], errors="coerce")

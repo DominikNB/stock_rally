@@ -200,7 +200,7 @@ def add_technical_indicators(df, meta_only=False):
         _bw = cfg.__dict__.get("bb_w")
         _sw = cfg.__dict__.get("sma_w")
         if _rw is None or _bw is None or _sw is None:
-            raise ValueError("meta_only=True: rsi_w, bb_w, sma_w müssen gesetzt sein (Cell 13+).")
+            raise ValueError("meta_only=True: rsi_w, bb_w, sma_w müssen gesetzt sein (nach Meta-/Phase-4-Params).")
 
         def _fn(g):
             return _compute_indicators_one_ticker_for_meta(g[1], _rw, _bw, _sw)

@@ -153,17 +153,14 @@ def main() -> None:
         print(f"Gemerged: {MASTER}")
         from holdout.build_holdout_signals_master import (
             HORIZONS,
-            META_EXPORT_CSV,
             MASTER_DAILY_CSV,
             _build_daily_update,
         )
 
         ret_cols = [f"ret_{h}d" for h in HORIZONS]
-        merged.to_csv(META_EXPORT_CSV, index=False)
         daily = _build_daily_update(merged, ret_cols)
         daily.to_csv(MASTER_DAILY_CSV, index=False)
-        print(f"Geschrieben: {META_EXPORT_CSV}  (Kopie von master_complete)")
-        print(f"Geschrieben: {MASTER_DAILY_CSV}  ({len(daily)} Zeilen, tagesaktuell)")
+        print(f"Geschrieben: {MASTER_DAILY_CSV}  ({len(daily)} Zeilen, tagesaktuell, LLM-Spalten)")
 
 
 if __name__ == "__main__":

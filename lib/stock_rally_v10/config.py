@@ -123,8 +123,8 @@ def load_scoring_artifacts(path=None):
 N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
 OPT_MIN_PRECISION_BASE   = 0.6   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.75   # Phase 4 Meta-Learner
-OPT_MIN_PRECISION_THRESHOLD = 0.90  # Phase 5 Threshold-Kalibrierung / PR-Plots
+OPT_MIN_PRECISION_META   = 0.65   # Phase 4 Meta-Learner
+OPT_MIN_PRECISION_THRESHOLD = 0.85  # Phase 5 Threshold-Kalibrierung / PR-Plots
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_THRESHOLD  # Alias: find_precision_threshold, Reports
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
 PHASE5_MIN_SIGNALS    = 5
@@ -137,39 +137,49 @@ PHASE5_MIN_SIGNALS    = 5
 #                   All base models use fixed SEED_PARAMS — consistent and faster.
 OPT_MODEL_HYPERPARAMS = True
 # True: Phase-1-Optuna optimiert Rally-/Label-Parameter (return_window, rally_threshold, …).
-# False: feste Regel — grüner Bereich = Rendite > FIXED_Y_RALLY_THRESHOLD innerhalb von
-# FIXED_Y_WINDOW_MIN..FIXED_Y_WINDOW_MAX Handelstagen; Targets nur nach fester Vorschrift.
+# False: feste Band-Regel (FIXED_Y_*), siehe ``target._create_target_one_ticker_fixed_bands``.
 OPT_OPTIMIZE_Y_TARGETS = False
 
 
 def opt_optimize_y_targets() -> bool:
-    """True = Optuna sucht Rally-/Label-Parameter. Override: ``cfg.__dict__['cfg.OPT_OPTIMIZE_Y_TARGETS']`` (Notebook)."""
-    g = globals()
-    if "cfg.OPT_OPTIMIZE_Y_TARGETS" in g:
-        return bool(g["cfg.OPT_OPTIMIZE_Y_TARGETS"])
-    return bool(g.get("OPT_OPTIMIZE_Y_TARGETS", True))
+    """True = Optuna sucht Rally-/Label-Parameter (Modulattribut ``OPT_OPTIMIZE_Y_TARGETS``)."""
+    return bool(OPT_OPTIMIZE_Y_TARGETS)
 
 
+# Festes Y (OPT_OPTIMIZE_Y_TARGETS=False) — ``target._create_target_one_ticker_fixed_bands``:
+# (1) Grün: ∃ Fenster w ∈ [FIXED_Y_WINDOW_MIN, FIXED_Y_WINDOW_MAX] mit kum. Rendite ≥ FIXED_Y_RALLY_THRESHOLD;
+#     alle Tage solcher Fenster werden zu grünen Segmenten vereinigt.
+# (2) Label 1: FIXED_Y_LEAD_DAYS vor Segmentbeginn; bei L < FIXED_Y_SEGMENT_SPLIT zusätzlich die ersten
+#     FIXED_Y_ENTRY_DAYS grüne Tage; bei L ≥ split alle grünen außer den letzten FIXED_Y_TAIL_EXCLUDE_DAYS.
+# Entspricht: w ∈ [3, 10], 6 %, 3 Vorlauf-Tage, Split 5, 2 Einstiegs-Tage auf Grün, 3 Tage Rally-Ende ausgeschlossen.
 FIXED_Y_WINDOW_MIN = 3
-FIXED_Y_WINDOW_MAX = 10
-FIXED_Y_RALLY_THRESHOLD = 0.08
+FIXED_Y_WINDOW_MAX = 9
+FIXED_Y_RALLY_THRESHOLD = 0.08  # 8.00 %
 FIXED_Y_SEGMENT_SPLIT = 5
+FIXED_Y_LEAD_DAYS = 3
+FIXED_Y_ENTRY_DAYS = 2
+FIXED_Y_TAIL_EXCLUDE_DAYS = 3
 
 
-def fixed_y_rule_params() -> tuple[int, int, float, int]:
-    """(w_min, w_max, rally_threshold, segment_split) wie ``target._create_target_one_ticker_fixed_bands``."""
+def fixed_y_rule_params() -> tuple[int, int, float, int, int, int, int]:
+    """(w_min, w_max, rally_threshold, segment_split, lead_days, entry_days, tail_exclude_days).
+
+    Wie ``target._create_target_one_ticker_fixed_bands``. Nur Modulattribute ``FIXED_Y_*``.
+    """
     m = sys.modules[__name__]
-    d = m.__dict__
-    w_lo = int(d.get("cfg.FIXED_Y_WINDOW_MIN", getattr(m, "FIXED_Y_WINDOW_MIN", 3)))
-    w_hi = int(d.get("cfg.FIXED_Y_WINDOW_MAX", getattr(m, "FIXED_Y_WINDOW_MAX", 10)))
-    rt = float(d.get("cfg.FIXED_Y_RALLY_THRESHOLD", getattr(m, "FIXED_Y_RALLY_THRESHOLD", 0.06)))
-    split = int(d.get("cfg.FIXED_Y_SEGMENT_SPLIT", getattr(m, "FIXED_Y_SEGMENT_SPLIT", 5)))
-    return w_lo, w_hi, rt, split
+    w_lo = int(getattr(m, "FIXED_Y_WINDOW_MIN", 3))
+    w_hi = int(getattr(m, "FIXED_Y_WINDOW_MAX", 10))
+    rt = float(getattr(m, "FIXED_Y_RALLY_THRESHOLD", 0.06))
+    split = int(getattr(m, "FIXED_Y_SEGMENT_SPLIT", 5))
+    ld = int(getattr(m, "FIXED_Y_LEAD_DAYS", 3))
+    ed = int(getattr(m, "FIXED_Y_ENTRY_DAYS", 2))
+    tail_ex = int(getattr(m, "FIXED_Y_TAIL_EXCLUDE_DAYS", 3))
+    return w_lo, w_hi, rt, split, ld, ed, tail_ex
 
 
 def describe_target_rule_fixed_bands() -> str:
     """Feste Band-Regel (OPT_OPTIMIZE_Y_TARGETS=False); Zahlen = ``fixed_y_rule_params()`` wie in der Pipeline."""
-    w_lo, w_hi, rt, split = fixed_y_rule_params()
+    w_lo, w_hi, rt, split, ld, ed, tail_ex = fixed_y_rule_params()
     return (
         "Zieldefinition (feste Band-Regel — dieselben Konstanten wie in der Pipeline):\n\n"
         "(1) Grüne Rally-Phase: Ein Handelstag ist „grün“, wenn es mindestens ein Fenster "
@@ -177,10 +187,18 @@ def describe_target_rule_fixed_bands() -> str:
         "(Produkt der Tagesrenditen) mindestens {rt_str} beträgt; alle Tage solcher Fenster werden "
         "zu grünen Segmenten vereinigt.\n\n"
         "(2) Positives Klassenlabel: Am ersten Tag eines neuen grünen Segments sei L die "
-        "Segmentlänge in Handelstagen. Label 1 erhalten die drei Handelstage unmittelbar vor "
-        "Segmentbeginn; bei L < {split} zusätzlich die ersten zwei grünen Tage des Segments; "
-        "bei L ≥ {split} alle grünen Tage des Segments außer den letzten drei."
-    ).format(w_lo=w_lo, w_hi=w_hi, rt_str=f"{rt:.2%}", split=split)
+        "Segmentlänge in Handelstagen. Label 1 erhalten die {ld} Handelstage unmittelbar vor "
+        "Segmentbeginn; bei L < {split} zusätzlich die ersten {ed} grünen Tage des Segments; "
+        "bei L ≥ {split} alle grünen Tage des Segments außer den letzten {tail_ex}."
+    ).format(
+        w_lo=w_lo,
+        w_hi=w_hi,
+        rt_str=f"{rt:.2%}",
+        split=split,
+        ld=ld,
+        ed=ed,
+        tail_ex=tail_ex,
+    )
 
 
 def describe_fixed_y_target_rule() -> str:
@@ -262,7 +280,7 @@ def describe_target_rule_narrative_for_website(c=None) -> str:
 
 
 def _describe_target_rule_fixed_bands_narrative() -> str:
-    w_lo, w_hi, rt, split = fixed_y_rule_params()
+    w_lo, w_hi, rt, split, ld, ed, tail_ex = fixed_y_rule_params()
     rt_str = f"{rt:.2%}"
     return (
         "Was das Modell vorhersagen soll: Das Klassenlabel „positiv“ markiert Tage, an denen sich ein "
@@ -276,12 +294,20 @@ def _describe_target_rule_fixed_bands_narrative() -> str:
         "vereinigt — so entsteht die Rally-Spur.\n\n"
         "Daraus werden die Trainings-Labels abgeleitet: Betrachtet wird jeweils der erste Tag "
         "eines neuen grünen Segments (nach einer Rally-Pause). Seine Länge sei L Handelstage. "
-        "Dann erhalten die drei Handelstage unmittelbar vor Segmentbeginn das positive Label; "
-        "zusätzlich — je nach Länge — entweder nur die ersten zwei grünen Tage des Segments "
+        "Dann erhalten die {ld} Handelstage unmittelbar vor Segmentbeginn das positive Label; "
+        "zusätzlich — je nach Länge — entweder nur die ersten {ed} grünen Tage des Segments "
         "(wenn L kleiner als {split} ist), oder alle grünen Tage des Segments außer "
-        "den letzten drei (wenn L mindestens {split} beträgt). So werden frühe Einstiege "
+        "den letzten {tail_ex} (wenn L mindestens {split} beträgt). So werden frühe Einstiege "
         "bevorzugt und sehr späte Rally-Tage nicht als Trainingsziel geführt."
-    ).format(w_lo=w_lo, w_hi=w_hi, rt_str=rt_str, split=split)
+    ).format(
+        w_lo=w_lo,
+        w_hi=w_hi,
+        rt_str=rt_str,
+        split=split,
+        ld=ld,
+        ed=ed,
+        tail_ex=tail_ex,
+    )
 
 
 def _describe_target_rule_opt_y_narrative(p: dict[str, int | float]) -> str:
@@ -334,34 +360,34 @@ def html_target_definition_section(c=None) -> str:
 
 
 EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 5  # erhöht wegen News-Feature-Grid
+N_OPTUNA_TRIALS       = 25  # erhöht wegen News-Feature-Grid
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
-# OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
-OPTUNA_TRIALS         = None  # None → N_OPTUNA_TRIALS; z.B. 40 für schnelle Tests
+# N_OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
 # tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
 OPTUNA_SHOW_PROGRESS_BAR = None
-N_META_TRIALS         = 25
-# Meta-Stacking: Top-K Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``)
-META_SHAP_TOP_K       = 10
+N_META_TRIALS         = 600
+# Meta-Stacking: Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``).
+# Standard: feste Anzahl META_SHAP_TOP_K. Alternativ: META_SHAP_CUM_FRAC z. B. 0.75 =
+# kleinstes K, sodass Summe der K größten mean|SHAP| ≥ 75 % der Summe über alle Spalten.
+META_SHAP_TOP_K = 10  # Fallback, wenn Summe mean|SHAP| = 0 (nur dann)
+META_SHAP_CUM_FRAC = 0.75  # kleinstes K mit kumulierter SHAP-Masse ≥ 75 %
+META_SHAP_TOP_K_MIN = 5
+META_SHAP_TOP_K_MAX = 35
 RANDOM_STATE          = 42
 N_WORKERS             = os.cpu_count()
 
-# ── Optuna-Startwerte (vor Phase 1; nach Optimierung durch ``best_params`` / Artefakt ersetzt) ──
-# ``create_target()`` in der Datenpipeline läuft vor Optuna — mit SEED_PARAMS abstimmen.
-RETURN_WINDOW        = 4     # Startwert; Optuna Phase 1 (Base-XGB) kann überschreiben
-RALLY_THRESHOLD      = 0.07423891180366396
-# „Early-only“-Label: positives = Vorlauf (LEAD_DAYS) + kurze Einstiegszone (ENTRY_DAYS),
-# nicht die gesamte grüne Rally. Optuna sucht entry_days in [1, ENTRY_DAYS_OPT_MAX].
-ENTRY_DAYS_OPT_MAX   = 4
-LEAD_DAYS            = 4
-ENTRY_DAYS           = 3
-# Positives Label nur, wenn ab diesem Tag noch mind. so viele Rally-Handelstage „übrig“ sind
-# (inkl. heute bis Segmentende) — kurze grüne Reste / Rally-Ende werden nicht als Ziel markiert.
-MIN_RALLY_TAIL_DAYS  = 5
-CONSECUTIVE_DAYS     = 2
-SIGNAL_COOLDOWN_DAYS = 4
+# ── Parametrisches Y (nur wenn OPT_OPTIMIZE_Y_TARGETS=True) ─────────────────
+# Bei festem Y (False) nutzt ``create_target`` nur FIXED_Y_*; diese Werte sind dann irrelevant,
+# werden aber an die Band-Logik und SEED_PARAMS-Y-Keys angeglichen (Lesbarkeit / späteres Umschalten).
+RETURN_WINDOW        = FIXED_Y_WINDOW_MAX  # Oberkante w; Band-Regel nutzt w ∈ [FIXED_Y_WINDOW_MIN, …]
+RALLY_THRESHOLD      = FIXED_Y_RALLY_THRESHOLD
+LEAD_DAYS            = FIXED_Y_LEAD_DAYS   # bei festem Y: dieselben wie in fixed_y_rule_params()
+ENTRY_DAYS           = FIXED_Y_ENTRY_DAYS
+MIN_RALLY_TAIL_DAYS  = 5 # nur parametrische Regel; bei festem Y unbenutzt
+CONSECUTIVE_DAYS     = 2     # wie SEED_PARAMS (Post-Filter)
+SIGNAL_COOLDOWN_DAYS = 2
 
 # ── Anti-Peak (nur apply_signal_filters / Website — nicht in Optuna-CV) ─────
 # Viele Fehlsignale sitzen direkt am lokalen Kurs-High; Filter verlangt Abstand zum N-Tage-High.
@@ -370,19 +396,23 @@ PEAK_LOOKBACK_DAYS = 20
 PEAK_MIN_DIST_FROM_HIGH_PCT = 0.012   # mind. 1.2 % unter Rolling-High (tunable 0.008–0.02)
 SIGNAL_MAX_RSI = 78.0                 # kein Kauf-Signal wenn RSI darüber; None = aus
 
-# ── Trainings-Universum ─────────────────────────────────────────────────────
+# ── Ticker-Universum (Symbole) ──────────────────────────────────────────────
 # Maximale Anzahl Wertpapiere im TRAIN_BASE-Set — nur bei SPLIT_MODE="ticker" (Legacy).
-# Bei SPLIT_MODE="time" nutzen alle Stufen dieselben Ticker (TIME_SPLIT_FRAC_*).
+# Bei SPLIT_MODE="time" nutzen alle Stufen dieselben Ticker; unten steht der Zeit-Split.
 # Empfehlung: 30–60. Höher = langsamer, aber potenziell besseres Modell.
 MAX_TRAIN_TICKERS   = 45
-# Schneller Run: nur einen zufälligen Anteil der geladenen Ticker (nach assemble_features)
+# Anteil von ALL_TICKERS, der geladen wird — VOR Download/Target/News/Features (s. data_and_split).
 # 2.5 % = 0.025 (nicht 2.5 — sonst greift die Auswahl nicht).
-UNIVERSE_FRACTION = 1  # 1.0 = alle; <1 wählt Tickers VOR Download/Features (nicht erst danach)
+# Nicht verwechseln mit TIME_SPLIT_FRAC_*: das sind Anteile der Handelstage, nicht der Ticker.
+UNIVERSE_FRACTION = 1  # 1.0 = alle; <1 = zufällige Teilmenge (UNIVERSE_SAMPLE_SEED)
 UNIVERSE_SAMPLE_SEED = 42
-# Train/Test-Split: "time" = gleiches Ticker-Universum, disjunkte Zeiträume (empfohlen).
+
+# ── Zeit-Split (Kalender) ────────────────────────────────────────────────────
+# "time" = gleiche Ticker in allen Stufen, disjunkte Zeiträume (empfohlen).
 # "ticker" = Legacy: verschiedene Ticker pro Stufe, gleicher Kalender bis TRAIN_END_DATE.
 SPLIT_MODE = "time"
-# Anteile auf allen Handelstagen [START … TRAIN_END_DATE]; walk-forward, keine Überlappung der Stufen (Purge Base→Meta).
+# Anteile der Handelstage im Fenster [START … TRAIN_END_DATE]; walk-forward; Purge Base→Meta.
+# (Nur Kalender — nicht Label-Schwelle FIXED_Y_*; nicht Ticker-Anteil UNIVERSE_FRACTION.)
 TIME_SPLIT_FRAC_BASE = 0.45
 TIME_SPLIT_FRAC_META = 0.25
 TIME_SPLIT_FRAC_THRESHOLD = 0.15
@@ -395,42 +425,44 @@ BB_WINDOWS   = [15, 20, 25]
 SMA_WINDOWS  = [30, 50, 70]
 
 # ── Seed params für enqueue_trial (Optuna Base-XGB) ─────────────────────────
-# Referenz-Trial / Reproduktion; wird von Optuna bei erfolgreicher Suche übertroffen.
+# Fest eingetragen aus ``best_params`` des letzten gespeicherten Trainings
+# (``models/scoring_artifacts.joblib``) — kein Laufzeit-Laden des Artefakts.
 SEED_PARAMS = dict(
-    return_window=4,
-    rally_threshold=0.07423891180366396,
-    lead_days=4,
-    entry_days=3,
+    # Y-Keys: an feste Band-Regel angeglichen (bei OPT_OPTIMIZE_Y_TARGETS=False ohnehin aus enqueue entfernt).
+    return_window=10,
+    rally_threshold=0.06,
+    lead_days=3,
+    entry_days=2,
     min_rally_tail_days=5,
     consecutive_days=2,
-    signal_cooldown_days=4,
+    signal_cooldown_days=2,
     threshold=0.6338651351186617,
-    rsi_window=14,
-    bb_window=25,
+    rsi_window=21,
+    bb_window=20,
     sma_window=50,
     news_mom_w=3,
     news_vol_ma=20,
-    news_tone_roll=0,
+    news_tone_roll=3,
     news_extra_zscore_w=20,
     news_extra_tone_accel=True,
     news_extra_macro_sec_diff=True,
     btc_momentum_z_window=60,
     market_breadth_z_window=60,
     rel_momentum_window=20,
-    grow_policy='depthwise',
-    max_leaves=910,
-    max_bin=64,
-    max_depth=6,
-    min_child_weight=9,
-    gamma=5.7204046577916365,
-    reg_alpha=0.00044267707418928947,
-    reg_lambda=1.1663163488001458,
-    learning_rate=0.013316606543583374,
-    n_estimators=1263,
-    subsample=0.5896905968497552,
-    colsample_bytree=0.5602713933350929,
-    focal_gamma=0.5063350144294034,
-    focal_alpha=0.38191769324282254,
+    grow_policy='lossguide',
+    max_leaves=686,
+    max_bin=256,
+    max_depth=3,
+    min_child_weight=22,
+    gamma=8.955413122339955,
+    reg_alpha=9.617691306887567e-08,
+    reg_lambda=2.1395039834782624e-08,
+    learning_rate=0.024079682452395383,
+    n_estimators=363,
+    subsample=0.7803623012672697,
+    colsample_bytree=0.5792981006909539,
+    focal_gamma=0.8076637868641594,
+    focal_alpha=0.3869335839666591,
     signal_skip_near_peak=True,
     peak_lookback_days=20,
     peak_min_dist_from_high_pct=0.012,

@@ -17,6 +17,39 @@ from sklearn.preprocessing import StandardScaler
 from lib.stock_rally_v10.features import merge_news_shard_from_best_params
 
 
+def _resolve_meta_shap_top_k(c: Any, mean_shap: np.ndarray) -> tuple[int, float]:
+    """
+    Anzahl Roh-Features für Meta-Stacking: festes K oder kleinstes K mit
+    cumsum(mean|SHAP| der Top-K) >= META_SHAP_CUM_FRAC * sum(mean|SHAP|).
+    Rückgabe: (K, erreichte kumulierte Masse / Gesamtsumme nach Clip).
+    """
+    n_feat = int(len(mean_shap))
+    k_min = max(1, int(getattr(c, "META_SHAP_TOP_K_MIN", 1)))
+    k_cap = getattr(c, "META_SHAP_TOP_K_MAX", None)
+    k_max = n_feat if k_cap is None else max(k_min, min(int(k_cap), n_feat))
+
+    total = float(np.sum(mean_shap))
+    cum_frac = getattr(c, "META_SHAP_CUM_FRAC", None)
+    if cum_frac is not None:
+        f = float(cum_frac)
+        if not (0.0 < f <= 1.0):
+            raise ValueError(f"META_SHAP_CUM_FRAC muss in (0, 1] liegen, nicht {f!r}")
+        if total <= 0.0:
+            k = max(k_min, min(int(getattr(c, "META_SHAP_TOP_K", 10)), k_max))
+        else:
+            order = np.argsort(mean_shap)[::-1]
+            vcum = np.cumsum(mean_shap[order])
+            thr = f * total
+            k = int(np.searchsorted(vcum, thr, side="left")) + 1
+            k = max(k_min, min(k, k_max))
+    else:
+        k = max(k_min, min(int(getattr(c, "META_SHAP_TOP_K", 10)), k_max))
+
+    order = np.argsort(mean_shap)[::-1][:k]
+    mass = float(np.sum(mean_shap[order])) / total if total > 0 else 0.0
+    return k, mass
+
+
 def run_phase_optuna_base_models(cfg_mod: Any) -> None:
     if getattr(cfg_mod, "SCORING_ONLY", False):
         print("[SCORING_ONLY] Training-Zelle übersprungen.")
@@ -48,10 +81,7 @@ def _run_phase12(c: Any) -> None:
         ENTRY_DAYS = best_params["entry_days"]
         MIN_RALLY_TAIL_DAYS = best_params.get("min_rally_tail_days", sp["min_rally_tail_days"])
     else:
-        RETURN_WINDOW = c.FIXED_Y_WINDOW_MAX
-        RALLY_THRESHOLD = c.FIXED_Y_RALLY_THRESHOLD
-        LEAD_DAYS = 3
-        ENTRY_DAYS = 2
+        _, RETURN_WINDOW, RALLY_THRESHOLD, _, LEAD_DAYS, ENTRY_DAYS, _ = c.fixed_y_rule_params()
         MIN_RALLY_TAIL_DAYS = 5
 
     CONSECUTIVE_DAYS = best_params["consecutive_days"]
@@ -375,6 +405,14 @@ def _run_phase12(c: Any) -> None:
     )
     print("\nMittlere |SHAP| (alle Features, absteigend):")
     print(shap_df.to_string(index=False))
+    _shap_zeroish = (shap_df["mean_abs_shap"] <= 1e-12).sum()
+    if _shap_zeroish:
+        print(
+            f"Hinweis: {_shap_zeroish} Feature(s) mit ~0 mittlerer |SHAP| — beim XGB-1 typisch für Spalten, "
+            "auf die kein Split fällt (Redundanz, `colsample_bytree`, seltene Nutzung) oder die in der "
+            "SHAP-Stichprobe (fast) konstant sind.",
+            flush=True,
+        )
 
     _shap_top = min(25, len(shap_df))
     fig, ax = plt.subplots(figsize=(8, max(6, _shap_top * 0.28)))
@@ -393,10 +431,22 @@ def _run_phase12(c: Any) -> None:
         show=True,
     )
 
-    topk = c.META_SHAP_TOP_K
+    topk, _mass_frac = _resolve_meta_shap_top_k(c, mean_shap)
     topk_idx = np.argsort(mean_shap)[::-1][:topk]
     topk_names = [FEAT_COLS[i] for i in topk_idx]
-    print(f"\nTop {topk} SHAP features (Meta-Stacking): {[rename_map.get(n, n) for n in topk_names]}")
+    _cf = getattr(c, "META_SHAP_CUM_FRAC", None)
+    if _cf is not None:
+        print(
+            f"\nMeta SHAP: K={topk} (Ziel kumul. Masse ≥ {_cf:.0%} der Summe mean|SHAP|; "
+            f"erreicht {_mass_frac:.1%}) — Features: {[rename_map.get(n, n) for n in topk_names]}",
+            flush=True,
+        )
+    else:
+        print(
+            f"\nTop {topk} SHAP features (Meta-Stacking, META_SHAP_TOP_K): "
+            f"{[rename_map.get(n, n) for n in topk_names]}",
+            flush=True,
+        )
     print(
         "\nPhase 12 abgeschlossen (Base + SHAP). Weiter mit Meta-Learner / Threshold (Phase 13).",
         flush=True,

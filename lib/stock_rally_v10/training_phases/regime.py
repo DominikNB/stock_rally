@@ -178,7 +178,7 @@ def run_phase_regime_benchmark_report(cfg_mod: Any | None = None) -> None:
         )
     except NameError as _e:
         print(
-            f"Regime-Evaluation übersprungen (fehlt: {_e}). Zuerst Cell 13 (Phase 5) ausführen.",
+            f"Regime-Evaluation übersprungen (fehlt: {_e}). Zuerst Phase 5 ausführen.",
             flush=True,
         )
     except Exception as _e:

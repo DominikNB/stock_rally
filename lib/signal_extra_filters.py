@@ -26,6 +26,7 @@ from __future__ import annotations
 import os
 import sys
 import warnings
+from typing import Sequence
 from contextlib import contextmanager
 from datetime import date, datetime
 
@@ -93,6 +94,30 @@ _LLM_EXTRA_COLS = (
     "sector_bench_symbol",
     "news_sentiment",
 )
+
+
+def ordered_llm_daily_columns(classification_column_keys: Sequence[str]) -> list[str]:
+    """
+    Feste Spaltenreihenfolge für ``data/master_daily_update.csv`` (Upload zu Gemini / Website-Analyse).
+    Nur Meta + Klassifikation + im Prompt dokumentierte Kennzahlen — keine Forward-/Label-Spalten.
+    """
+    meta = (
+        "ticker",
+        "Date",
+        "prob",
+        "threshold_used",
+        "company",
+        "sector",
+    )
+    seen: set[str] = set()
+    out: list[str] = []
+    for block in (meta, classification_column_keys, _LLM_EXTRA_COLS, _OHLC_LLM_COLS):
+        for c in block:
+            if c not in seen:
+                seen.add(c)
+                out.append(c)
+    return out
+
 
 # Grobe US-Sektor-ETFs (Vergleich „eigene Story vs. Sektor“); unbekannte Sektoren → NaN in ret_vs_sector_5d
 _SECTOR_TO_BENCH_ETF: dict[str, str] = {

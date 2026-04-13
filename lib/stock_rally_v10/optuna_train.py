@@ -17,7 +17,7 @@ from lib.stock_rally_v10.helpers import make_focal_objective
 from lib.stock_rally_v10.target import rebuild_target_for_train
 
 
-# Gates: cfg.OPT_MIN_PRECISION_BASE (Cell 2); Phase 5 nutzt cfg.OPT_MIN_PRECISION (= THRESHOLD-Ziel)
+# Gates: cfg.OPT_MIN_PRECISION_BASE; Phase 5 nutzt cfg.OPT_MIN_PRECISION (= THRESHOLD-Ziel)
 _OPT_MIN_PRECISION = cfg.OPT_MIN_PRECISION_BASE
 # Maximum consecutive FP signals per ticker before a trial is penalised
 _OPT_MAX_CONSEC_FP = 3
@@ -139,7 +139,7 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
       cfg.OPT_MODEL_HYPERPARAMS=True:  auch XGBoost-Hyperparameter (Option A)
       cfg.OPT_MODEL_HYPERPARAMS=False: Modell-HPs aus cfg.SEED_PARAMS (Option B)
 
-    Nicht optimiert hier (wird später überschrieben — siehe Cell 12/13):
+    Nicht optimiert hier (wird in späteren Phasen überschrieben):
       - Schwelle ``threshold`` für CV: fest aus ``seed_params`` (Phase 5 setzt ``best_threshold``).
       - Anti-Peak/RSI: fest aus ``seed_params`` (Phase 4 Meta-Optuna optimiert diese Werte).
 
@@ -151,17 +151,10 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     Returns best_params dict.
     """
     if n_trials is None:
-        # getattr: echte Attribute auf ``config`` (OPTUNA_TRIALS = None → N_OPTUNA_TRIALS).
-        # Legacy: Notebooks setzen manchmal cfg.__dict__["cfg.OPTUNA_TRIALS"].
-        _ot = getattr(cfg, "OPTUNA_TRIALS", None)
-        if _ot is None:
-            _ot = cfg.__dict__.get("cfg.OPTUNA_TRIALS")
-        n_trials = int(_ot) if _ot is not None else cfg.N_OPTUNA_TRIALS
+        n_trials = int(cfg.N_OPTUNA_TRIALS)
     else:
         n_trials = int(n_trials)
     wf = getattr(cfg, "OPTUNA_WF_SPLITS", None)
-    if wf is None:
-        wf = cfg.__dict__.get("cfg.OPTUNA_WF_SPLITS")
     wf = int(wf) if wf is not None else cfg.N_WF_SPLITS
     if wf < 1:
         wf = cfg.N_WF_SPLITS
@@ -196,6 +189,12 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         )
     if not _opt_y:
         print(cfg.describe_target_rule_text(), flush=True)
+    else:
+        print(
+            "  → Labels: Positive-Rate aus create_target (Pipeline) ist nur Baseline; "
+            "hier wird pro Trial mit rebuild_target_for_train neu gelabelt.",
+            flush=True,
+        )
 
     date_to_idx = {d: i for i, d in enumerate(all_dates)}
     df_base = df_train.copy()
@@ -204,16 +203,15 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     def objective(trial):
         # ── Rally-/Label-Params (nur wenn opt_optimize_y_targets() True) ──────────
         if _opt_y:
-            return_window   = trial.suggest_int(  'return_window',   3,    15)
-            rally_threshold = trial.suggest_float('rally_threshold', 0.07, 0.30)
-            lead_days            = trial.suggest_int('lead_days',            1, 7)
-            entry_days           = trial.suggest_int('entry_days',           1, cfg.ENTRY_DAYS_OPT_MAX)
-            min_rally_tail_days  = trial.suggest_int('min_rally_tail_days',  3, 15)
+            return_window   = trial.suggest_int(  'return_window',   3,    12)
+            rally_threshold = trial.suggest_float('rally_threshold', 0.06, 0.15)
+            lead_days            = trial.suggest_int('lead_days',            1, 3)
+            entry_days           = trial.suggest_int('entry_days',           1, 3)
+            min_rally_tail_days  = trial.suggest_int('min_rally_tail_days',  3, 5)
         else:
-            return_window = cfg.FIXED_Y_WINDOW_MAX
-            rally_threshold = cfg.FIXED_Y_RALLY_THRESHOLD
-            lead_days = 3
-            entry_days = 2
+            _, return_window, rally_threshold, _, lead_days, entry_days, _ = (
+                cfg.fixed_y_rule_params()
+            )
             min_rally_tail_days = 5
         # ── Post-processing params ─────────────────────────────────────────
         consecutive_days     = trial.suggest_int('consecutive_days',     1, 3)
@@ -279,13 +277,13 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 grow_policy      = grow_policy,
                 max_leaves       = max_leaves,
                 max_bin          = trial.suggest_categorical('max_bin', [64, 128, 256]),
-                max_depth        = trial.suggest_int('max_depth', 3, 15),
+                max_depth        = trial.suggest_int('max_depth', 3, 12),
                 min_child_weight = trial.suggest_int('min_child_weight', 5, 100),
                 gamma            = trial.suggest_float('gamma', 0.0, 10.0),
                 reg_alpha        = trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True),
                 reg_lambda       = trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),
                 learning_rate    = trial.suggest_float('learning_rate', 0.01, 0.1, log=True),
-                n_estimators     = trial.suggest_int('n_estimators', 100, 1500),
+                n_estimators     = trial.suggest_int('n_estimators', 100, 600),
                 subsample        = trial.suggest_float('subsample', 0.5, 0.9),
                 colsample_bytree = trial.suggest_float('colsample_bytree', 0.2, 0.7),
             )
@@ -433,10 +431,11 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             best[k] = v
 
     if not cfg.opt_optimize_y_targets():
-        best['return_window'] = cfg.FIXED_Y_WINDOW_MAX
-        best['rally_threshold'] = cfg.FIXED_Y_RALLY_THRESHOLD
-        best['lead_days'] = 3
-        best['entry_days'] = 2
+        _, _wh, _rt, _, _ld, _ed, _ = cfg.fixed_y_rule_params()
+        best['return_window'] = _wh
+        best['rally_threshold'] = _rt
+        best['lead_days'] = _ld
+        best['entry_days'] = _ed
         best['min_rally_tail_days'] = 5
 
     mode = 'Option A (model HPs optimised)' if cfg.OPT_MODEL_HYPERPARAMS \

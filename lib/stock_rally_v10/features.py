@@ -412,7 +412,9 @@ def merge_news_shard_into_df(df: pd.DataFrame, tag: str) -> pd.DataFrame:
     s_ix = _NEWS_SHARD_FRAME_CACHE[tag]
     kdf = df[["Date", "ticker"]].copy()
     kdf["Date"] = pd.to_datetime(kdf["Date"]).dt.normalize()
-    news_cols = [c for c in s_ix.columns if c != "sector"]
+    # Shard enthält u. a. ticker/sector — nur echte news_* (und ähnliche) mergen, nie Schlüsselspalten.
+    _shard_skip = {"sector", "ticker", "Date"}
+    news_cols = [c for c in s_ix.columns if c not in _shard_skip]
     idx = pd.MultiIndex.from_frame(kdf)
     aligned = s_ix.reindex(idx)
     for c in news_cols:
@@ -499,8 +501,6 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         sma_loop = list(cfg.SMA_WINDOWS)
         rsi_loop = list(cfg.RSI_WINDOWS)
 
-    _br_zw = int(getattr(cfg, "MARKET_BREADTH_Z_WINDOW", 60))
-    _br_min_p = max(10, _br_zw // 3)
     for sw in sma_loop:
         breadth = (
             df.groupby("Date")[f"sma_ratio_{sw}"]
@@ -508,25 +508,39 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             .rename(f"market_breadth_{sw}")
         )
         bdf = breadth.reset_index().sort_values("Date")
-        _r = bdf[f"market_breadth_{sw}"].rolling(_br_zw, min_periods=_br_min_p)
-        bdf[f"market_breadth_z_{sw}"] = (
-            (bdf[f"market_breadth_{sw}"] - _r.mean()) / (_r.std() + 1e-10)
-        ).astype(float)
-        _assign_join_columns(df, bdf[["Date", f"market_breadth_{sw}", f"market_breadth_z_{sw}"]], "Date")
+        _bcols = ["Date", f"market_breadth_{sw}"]
+        for _br_zw in cfg.MARKET_BREADTH_Z_WINDOWS:
+            _br_zw = int(_br_zw)
+            _br_min_p = max(10, _br_zw // 3)
+            _r = bdf[f"market_breadth_{sw}"].rolling(_br_zw, min_periods=_br_min_p)
+            _zn = f"market_breadth_z_{sw}_w{_br_zw}"
+            bdf[_zn] = (
+                (bdf[f"market_breadth_{sw}"] - _r.mean()) / (_r.std() + 1e-10)
+            ).astype(float)
+            _bcols.append(_zn)
+        _assign_join_columns(df, bdf[_bcols], "Date")
         df[f"market_breadth_{sw}"] = df[f"market_breadth_{sw}"].fillna(0.5)
-        df[f"market_breadth_z_{sw}"] = df[f"market_breadth_z_{sw}"].fillna(0.0)
+        for _br_zw in cfg.MARKET_BREADTH_Z_WINDOWS:
+            _zn = f"market_breadth_z_{sw}_w{int(_br_zw)}"
+            df[_zn] = df[_zn].fillna(0.0)
 
     for rw in rsi_loop:
         df[f"sector_avg_rsi_{rw}"] = df.groupby(["Date", "sector"])[f"rsi_{rw}"].transform("mean")
 
-    df["rel_momentum_20d"] = df["momentum_20d"] - df.groupby(["Date", "sector"])[
-        "momentum_20d"
-    ].transform("mean")
-    df["rel_momentum_20d"] = df["rel_momentum_20d"].fillna(0.0)
+    for _mw in cfg.REL_MOMENTUM_WINDOWS:
+        _mw = int(_mw)
+        _mcol = f"momentum_{_mw}d"
+        if _mcol not in df.columns:
+            df = df.sort_values(["ticker", "Date"])
+            df[_mcol] = df.groupby("ticker", sort=False)["close"].pct_change(_mw)
+        df[f"rel_momentum_{_mw}d"] = df[_mcol] - df.groupby(["Date", "sector"])[
+            _mcol
+        ].transform("mean")
+        df[f"rel_momentum_{_mw}d"] = df[f"rel_momentum_{_mw}d"].fillna(0.0)
 
     print(
-        "assemble_features: Kontext — sector, sector_id, gics_*, month, btc_momentum (+z), "
-        "market_breadth_* (+z), rel_momentum_20d, sector_avg_rsi_* — fertig. "
+        "assemble_features: Kontext — sector, sector_id, gics_*, month, btc_momentum, "
+        "btc_momentum_z_w*, market_breadth_*, market_breadth_z_*_w*, rel_momentum_*d, sector_avg_rsi_* — fertig. "
         "Als Nächstes: News (oder überspringen) …",
         flush=True,
     )

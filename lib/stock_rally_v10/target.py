@@ -82,11 +82,12 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
       über das die kumulierte Rendite (Produkt der Tagesrenditen) >= cfg.FIXED_Y_RALLY_THRESHOLD ist;
       alle Tage dieses Fensters gehören zur grünen Phase (Vereinigung wie bisher).
 
-      Pro zusammenhängendem grünen Segment [start, end] mit Länge L:
-        L < cfg.FIXED_Y_SEGMENT_SPLIT: Target = 3 Tage vor start + erste 2 grüne Tage.
-        L >= cfg.FIXED_Y_SEGMENT_SPLIT: Target = 3 Tage vor start + alle grünen Tage außer den letzten 3.
+      Pro zusammenhängendem grünen Segment [start, end] mit Länge L (Parameter aus cfg.FIXED_Y_*):
+        L < split: Target = FIXED_Y_LEAD_DAYS vor start + erste FIXED_Y_ENTRY_DAYS grüne Tage.
+        L >= split: Target = FIXED_Y_LEAD_DAYS vor start + alle grünen außer den letzten
+        FIXED_Y_TAIL_EXCLUDE_DAYS.
     """
-    w_lo, w_hi, rt, split = cfg.fixed_y_rule_params()
+    w_lo, w_hi, rt, split, ld, ed, tail_ex = cfg.fixed_y_rule_params()
 
     close = df_ticker["close"].values.astype(np.float64)
     n = len(close)
@@ -128,14 +129,14 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
         end = j - 1
         L = end - start + 1
 
-        for k in range(max(0, start - 3), start):
+        for k in range(max(0, start - ld), start):
             target[k] = 1
 
         if L < split:
-            for k in range(start, min(n, start + 2)):
+            for k in range(start, min(n, start + ed)):
                 target[k] = 1
         else:
-            last_ok = end - 3
+            last_ok = end - tail_ex
             if last_ok >= start:
                 for k in range(start, last_ok + 1):
                     target[k] = 1
@@ -203,6 +204,23 @@ def create_target(df):
         df.loc[sub.index, 'rally']  = r
         df.loc[sub.index, 'target'] = t
 
-    pos_rate = df['target'].mean()
-    print(f'Target created. Positive rate: {pos_rate:.1%}')
+    pos_rate = df["target"].mean()
+    if cfg.opt_optimize_y_targets():
+        print(
+            f"Target created. Positive rate: {pos_rate:.1%} "
+            "(Baseline vor Optuna: cfg RETURN_WINDOW, RALLY_THRESHOLD, LEAD_DAYS, "
+            "ENTRY_DAYS, MIN_RALLY_TAIL_DAYS — in Phase 1 setzt jedes Trial "
+            "rebuild_target_for_train mit gesampelten Label-Parametern neu).",
+            flush=True,
+        )
+    else:
+        print(f"Target created. Positive rate: {pos_rate:.1%}", flush=True)
+    if not cfg.opt_optimize_y_targets():
+        _w_lo, _w_hi, _rt, _sp, _ld, _ed, _tex = cfg.fixed_y_rule_params()
+        print(
+            f"  Feste Band-Regel: Fenster w ∈ [{_w_lo}, {_w_hi}] Handelstage, "
+            f"kum. Rendite ≥ {_rt:.2%}, Segment-Split {_sp}d, "
+            f"lead={_ld} entry={_ed} tail_excl={_tex} (cfg.FIXED_Y_*)",
+            flush=True,
+        )
     return df

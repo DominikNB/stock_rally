@@ -1,5 +1,5 @@
 """
-Backward-kompatibler Einstieg: erzeugt data/master_complete.csv (+ Kopie meta_holdout_signals.csv) und master_daily_update.csv
+Backward-kompatibler Einstieg: erzeugt data/master_complete.csv und master_daily_update.csv (LLM-Spalten)
 (siehe build_holdout_signals_master.py; inkl. Zusatzfilter, außer `--no-filters`).
 
 python -m holdout.analyze_holdout_forward_returns

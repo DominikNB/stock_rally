@@ -127,9 +127,17 @@ def _run_phase17(c: Any) -> None:
         {
             s
             for s in df_s["ticker"].dropna().astype(str).str.strip().unique()
-            if s and s.lower() != "nan"
+            if s and s.lower() != "nan" and s not in ("0.0", "0")
         }
     )
+    if not _tickers_sorted:
+        _raw = sorted(df_s["ticker"].dropna().astype(str).str.strip().unique())
+        print(
+            "  WARNUNG Phase17: Keine gültigen Ticker nach Filter (0.0/0 ausgeschlossen). "
+            f"Roh-Unique (max. 15): {_raw[:15]} — Ticker-Spalte in Features prüfen.",
+            flush=True,
+        )
+        _tickers_sorted = [x for x in _raw if x and x.lower() != "nan"]
     _nt = len(_tickers_sorted)
     print(
         "  Branchenklassifikation (Yahoo sector + industry via yfinance) für Website & Holdout-CSV …",
@@ -155,8 +163,9 @@ def _run_phase17(c: Any) -> None:
         "peak_min_dist_from_high_pct": float(c.PEAK_MIN_DIST_FROM_HIGH_PCT),
         "signal_max_rsi": getattr(c, "SIGNAL_MAX_RSI", None),
     }
+    _ts_norm = df_s["ticker"].astype(str).str.strip()
     _tasks = [
-        (t, df_s[df_s["ticker"] == t].sort_values("Date").reset_index(drop=True))
+        (t, df_s.loc[_ts_norm == str(t)].sort_values("Date").reset_index(drop=True))
         for t in _tickers_sorted
     ]
     _n_jobs = int(getattr(c, "PHASE17_SIGNAL_FILTER_JOBS", -1))
@@ -194,7 +203,7 @@ def _run_phase17(c: Any) -> None:
 
     all_hist_signals = []
     for ticker, sig_dates in _pairs:
-        sub = df_s[df_s["ticker"] == ticker].sort_values("Date").reset_index(drop=True)
+        sub = df_s.loc[_ts_norm == str(ticker)].sort_values("Date").reset_index(drop=True)
         for d in sig_dates:
             match = _rows_for_signal_calendar_day(sub, d)
             if match.empty:
@@ -236,12 +245,20 @@ def _run_phase17(c: Any) -> None:
     ]
     if str(Path.cwd()) not in sys.path:
         sys.path.insert(0, str(Path.cwd()))
-    from holdout.build_holdout_signals_master import main as _export_meta_holdout_csv
+    from holdout.build_holdout_signals_master import main as _build_holdout_master
 
-    _export_meta_holdout_csv(holdout_df=pd.DataFrame(_ho_rows))
-    print(
-        f"wrote data/master_complete.csv (+ meta_holdout_signals.csv) & master_daily_update.csv ({len(_ho_rows)} holdout rows)"
-    )
+    if _ho_rows:
+        _build_holdout_master(holdout_df=pd.DataFrame(_ho_rows))
+        print(
+            f"wrote data/master_complete.csv & master_daily_update.csv (LLM-Spalten) "
+            f"({len(_ho_rows)} holdout rows)"
+        )
+    else:
+        print(
+            "Holdout-CSV übersprungen: 0 Signale im FINAL-Zeitfenster (Schwelle + Filter + Datenlage). "
+            "Kein KeyError mehr — master_complete wird nicht überschrieben.",
+            flush=True,
+        )
 
     recent_cutoff = (pd.Timestamp(c.END_DATE) - pd.Timedelta(days=30)).strftime("%Y-%m-%d")
     recent_signals = [s for s in all_hist_signals if s["date"] >= recent_cutoff]
@@ -735,7 +752,7 @@ def _run_phase17(c: Any) -> None:
         '<p class="empty"><strong>Lokal:</strong> <code>.env</code> mit <code>GEMINI_API_KEY</code> (Projektroot). '
         "Dann <code>python scripts/run_website_analysis_gemini.py</code> — es muss "
         "<code>docs/analysis_llm_last.html</code> erscheinen. Anschließend <strong>diese Zelle (17)</strong> erneut ausführen.</p>"
-        '<p class="empty"><strong>Daten:</strong> Vorher <code>data/master_daily_update.csv</code> erzeugen (holdout/build_holdout_signals_master / gleicher Lauf wie die Meta-CSV).</p>'
+        '<p class="empty"><strong>Daten:</strong> Vorher <code>data/master_daily_update.csv</code> erzeugen (holdout/build_holdout_signals_master, z. B. nach Holdout-Export).</p>'
         '<p class="empty"><strong>GitHub Pages:</strong> Ohne Commit von <code>docs/analysis_llm_last.html</code> und neuem '
         "<code>docs/index.html</code> bleibt die Analyse auf der Website leer — API-Keys liegen nicht im Repo.</p>"
         "</div>"

@@ -1283,7 +1283,7 @@ ORDER BY d
     proj = _bq_resolve_project()
     if not proj:
         raise OSError(
-            "BigQuery: Kein GCP-Projekt. Setze in Cell 2 z. B. cfg.BQ_PROJECT_ID = 'dein-projekt-id' "
+            "BigQuery: Kein GCP-Projekt. Setze z. B. cfg.BQ_PROJECT_ID = 'dein-projekt-id' "
             "oder im Terminal: gcloud config set project dein-projekt-id  "
             "und $env:GOOGLE_CLOUD_PROJECT = 'dein-projekt-id' (PowerShell)."
         )
