@@ -16,6 +16,7 @@ Datei-Gliederung (Lesereihenfolge):
 """
 
 import datetime
+import functools
 import os
 import sys
 from pathlib import Path
@@ -72,7 +73,7 @@ else:
 # ── Dates ──────────────────────────────────────────────────────────────────
 # Walk-forward: BASE → META → THRESHOLD → FINAL = disjunkte Zeitfenster (Purge zwischen Stufen).
 # FINAL = letztes Fenster (Final-Test); TRAIN_END_DATE = END_DATE = Kalenderende des Laufs (aktueller Tag).
-START_DATE = '2018-01-01'  # Kurs-Download / Labels; News siehe NEWS_EXTRA_HISTORY_* und NEWS_BQ_*
+START_DATE = '2015-01-01'  # Kurs-Download / Labels; News siehe NEWS_EXTRA_HISTORY_* und NEWS_BQ_*
 END_DATE        = datetime.date.today().strftime('%Y-%m-%d')           # Download bis heute
 TRAIN_END_DATE  = datetime.date.today().strftime('%Y-%m-%d')           # gleiches Kalenderende wie END_DATE
 print(f'Download:  {START_DATE} → {END_DATE}')
@@ -85,12 +86,14 @@ print(f'Training:  {START_DATE} → {TRAIN_END_DATE}  (bis zum aktuellen Datum)'
 # ── SCORING_ONLY: gespeicherte Modelle + Threshold, ohne Neu-Training ───────
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
+# Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
 SCORING_ONLY = False
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
 # Fortschrittslog alle N Ticker; 0 = ca. 10 Stufen (nt//10).
 PHASE17_SIGNAL_FILTER_PROGRESS_BATCH = 0
+# Website + signals.json „signals“: nur FINAL-OOS (Classifier) — nie TRAIN/THRESHOLD-Kalender.
 # Wird von save_scoring_artifacts / load_scoring_artifacts gesetzt, wenn in dieser Session gespeichert wurde.
 _SCORING_ARTIFACT_SAVED_THIS_SESSION = False
 
@@ -112,6 +115,23 @@ def load_scoring_artifacts(path=None):
     r = scoring_persist.load_scoring_artifacts(globals(), p)
     globals()["_SCORING_ARTIFACT_SAVED_THIS_SESSION"] = True
     return r
+
+
+@functools.cache
+def log_pipeline_mode_banner() -> None:
+    """Schreibt einmal pro Prozess, ob nur gescored wird (``SCORING_ONLY``) oder trainiert wird."""
+    sc = bool(globals().get("SCORING_ONLY", False))
+    if sc:
+        print(
+            "Pipeline-Modus: SCORING_ONLY — nur Scoring/Export "
+            "(Phasen 12–16 Training übersprungen; Artefakt wird geladen).",
+            flush=True,
+        )
+    else:
+        print(
+            "Pipeline-Modus: volles Training — Optuna/Meta/Kalibrierung (12–16), danach Scoring/Export.",
+            flush=True,
+        )
 
 
 # =============================================================================
@@ -153,8 +173,8 @@ def opt_optimize_y_targets() -> bool:
 #     FIXED_Y_ENTRY_DAYS grüne Tage; bei L ≥ split alle grünen außer den letzten FIXED_Y_TAIL_EXCLUDE_DAYS.
 # Entspricht: w ∈ [3, 10], 6 %, 3 Vorlauf-Tage, Split 5, 2 Einstiegs-Tage auf Grün, 3 Tage Rally-Ende ausgeschlossen.
 FIXED_Y_WINDOW_MIN = 3
-FIXED_Y_WINDOW_MAX = 9
-FIXED_Y_RALLY_THRESHOLD = 0.08  # 8.00 %
+FIXED_Y_WINDOW_MAX = 8
+FIXED_Y_RALLY_THRESHOLD = 0.09  # 8.00 %
 FIXED_Y_SEGMENT_SPLIT = 5
 FIXED_Y_LEAD_DAYS = 3
 FIXED_Y_ENTRY_DAYS = 2
@@ -372,7 +392,7 @@ N_META_TRIALS         = 600
 # Standard: feste Anzahl META_SHAP_TOP_K. Alternativ: META_SHAP_CUM_FRAC z. B. 0.75 =
 # kleinstes K, sodass Summe der K größten mean|SHAP| ≥ 75 % der Summe über alle Spalten.
 META_SHAP_TOP_K = 10  # Fallback, wenn Summe mean|SHAP| = 0 (nur dann)
-META_SHAP_CUM_FRAC = 0.75  # kleinstes K mit kumulierter SHAP-Masse ≥ 75 %
+META_SHAP_CUM_FRAC = 0.85  # kleinstes K mit kumulierter SHAP-Masse ≥ 75 %
 META_SHAP_TOP_K_MIN = 5
 META_SHAP_TOP_K_MAX = 35
 RANDOM_STATE          = 42
@@ -411,12 +431,13 @@ UNIVERSE_SAMPLE_SEED = 42
 # "time" = gleiche Ticker in allen Stufen, disjunkte Zeiträume (empfohlen).
 # "ticker" = Legacy: verschiedene Ticker pro Stufe, gleicher Kalender bis TRAIN_END_DATE.
 SPLIT_MODE = "time"
-# Anteile der Handelstage im Fenster [START … TRAIN_END_DATE]; walk-forward; Purge Base→Meta.
+# Anteile der Handelstage [START … TRAIN_END_DATE]: **TRAIN** = BASE+META (f_train = BASE+META),
+# dann Purge, **THRESHOLD**, **FINAL**. TIME_SPLIT_FRAC_META bleibt für Kompatibilität (wird zu BASE addiert).
 # (Nur Kalender — nicht Label-Schwelle FIXED_Y_*; nicht Ticker-Anteil UNIVERSE_FRACTION.)
+# Beispiel: 0.45 + 0.25 + 0.15 = 0.85 → FINAL = 0.15.
 TIME_SPLIT_FRAC_BASE = 0.45
 TIME_SPLIT_FRAC_META = 0.25
 TIME_SPLIT_FRAC_THRESHOLD = 0.15
-# Rest = FINAL: letztes Fenster = eigentlicher Final-Test bis zum Kalenderende (s. TRAIN_END_DATE).
 TIME_PURGE_TRADING_DAYS = 5
 
 # ── Indicator parameter grids ───────────────────────────────────────────────

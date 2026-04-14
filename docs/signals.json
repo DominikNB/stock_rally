@@ -4302,5 +4302,5 @@
     }
   ],
   "signals_all_timeline_including_in_sample_count": 10214,
-  "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (BASE/META/THRESHOLD ausgeschlossen). Mit FINAL_HOLDOUT_REGRESSOR_TRAIN_FRAC zus\u00e4tzlich Meta-Regressor-Train entfernt + Filter. Keine In-Sample-Signale f\u00fcr die Website."
+  "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website."
 }

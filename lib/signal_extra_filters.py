@@ -8,15 +8,22 @@ data/master_complete.csv / master_daily_update.csv vorrechenbar, damit ein LLM d
     n_sectors_same_day, sector_hhi_same_day
   • Korrelation: cluster_mean_corr_60d (60 Handelstage Lookback), cluster_corr_pairwise_valid
   • Kurs/OHLCV (yfinance): volatility_20d/60d/ann, momentum_20d/60d, dist_from_20d_high/low_pct,
+    dist_ma200_pct, bb_width_20, trend_efficiency_20d, amihud_illiq_20d,
     ret_1d_signal_day, avg_hl_range_pct_14d, volume_zscore_20d
-  • Cross-Section je Signaltag: rank_prob_same_day, pct_rank_prob_same_day, prob_zscore_same_day
+  • Cross-Section je Signaltag: rank_prob_same_day, pct_rank_prob_same_day, prob_zscore_same_day,
+    prob_z_within_sector
   • Termine (yfinance calendar): next_earnings_date, bdays_to_next_earnings,
     earnings_in_3_15_bday_window, earnings_date_known, earnings_beyond_swing_15b, earnings_too_soon_lt3b
-  • Relative Stärke: ret_vs_spy_5d (5 Handelstage vs. SPY), ret_vs_sector_5d (vs. grobem US-Sektor-ETF, falls gemappt)
+  • Relative Stärke: ret_vs_spy_5d/20d, ret_vs_sector_5d/20d (vs. SPY bzw. Sektor-ETF)
+  • Beta-adjustiert (60 Handelstage Rolling-Beta, 5-Tage-Horizont): alpha_mkt_5d, beta_mkt_60d,
+    alpha_sec_5d, beta_sec_60d (Leitindex bzw. Sektor-ETF wie market_bench_symbol)
+  • Querschnitt: prob_z_within_sector (Z-Score von prob je Signaltag innerhalb sector)
   • Gap: open_gap_pct (Open vs. Vortages-Close am Signaltag)
   • yfinance info (Snapshot): short_float_pct, short_days_to_cover, inst_own_pct (jeweils % 0–100, kein Trend — nur Stand)
   • Markt/Sektor (yfinance Index/ETF, dynamisch zur Notierung): market_bench_symbol, sector_bench_symbol,
     market_ret_1d/2d/3d, sector_ret_1d/2d/3d (kumulativ über 1/2/3 Handelstage bis Signaltag)
+  • Kurzfristiges Regime (US, bis Signaltag, eigener Yahoo-Download): regime_vix_level, regime_vix_ret_1d/5d,
+    regime_vix_z_20d, regime_spy_realvol_5d_ann, regime_tnx_ret_5d
   • Platzhalter: news_sentiment (derzeit nicht befüllt — NaN)
 
 Keine harten externen Abhängigkeiten außer yfinance/pandas/numpy.
@@ -52,6 +59,10 @@ _OHLC_LLM_COLS = (
     "momentum_60d",
     "dist_from_20d_high_pct",
     "dist_from_20d_low_pct",
+    "dist_ma200_pct",
+    "bb_width_20",
+    "trend_efficiency_20d",
+    "amihud_illiq_20d",
     "ret_1d_signal_day",
     "avg_hl_range_pct_14d",
     "volume_zscore_20d",
@@ -80,6 +91,13 @@ _LLM_EXTRA_COLS = (
     "earnings_too_soon_lt3b",
     "ret_vs_spy_5d",
     "ret_vs_sector_5d",
+    "ret_vs_spy_20d",
+    "ret_vs_sector_20d",
+    "alpha_mkt_5d",
+    "beta_mkt_60d",
+    "alpha_sec_5d",
+    "beta_sec_60d",
+    "prob_z_within_sector",
     "open_gap_pct",
     "short_float_pct",
     "short_days_to_cover",
@@ -92,6 +110,12 @@ _LLM_EXTRA_COLS = (
     "sector_ret_3d",
     "market_bench_symbol",
     "sector_bench_symbol",
+    "regime_vix_level",
+    "regime_vix_ret_1d",
+    "regime_vix_ret_5d",
+    "regime_vix_z_20d",
+    "regime_spy_realvol_5d_ann",
+    "regime_tnx_ret_5d",
     "news_sentiment",
 )
 
@@ -139,6 +163,8 @@ _INTERNAL_MODEL_SECTOR_BENCH_ALIAS: dict[str, str] = {
     "heat_pump": "industrial",
 }
 _BENCH_SPY = "SPY"
+_MACRO_VIX = "^VIX"
+_MACRO_TNX = "^TNX"
 
 # Suffix → Leitindex, wenn yfinance `info` keine eindeutige Region liefert
 _LEAD_INDEX_BY_TICKER_SUFFIX: list[tuple[tuple[str, ...], str]] = [
@@ -560,6 +586,11 @@ def _merge_ticker_date_features(raw: pd.DataFrame, out: pd.DataFrame) -> pd.Data
         rm20 = c.rolling(20, min_periods=5).max()
         rmi20 = c.rolling(20, min_periods=5).min()
         hl_pct = (hi - lo) / c.replace(0, np.nan)
+        ma200 = c.rolling(200, min_periods=60).mean()
+        ma20 = c.rolling(20, min_periods=10).mean()
+        sd20 = ret.rolling(20, min_periods=10).std()
+        dv = (c * vol).replace(0, np.nan)
+        er_den = ret.abs().rolling(20, min_periods=10).sum().replace(0, np.nan)
         fe = pd.DataFrame(
             {
                 "Date": pd.to_datetime(df.index).normalize(),
@@ -571,6 +602,10 @@ def _merge_ticker_date_features(raw: pd.DataFrame, out: pd.DataFrame) -> pd.Data
                 "momentum_60d": c / c.shift(60) - 1.0,
                 "dist_from_20d_high_pct": (c - rm20) / rm20.replace(0, np.nan),
                 "dist_from_20d_low_pct": (c - rmi20) / rmi20.replace(0, np.nan),
+                "dist_ma200_pct": (c - ma200) / ma200.replace(0, np.nan),
+                "bb_width_20": (4.0 * sd20) / ma20.replace(0, np.nan),
+                "trend_efficiency_20d": (c - c.shift(20)).abs() / er_den,
+                "amihud_illiq_20d": (ret.abs() / dv).rolling(20, min_periods=10).mean(),
                 "ret_1d_signal_day": ret,
                 "avg_hl_range_pct_14d": hl_pct.rolling(14, min_periods=5).mean(),
                 "volume_zscore_20d": (vol - vol.rolling(20, min_periods=10).mean())
@@ -623,6 +658,97 @@ def _yf_close_series_single(ticker: str, start_d: str, end_d: str) -> pd.Series 
         return c.sort_index().astype(float)
     except Exception:
         return None
+
+
+def _close_last_leq(series: pd.Series | None, end_d: pd.Timestamp) -> float:
+    if series is None:
+        return float("nan")
+    end_d = pd.Timestamp(end_d).normalize()
+    s = series.dropna().sort_index()
+    s.index = pd.to_datetime(s.index).normalize()
+    sub = s[s.index <= end_d]
+    if sub.empty:
+        return float("nan")
+    v = float(sub.iloc[-1])
+    return v if np.isfinite(v) else float("nan")
+
+
+def _spy_realized_vol_n_ann(
+    close: pd.Series | None, end_d: pd.Timestamp, n: int = 5
+) -> float:
+    """Annualisierte Realisierte Vol. aus den letzten ``n`` Tagesrenditen (Schluss-Schluss) bis ``end_d``."""
+    if close is None:
+        return float("nan")
+    end_d = pd.Timestamp(end_d).normalize()
+    s = close.dropna().sort_index()
+    s.index = pd.to_datetime(s.index).normalize()
+    sub = s[s.index <= end_d]
+    if len(sub) < n + 1:
+        return float("nan")
+    r = sub.astype(float).pct_change().dropna().tail(n)
+    if len(r) < n:
+        return float("nan")
+    st = float(r.std(ddof=0))
+    if not np.isfinite(st):
+        return float("nan")
+    return st * np.sqrt(252.0)
+
+
+def _vix_z_vs_20d(close: pd.Series | None, end_d: pd.Timestamp) -> float:
+    """Z-Score VIX am Signaltag vs. Mittel/Std der letzten 20 Handelsschlüsse (alle ≤ end_d)."""
+    if close is None:
+        return float("nan")
+    end_d = pd.Timestamp(end_d).normalize()
+    s = close.dropna().sort_index()
+    s.index = pd.to_datetime(s.index).normalize()
+    sub = s[s.index <= end_d]
+    if len(sub) < 20:
+        return float("nan")
+    w = sub.tail(20).astype(float)
+    st = w.std(ddof=0)
+    if not np.isfinite(st) or st == 0:
+        return float("nan")
+    return float((w.iloc[-1] - w.mean()) / st)
+
+
+def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
+    """
+    Kurzfristiges US-Risk-Regime (eigener Yahoo-Download), für Meta-Layer / LLM.
+
+    VIX: Niveau, 1/5-Tage-Rendite, Z-Score vs. 20 Handelstagen.
+    SPY:5-Tage-Realisierte Vol. (annualisiert) — „breiter Markt-Stress“.
+    ^TNX: nur **5-Tage-Rendite** (schnelle Zinsbewegung); kein langfristiges Niveau.
+    """
+    o = out.copy()
+    o["Date"] = pd.to_datetime(o["Date"]).dt.normalize()
+    d_min = o["Date"].min() - pd.Timedelta(days=60)
+    d_max = o["Date"].max() + pd.Timedelta(days=5)
+    start_s = d_min.strftime("%Y-%m-%d")
+    end_s = d_max.strftime("%Y-%m-%d")
+
+    vix = _yf_close_series_single(_MACRO_VIX, start_s, end_s)
+    spy = _yf_close_series_single(_BENCH_SPY, start_s, end_s)
+    tnx = _yf_close_series_single(_MACRO_TNX, start_s, end_s)
+
+    rows: list[dict] = []
+    for d in sorted(o["Date"].unique()):
+        d = pd.Timestamp(d).normalize()
+        rows.append(
+            {
+                "Date": d,
+                "regime_vix_level": _close_last_leq(vix, d),
+                "regime_vix_z_20d": _vix_z_vs_20d(vix, d),
+                "regime_spy_realvol_5d_ann": _spy_realized_vol_n_ann(spy, d, 5),
+                "regime_tnx_ret_5d": _pct_ret_last_n_trading_days(tnx, d, 5),
+            }
+        )
+    feat = pd.DataFrame(rows)
+    return o.merge(feat, on="Date", how="left")
+
+
+def add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
+    """US-Kurzfrist-Regime (^VIX, SPY-RV, ^TNX) — öffentliche Hülle für Training/Classifier-Enrich."""
+    return _add_short_horizon_macro_regime_columns(out)
 
 
 def _sector_etf_for_label(sector: str | float | None) -> str | None:
@@ -718,6 +844,8 @@ def _add_rs_gap_short_columns(
 
     ret_vs_spy: list[float] = []
     ret_vs_sec: list[float] = []
+    ret_vs_spy_20: list[float] = []
+    ret_vs_sec_20: list[float] = []
     gap_pct: list[float] = []
     for _, r in o.iterrows():
         t = r["ticker"]
@@ -725,21 +853,30 @@ def _add_rs_gap_short_columns(
         st = _st(t)
         rs = float("nan")
         rspy = float("nan")
+        rs20 = float("nan")
+        rspy20 = float("nan")
         if st is not None and len(st) >= 2:
             c = st["Close"].astype(float)
             c.index = pd.to_datetime(st.index).normalize()
             rs = _pct_ret_last_n_trading_days(c, d, 5)
+            rs20 = _pct_ret_last_n_trading_days(c, d, 20)
         if spy is not None:
             rspy = _pct_ret_last_n_trading_days(spy, d, 5)
+            rspy20 = _pct_ret_last_n_trading_days(spy, d, 20)
         if np.isfinite(rs) and np.isfinite(rspy):
             ret_vs_spy.append(float(rs - rspy))
         else:
             ret_vs_spy.append(float("nan"))
+        if np.isfinite(rs20) and np.isfinite(rspy20):
+            ret_vs_spy_20.append(float(rs20 - rspy20))
+        else:
+            ret_vs_spy_20.append(float("nan"))
 
         etf = _sector_bench_etf(
             r.get("sector"), t, info_cache.get(str(t), {})
         )
         rsec = float("nan")
+        rsec20 = float("nan")
         if etf:
             ser = bench_series.get(etf)
             if ser is not None and st is not None:
@@ -749,12 +886,19 @@ def _add_rs_gap_short_columns(
                 rb = _pct_ret_last_n_trading_days(ser, d, 5)
                 if np.isfinite(rs2) and np.isfinite(rb):
                     rsec = float(rs2 - rb)
+                rs2b = _pct_ret_last_n_trading_days(c, d, 20)
+                rbb = _pct_ret_last_n_trading_days(ser, d, 20)
+                if np.isfinite(rs2b) and np.isfinite(rbb):
+                    rsec20 = float(rs2b - rbb)
         ret_vs_sec.append(rsec)
+        ret_vs_sec_20.append(rsec20)
 
         gap_pct.append(_open_gap_pct_ohlc(st, d))
 
     o["ret_vs_spy_5d"] = ret_vs_spy
     o["ret_vs_sector_5d"] = ret_vs_sec
+    o["ret_vs_spy_20d"] = ret_vs_spy_20
+    o["ret_vs_sector_20d"] = ret_vs_sec_20
     o["open_gap_pct"] = gap_pct
 
     sf_l: list[float] = []
@@ -843,7 +987,88 @@ def _add_market_sector_bench_columns(
     return o
 
 
-# --- Alles in einem DataFrame ---------------------------------------------------
+def _beta_alpha_panel(
+    c_stk: pd.Series,
+    c_bench: pd.Series | None,
+    *,
+    suffix: str,
+    win: int = 60,
+    minp: int = 30,
+    h: int = 5,
+) -> pd.DataFrame:
+    """Rolling OLS-Beta auf Tagesrenditen; Alpha = h-Tage-Aktienrendite minus Beta * h-Tage-Benchmark."""
+    bcol, acol = f"beta_{suffix}_60d", f"alpha_{suffix}_5d"
+    if c_bench is None:
+        idx = pd.to_datetime(c_stk.index).normalize()
+        return pd.DataFrame({bcol: np.nan, acol: np.nan}, index=idx)
+    j = pd.DataFrame({"s": c_stk.astype(float), "b": c_bench.astype(float)}).sort_index()
+    j = j.dropna(how="any")
+    j.index = pd.to_datetime(j.index).normalize()
+    if len(j) < h + minp + 2:
+        return pd.DataFrame({bcol: np.nan, acol: np.nan}, index=j.index)
+    rs = j["s"].pct_change()
+    rb = j["b"].pct_change()
+    var_b = rb.rolling(win, min_periods=minp).var()
+    cov_sb = rs.rolling(win, min_periods=minp).cov(rb)
+    beta = cov_sb / var_b.replace(0, np.nan)
+    r_s_h = j["s"] / j["s"].shift(h) - 1.0
+    r_b_h = j["b"] / j["b"].shift(h) - 1.0
+    alpha = r_s_h - beta * r_b_h
+    return pd.DataFrame({bcol: beta, acol: alpha}, index=j.index)
+
+
+def _add_beta_alpha_columns(
+    out: pd.DataFrame, raw: pd.DataFrame, info_cache: dict[str, dict]
+) -> pd.DataFrame:
+    o = out.copy()
+    o["Date"] = pd.to_datetime(o["Date"]).dt.normalize()
+    d_min = o["Date"].min() - pd.Timedelta(days=420)
+    d_max = o["Date"].max() + pd.Timedelta(days=5)
+    start_s = d_min.strftime("%Y-%m-%d")
+    end_s = d_max.strftime("%Y-%m-%d")
+
+    lead_syms: set[str] = set()
+    sec_syms: set[str] = set()
+    for _, r in o.iterrows():
+        inf = info_cache.get(str(r["ticker"]), {})
+        lead_syms.add(_lead_index_from_info(r["ticker"], inf))
+        etf = _sector_bench_etf(r.get("sector"), r["ticker"], inf)
+        if etf:
+            sec_syms.add(etf)
+
+    series_cache: dict[str, pd.Series | None] = {}
+    for sym in lead_syms | sec_syms:
+        series_cache[sym] = _yf_close_series_single(sym, start_s, end_s)
+
+    parts: list[pd.DataFrame] = []
+    for t in sorted(o["ticker"].astype(str).unique()):
+        sub = o[o["ticker"].astype(str) == t]
+        inf = info_cache.get(str(t), {})
+        lead = _lead_index_from_info(t, inf)
+        st = _ohlc_for_ticker(raw, t)
+        if st is None:
+            continue
+        c_stk = st["Close"].astype(float)
+        c_stk.index = pd.to_datetime(c_stk.index).normalize()
+
+        pm = _beta_alpha_panel(c_stk, series_cache.get(lead), suffix="mkt")
+        smode = sub["sector"].dropna().astype(str).mode()
+        sector_key = smode.iloc[0] if len(smode) else ""
+        etf = _sector_bench_etf(sector_key if sector_key else None, t, inf)
+        ps = _beta_alpha_panel(
+            c_stk, series_cache.get(etf) if etf else None, suffix="sec"
+        )
+        merged = pm.join(ps, how="outer").rename_axis("Date").reset_index()
+        merged["ticker"] = t
+        parts.append(merged)
+
+    if not parts:
+        for c in ("beta_mkt_60d", "alpha_mkt_5d", "beta_sec_60d", "alpha_sec_5d"):
+            o[c] = np.nan
+        return o
+    feat = pd.concat(parts, ignore_index=True)
+    feat["Date"] = pd.to_datetime(feat["Date"]).dt.normalize()
+    return o.merge(feat, on=["ticker", "Date"], how="left")
 
 
 def enrich_signal_frame(
@@ -928,6 +1153,11 @@ def enrich_signal_frame(
         return (s - m) / st
 
     out["prob_zscore_same_day"] = out.groupby("Date")["prob"].transform(_z)
+    out["_sec_z"] = out["sector"].astype(str).str.strip().replace("", "unknown")
+    out["prob_z_within_sector"] = out.groupby(["Date", "_sec_z"], sort=False)[
+        "prob"
+    ].transform(_z)
+    out = out.drop(columns=["_sec_z"])
 
     # Earnings (pro Ticker cachen)
     cache: dict[str, date | None] = {}
@@ -961,5 +1191,12 @@ def enrich_signal_frame(
     out = _merge_ticker_date_features(raw, out)
     out = _add_rs_gap_short_columns(out, raw, info_cache)
     out = _add_market_sector_bench_columns(out, info_cache)
+    print("  … Zusatzfilter: Rolling-Beta / Alpha vs. Leitindex & Sektor …", flush=True)
+    out = _add_beta_alpha_columns(out, raw, info_cache)
+    print(
+        "  … Zusatzfilter: kurzfristiges Makro-Regime (^VIX, SPY-RealVol 5d, ^TNX ret 5d) …",
+        flush=True,
+    )
+    out = _add_short_horizon_macro_regime_columns(out)
 
     return ensure_llm_signal_columns(out)

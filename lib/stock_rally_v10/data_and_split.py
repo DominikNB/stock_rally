@@ -2,7 +2,9 @@
 Datenpipeline bis zur zeitlichen bzw. Ticker-basierten Aufteilung.
 
 Lädt Kurse, baut Targets, Indikatoren, News-Features, assembliert die Matrix und erzeugt
-``df_train_base`` / ``df_train_meta`` / ``df_threshold`` / ``df_final`` sowie Aliase ``df_train`` / ``df_test``.
+drei Zeitfenster — **TRAIN** (ehem. BASE+META verschmolzen), **THRESHOLD**, **FINAL**.
+``df_train_base`` und ``df_train_meta`` sind dasselbe Objekt (Alias für ältere Phasencode-Pfade);
+Aliase ``df_train`` / ``df_test`` zeigen auf TRAIN.
 Alle Ergebnisse werden als Attribute auf ``config`` geschrieben.
 """
 from __future__ import annotations
@@ -28,6 +30,7 @@ def _df_on_trading_days(df, tickers, date_array):
 
 def run_data_download_and_split() -> None:
     """Download → Target → Indikatoren → Features → Split (Zeit oder Legacy-Ticker)."""
+    cfg.log_pipeline_mode_banner()
     # ── 1. Load data ────────────────────────────────────────────────────────
     if getattr(cfg, "SCORING_ONLY", False):
         load_scoring_artifacts()
@@ -81,9 +84,10 @@ def run_data_download_and_split() -> None:
 
     if _split_mode == "time":
         fb = float(cfg.TIME_SPLIT_FRAC_BASE)
-        fm = float(cfg.TIME_SPLIT_FRAC_META)
+        fm = float(getattr(cfg, "TIME_SPLIT_FRAC_META", 0.0))
         ft = float(cfg.TIME_SPLIT_FRAC_THRESHOLD)
-        ff = 1.0 - fb - fm - ft
+        f_train = fb + max(0.0, fm)
+        ff = 1.0 - f_train - ft
         if ff < 0.0:
             raise ValueError(
                 "TIME_SPLIT_FRAC_BASE+META+THRESHOLD darf 1.0 nicht überschreiten."
@@ -94,45 +98,38 @@ def run_data_download_and_split() -> None:
         n = len(uniq)
         if n < 30:
             raise ValueError(f"Zu wenig Handelstage für Zeit-Split (n={n}).")
-        c1 = max(1, int(round(n * fb)))
-        meta_start = c1 + p
-        if meta_start >= n - 2:
+        c_train = max(1, int(round(n * f_train)))
+        thr_start = c_train + p
+        if thr_start >= n - 2:
             raise ValueError(
-                "Zeit-Split: Purge zu groß oder BASE-Anteil zu groß — TIME_PURGE_TRADING_DAYS "
-                "oder TIME_SPLIT_FRAC_BASE verkleinern."
+                "Zeit-Split: Purge zu groß oder TRAIN-Anteil zu groß — TIME_PURGE_TRADING_DAYS "
+                "oder TIME_SPLIT_FRAC_BASE+META verkleinern."
             )
-        c2 = max(meta_start + 1, int(round(n * (fb + fm))))
-        c3 = max(c2 + 1, int(round(n * (fb + fm + ft))))
-        c2 = min(c2, n - 1)
-        c3 = min(c3, n - 1)
-        if c2 <= meta_start or c3 <= c2:
+        c_thr_end = max(thr_start + 1, int(round(n * (f_train + ft))))
+        c_thr_end = min(c_thr_end, n - 1)
+        if c_thr_end <= thr_start:
             raise ValueError("Zeit-Split: ungültige Grenzen — Anteile anpassen.")
-        base_dates = uniq[:c1]
-        meta_dates = uniq[meta_start:c2]
-        thr_dates = uniq[c2:c3]
-        final_dates = uniq[c3:]
-        if not len(meta_dates) or not len(thr_dates) or not len(final_dates):
+        train_dates = uniq[:c_train]
+        thr_dates = uniq[thr_start:c_thr_end]
+        final_dates = uniq[c_thr_end:]
+        if not len(thr_dates) or not len(final_dates):
             raise ValueError("Zeit-Split: eine Partition ist leer — Fraktionen anpassen.")
         universe_tickers = sorted(available_tickers)
         train_base_tickers = universe_tickers
-        train_meta_tickers = universe_tickers
+        train_meta_tickers = train_base_tickers
         threshold_tickers = universe_tickers
         final_tickers = universe_tickers
-        df_train_base = _df_on_trading_days(df_features, universe_tickers, base_dates)
-        df_train_meta = _df_on_trading_days(df_features, universe_tickers, meta_dates)
+        df_train_base = _df_on_trading_days(df_features, universe_tickers, train_dates)
+        df_train_meta = df_train_base
         df_threshold = _df_on_trading_days(df_features, universe_tickers, thr_dates)
         df_final = _df_on_trading_days(df_features, universe_tickers, final_dates)
         print(
-            f"SPLIT_MODE=time — {len(universe_tickers)} Ticker in allen Stufen; "
-            f"Purge Base→Meta: {p} Handelstage"
+            f"SPLIT_MODE=time — {len(universe_tickers)} Ticker; "
+            f"TRAIN = BASE+META ({f_train:.0%} Kalender), Purge vor THRESHOLD: {p} Tage"
         )
         print(
-            f"  BASE:      {pd.Timestamp(base_dates[0]).date()} … "
-            f"{pd.Timestamp(base_dates[-1]).date()}  ({len(base_dates)} Tage)"
-        )
-        print(
-            f"  META:      {pd.Timestamp(meta_dates[0]).date()} … "
-            f"{pd.Timestamp(meta_dates[-1]).date()}  ({len(meta_dates)} Tage)"
+            f"  TRAIN:     {pd.Timestamp(train_dates[0]).date()} … "
+            f"{pd.Timestamp(train_dates[-1]).date()}  ({len(train_dates)} Tage)"
         )
         print(
             f"  THRESHOLD: {pd.Timestamp(thr_dates[0]).date()} … "
@@ -215,16 +212,21 @@ def run_data_download_and_split() -> None:
             final_tickers.extend(overflow_clean[2::3])
         all_assigned = train_base_tickers + train_meta_tickers + threshold_tickers + final_tickers
         assert len(all_assigned) == len(set(all_assigned)), "Ticker-Überlappung zwischen Partitionen!"
-        print(f"TRAIN_BASE:  {len(train_base_tickers):3d} tickers")
-        print(f"TRAIN_META:  {len(train_meta_tickers):3d} tickers — {train_meta_tickers}")
+        _seen_m = set()
+        _merged_tb: list[str] = []
+        for t in train_base_tickers + train_meta_tickers:
+            if t not in _seen_m:
+                _merged_tb.append(t)
+                _seen_m.add(t)
+        train_base_tickers = _merged_tb
+        train_meta_tickers = train_base_tickers
+        print(f"TRAIN:       {len(train_base_tickers):3d} tickers (BASE+META zusammengelegt)")
         print(f"THRESHOLD:   {len(threshold_tickers):3d} tickers — {threshold_tickers}")
         print(f"FINAL:       {len(final_tickers):3d} tickers — {final_tickers}")
         df_train_base = df_features[
             (df_features["ticker"].isin(train_base_tickers)) & (df_features["Date"] <= _train_cutoff)
         ].copy()
-        df_train_meta = df_features[
-            (df_features["ticker"].isin(train_meta_tickers)) & (df_features["Date"] <= _train_cutoff)
-        ].copy()
+        df_train_meta = df_train_base
         df_threshold = df_features[
             (df_features["ticker"].isin(threshold_tickers)) & (df_features["Date"] <= _train_cutoff)
         ].copy()
@@ -249,6 +251,6 @@ def run_data_download_and_split() -> None:
         )
 
     print(
-        f"\nZeilenanzahl — TRAIN_BASE: {len(df_train_base):,}  TRAIN_META: {len(df_train_meta):,}  "
-        f"THRESHOLD: {len(df_threshold):,}  FINAL: {len(df_final):,}"
+        f"\nZeilenanzahl — TRAIN: {len(df_train_base):,}  THRESHOLD: {len(df_threshold):,}  "
+        f"FINAL: {len(df_final):,}"
     )

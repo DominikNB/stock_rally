@@ -156,12 +156,23 @@ def main() -> None:
     prompt_base = rally_block + "\n\n---\n\n" + prompt_static
     latest, sub = read_signals_for_latest_day()
     if sub.empty:
-        print(
-            f"Keine Signale für aktuellsten Tag {latest}. "
-            "Zuerst data/master_daily_update.csv erzeugen (build_holdout_signals_master / Zelle 17 Pipeline).",
-            file=sys.stderr,
+        DOCS.mkdir(parents=True, exist_ok=True)
+        msg_plain = "Für heute liegen keine Signale vor."
+        provider = (
+            f"Kein Gemini-Aufruf — 0 Treffer am aktuellsten Signaltag in den Daten "
+            f"({latest}; Meta ≥ Schwelle bzw. leere CSV)."
         )
-        sys.exit(1)
+        OUT_TXT.write_text(msg_plain + "\n", encoding="utf-8")
+        OUT_HTML.write_text(
+            analysis_text_to_html(msg_plain, provider),
+            encoding="utf-8",
+        )
+        print(
+            f"Keine Signale für LLM-Auswertung (Signaltag in CSV: {latest}). "
+            f"Geschrieben: {OUT_TXT}, {OUT_HTML}",
+            flush=True,
+        )
+        return
 
     tmp_path: str | None = None
     uploaded: types.File | None = None

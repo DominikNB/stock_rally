@@ -14,6 +14,10 @@ Ausgabe:
 
 Eingabe CLI: data/holdout_signals.csv — oder Aufruf ``main(holdout_df=...)`` (Notebook nach Meta-Scoring).
 
+**Classifier unberührt:** ``enrich_signal_frame`` (Zusatzspalten) läuft **nach** dem Meta-Scoring
+und schreibt nur die Export-CSV; es lädt **kein** Classifier-Training neu und ändert keine
+``build_feature_cols``-Logik in ``config.py``. Zusatzspalten dienen Analyse und LLM.
+
 python -m holdout.build_holdout_signals_master
 python -m holdout.build_holdout_signals_master --no-filters
 """
@@ -42,7 +46,13 @@ MASTER_COMPLETE_CSV = ROOT / "data" / "master_complete.csv"
 MASTER_DAILY_CSV = ROOT / "data" / "master_daily_update.csv"
 ARTIFACT = ROOT / "models" / "scoring_artifacts.joblib"
 HORIZONS = (2, 4, 6, 8, 10)
-YF_START = "2018-01-01"
+try:
+    from lib.stock_rally_v10 import config as _sr_cfg_for_yf
+
+    _sd = getattr(_sr_cfg_for_yf, "START_DATE", "2015-01-01")
+    YF_START = _sd.strftime("%Y-%m-%d") if hasattr(_sd, "strftime") else str(_sd)[:10]
+except Exception:
+    YF_START = "2015-01-01"
 
 
 def _progress_step(n: int, parts: int = 10) -> int:
@@ -148,7 +158,7 @@ def _build_daily_update(full: pd.DataFrame, ret_cols: list[str]) -> pd.DataFrame
     return sub.drop(columns=drop, errors="ignore")
 
 
-def main(holdout_df: pd.DataFrame | None = None) -> None:
+def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
     """
     holdout_df: optional DataFrame inkl. Klassifikationsspalten (s. _CLASSIFICATION_META_COLS).
                 Wenn None: data/holdout_signals.csv oder Rebuild aus master/meta CSV.
@@ -198,7 +208,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
             "master_complete unverändert.",
             flush=True,
         )
-        return
+        return None
     if "Date" not in sig.columns:
         print("build_holdout_signals_master: Spalte 'Date' fehlt.", file=sys.stderr)
         sys.exit(1)
@@ -451,6 +461,8 @@ def main(holdout_df: pd.DataFrame | None = None) -> None:
             f"  H={h}d: n={nn}  Mittel={s.mean():+.2%}  Median={s.median():+.2%}  "
             f"Anteil>0={(s > 0).sum() / nn:.1%}"
         )
+
+    return out
 
 
 if __name__ == "__main__":

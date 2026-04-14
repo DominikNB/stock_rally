@@ -107,6 +107,7 @@ def _log_loaded_config_snapshot() -> None:
 def run_pipeline_default() -> None:
     """Voller Lauf: Daten/Split, Training, Scoring und HTML-Export."""
     bind_step_functions()
+    cfg.log_pipeline_mode_banner()
     _log_loaded_config_snapshot()
     run_data_download_and_split()
     run_training_scoring_and_export()

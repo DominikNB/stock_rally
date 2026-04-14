@@ -25,16 +25,22 @@ def read_signals_for_latest_day():
 
     if DAILY_CSV.is_file():
         df = pd.read_csv(DAILY_CSV)
+        if df.empty:
+            return "—", pd.DataFrame()
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
         latest = df["Date"].max()
         sub = df.copy()
     elif COMPLETE_CSV.is_file():
         df = pd.read_csv(COMPLETE_CSV)
+        if df.empty:
+            return "—", pd.DataFrame()
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
         latest = df["Date"].max()
         sub = df[df["Date"] == latest].copy()
     elif HOLDOUT_CSV.is_file():
         df = pd.read_csv(HOLDOUT_CSV)
+        if df.empty:
+            return "—", pd.DataFrame()
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
         latest = df["Date"].max()
         sub = df[df["Date"] == latest].copy()

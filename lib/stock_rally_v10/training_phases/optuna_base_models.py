@@ -15,6 +15,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+from lib.stock_rally_v10.extended_base_features import append_macro_regime_vol_numeric_cols
 
 
 def _resolve_meta_shap_top_k(c: Any, mean_shap: np.ndarray) -> tuple[int, float]:
@@ -174,6 +175,7 @@ def _run_phase12(c: Any) -> None:
             market_breadth_z_window=_brd_z,
             rel_momentum_window=_rel_m,
         )
+    FEAT_COLS = append_macro_regime_vol_numeric_cols(FEAT_COLS, df_train)
     print(
         f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, "
         f"BTCz={_btc_z}, BreadthZ={_brd_z}, relMom={_rel_m}d  ({len(FEAT_COLS)} features)"

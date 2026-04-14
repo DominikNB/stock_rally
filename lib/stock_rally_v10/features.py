@@ -626,6 +626,11 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                 # Immer Shard-Export: keine monolithische Wide-Matrix (tausende news_*-Spalten) im RAM.
                 _export_news_shards_for_grid(df, s)
 
+    if not meta_only:
+        from lib.stock_rally_v10.extended_base_features import augment_df_macro_regime_and_vol
+
+        df = augment_df_macro_regime_and_vol(df)
+
     if meta_only:
         _rw = cfg.__dict__["rsi_w"]
         _bw = cfg.__dict__["bb_w"]

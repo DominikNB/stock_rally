@@ -248,11 +248,32 @@ def _run_phase17(c: Any) -> None:
     from holdout.build_holdout_signals_master import main as _build_holdout_master
 
     if _ho_rows:
-        _build_holdout_master(holdout_df=pd.DataFrame(_ho_rows))
-        print(
-            f"wrote data/master_complete.csv & master_daily_update.csv (LLM-Spalten) "
-            f"({len(_ho_rows)} holdout rows)"
-        )
+        _exported_ho = _build_holdout_master(holdout_df=pd.DataFrame(_ho_rows))
+        if _exported_ho is not None and len(_exported_ho) > 0:
+            _cls_keys = list(CLASSIFICATION_COLUMN_KEYS)
+            signals_holdout_final = []
+            for _, _r in _exported_ho.iterrows():
+                signals_holdout_final.append(
+                    {
+                        "ticker": str(_r["ticker"]),
+                        "company": str(_r.get("company", _r["ticker"])),
+                        "sector": str(_r.get("sector", "—")),
+                        **{k: str(_r.get(k, "")) for k in _cls_keys},
+                        "date": str(_r["Date"])[:10],
+                        "prob": float(_r["prob"]),
+                    }
+                )
+            signals_holdout_final.sort(key=lambda x: x["date"], reverse=True)
+            print(
+                f"wrote data/master_complete.csv & master_daily_update.csv (LLM-Spalten) "
+                f"({len(_exported_ho)} holdout rows)"
+            )
+        else:
+            signals_holdout_final = []
+            print(
+                "Holdout-CSV: 0 Zeilen nach build_holdout_signals_master.",
+                flush=True,
+            )
     else:
         print(
             "Holdout-CSV übersprungen: 0 Signale im FINAL-Zeitfenster (Schwelle + Filter + Datenlage). "
@@ -260,9 +281,18 @@ def _run_phase17(c: Any) -> None:
             flush=True,
         )
 
+    # Website + öffentliches signals.json: nur echte OOS — keine Signale aus TRAIN/THRESHOLD-Kalender.
+    website_signals = list(signals_holdout_final)
+    website_signals.sort(key=lambda x: x["date"], reverse=True)
+    print(
+        f"Website/OOS-Export: {len(website_signals)} Signale "
+        f"(intern für Diagnose: {len(all_hist_signals)} über alle Zeiten mit Schwelle+Filter).",
+        flush=True,
+    )
+
     recent_cutoff = (pd.Timestamp(c.END_DATE) - pd.Timedelta(days=30)).strftime("%Y-%m-%d")
-    recent_signals = [s for s in all_hist_signals if s["date"] >= recent_cutoff]
-    print(f"{len(recent_signals)} signals in the last 30 days.")
+    recent_signals = [s for s in website_signals if s["date"] >= recent_cutoff]
+    print(f"{len(recent_signals)} OOS-Signale in den letzten 30 Tagen (Website).")
 
     _chart_yf_failures: list[tuple[Any, ...]] = []
 
@@ -405,10 +435,10 @@ def _run_phase17(c: Any) -> None:
             plt.close("all")
             return None
 
-    print("Generating charts (yfinance + matplotlib, bis zu 600 Signale) …", flush=True)
+    print("Generating charts (yfinance + matplotlib, bis zu 600 OOS-Signale) …", flush=True)
     _chart_yf_failures.clear()
     chart_cache = {}
-    for s in all_hist_signals[:600]:
+    for s in website_signals[:600]:
         key = (s["ticker"], s["date"])
         if key not in chart_cache:
             b64 = _make_chart(s["ticker"], s["date"])
@@ -534,8 +564,8 @@ def _run_phase17(c: Any) -> None:
         or '<p class="empty">Keine Signale in den letzten 30 Tagen.</p>'
     )
     hist_html = (
-        "".join(_signal_card(s) for s in all_hist_signals[:600])
-        or '<p class="empty">Keine historischen Signale.</p>'
+        "".join(_signal_card(s) for s in website_signals[:600])
+        or '<p class="empty">Keine OOS-Signale.</p>'
     )
 
     pr_section = (
@@ -705,8 +735,7 @@ def _run_phase17(c: Any) -> None:
     <div class="model-chips">
       <div class="chip">Threshold <strong>{best_threshold:.3f}</strong></div>
       <div class="chip">Tickers <strong>{df_s['ticker'].nunique()}</strong></div>
-      <div class="chip">Signale gesamt <strong>{len(all_hist_signals)}</strong></div>
-      <div class="chip">FINAL Holdout OOS <strong>{len(signals_holdout_final)}</strong></div>
+      <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>{len(website_signals)}</strong></div>
       {_thr_chip}
       <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>{_matrix_last_date}</strong></div>
       <div class="chip">Run <strong>{today_str}</strong></div>
@@ -727,7 +756,7 @@ def _run_phase17(c: Any) -> None:
 
   <div class="section">
     <details>
-      <summary>Alle historischen Signale &mdash; {len(all_hist_signals)} gesamt (max. 600 angezeigt)</summary>
+      <summary>OOS-Signale (nicht in Classifier-Training) &mdash; {len(website_signals)} gesamt (max. 600 angezeigt)</summary>
       {hist_html}
     </details>
   </div>
@@ -768,9 +797,10 @@ def _run_phase17(c: Any) -> None:
             {
                 "generated": today_str,
                 "threshold": float(best_threshold),
-                "signals": all_hist_signals,
+                "signals": website_signals,
                 "signals_holdout_final": signals_holdout_final,
-                "note": "signals_holdout_final = FINAL OOS. master_complete = Historie+Forward; master_daily_update = nur letzter Tag ohne Forward.",
+                "signals_all_timeline_including_in_sample_count": len(all_hist_signals),
+                "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS für Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale für die Website.",
             },
             indent=2,
             default=str,
@@ -779,12 +809,15 @@ def _run_phase17(c: Any) -> None:
     )
 
     print(f"\ndocs/index.html   {len(html):,} bytes")
-    print(f"docs/signals.json {len(all_hist_signals)} signals total ({len(signals_holdout_final)} FINAL OOS)")
+    print(
+        f"docs/signals.json {len(website_signals)} OOS signals public "
+        f"({len(all_hist_signals)} mit Schwelle über alle Zeiten nur intern gezählt)"
+    )
     print("\nOpen docs/index.html in a browser to preview.")
 
     _msg = (
         f"Daily signal update {today_str} "
-        f"({len(all_hist_signals)} signals, "
+        f"({len(website_signals)} OOS signals, "
         f"{len(recent_signals)} in last 30 days)"
     )
     _git_docs = [

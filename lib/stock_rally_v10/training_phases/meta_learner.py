@@ -82,11 +82,11 @@ def _run_phase13(c: Any) -> None:
     y_threshold = df_threshold["target"].values.astype(np.int8)
 
     t_total = time.time()
-    X_meta_test = build_meta_features(X_test_feat, "TRAIN_META")
+    X_meta_test = build_meta_features(X_test_feat, "EARLY_TRAIN (df_test)")
     X_meta_final = build_meta_features(X_final_feat, "FINAL")
     X_meta_threshold = build_meta_features(X_threshold_feat, "THRESHOLD")
     print(f"\nAlle Meta-Matrizen fertig in {time.time()-t_total:.0f}s")
-    print(f"  TRAIN_META:  {X_meta_test.shape}")
+    print(f"  EARLY_TRAIN: {X_meta_test.shape}")
     print(f"  THRESHOLD:   {X_meta_threshold.shape}")
     print(f"  FINAL:       {X_meta_final.shape}")
 
