@@ -27,8 +27,7 @@ from lib.stock_rally_v10.post_split_embedded import run_training_scoring_and_exp
 
 
 def bind_step_functions() -> None:
-    """Bootstrap-Imports anwenden und Schrittfunktionen auf ``cfg`` legen."""
-    from lib.stock_rally_v10 import bootstrap  # noqa: F401 — Seiteneffekt: cfg.np, cfg.pd, …
+    """Schrittfunktionen auf ``cfg`` legen (ohne globale Bootstrap-Seiteneffekte)."""
 
     from lib.stock_rally_v10.data import load_stock_data
     from lib.stock_rally_v10.features import assemble_features

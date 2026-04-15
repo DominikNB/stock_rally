@@ -250,7 +250,9 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             news_mom_w = trial.suggest_categorical('news_mom_w', cfg.NEWS_MOM_WINDOWS)
             news_vol_ma = trial.suggest_categorical('news_vol_ma', cfg.NEWS_VOL_MA_WINDOWS)
             news_tone_roll = trial.suggest_categorical('news_tone_roll', cfg.NEWS_TONE_ROLL_WINDOWS)
-            news_extra_zscore_w = trial.suggest_categorical('news_extra_zscore_w', cfg.NEWS_EXTRA_ZSCORE_WINDOWS)
+            news_extra_zscore_w = trial.suggest_categorical(
+                "news_extra_zscore_w", cfg.NEWS_EXTRA_ZSCORE_WINDOWS
+            )
             news_extra_tone_accel = trial.suggest_categorical('news_extra_tone_accel', cfg.NEWS_EXTRA_TONE_ACCEL_OPTIONS)
             news_extra_macro_sec_diff = trial.suggest_categorical(
                 'news_extra_macro_sec_diff', cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS

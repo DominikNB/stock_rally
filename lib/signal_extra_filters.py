@@ -719,7 +719,8 @@ def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
     SPY:5-Tage-Realisierte Vol. (annualisiert) — „breiter Markt-Stress“.
     ^TNX: nur **5-Tage-Rendite** (schnelle Zinsbewegung); kein langfristiges Niveau.
     """
-    o = out.copy()
+    # Kein Deep-Copy der gesamten breiten Matrix (tausende Spalten) — das kann unnötig RAM sprengen.
+    o = out
     o["Date"] = pd.to_datetime(o["Date"]).dt.normalize()
     d_min = o["Date"].min() - pd.Timedelta(days=60)
     d_max = o["Date"].max() + pd.Timedelta(days=5)
@@ -743,7 +744,17 @@ def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
             }
         )
     feat = pd.DataFrame(rows)
-    return o.merge(feat, on="Date", how="left")
+    if feat.empty:
+        return o
+    feat = feat.drop_duplicates(subset=["Date"], keep="last").set_index("Date")
+    for col in (
+        "regime_vix_level",
+        "regime_vix_z_20d",
+        "regime_spy_realvol_5d_ann",
+        "regime_tnx_ret_5d",
+    ):
+        o[col] = o["Date"].map(feat[col]) if col in feat.columns else np.nan
+    return o
 
 
 def add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:

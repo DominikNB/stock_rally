@@ -124,12 +124,15 @@ def _bq_sector_keyword_or_sql(sector: str) -> str:
     return "(" + " OR ".join(parts) + ")"
 
 
-def _bq_sector_theme_cond(sector: str) -> str:
+def _bq_sector_theme_cond(sector: str, *, for_base_agg: bool = True) -> str:
+    """Sektor-Zeile im GKG-Scan: Theme; optional AND Keywords (siehe cfg)."""
     base = str(cfg.SECTOR_BQ_THEME_WHERE.get(sector) or "(1=0)")
     if not _bq_sector_keyword_conjunction_enabled(sector):
         return base
     kw_or = _bq_sector_keyword_or_sql(sector)
     if not kw_or:
+        return base
+    if for_base_agg and not bool(_c("BQ_SECTOR_KEYWORD_CONJUNCTION_FOR_BASE_AGG", False)):
         return base
     return f"(({base}) AND ({kw_or}))"
 
@@ -137,6 +140,7 @@ def _bq_sector_theme_cond(sector: str) -> str:
 # Mindestabstand zwischen GDELT-HTTP-Calls (öffentliche API ist streng rate-limited).
 _GDELT_THROTTLE_LAST = [0.0]
 _ANCHOR_FILTER_LOGGED = False
+_BASE_TONE_MODE_LOGGED = False
 
 
 def _gdelt_throttle():
@@ -1004,8 +1008,8 @@ def _bq_gkg_theme_triple_cond(channel: str, raw_token: str, ref_date=None) -> st
     if channel == "macro":
         base = str(_c("MACRO_BQ_THEME_WHERE", "(1=1)"))
     else:
-        # Theme-Splits: sektoral Basisbedingung inkl. optionalem Theme∧Keyword-AND.
-        base = _bq_sector_theme_cond(channel)
+        # Tripel: Keywords am Sektor-Base belassen (schmaler Zusatzkanal).
+        base = _bq_sector_theme_cond(channel, for_base_agg=False)
     return f"(({base}) AND ({like}))"
 
 
@@ -1102,7 +1106,7 @@ def _bq_query_all_channels_gkg(a, b):
     """Eine Query, ein Scan: OR über alle Theme-Filter, IF/COUNTIF pro Kanal."""
     from google.cloud import bigquery
 
-    global _ANCHOR_FILTER_LOGGED
+    global _ANCHOR_FILTER_LOGGED, _BASE_TONE_MODE_LOGGED
     if getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False) and not _ANCHOR_FILTER_LOGGED:
         print(
             "[BigQuery] Anker-Filter aktiv: Sektoren doppelt — breites V2Themes + Anker (Theme plus Orgs); "
@@ -1110,6 +1114,16 @@ def _bq_query_all_channels_gkg(a, b):
             flush=True,
         )
         _ANCHOR_FILTER_LOGGED = True
+    if (
+        not _BASE_TONE_MODE_LOGGED
+        and bool(_c("BQ_SECTOR_THEME_KEYWORD_CONJUNCTION", False))
+        and not bool(_c("BQ_SECTOR_KEYWORD_CONJUNCTION_FOR_BASE_AGG", False))
+    ):
+        print(
+            "[BigQuery] Sektor-Basis-Tone/Vol: nur Theme-Filter (breiter); Keyword-AND gilt weiter für Anker-Spalten.",
+            flush=True,
+        )
+        _BASE_TONE_MODE_LOGGED = True
     if not _c("BQ_USE_PARTITION_FILTER", True):
         print(
             "[BigQuery] WARNUNG: cfg.BQ_USE_PARTITION_FILTER=False kann Full-Table-Scan bedeuten.",

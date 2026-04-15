@@ -132,9 +132,21 @@ def _compute_news_block(ch_df, mom_w, vol_ma_w, tone_roll, col_prefix):
         sw = f'_w{int(zw)}'
         out[f"{col_prefix}tone_z{sw}"] = tone_z.fillna(0.0).values
         out[f"{col_prefix}vol_z{sw}"] = vol_z.fillna(0.0).values
+        # Schock/Δ/Impact auf der Z-Skala (tägliche Kanalserie — kein groupby ticker nötig)
+        prev_roll = tone_z.shift(1).rolling(window=3, min_periods=1).mean()
+        shock = (tone_z - prev_roll).fillna(0.0)
+        dz1 = tone_z.diff().fillna(0.0)
+        impact = (tone_z * vol_z.clip(lower=0.0)).fillna(0.0)
+        out[f"{col_prefix}tone_z{sw}_shock"] = shock.to_numpy(dtype=np.float64)
+        out[f"{col_prefix}tone_z{sw}_dz1"] = dz1.to_numpy(dtype=np.float64)
+        out[f"{col_prefix}tone_z{sw}_x_volz_pos"] = impact.to_numpy(dtype=np.float64)
     if True in cfg.NEWS_EXTRA_TONE_ACCEL_OPTIONS:
         accel = ts.diff().diff()
         out[f"{col_prefix}tone_accel"] = accel.fillna(0.0).values
+    vs_np = np.maximum(np.asarray(vs, dtype=np.float64), 0.0)
+    ts_np = np.asarray(ts, dtype=np.float64)
+    out[f"{col_prefix}tone_x_log1p_artcount"] = (ts_np * np.log1p(vs_np)).astype(np.float64)
+    out[f"{col_prefix}tone_d1"] = ts.diff().fillna(0.0).to_numpy(dtype=np.float64)
     return out
 
 
@@ -379,12 +391,42 @@ def _export_news_shards_for_grid(df_base: pd.DataFrame, s: pd.DataFrame) -> None
     )
 
 
+def _apply_news_regime_tone_interactions(df: pd.DataFrame, tag: str) -> None:
+    """Tone × Regime (z. B. VVIX/VIX) — nach Shard-Merge; Spalten kommen aus ``augment_df_macro_regime_and_vol``."""
+    if not getattr(cfg, "USE_NEWS_SENTIMENT", False) or not getattr(
+        cfg, "NEWS_ADD_REGIME_TONE_INTERACTIONS", False
+    ):
+        return
+    for base_col in getattr(cfg, "NEWS_REGIME_INTERACTION_BASE_COLS", ()):
+        if base_col not in df.columns:
+            continue
+        m = np.nan_to_num(
+            pd.to_numeric(df[base_col], errors="coerce").to_numpy(dtype=np.float64),
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0,
+        )
+        safe = str(base_col).replace(".", "_")
+        for prefix in ("news_macro", "news_sec"):
+            tcol = f"{prefix}_{tag}_tone"
+            if tcol not in df.columns:
+                continue
+            t = np.nan_to_num(
+                pd.to_numeric(df[tcol], errors="coerce").to_numpy(dtype=np.float64),
+                nan=0.0,
+                posinf=0.0,
+                neginf=0.0,
+            )
+            df[f"{tcol}_x_{safe}"] = (t * m).astype(np.float32)
+
+
 def merge_news_shard_into_df(df: pd.DataFrame, tag: str) -> pd.DataFrame:
     """Lädt News-Spalten für ``feat_tag`` (Fenster-Tripel-String, vgl. ``cfg.news_feat_tag``) an (Date, ticker)."""
     if not getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
         return df
-    # Bereits gemerged (z. B. Phase 12 → 13): kein zweites Laden.
+    # Bereits gemerged (z. B. Phase 12 → 13): nur Regime-Interaktionen nachziehen.
     if f"news_macro_{tag}_tone" in df.columns:
+        _apply_news_regime_tone_interactions(df, tag)
         return df
     manifest = getattr(cfg, "NEWS_SHARD_MANIFEST", None) or {}
     path = manifest.get(tag)
@@ -423,6 +465,7 @@ def merge_news_shard_into_df(df: pd.DataFrame, tag: str) -> pd.DataFrame:
             df[c] = ser.astype(np.float32).fillna(0.0).to_numpy()
         else:
             df[c] = pd.to_numeric(ser, errors="coerce").fillna(0.0).to_numpy()
+    _apply_news_regime_tone_interactions(df, tag)
     return df
 
 
@@ -556,17 +599,15 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         df[f"rel_momentum_{_mw}d"] = df[f"rel_momentum_{_mw}d"].fillna(0.0)
 
     print(
-        "assemble_features: Kontext — sector, sector_id, gics_*, month, btc_momentum, "
-        "btc_momentum_z_w*, market_breadth_*, market_breadth_z_*_w*, rel_momentum_*d, sector_avg_rsi_* — fertig. "
-        "Als Nächstes: News (oder überspringen) …",
+        "assemble_features: Kontext-Features fertig. Als Nächstes: News-Features …",
         flush=True,
     )
 
     if cfg.USE_NEWS_SENTIMENT:
         if sentiment_df is None or sentiment_df.empty:
             print(
-                "assemble_features [News]: Warnung — USE_NEWS_SENTIMENT, aber kein Sentiment; "
-                "news_* werden auf 0 gesetzt bzw. per Fill-Liste angelegt."
+                "assemble_features [News]: Keine News-Daten vorhanden. Lauf geht weiter; News-Features werden mit 0.0 belegt.",
+                flush=True,
             )
             if meta_only:
                 for c in cfg.FEAT_COLS:
@@ -575,8 +616,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             else:
                 _fill_news = _news_fill_column_list()
                 print(
-                    f"assemble_features [News ohne Daten]: Fill-Modus "
-                    f"{getattr(cfg, 'FEATURE_ASSEMBLE_NEWS_FILL', '?')!r} — {len(_fill_news):,} Spaltennamen.",
+                    f"assemble_features [News]: Fill-Liste aktiv ({len(_fill_news):,} News-Spalten).",
                     flush=True,
                 )
                 if _fill_news:
@@ -639,6 +679,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                         df[c] = 0.0
                     else:
                         df[c] = df[c].fillna(0.0)
+                _apply_news_regime_tone_interactions(df, tag)
             else:
                 # Immer Shard-Export: keine monolithische Wide-Matrix (tausende news_*-Spalten) im RAM.
                 _export_news_shards_for_grid(df, s)

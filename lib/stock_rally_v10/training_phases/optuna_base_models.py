@@ -101,6 +101,81 @@ def _log_feature_health(dataset_label: str, df: pd.DataFrame, feat_cols: list[st
         print(f"    ... +{len(bad_cols) - top_n} weitere Spalten", flush=True)
 
 
+def _log_news_feature_constancy(
+    df: pd.DataFrame,
+    feat_cols: list[str],
+    *,
+    label: str,
+    eps_spread: float = 1e-12,
+    eps_std: float = 1e-12,
+    name_samples: int = 12,
+) -> None:
+    """Prüft news_* auf konstante Spalten (keine/minimale Varianz) — erklärt oft SHAP≈0."""
+    news_in = [c for c in feat_cols if str(c).startswith("news_") and c in df.columns]
+    if not news_in:
+        print(f"[News-Konstanz] {label}: keine news_* in FEAT_COLS / DataFrame.", flush=True)
+        return
+    n_rows = len(df)
+    n_all_nan = 0
+    n_const0 = 0
+    n_const_nz = 0
+    n_vary = 0
+    examples_const0: list[str] = []
+    examples_const_nz: list[str] = []
+    low_std_varying: list[tuple[float, str]] = []
+
+    for col in news_in:
+        s = pd.to_numeric(df[col], errors="coerce").to_numpy(dtype=np.float64, copy=False)
+        ok = np.isfinite(s)
+        n_ok = int(ok.sum())
+        if n_ok == 0:
+            n_all_nan += 1
+            continue
+        v = s[ok]
+        spread = float(v.max() - v.min())
+        std = float(np.std(v, ddof=0))
+        if spread <= eps_spread and std <= eps_std:
+            mu = float(v[0])
+            if abs(mu) <= eps_spread:
+                n_const0 += 1
+                if len(examples_const0) < name_samples:
+                    examples_const0.append(col)
+            else:
+                n_const_nz += 1
+                if len(examples_const_nz) < name_samples:
+                    examples_const_nz.append(col)
+        else:
+            n_vary += 1
+            if std < 1e-8:
+                low_std_varying.append((std, col))
+
+    n_news = len(news_in)
+    n_const = n_const0 + n_const_nz
+    pct_const = 100.0 * float(n_const) / float(n_news) if n_news else 0.0
+    print(
+        f"\n[News-Konstanz] {label} ({n_rows:,} Zeilen, {n_news:,} news_*-Spalten im Modell):",
+        flush=True,
+    )
+    print(
+        f"  variierend: {n_vary:,}  |  konstant (Wert≈0): {n_const0:,}  |  "
+        f"konstant (Wert≠0): {n_const_nz:,}  |  nur NaN: {n_all_nan:,}  |  "
+        f"Anteil konstant: {pct_const:.1f}%",
+        flush=True,
+    )
+    if examples_const0:
+        print(f"  Beispiele konstant 0: {', '.join(examples_const0)}", flush=True)
+    if examples_const_nz:
+        print(f"  Beispiele konstant ≠0: {', '.join(examples_const_nz)}", flush=True)
+    low_std_varying.sort(key=lambda x: x[0])
+    if low_std_varying:
+        tail = ", ".join(f"{n} (std={st:.2e})" for st, n in low_std_varying[:8])
+        print(
+            f"  Schwach variierend (std<1e-8, Auszug): {tail}"
+            + (f" … (+{len(low_std_varying) - 8})" if len(low_std_varying) > 8 else ""),
+            flush=True,
+        )
+
+
 def run_phase_optuna_base_models(cfg_mod: Any) -> None:
     if getattr(cfg_mod, "SCORING_ONLY", False):
         print("[SCORING_ONLY] Training-Zelle übersprungen.")
@@ -230,6 +305,8 @@ def _run_phase12(c: Any) -> None:
         f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, "
         f"BTCz={_btc_z}, BreadthZ={_brd_z}, relMom={_rel_m}d  ({len(FEAT_COLS)} features)"
     )
+    if c.USE_NEWS_SENTIMENT:
+        _log_news_feature_constancy(df_train, FEAT_COLS, label="df_train (BASE, nach News-Shard)")
 
     focal_gamma = best_params["focal_gamma"]
     focal_alpha = best_params["focal_alpha"]

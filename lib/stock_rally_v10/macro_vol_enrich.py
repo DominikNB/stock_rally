@@ -256,7 +256,7 @@ def enrich_macro_volatility_features(df: pd.DataFrame) -> pd.DataFrame:
             label="mr_vvix_level",
             d_min=d_min,
             d_max=d_max,
-            fred_ids=(),
+            fred_ids=("VVIXCLS",),
             yahoo_symbols=("^VVIX",),
         ),
         "mr_vvix_level",

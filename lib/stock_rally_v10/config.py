@@ -76,6 +76,8 @@ else:
 START_DATE = '2015-01-01'  # Kurs-Download / Labels; News siehe NEWS_EXTRA_HISTORY_* und NEWS_BQ_*
 END_DATE        = datetime.date.today().strftime('%Y-%m-%d')           # Download bis heute
 TRAIN_END_DATE  = datetime.date.today().strftime('%Y-%m-%d')           # gleiches Kalenderende wie END_DATE
+YF_DOWNLOAD_BATCH_SIZE = 20
+YF_DOWNLOAD_BATCH_SLEEP_SEC = 1.0
 print(f'Download:  {START_DATE} -> {END_DATE}')
 print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 
@@ -379,7 +381,7 @@ def html_target_definition_section(c=None) -> str:
 
 
 EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 35  # erhöht wegen News-Feature-Grid
+N_OPTUNA_TRIALS       = 50  # erhöht wegen News-Feature-Grid
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
 # N_OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
@@ -465,7 +467,7 @@ SEED_PARAMS = dict(
     sma_window=50,
     news_mom_w=3,
     news_vol_ma=20,
-    news_tone_roll=3,
+    news_tone_roll=1,
     news_extra_zscore_w=20,
     news_extra_tone_accel=True,
     news_extra_macro_sec_diff=True,
@@ -501,10 +503,12 @@ USE_NEWS_SENTIMENT = True
 # Momentum auf geglätteter Ton-Serie; Vol-MA für Spike; zusätzliche Ton-Glättung vor Momentum
 NEWS_MOM_WINDOWS = [3, 5, 7]
 NEWS_VOL_MA_WINDOWS = [10, 20]
-NEWS_TONE_ROLL_WINDOWS = [0, 3]  # 0 = keine zusätzliche Ton-Glättung
+# 0 = kein Roll auf Tone (reaktiv); 1 = leicht; 3 = noch kompakt. Lange Rollings verwischen Börsen-„Spikes“.
+NEWS_TONE_ROLL_WINDOWS = [0, 1, 3]
 
 # Zusätzliche News-Spalten — Optuna Phase 1 wählt je Trial ein Tripel (wie news_mom_w …)
-NEWS_EXTRA_ZSCORE_WINDOWS = [0, 10, 20, 30]   # 0 = keine tone_z/vol_z; >0 → Spalten …_tone_z_w{w}
+# 5 = kurzes „Shock“-Fenster (relativ zur lokalen 5d-Basis); 0 = kein Z-Block in FEAT_COLS (Optuna darf das wählen)
+NEWS_EXTRA_ZSCORE_WINDOWS = [0, 5, 10, 20, 30]
 NEWS_EXTRA_TONE_ACCEL_OPTIONS = [False, True]
 NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS = [False, True]
 # assemble_features: welche News-Spalten am Ende per Fillna/0 angelegt werden.
@@ -550,10 +554,15 @@ BQ_SINGLE_SCAN = True          # True: GKG-Query mit IF/COUNTIF pro Kanal (nicht
 # Größere Fenster + viele Theme-Spalten → BigQuery „Query too big“ / Ressourcenlimit.
 # 0 = ein einziger Scan über [a,b]; sonst höchstens so viele Kalendertage pro Teil-Query (Ergebnisse werden aneinandergehängt).
 BQ_SINGLE_SCAN_CHUNK_DAYS = 120
-# Wenn True: sektorale GKG-Bedingung = (Theme-Filter) AND (Keyword-OR über SECTOR_KEYWORDS[sector]).
-# Leere Channel-Liste bedeutet: auf alle Sektorkanäle anwenden.
+# Wenn True: Keyword-OR (SECTOR_KEYWORDS) kann in SQL mit dem Theme kombiniert werden.
+# Leere Channel-Liste bedeutet: auf alle Sektorkanäle anwenden (siehe unten FOR_BASE_AGG).
 BQ_SECTOR_THEME_KEYWORD_CONJUNCTION = True
 BQ_SECTOR_THEME_KEYWORD_CHANNELS: tuple[str, ...] = ()
+# Wenn True UND BQ_SECTOR_THEME_KEYWORD_CONJUNCTION True: Basis-Sektorkanal ({ch}_tone/{ch}_vol/GCAM)
+# nutzt (Theme) AND (Keywords) — sehr streng, oft wenig Artikel -> flache Tone-Features.
+# False: Basis-Kanal nur Theme (wie früher, mehr Varianz); Keywords bleiben bei Anker-Spalten
+# (_anchor_tone etc.) aktiv, sofern CONJUNCTION an ist.
+BQ_SECTOR_KEYWORD_CONJUNCTION_FOR_BASE_AGG = False
 
 # Feste GKG-Theme-Tripel für SQL (leer = keine zusätzlichen Theme-Kanäle im GKG-Scan).
 # Hinweis: Es werden keine ``news_*_th_*``-Modellspalten mehr gebaut — nur V2 Macro/Sektor + Sektor-GCAM.
@@ -707,7 +716,7 @@ TICKERS_BY_SECTOR = {
                    'SAP.DE', 'IFX.DE',
                    'NEM.DE', 'BC8.DE',
                    'TMV.DE', 'COK.DE', 'YSN.DE', 'GFT.DE', 'NA9.DE',
-                   'AOF.DE', 'ELG.DE', 'AIXA.DE', 'SMHN.DE', 'SANT.DE'],
+                   'AOF.DE', 'ELG.DE', 'AIXA.DE', 'SMHN.DE', 'KTN.DE'],
 
     # ── Financial Services ─────────────────────────────────────────────────
     # DAX: DB1, HNR1  |  MDAX: TLX  |  SDAX: MLP, GLJ, PBB, HABA, WUW, DBAG, HYQ
@@ -715,7 +724,7 @@ TICKERS_BY_SECTOR = {
                            'ALV.DE', 'MUV2.DE', 'DBK.DE', 'CBK.DE', 'BNP.PA',
                            'DB1.DE', 'HNR1.DE',
                            'TLX.DE',
-                           'MLP.DE', 'GLJ.DE', 'PBB.DE', 'WUW.DE', 'DBAG.DE', 'HYQ.DE'],
+                           'MLP.DE', 'GLJ.DE', 'PBB.DE', 'WUW.DE', 'DBAN.DE', 'HYQ.DE'],
 
     # ── Healthcare ─────────────────────────────────────────────────────────
     # DAX: FME, SHL  |  MDAX: SRT3  |  SDAX: AFX, EUZ, DMP, GXI, DRW3, O2BC, EVT
@@ -723,20 +732,19 @@ TICKERS_BY_SECTOR = {
                    'ISRG', 'ILMN',
                    'BAYN.DE', 'FRE.DE', 'MRK.DE', 'FME.DE', 'SHL.DE',
                    'SRT3.DE',
-                   'AFX.DE', 'EUZ.DE', 'DMP.DE', 'GXI.DE', 'DRW3.DE', 'O2BC.DE', 'EVT.DE'],
+                   'AFX.DE', 'EUZ.DE', 'DMP.DE', 'GXI.DE', 'DRW3.DE', 'EVT.DE'],
 
     # ── Consumer Cyclical (inkl. Automotive-Basket) ───────────────────────
     # DAX: BEI  |  SDAX: FIE, HBH, DOU, SZU, HFG, KWS, EVD, DHER
     # DAX Automotive: VOW3, BMW, MBG, CON, PAH3, P911, DTG  |  MDAX: TGR, SHA
     'consumer_cyclical': ['KO', 'MCD', 'NKE', 'PG', 'WMT', 'HD', 'DIS',
-                          'ADS.DE', 'BOSS.DE', 'HEN3.DE', 'PUM.DE', 'ZAL.DE', 'LVMH.PA',
+                          'ADS.DE', 'BOSS.DE', 'HEN3.DE', 'PUM.DE', 'ZAL.DE', 'MC.PA',
                           'BEI.DE',
                           'FIE.DE', 'HBH.DE', 'DOU.DE', 'SZU.DE', 'HFG.DE', 'KWS.DE',
                           'EVD.DE', 'DHER.DE',
                           'VOW3.DE', 'BMW.DE', 'MBG.DE', 'CON.DE', 'PAH3.DE', 'P911.DE',
                           'DTG.DE',
-                          'TM', 'STLA', 'GM', 'F',
-                          'TGR.DE', 'SHA.DE'],
+                          'TM', 'STLA', 'GM', 'F'],
 
     # ── Industrials (inkl. HVAC/Heat-Pump-Basket) ─────────────────────────
     # DAX: SIE, RHM, MTX, AIR, DHL, G1A  |  MDAX: KBX, HOC, KGX, JUN3, TKA, HAG, R3NK, LHA, FRA, HLAG, RAA
@@ -765,7 +773,7 @@ TICKERS_BY_SECTOR = {
     # DAX: BAS, BNR, HEI, SY1  |  MDAX: EVK, LXS, NDA, SDO, FPE3  |  SDAX: ACT, WAF, BFSA, KCO
     'basic_materials': ['BAS.DE', 'LIN', 'WCH.DE', 'APD', 'LYB', 'BNR.DE', 'NEM', 'RIO',
                         'HEI.DE', 'SY1.DE',
-                        'EVK.DE', 'LXS.DE', 'NDA.DE', 'SDO.DE', 'FPE3.DE',
+                        'EVK.DE', 'LXS.DE', 'NDA.DE', 'SZG.DE', 'FPE3.DE',
                         'ACT.DE', 'WAF.DE', 'BFSA.DE', 'KCO.DE'],
 
     # ── Real Estate ────────────────────────────────────────────────────────
@@ -776,8 +784,8 @@ TICKERS_BY_SECTOR = {
     # ── Communication Services (Telecom + Media) ───────────────────────────
     # DAX: DTE  |  MDAX: O2D, UTDI, FNTN  |  SDAX: 1U1
     # DAX: G24  |  MDAX: RRTL  |  SDAX: SPG, BVB, PSM, CWC
-    'communication_services': ['DTE.DE', 'T', 'VZ', 'TMUS', 'ORAN',
-                               'O2D.DE', 'UTDI.DE', 'FNTN.DE', '1U1.DE',
+    'communication_services': ['DTE.DE', 'T', 'VZ', 'TMUS', 'ORA.PA',
+                               'TEF.MC', 'UTDI.DE', 'FNTN.DE', '1U1.DE',
                                'RRTL.DE', 'SPG.DE', 'BVB.DE', 'PSM.DE', 'CWC.DE', 'G24.DE'],
 }
 
@@ -813,7 +821,7 @@ COMPANY_NAMES = {
     'KO': 'Coca-Cola', 'MCD': "McDonald's", 'NKE': 'Nike', 'PG': 'P&G',
     'WMT': 'Walmart', 'HD': 'Home Depot', 'DIS': 'Disney',
     'ADS.DE': 'Adidas', 'BOSS.DE': 'Hugo Boss', 'HEN3.DE': 'Henkel',
-    'PUM.DE': 'PUMA', 'ZAL.DE': 'Zalando', 'LVMH.PA': 'LVMH',
+    'PUM.DE': 'PUMA', 'ZAL.DE': 'Zalando', 'MC.PA': 'LVMH',
     # Industrial (DAX)
     'CAT': 'Caterpillar', 'BA': 'Boeing', 'HON': 'Honeywell', 'MMM': '3M',
     'FDX': 'FedEx',
@@ -845,15 +853,13 @@ COMPANY_NAMES = {
     'CON.DE': 'Continental', 'PAH3.DE': 'Porsche SE', 'P911.DE': 'Porsche AG',
     'DTG.DE': 'Daimler Truck',
     'TM': 'Toyota', 'STLA': 'Stellantis', 'GM': 'General Motors', 'F': 'Ford',
-    # Automotive (MDAX)
-    'TGR.DE': 'Traton', 'SHA.DE': 'Schaeffler',
     # Materials (DAX)
     'BAS.DE': 'BASF', 'LIN': 'Linde', 'WCH.DE': 'Wacker Chemie',
     'APD': 'Air Products', 'LYB': 'LyondellBasell', 'BNR.DE': 'Brenntag',
     'NEM': 'Newmont', 'RIO': 'Rio Tinto', 'HEI.DE': 'Heidelberg Materials', 'SY1.DE': 'Symrise',
     # Materials (MDAX)
     'EVK.DE': 'Evonik', 'LXS.DE': 'LANXESS', 'NDA.DE': 'Aurubis',
-    'SDO.DE': 'K+S', 'FPE3.DE': 'Fuchs SE',
+    'SZG.DE': 'Salzgitter', 'FPE3.DE': 'Fuchs SE',
     # Materials (SDAX)
     'ACT.DE': 'AlzChem', 'WAF.DE': 'Siltronic', 'BFSA.DE': 'Befesa',
     'KCO.DE': 'Klöckner & Co',
@@ -864,8 +870,8 @@ COMPANY_NAMES = {
     'HABA.DE': 'Hamborner REIT', 'PAT.DE': 'PATRIZIA',
     # Telecom
     'DTE.DE': 'Deutsche Telekom', 'T': 'AT&T', 'VZ': 'Verizon',
-    'TMUS': 'T-Mobile', 'ORAN': 'Orange',
-    'O2D.DE': 'Telefónica Dtl.', 'UTDI.DE': 'United Internet',
+    'TMUS': 'T-Mobile', 'ORA.PA': 'Orange',
+    'TEF.MC': 'Telefonica', 'UTDI.DE': 'United Internet',
     'FNTN.DE': 'freenet', '1U1.DE': '1&1',
     # Media
     'RRTL.DE': 'RTL Group', 'SPG.DE': 'Springer Nature', 'BVB.DE': 'Borussia Dortmund',
@@ -877,13 +883,13 @@ COMPANY_NAMES = {
     # Finance (SDAX)
     'MLP.DE': 'MLP', 'GLJ.DE': 'GRENKE', 'PBB.DE': 'Deutsche Pfandbriefbank',
     'WUW.DE': 'Wüstenrot & W.',
-    'DBAG.DE': 'Deutsche Beteiligungs', 'HYQ.DE': 'Hypoport',
+    'DBAN.DE': 'Deutsche Beteiligungs', 'HYQ.DE': 'Hypoport',
     # Healthcare (DAX additions)
     'FME.DE': 'Fresenius Med.', 'SHL.DE': 'Siemens Healthineers',
     # Healthcare (SDAX)
     'AFX.DE': 'Carl Zeiss Meditec', 'EUZ.DE': 'Eckert & Ziegler',
     'DMP.DE': 'Dermapharm', 'GXI.DE': 'Gerresheimer',
-    'DRW3.DE': 'Drägerwerk', 'O2BC.DE': 'Ottobock', 'EVT.DE': 'Evotec',
+    'DRW3.DE': 'Drägerwerk', 'EVT.DE': 'Evotec',
     # Consumer (DAX additions)
     'BEI.DE': 'Beiersdorf',
     # Consumer (SDAX)
@@ -896,7 +902,7 @@ COMPANY_NAMES = {
     'TMV.DE': 'TeamViewer', 'COK.DE': 'CANCOM', 'YSN.DE': 'secunet',
     'GFT.DE': 'GFT Technologies', 'NA9.DE': 'Nagarro', 'AOF.DE': 'ATOSS Software',
     'ELG.DE': 'Elmos Semiconductor', 'AIXA.DE': 'Aixtron',
-    'SMHN.DE': 'SÜSS MicroTec', 'SANT.DE': 'Kontron',
+    'SMHN.DE': 'SÜSS MicroTec', 'KTN.DE': 'Kontron',
 }
 
 # Rollierende Anker-Ticker (Top-N nach Marktkap): Spillover-Signal, weniger GDELT-Rauschen.
@@ -914,6 +920,8 @@ NEWS_ANCHOR_FETCH_SLEEP_SEC = 0.05
 
 def sector_news_theme_sql(sector_key: str, ref_date) -> str:
     """Sektor-``V2Themes``-Block; optional zusätzlich ``V2Organizations`` (Ankerliste zum Datum)."""
+    import datetime as _dt
+
     base = str(SECTOR_BQ_THEME_WHERE.get(sector_key) or "(1=0)")
     if not NEWS_ANCHOR_ORG_FILTER:
         return base
@@ -926,14 +934,14 @@ def sector_news_theme_sql(sector_key: str, ref_date) -> str:
     sched = load_anchor_schedule(NEWS_ANCHOR_SCHEDULE_PATH)
     if not sched:
         return base
-    if isinstance(ref_date, datetime.datetime):
+    if isinstance(ref_date, _dt.datetime):
         d = ref_date.date()
-    elif isinstance(ref_date, datetime.date):
+    elif isinstance(ref_date, _dt.date):
         d = ref_date
     elif isinstance(ref_date, str) and len(ref_date) >= 10:
-        d = datetime.date.fromisoformat(ref_date[:10])
+        d = _dt.date.fromisoformat(ref_date[:10])
     else:
-        d = datetime.date.today()
+        d = _dt.date.today()
     tks = tickers_for_sector_on_date(sched, sector_key, d)
     if not tks:
         return base
@@ -967,6 +975,8 @@ def _news_macro_variant_cols(mid: str):
         f'news_macro_{mid}_vol_spike',
         f'news_macro_{mid}_tone_l1', f'news_macro_{mid}_tone_l3', f'news_macro_{mid}_tone_l5',
         f'news_macro_{mid}_vol_l1', f'news_macro_{mid}_vol_l3', f'news_macro_{mid}_vol_l5',
+        f'news_macro_{mid}_tone_x_log1p_artcount',
+        f'news_macro_{mid}_tone_d1',
     ]
 
 
@@ -978,6 +988,33 @@ def _news_sec_variant_cols(mid: str):
         f'news_sec_{mid}_vol_spike',
         f'news_sec_{mid}_tone_l1', f'news_sec_{mid}_tone_l3', f'news_sec_{mid}_tone_l5',
         f'news_sec_{mid}_vol_l1', f'news_sec_{mid}_vol_l3', f'news_sec_{mid}_vol_l5',
+        f'news_sec_{mid}_tone_x_log1p_artcount',
+        f'news_sec_{mid}_tone_d1',
+    ]
+
+
+# Nach Shard-Merge: Macro-/Sektor-Tone × Regime-Spalten (Interaktion „Stress × News“).
+NEWS_ADD_REGIME_TONE_INTERACTIONS = True
+NEWS_REGIME_INTERACTION_BASE_COLS: tuple[str, ...] = ("mr_vvix_div_vix", "regime_vix_level")
+
+
+def _news_regime_interaction_colnames(tag: str) -> list[str]:
+    if not USE_NEWS_SENTIMENT or not NEWS_ADD_REGIME_TONE_INTERACTIONS:
+        return []
+    out: list[str] = []
+    for base in NEWS_REGIME_INTERACTION_BASE_COLS:
+        safe = str(base).replace(".", "_")
+        out.append(f"news_macro_{tag}_tone_x_{safe}")
+        out.append(f"news_sec_{tag}_tone_x_{safe}")
+    return out
+
+
+def _news_tone_z_derived_colnames(feature_base: str, sw: str) -> list[str]:
+    """Aus tone_z/vol_z (gleiches Roll-Fenster sw): Shock vs. 3d-Basis, ΔZ, Z×relu(vol_z)."""
+    return [
+        f"{feature_base}_tone_z{sw}_shock",
+        f"{feature_base}_tone_z{sw}_dz1",
+        f"{feature_base}_tone_z{sw}_x_volz_pos",
     ]
 
 
@@ -999,6 +1036,7 @@ def _append_gcam_news_cols(out, tag, zscore_w, use_accel):
                     f"news_sec_{mid}_vol_z{sw}",
                 ]
             )
+            out.extend(_news_tone_z_derived_colnames(f"news_sec_{mid}", sw))
         if use_accel:
             out.append(f"news_sec_{mid}_tone_accel")
 
@@ -1018,6 +1056,7 @@ def _append_anchor_gcam_sec_cols(out, tag, zscore_w, use_accel):
                     f"news_sec_{mid}_vol_z{sw}",
                 ]
             )
+            out.extend(_news_tone_z_derived_colnames(f"news_sec_{mid}", sw))
         if use_accel:
             out.append(f"news_sec_{mid}_tone_accel")
 
@@ -1037,6 +1076,7 @@ def _append_gcam_div_sec_cols(out, tag, zscore_w, use_accel):
                     f"news_sec_{mid}_vol_z{sw}",
                 ]
             )
+            out.extend(_news_tone_z_derived_colnames(f"news_sec_{mid}", sw))
         if use_accel:
             out.append(f"news_sec_{mid}_tone_accel")
 
@@ -1054,6 +1094,7 @@ def _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel):
                 f"news_sec_{mid}_vol_z{sw}",
             ]
         )
+        out.extend(_news_tone_z_derived_colnames(f"news_sec_{mid}", sw))
     if use_accel:
         out.append(f"news_sec_{mid}_tone_accel")
 
@@ -1068,6 +1109,8 @@ def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
             f'news_macro_{tag}_tone_z{sw}', f'news_macro_{tag}_vol_z{sw}',
             f'news_sec_{tag}_tone_z{sw}', f'news_sec_{tag}_vol_z{sw}',
         ])
+        out.extend(_news_tone_z_derived_colnames(f"news_macro_{tag}", sw))
+        out.extend(_news_tone_z_derived_colnames(f"news_sec_{tag}", sw))
     if use_accel:
         out.extend([f'news_macro_{tag}_tone_accel', f'news_sec_{tag}_tone_accel'])
     if use_cross:
@@ -1077,6 +1120,7 @@ def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
         _append_anchor_gcam_sec_cols(out, tag, zscore_w, use_accel)
         _append_gcam_div_sec_cols(out, tag, zscore_w, use_accel)
         _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel)
+    out.extend(_news_regime_interaction_colnames(tag))
     return out
 
 
@@ -1122,6 +1166,8 @@ def all_news_model_cols():
                             f'news_macro_{tag}_tone_z{sw}', f'news_macro_{tag}_vol_z{sw}',
                             f'news_sec_{tag}_tone_z{sw}', f'news_sec_{tag}_vol_z{sw}',
                         ])
+                        cols.extend(_news_tone_z_derived_colnames(f"news_macro_{tag}", sw))
+                        cols.extend(_news_tone_z_derived_colnames(f"news_sec_{tag}", sw))
                 if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
                     cols.extend([f'news_macro_{tag}_tone_accel', f'news_sec_{tag}_tone_accel'])
                 if True in NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
@@ -1138,6 +1184,7 @@ def all_news_model_cols():
                                     f'news_sec_{mid}_vol_z{sw}',
                                 ]
                             )
+                            cols.extend(_news_tone_z_derived_colnames(f"news_sec_{mid}", sw))
                     if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
                         cols.append(f'news_sec_{mid}_tone_accel')
                 if NEWS_ANCHOR_ORG_FILTER:
@@ -1154,6 +1201,7 @@ def all_news_model_cols():
                                         f'news_sec_{mid_a}_vol_z{sw}',
                                     ]
                                 )
+                                cols.extend(_news_tone_z_derived_colnames(f"news_sec_{mid_a}", sw))
                         if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
                             cols.append(f'news_sec_{mid_a}_tone_accel')
                     for gk in _gkg_gcam_keys_clean():
@@ -1169,6 +1217,7 @@ def all_news_model_cols():
                                         f'news_sec_{mid_d}_vol_z{sw}',
                                     ]
                                 )
+                                cols.extend(_news_tone_z_derived_colnames(f"news_sec_{mid_d}", sw))
                         if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
                             cols.append(f'news_sec_{mid_d}_tone_accel')
                     mid_q = f"{tag}_anchor_quality_idx"
@@ -1182,8 +1231,10 @@ def all_news_model_cols():
                                     f'news_sec_{mid_q}_vol_z{sw}',
                                 ]
                             )
+                            cols.extend(_news_tone_z_derived_colnames(f"news_sec_{mid_q}", sw))
                     if True in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
                         cols.append(f'news_sec_{mid_q}_tone_accel')
+                cols.extend(_news_regime_interaction_colnames(tag))
     return cols
 
 def _default_btc_momentum_z_window():
