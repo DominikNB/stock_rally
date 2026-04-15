@@ -449,8 +449,6 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         flush=True,
     )
 
-    df["sector"] = df["ticker"].map(cfg.TICKER_TO_SECTOR)
-    df["sector_id"] = df["sector"].map(cfg.SECTOR_LABELS).astype(float)
     _gics_syms = sorted({_ticker_symbol_str(x) for x in df["ticker"].unique()} - {""})
     print(
         f"assemble_features: Yahoo GICS — yfinance für {len(_gics_syms)} Symbole (Sektor + Branche) …",
@@ -460,6 +458,25 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         _gics_syms, progress_every=max(1, len(_gics_syms) // 10) if len(_gics_syms) > 1 else 1
     )
     add_yahoo_gics_feature_columns(df, _gics_cache)
+    # Primär nach Yahoo-Sector zuordnen (2-stufige Yahoo-Klassifikation ist bereits in gics_* enthalten).
+    # Fallback auf Legacy-Map nur, wenn Yahoo für ein Symbol keinen Sector liefert.
+    _legacy_sector = df["ticker"].map(cfg.TICKER_TO_SECTOR)
+    _gics_sector = df["gics_sector"].astype(str).str.strip()
+    _gics_sector = _gics_sector.mask(_gics_sector.eq(""), np.nan)
+    df["sector"] = _gics_sector.fillna(_legacy_sector).fillna("unknown")
+    _sector_labels = {s: i for i, s in enumerate(sorted({str(x) for x in df["sector"].dropna().unique()}))}
+    df["sector_id"] = df["sector"].map(_sector_labels).astype(float)
+    # Laufzeit-Konsistenz für alle späteren Phasen (Website/Reports/Filter).
+    cfg.SECTOR_LABELS = _sector_labels
+    cfg.TICKER_TO_SECTOR = {
+        t: (v.get("gics_sector") or cfg.TICKER_TO_SECTOR.get(t) or "unknown")
+        for t, v in _gics_cache.items()
+    }
+    print(
+        f"assemble_features: Sector-Mapping = Yahoo (fallback legacy), "
+        f"{len(_sector_labels)} Sektoren im Lauf.",
+        flush=True,
+    )
     df["month"] = df["Date"].dt.month.astype(float)
 
     btc = df[df["ticker"] == "BTC-USD"][["Date", "momentum_20d"]].rename(

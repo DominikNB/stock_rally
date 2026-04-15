@@ -50,7 +50,7 @@ _cred = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
 if _cred:
     if os.path.isfile(_cred):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = _cred
-        print(f"Credentials: GOOGLE_APPLICATION_CREDENTIALS → {_cred}")
+        print(f"Credentials: GOOGLE_APPLICATION_CREDENTIALS -> {_cred}")
     else:
         print(
             "WARNUNG: GOOGLE_APPLICATION_CREDENTIALS gesetzt, Datei fehlt —",
@@ -60,7 +60,7 @@ else:
     _adc = _default_application_default_credentials_path()
     if _adc is not None:
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(_adc)
-        print(f"Credentials: ADC → {_adc}")
+        print(f"Credentials: ADC -> {_adc}")
     else:
         print(
             "Hinweis: Keine ADC-JSON gefunden — für BigQuery: gcloud auth application-default login "
@@ -76,8 +76,8 @@ else:
 START_DATE = '2015-01-01'  # Kurs-Download / Labels; News siehe NEWS_EXTRA_HISTORY_* und NEWS_BQ_*
 END_DATE        = datetime.date.today().strftime('%Y-%m-%d')           # Download bis heute
 TRAIN_END_DATE  = datetime.date.today().strftime('%Y-%m-%d')           # gleiches Kalenderende wie END_DATE
-print(f'Download:  {START_DATE} → {END_DATE}')
-print(f'Training:  {START_DATE} → {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
+print(f'Download:  {START_DATE} -> {END_DATE}')
+print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 
 
 # =============================================================================
@@ -143,9 +143,8 @@ def log_pipeline_mode_banner() -> None:
 N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
 OPT_MIN_PRECISION_BASE   = 0.6   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.65   # Phase 4 Meta-Learner
-OPT_MIN_PRECISION_THRESHOLD = 0.85  # Phase 5 Threshold-Kalibrierung / PR-Plots
-OPT_MIN_PRECISION = OPT_MIN_PRECISION_THRESHOLD  # Alias: find_precision_threshold, Reports
+OPT_MIN_PRECISION_META   = 0.85  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
+OPT_MIN_PRECISION = OPT_MIN_PRECISION_META  # Reports/PR-Plots: gleiches Gate wie Meta
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
 PHASE5_MIN_SIGNALS    = 5
 
@@ -380,14 +379,14 @@ def html_target_definition_section(c=None) -> str:
 
 
 EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 25  # erhöht wegen News-Feature-Grid
+N_OPTUNA_TRIALS       = 35  # erhöht wegen News-Feature-Grid
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
 # N_OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
 # tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
 OPTUNA_SHOW_PROGRESS_BAR = None
-N_META_TRIALS         = 600
+N_META_TRIALS         = 250
 # Meta-Stacking: Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``).
 # Standard: feste Anzahl META_SHAP_TOP_K. Alternativ: META_SHAP_CUM_FRAC z. B. 0.75 =
 # kleinstes K, sodass Summe der K größten mean|SHAP| ≥ 75 % der Summe über alle Spalten.
@@ -431,13 +430,16 @@ UNIVERSE_SAMPLE_SEED = 42
 # "time" = gleiche Ticker in allen Stufen, disjunkte Zeiträume (empfohlen).
 # "ticker" = Legacy: verschiedene Ticker pro Stufe, gleicher Kalender bis TRAIN_END_DATE.
 SPLIT_MODE = "time"
-# Anteile der Handelstage [START … TRAIN_END_DATE]: **TRAIN** = BASE+META (f_train = BASE+META),
-# dann Purge, **THRESHOLD**, **FINAL**. TIME_SPLIT_FRAC_META bleibt für Kompatibilität (wird zu BASE addiert).
-# (Nur Kalender — nicht Label-Schwelle FIXED_Y_*; nicht Ticker-Anteil UNIVERSE_FRACTION.)
-# Beispiel: 0.45 + 0.25 + 0.15 = 0.85 → FINAL = 0.15.
+# Anteile der „Inhalts“-Handelstage (n − 3×Purge) für SPLIT_MODE=time: **BASE** (nur Base-Optuna/Modelle),
+# **META** (nur Meta-Learner; Base-Vorhersagen OOS), **THRESHOLD** (Schwellen-Kalibrierung), **FINAL** (OOS).
+# Zwischen je zwei Blöcken liegen TIME_PURGE_TRADING_DAYS (keine Überlappung / Embargo).
+# Alle drei Fraktionen müssen > 0 sein; Summe BASE+META+THRESHOLD muss < 1 (Rest = FINAL).
+# Da der produktive Threshold jetzt direkt aus Meta-Optuna kommt, kann META größer und THRESHOLD kleiner sein.
+# THRESHOLD bleibt als separates Diagnose-/Monitoring-Fenster bestehen.
+# SPLIT_MODE=ticker: dieselben BASE/META-Anteile + Purge teilen nur den TRAIN-Kalender (gleiche Ticker).
 TIME_SPLIT_FRAC_BASE = 0.45
-TIME_SPLIT_FRAC_META = 0.25
-TIME_SPLIT_FRAC_THRESHOLD = 0.15
+TIME_SPLIT_FRAC_META = 0.35
+TIME_SPLIT_FRAC_THRESHOLD = 0.05
 TIME_PURGE_TRADING_DAYS = 5
 
 # ── Indicator parameter grids ───────────────────────────────────────────────
@@ -548,6 +550,10 @@ BQ_SINGLE_SCAN = True          # True: GKG-Query mit IF/COUNTIF pro Kanal (nicht
 # Größere Fenster + viele Theme-Spalten → BigQuery „Query too big“ / Ressourcenlimit.
 # 0 = ein einziger Scan über [a,b]; sonst höchstens so viele Kalendertage pro Teil-Query (Ergebnisse werden aneinandergehängt).
 BQ_SINGLE_SCAN_CHUNK_DAYS = 120
+# Wenn True: sektorale GKG-Bedingung = (Theme-Filter) AND (Keyword-OR über SECTOR_KEYWORDS[sector]).
+# Leere Channel-Liste bedeutet: auf alle Sektorkanäle anwenden.
+BQ_SECTOR_THEME_KEYWORD_CONJUNCTION = True
+BQ_SECTOR_THEME_KEYWORD_CHANNELS: tuple[str, ...] = ()
 
 # Feste GKG-Theme-Tripel für SQL (leer = keine zusätzlichen Theme-Kanäle im GKG-Scan).
 # Hinweis: Es werden keine ``news_*_th_*``-Modellspalten mehr gebaut — nur V2 Macro/Sektor + Sektor-GCAM.
@@ -616,21 +622,20 @@ NEWS_GDELT_SECONDS_PER_CALL = 6.0  # nur gdelt_api: Throttle + Zeit-Schätzung
 
 # Legacy GDELT-Doc-API (nicht BigQuery): Suchstrings pro Kanal
 MACRO_NEWS_QUERY = "heat pump OR HVAC OR refrigerant OR air conditioning"
-SECTOR_KEYWORDS = {
-    'heat_pump':  ['heat pump', 'HVAC', 'refrigerant', 'air conditioning', 'Daikin', 'Carrier'],
-    'tech':       ['semiconductor', 'AI chip', 'cloud computing', 'software'],
-    'finance':    ['interest rate', 'bank earnings', 'Fed', 'credit'],
-    'healthcare': ['FDA approval', 'clinical trial', 'pharma', 'biotech'],
-    'consumer':   ['consumer spending', 'retail sales', 'inflation'],
-    'industrial': ['manufacturing PMI', 'industrial output', 'capex'],
-    'energy':     ['oil price', 'crude', 'OPEC', 'natural gas'],
-    'crypto':     ['Bitcoin', 'Ethereum', 'crypto regulation', 'DeFi'],
-    'automotive': ['automotive industry', 'electric vehicle', 'car manufacturing'],
-    'materials':  ['chemical industry', 'steel', 'commodities'],
-    'real_estate': ['real estate', 'mortgage rates', 'housing market'],
-    'telecom':    ['telecom', '5G', 'broadband'],
-    'media':      ['media earnings', 'streaming', 'advertising'],
+
+_SECTOR_KEYWORDS_PRIMARY = {
+    "technology": ["semiconductor", "AI chip", "cloud computing", "software"],
+    "financial_services": ["interest rate", "bank earnings", "Fed", "credit"],
+    "healthcare": ["FDA approval", "clinical trial", "pharma", "biotech"],
+    "consumer_cyclical": ["consumer spending", "retail sales", "inflation", "automotive industry", "tariff"],
+    "industrials": ["manufacturing PMI", "industrial output", "capex", "HVAC"],
+    "energy": ["oil price", "crude", "OPEC", "natural gas"],
+    "basic_materials": ["chemical industry", "steel", "commodities"],
+    "real_estate": ["real estate", "mortgage rates", "housing market"],
+    "communication_services": ["telecom", "5G", "broadband", "streaming", "advertising"],
+    "crypto": ["Bitcoin", "Ethereum", "crypto regulation", "DeFi"],
 }
+SECTOR_KEYWORDS = dict(_SECTOR_KEYWORDS_PRIMARY)
 
 # BigQuery GKG: grober V2Themes-Filter pro Kanal (Makro + Sektor).
 # Wird von news.py in jeder Tagesaggregation mitbenutzt — nicht durch GCAM/GKG_THEME_SQL_TRIPLES
@@ -639,118 +644,113 @@ SECTOR_KEYWORDS = {
 # (Trainingsstand) — dann ist dieser Block in der Datei nur Default vor dem Laden.
 MACRO_BQ_THEME_WHERE = (
     "(V2Themes LIKE '%ECON_INTERESTRATES%' OR V2Themes LIKE '%ECON_INFLATION%' "
-    "OR V2Themes LIKE '%MONETARY%' OR V2Themes LIKE '%ECON_CENTRALBANK%')"
+    "OR V2Themes LIKE '%MONETARY%' OR V2Themes LIKE '%ECON_CENTRALBANK%' "
+    "OR V2Themes LIKE '%ECON_COST_OF_BORROWING%' OR V2Themes LIKE '%ECON_DEBT%')"
 )
 
-SECTOR_BQ_THEME_WHERE = {
-    'heat_pump': (
-        "(V2Themes LIKE '%ENV_GREEN_ENERGY%' OR V2Themes LIKE '%ECON_SUBSIDIES%' "
-        "OR V2Themes LIKE '%ENV_ENERGY%')"
+_SECTOR_BQ_THEME_WHERE_PRIMARY = {
+    "technology": (
+        "(V2Themes LIKE '%TECH%' OR V2Themes LIKE '%AI_%' OR V2Themes LIKE '%SEMICONDUCTOR%' "
+        "OR V2Themes LIKE '%ECON_ENTREPRENEURSHIP%' OR V2Themes LIKE '%ECON_TAXES_CORPORATE%')"
     ),
-    'tech': (
-        "(V2Themes LIKE '%TECH%' OR V2Themes LIKE '%ECON_%' OR V2Themes LIKE '%AI_%' "
-        "OR V2Themes LIKE '%SEMICONDUCTOR%')"
-    ),
-    'finance': (
+    "financial_services": (
         "(V2Themes LIKE '%ECON_%' OR V2Themes LIKE '%FINANCE%' OR V2Themes LIKE '%BANK%' "
         "OR V2Themes LIKE '%MONETARY%' OR V2Themes LIKE '%INFLATION%')"
     ),
-    'healthcare': (
+    "healthcare": (
         "(V2Themes LIKE '%HEALTH%' OR V2Themes LIKE '%MEDICAL%' OR V2Themes LIKE '%FDA%' "
-        "OR V2Themes LIKE '%PHARMACEUTICAL%')"
+        "OR V2Themes LIKE '%PHARMACEUTICAL%' OR V2Themes LIKE '%CLINICAL_TRIAL%')"
     ),
-    'consumer': (
-        "(V2Themes LIKE '%CONSUMER%' OR V2Themes LIKE '%RETAIL%' OR V2Themes LIKE '%ECON_%' "
-        "OR V2Themes LIKE '%INFLATION%')"
+    "consumer_cyclical": (
+        "(V2Themes LIKE '%CONSUMER%' OR V2Themes LIKE '%RETAIL%' OR V2Themes LIKE '%AUTO%' "
+        "OR V2Themes LIKE '%VEHICLE%' OR V2Themes LIKE '%AUTOMOTIVE%' "
+        "OR V2Themes LIKE '%ECON_AUTOS%' OR V2Themes LIKE '%TRADE_DISPUTE%')"
     ),
-    'industrial': (
-        "(V2Themes LIKE '%MANUFACTURING%' OR V2Themes LIKE '%ECON_%' OR V2Themes LIKE '%INDUSTRY%')"
+    "industrials": (
+        "(V2Themes LIKE '%MANUFACTURING%' OR V2Themes LIKE '%ECON_%' OR V2Themes LIKE '%INDUSTRY%' "
+        "OR V2Themes LIKE '%ENV_GREEN_ENERGY%' OR V2Themes LIKE '%ECON_SUBSIDIES%')"
     ),
-    'energy': (
+    "energy": (
         "(V2Themes LIKE '%ENERGY%' OR V2Themes LIKE '%OIL%' OR V2Themes LIKE '%GAS%' "
         "OR V2Themes LIKE '%PETROLEUM%' OR V2Themes LIKE '%OPEC%')"
     ),
-    'crypto': (
-        "(V2Themes LIKE '%CRYPTO%' OR V2Themes LIKE '%BITCOIN%' OR V2Themes LIKE '%BLOCKCHAIN%' "
-        "OR V2Themes LIKE '%ETHEREUM%')"
-    ),
-    'automotive': (
-        "(V2Themes LIKE '%AUTO%' OR V2Themes LIKE '%VEHICLE%' OR V2Themes LIKE '%ELECTRIC%' "
-        "OR V2Themes LIKE '%AUTOMOTIVE%')"
-    ),
-    'materials': (
+    "basic_materials": (
         "(V2Themes LIKE '%STEEL%' OR V2Themes LIKE '%COMMODITY%' OR V2Themes LIKE '%CHEMICAL%')"
     ),
-    'real_estate': (
+    "real_estate": (
         "(V2Themes LIKE '%REALESTATE%' OR V2Themes LIKE '%HOUSING%' OR V2Themes LIKE '%MORTGAGE%' "
         "OR V2Themes LIKE '%PROPERTY%')"
     ),
-    'telecom': (
-        "(V2Themes LIKE '%TELECOM%' OR V2Themes LIKE '%5G%' OR V2Themes LIKE '%BROADBAND%')"
+    "communication_services": (
+        "(V2Themes LIKE '%TELECOM%' OR V2Themes LIKE '%5G%' OR V2Themes LIKE '%BROADBAND%' "
+        "OR V2Themes LIKE '%MEDIA%' OR V2Themes LIKE '%STREAMING%' OR V2Themes LIKE '%ADVERTISING%')"
     ),
-    'media': (
-        "(V2Themes LIKE '%MEDIA%' OR V2Themes LIKE '%STREAMING%' OR V2Themes LIKE '%ADVERTISING%')"
+    "crypto": (
+        "(V2Themes LIKE '%CRYPTO%' OR V2Themes LIKE '%BITCOIN%' OR V2Themes LIKE '%BLOCKCHAIN%' "
+        "OR V2Themes LIKE '%ETHEREUM%')"
     ),
 }
+SECTOR_BQ_THEME_WHERE = dict(_SECTOR_BQ_THEME_WHERE_PRIMARY)
 
 # =============================================================================
 # 5. Universum: Ticker, Modell-Cluster / News-Kanäle, Anzeigenamen
 # =============================================================================
-# Die Keys von TICKERS_BY_SECTOR sind **keine** Yahoo-GICS-Sektoren. Sie bündeln Ticker für:
-#   • ``sector_id`` (Modell-Cluster), • je einen GDELT/BigQuery-Newskanal, • Cluster in Holdout-CSV.
-# Yahoo liefert **zwei Hierarchiestufen** (yfinance): ``gics_sector`` + ``gics_industry`` — in ``assemble_features``
-# als ``gics_sector_id`` / ``gics_industry_id`` (s. ``equity_classification``); Website nutzt dieselben Strings.
-# ``heat_pump`` ist ein **thematisches Research-Basket** (HVAC), kein GICS-Label; Yahoo ordnet diese Titel meist
-# „Industrials“ / „Building Products“ o. ä. zu.
-# (Keys müssen zu SECTOR_BQ_THEME_WHERE / SECTOR_KEYWORDS passen.)
+# Die Keys von TICKERS_BY_SECTOR folgen den Yahoo-nahen, normalisierten Sektor-Keys.
+# Für das Modell ist das der primäre Kanal-Schlüssel (News, sector_id, Reports).
+# ``gics_sector``/``gics_industry`` kommen weiterhin live aus yfinance in ``assemble_features``.
 
 TICKERS_BY_SECTOR = {
-    # ── Wärmepumpen & HVAC (thematisches Basket, nicht GICS) ────────────────
-    'heat_pump':  ['NIBE-B.ST', '6367.T', 'CARR', 'TT', 'JCI', 'LII',
-                   'AOS', 'WSO', '6503.T', 'AALB.AS'],
-
-    # ── Technologie ────────────────────────────────────────────────────────
+    # ── Technology ─────────────────────────────────────────────────────────
     # DAX: SAP, IFX  |  MDAX: NEM(Nemetschek), BC8  |  SDAX: TMV, COK, YSN, GFT, NA9, AOF, ELG, AIXA, SMHN, SANT
-    'tech':       ['AAPL', 'MSFT', 'NVDA', 'CRM', 'CSCO', 'INTC', 'IBM', 'ASML',
+    'technology': ['AAPL', 'MSFT', 'NVDA', 'CRM', 'CSCO', 'INTC', 'IBM', 'ASML',
+                   'TSM', 'AMD', 'PANW',
                    'SAP.DE', 'IFX.DE',
                    'NEM.DE', 'BC8.DE',
                    'TMV.DE', 'COK.DE', 'YSN.DE', 'GFT.DE', 'NA9.DE',
                    'AOF.DE', 'ELG.DE', 'AIXA.DE', 'SMHN.DE', 'SANT.DE'],
 
-    # ── Finanzen ───────────────────────────────────────────────────────────
+    # ── Financial Services ─────────────────────────────────────────────────
     # DAX: DB1, HNR1  |  MDAX: TLX  |  SDAX: MLP, GLJ, PBB, HABA, WUW, DBAG, HYQ
-    'finance':    ['JPM', 'GS', 'AXP', 'V',
-                   'ALV.DE', 'MUV2.DE', 'DBK.DE', 'CBK.DE', 'BNP.PA',
-                   'DB1.DE', 'HNR1.DE',
-                   'TLX.DE',
-                   'MLP.DE', 'GLJ.DE', 'PBB.DE', 'WUW.DE', 'DBAG.DE', 'HYQ.DE'],
+    'financial_services': ['JPM', 'GS', 'AXP', 'V',
+                           'ALV.DE', 'MUV2.DE', 'DBK.DE', 'CBK.DE', 'BNP.PA',
+                           'DB1.DE', 'HNR1.DE',
+                           'TLX.DE',
+                           'MLP.DE', 'GLJ.DE', 'PBB.DE', 'WUW.DE', 'DBAG.DE', 'HYQ.DE'],
 
-    # ── Gesundheit ─────────────────────────────────────────────────────────
+    # ── Healthcare ─────────────────────────────────────────────────────────
     # DAX: FME, SHL  |  MDAX: SRT3  |  SDAX: AFX, EUZ, DMP, GXI, DRW3, O2BC, EVT
     'healthcare': ['JNJ', 'UNH', 'MRK', 'AMGN', 'NVS',
+                   'ISRG', 'ILMN',
                    'BAYN.DE', 'FRE.DE', 'MRK.DE', 'FME.DE', 'SHL.DE',
                    'SRT3.DE',
                    'AFX.DE', 'EUZ.DE', 'DMP.DE', 'GXI.DE', 'DRW3.DE', 'O2BC.DE', 'EVT.DE'],
 
-    # ── Konsumgüter ────────────────────────────────────────────────────────
+    # ── Consumer Cyclical (inkl. Automotive-Basket) ───────────────────────
     # DAX: BEI  |  SDAX: FIE, HBH, DOU, SZU, HFG, KWS, EVD, DHER
-    'consumer':   ['KO', 'MCD', 'NKE', 'PG', 'WMT', 'HD', 'DIS',
-                   'ADS.DE', 'BOSS.DE', 'HEN3.DE', 'PUM.DE', 'ZAL.DE', 'LVMH.PA',
-                   'BEI.DE',
-                   'FIE.DE', 'HBH.DE', 'DOU.DE', 'SZU.DE', 'HFG.DE', 'KWS.DE',
-                   'EVD.DE', 'DHER.DE'],
+    # DAX Automotive: VOW3, BMW, MBG, CON, PAH3, P911, DTG  |  MDAX: TGR, SHA
+    'consumer_cyclical': ['KO', 'MCD', 'NKE', 'PG', 'WMT', 'HD', 'DIS',
+                          'ADS.DE', 'BOSS.DE', 'HEN3.DE', 'PUM.DE', 'ZAL.DE', 'LVMH.PA',
+                          'BEI.DE',
+                          'FIE.DE', 'HBH.DE', 'DOU.DE', 'SZU.DE', 'HFG.DE', 'KWS.DE',
+                          'EVD.DE', 'DHER.DE',
+                          'VOW3.DE', 'BMW.DE', 'MBG.DE', 'CON.DE', 'PAH3.DE', 'P911.DE',
+                          'DTG.DE',
+                          'TM', 'STLA', 'GM', 'F',
+                          'TGR.DE', 'SHA.DE'],
 
-    # ── Industrie ──────────────────────────────────────────────────────────
+    # ── Industrials (inkl. HVAC/Heat-Pump-Basket) ─────────────────────────
     # DAX: SIE, RHM, MTX, AIR, DHL, G1A  |  MDAX: KBX, HOC, KGX, JUN3, TKA, HAG, R3NK, LHA, FRA, HLAG, RAA
     # SDAX: DUE, JST, SFQ, NOEJ, VOS, WAC, INH, MUX, STM, KSB, HDD
-    'industrial': ['CAT', 'BA', 'HON', 'MMM', 'SHW', 'TRV', 'DOW',
-                   'SIE.DE', 'RHM.DE', 'MTX.DE', 'AIR.DE', 'DHL.DE', 'G1A.DE',
-                   'KBX.DE', 'HOC.DE', 'KGX.DE', 'JUN3.DE', 'TKA.DE', 'HAG.DE',
-                   'R3NK.DE', 'LHA.DE', 'FRA.DE', 'HLAG.DE', 'RAA.DE',
-                   'DUE.DE', 'JST.DE', 'SFQ.DE', 'NOEJ.DE', 'VOS.DE',
-                   'WAC.DE', 'INH.DE', 'MUX.DE', 'STM.DE', 'KSB.DE', 'HDD.DE'],
+    'industrials': ['CAT', 'BA', 'HON', 'MMM', 'SHW', 'TRV', 'DOW', 'FDX',
+                    'SIE.DE', 'RHM.DE', 'MTX.DE', 'AIR.DE', 'DHL.DE', 'G1A.DE',
+                    'KBX.DE', 'HOC.DE', 'KGX.DE', 'JUN3.DE', 'TKA.DE', 'HAG.DE',
+                    'R3NK.DE', 'LHA.DE', 'FRA.DE', 'HLAG.DE', 'RAA.DE',
+                    'DUE.DE', 'JST.DE', 'SFQ.DE', 'NOEJ.DE', 'VOS.DE',
+                    'WAC.DE', 'INH.DE', 'MUX.DE', 'STM.DE', 'KSB.DE', 'HDD.DE',
+                    'NIBE-B.ST', '6367.T', 'CARR', 'TT', 'JCI', 'LII',
+                    'AOS', 'WSO', '6503.T', 'AALB.AS'],
 
-    # ── Energie ────────────────────────────────────────────────────────────
+    # ── Energy ─────────────────────────────────────────────────────────────
     # DAX: ENR  |  MDAX: NDX1  |  SDAX: S92, VBK, EKT, PNE3, F3C, VH2
     'energy':     ['CVX', 'XOM', 'BP',
                    'RWE.DE', 'EOAN.DE', 'NEE', 'DUK', 'IBE.MC',
@@ -758,42 +758,33 @@ TICKERS_BY_SECTOR = {
                    'NDX1.DE',
                    'S92.DE', 'VBK.DE', 'EKT.DE', 'PNE3.DE', 'F3C.DE', 'VH2.DE'],
 
-    # ── Krypto ─────────────────────────────────────────────────────────────
+    # ── Crypto (nicht Yahoo-GICS) ──────────────────────────────────────────
     'crypto':     ['BTC-USD', 'ETH-USD', 'BNB-USD', 'SOL-USD', 'XRP-USD', 'ADA-USD'],
 
-    # ── Automotive ─────────────────────────────────────────────────────────
-    # DAX: VOW3, BMW, MBG, CON, PAH3, P911, DTG  |  MDAX: TGR, SHA
-    'automotive': ['VOW3.DE', 'BMW.DE', 'MBG.DE', 'CON.DE', 'PAH3.DE', 'P911.DE',
-                   'DTG.DE',
-                   'TM', 'STLA', 'GM', 'F',
-                   'TGR.DE', 'SHA.DE'],
-
-    # ── Rohstoffe & Chemie ─────────────────────────────────────────────────
+    # ── Basic Materials ─────────────────────────────────────────────────────
     # DAX: BAS, BNR, HEI, SY1  |  MDAX: EVK, LXS, NDA, SDO, FPE3  |  SDAX: ACT, WAF, BFSA, KCO
-    'materials':  ['BAS.DE', 'LIN', 'WCH.DE', 'APD', 'LYB', 'BNR.DE', 'NEM',
-                   'HEI.DE', 'SY1.DE',
-                   'EVK.DE', 'LXS.DE', 'NDA.DE', 'SDO.DE', 'FPE3.DE',
-                   'ACT.DE', 'WAF.DE', 'BFSA.DE', 'KCO.DE'],
+    'basic_materials': ['BAS.DE', 'LIN', 'WCH.DE', 'APD', 'LYB', 'BNR.DE', 'NEM', 'RIO',
+                        'HEI.DE', 'SY1.DE',
+                        'EVK.DE', 'LXS.DE', 'NDA.DE', 'SDO.DE', 'FPE3.DE',
+                        'ACT.DE', 'WAF.DE', 'BFSA.DE', 'KCO.DE'],
 
-    # ── Immobilien ─────────────────────────────────────────────────────────
+    # ── Real Estate ────────────────────────────────────────────────────────
     # DAX: VNA  |  MDAX: LEG  |  SDAX: GYC, DEQ, HABA, PAT
     'real_estate':['VNA.DE', 'LEG.DE', 'O', 'AMT', 'SPG', 'WDP.BR',
                    'GYC.DE', 'DEQ.DE', 'HABA.DE', 'PAT.DE'],
 
-    # ── Telekommunikation ──────────────────────────────────────────────────
+    # ── Communication Services (Telecom + Media) ───────────────────────────
     # DAX: DTE  |  MDAX: O2D, UTDI, FNTN  |  SDAX: 1U1
-    'telecom':    ['DTE.DE', 'T', 'VZ', 'TMUS', 'ORAN',
-                   'O2D.DE', 'UTDI.DE', 'FNTN.DE', '1U1.DE'],
-
-    # ── Medien (neu) ───────────────────────────────────────────────────────
     # DAX: G24  |  MDAX: RRTL  |  SDAX: SPG, BVB, PSM, CWC
-    'media':      ['RRTL.DE', 'SPG.DE', 'BVB.DE', 'PSM.DE', 'CWC.DE', 'G24.DE'],
+    'communication_services': ['DTE.DE', 'T', 'VZ', 'TMUS', 'ORAN',
+                               'O2D.DE', 'UTDI.DE', 'FNTN.DE', '1U1.DE',
+                               'RRTL.DE', 'SPG.DE', 'BVB.DE', 'PSM.DE', 'CWC.DE', 'G24.DE'],
 }
 
 # Alphabetically sorted sector labels (0-based)
 SECTOR_LABELS = {s: i for i, s in enumerate(sorted(TICKERS_BY_SECTOR.keys()))}
-# automotive=0, consumer=1, crypto=2, energy=3, finance=4, healthcare=5,
-# heat_pump=6, industrial=7, materials=8, media=9, real_estate=10, tech=11, telecom=12
+# basic_materials=0, communication_services=1, consumer_cyclical=2, crypto=3,
+# energy=4, financial_services=5, healthcare=6, industrials=7, real_estate=8, technology=9
 
 TICKER_TO_SECTOR = {t: s for s, tl in TICKERS_BY_SECTOR.items() for t in tl}
 ALL_TICKERS = [t for tl in TICKERS_BY_SECTOR.values() for t in tl]
@@ -807,6 +798,7 @@ COMPANY_NAMES = {
     # Tech
     'AAPL': 'Apple', 'MSFT': 'Microsoft', 'NVDA': 'NVIDIA', 'CRM': 'Salesforce',
     'CSCO': 'Cisco', 'INTC': 'Intel', 'IBM': 'IBM',
+    'TSM': 'TSMC', 'AMD': 'AMD', 'PANW': 'Palo Alto Networks',
     'SAP.DE': 'SAP', 'IFX.DE': 'Infineon', 'ASML': 'ASML',
     # Finance
     'JPM': 'JPMorgan', 'GS': 'Goldman Sachs', 'AXP': 'AmEx', 'V': 'Visa',
@@ -814,6 +806,7 @@ COMPANY_NAMES = {
     'CBK.DE': 'Commerzbank', 'BNP.PA': 'BNP Paribas',
     # Healthcare
     'JNJ': 'J&J', 'UNH': 'UnitedHealth', 'MRK': 'Merck US', 'AMGN': 'Amgen',
+    'ISRG': 'Intuitive Surgical', 'ILMN': 'Illumina',
     'BAYN.DE': 'Bayer', 'FRE.DE': 'Fresenius', 'MRK.DE': 'Merck KGaA',
     'SRT3.DE': 'Sartorius', 'NVS': 'Novartis',
     # Consumer
@@ -823,6 +816,7 @@ COMPANY_NAMES = {
     'PUM.DE': 'PUMA', 'ZAL.DE': 'Zalando', 'LVMH.PA': 'LVMH',
     # Industrial (DAX)
     'CAT': 'Caterpillar', 'BA': 'Boeing', 'HON': 'Honeywell', 'MMM': '3M',
+    'FDX': 'FedEx',
     'SHW': 'Sherwin-Williams', 'TRV': 'Travelers', 'DOW': 'Dow Inc.',
     'SIE.DE': 'Siemens', 'RHM.DE': 'Rheinmetall', 'MTX.DE': 'MTU Aero',
     'AIR.DE': 'Airbus', 'DHL.DE': 'DHL Group', 'G1A.DE': 'GEA Group',
@@ -856,7 +850,7 @@ COMPANY_NAMES = {
     # Materials (DAX)
     'BAS.DE': 'BASF', 'LIN': 'Linde', 'WCH.DE': 'Wacker Chemie',
     'APD': 'Air Products', 'LYB': 'LyondellBasell', 'BNR.DE': 'Brenntag',
-    'NEM': 'Newmont', 'HEI.DE': 'Heidelberg Materials', 'SY1.DE': 'Symrise',
+    'NEM': 'Newmont', 'RIO': 'Rio Tinto', 'HEI.DE': 'Heidelberg Materials', 'SY1.DE': 'Symrise',
     # Materials (MDAX)
     'EVK.DE': 'Evonik', 'LXS.DE': 'LANXESS', 'NDA.DE': 'Aurubis',
     'SDO.DE': 'K+S', 'FPE3.DE': 'Fuchs SE',
@@ -908,9 +902,10 @@ COMPANY_NAMES = {
 # Rollierende Anker-Ticker (Top-N nach Marktkap): Spillover-Signal, weniger GDELT-Rauschen.
 # Zeitplan: JSON mit Vierteljahres-Zeilen (siehe scripts/build_sector_anchor_schedule.py).
 # BigQuery nutzt Chunk-Enddatum ``ref_date`` — bei sehr großen Zeitscheiben ggf. Chunk-Dauer < Quartal.
-NEWS_ANCHOR_ORG_FILTER = False
+NEWS_ANCHOR_ORG_FILTER = True
 NEWS_ANCHOR_SCHEDULE_PATH = Path("data") / "sector_anchor_quarters.json"
 NEWS_ANCHOR_TOP_N = 3
+NEWS_ANCHOR_FETCH_SLEEP_SEC = 0.05
 
 # =============================================================================
 # 6. Hilfsfunktionen (Feature-Spalten, Rename-Map)
@@ -1395,4 +1390,28 @@ def build_rename_map(
 
 print('Configuration loaded.')
 print(f'Total tickers: {len(ALL_TICKERS)}')
+_uf_tr = float(UNIVERSE_FRACTION)
+if SCORING_ONLY:
+    print(
+        'Universum (Training): SCORING_ONLY=True — Symbole aus Artefakt beim Laden, '
+        'nicht über UNIVERSE_FRACTION.',
+        flush=True,
+    )
+elif _uf_tr >= 1.0:
+    print(
+        f'Universum (Training): 100.0% — alle {len(ALL_TICKERS)} Symbole (UNIVERSE_FRACTION={_uf_tr}).',
+        flush=True,
+    )
+elif _uf_tr <= 0.0:
+    print(
+        f'Universum (Training): UNIVERSE_FRACTION={_uf_tr} ungültig (muss > 0 und ≤ 1).',
+        flush=True,
+    )
+else:
+    _n_plan = max(1, int(round(len(ALL_TICKERS) * _uf_tr)))
+    print(
+        f'Universum (Training): {100.0 * _uf_tr:.1f}% — geplant ca. {_n_plan}/{len(ALL_TICKERS)} Symbole '
+        f'(UNIVERSE_FRACTION={_uf_tr}; Auswahl per Zufall, UNIVERSE_SAMPLE_SEED={UNIVERSE_SAMPLE_SEED}).',
+        flush=True,
+    )
 print(f'Sector labels: {SECTOR_LABELS}')

@@ -21,6 +21,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from lib.stock_rally_v10 import config as cfg
+from lib.stock_rally_v10.anchor_maintenance import ensure_anchor_schedule_current
 from lib.stock_rally_v10.data_and_split import run_data_download_and_split
 from lib.stock_rally_v10.post_split_embedded import run_training_scoring_and_export
 
@@ -109,6 +110,7 @@ def run_pipeline_default() -> None:
     bind_step_functions()
     cfg.log_pipeline_mode_banner()
     _log_loaded_config_snapshot()
+    ensure_anchor_schedule_current(cfg)
     run_data_download_and_split()
     run_training_scoring_and_export()
 

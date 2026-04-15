@@ -1,4 +1,4 @@
-"""Phase 15: PR-Kurven, Threshold-Sweep, ``apply_signal_filters`` auf dem Config-Modul."""
+"""Phase 15: PR-Kurven und kompakte Filter-Diagnose am produktiven Threshold."""
 from __future__ import annotations
 
 from typing import Any
@@ -8,10 +8,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import (
     average_precision_score,
-    f1_score,
     precision_recall_curve,
     precision_score,
-    recall_score,
 )
 
 from lib.stock_rally_v10.equity_classification import _ticker_symbol_str
@@ -138,170 +136,58 @@ def run_phase_threshold_pr_and_filters(cfg_mod: Any) -> None:
     ax1.set_xlim([0, 1])
     ax1.set_ylim([0, 1])
 
-    thr_sweep = np.arange(0.01, 1.0, 0.01)
-    prec_sw = []
-    rec_sw = []
-    f1_sw = []
-    for t in thr_sweep:
-        p_ = (y_prob_threshold >= t).astype(int)
-        prec_sw.append(precision_score(y_threshold, p_, zero_division=0))
-        rec_sw.append(recall_score(y_threshold, p_, zero_division=0))
-        f1_sw.append(f1_score(y_threshold, p_, zero_division=0))
-
-    ax2.plot(thr_sweep, prec_sw, color="tomato", label="Precision")
-    ax2.plot(thr_sweep, rec_sw, color="steelblue", label="Recall")
-    ax2.plot(thr_sweep, f1_sw, color="green", linestyle="--", label="F1")
+    bins = np.linspace(0.0, 1.0, 41)
+    ax2.hist(
+        y_prob_threshold,
+        bins=bins,
+        alpha=0.45,
+        color="steelblue",
+        label=f"THRESHOLD probs (n={len(y_prob_threshold):,})",
+        density=True,
+    )
+    ax2.hist(
+        y_prob_final,
+        bins=bins,
+        alpha=0.35,
+        color="tomato",
+        label=f"FINAL probs (n={len(y_prob_final):,})",
+        density=True,
+    )
     ax2.axvline(best_threshold, color="black", linewidth=1.2, label=f"Best thr={best_threshold:.2f}")
-    ax2.axvline(f1_thresh, color="purple", linestyle=":", linewidth=1.0, label=f"F1-opt={f1_thresh:.2f}")
-    ax2.set_xlabel("Threshold")
-    ax2.set_ylabel("Score")
-    ax2.set_title("THRESHOLD-Set — Threshold vs Metrics")
+    ax2.axvline(f1_thresh, color="purple", linestyle=":", linewidth=1.0, label=f"Ref thr={f1_thresh:.2f}")
+    ax2.set_xlabel("Model probability")
+    ax2.set_ylabel("Density")
+    ax2.set_title("Probability Distribution @ produktivem Threshold")
     ax2.legend()
     ax2.set_xlim([0, 1])
-    ax2.set_ylim([0, 1])
     plt.tight_layout()
     plt.show()
 
-    print("\n── THRESHOLD-Set (raw) Sweep ──")
-    rows_test = []
-    for t in np.arange(0.05, 0.96, 0.05):
-        preds = (y_prob_threshold >= t).astype(int)
-        n_sig = preds.sum()
-        tp = int((preds * y_threshold).sum())
-        fp = int(preds.sum() - tp)
-        prec = precision_score(y_threshold, preds, zero_division=0)
-        rec = recall_score(y_threshold, preds, zero_division=0)
-        f1 = f1_score(y_threshold, preds, zero_division=0)
-        rows_test.append(
-            {
-                "Thr": f"{t:.2f}",
-                "Prec": f"{prec:.2%}",
-                "Rec": f"{rec:.2%}",
-                "F1": f"{f1:.3f}",
-                "Signals": n_sig,
-                "TP": tp,
-                "FP": fp,
-            }
-        )
-    print(pd.DataFrame(rows_test).to_string(index=False))
-
     apply_signal_filters = cfg_mod.apply_signal_filters
-
-    print("\n── FINAL (filtered) Threshold Sweep ──", flush=True)
-    rows_final = []
-    _thr_grid_final = np.arange(0.05, 0.96, 0.05)
-    if not final_tickers:
-        print(
-            "  Leere Tickerliste (`final_tickers`) — kein Sweep, keine Tabellenzeilen.",
-            flush=True,
-        )
-    else:
-        print(
-            f"  Sweep: {len(_thr_grid_final)} Schwellen × {len(final_tickers)} Ticker "
-            f"(gefilterte Signale; Fortschritt pro Schwelle unten).",
-            flush=True,
-        )
-        for _i_thr, t in enumerate(_thr_grid_final, start=1):
-            print(
-                f"  [{_i_thr}/{len(_thr_grid_final)}] Schwelle {t:.2f}: "
-                f"`apply_signal_filters` für {len(final_tickers)} Ticker …",
-                flush=True,
-            )
-            sig_dates_by_ticker = {}
-            _n_ft = len(final_tickers)
-            _mid = (_n_ft // 2) if _n_ft else 0
-            for _j, ticker in enumerate(final_tickers, start=1):
-                sub = df_final[df_final["ticker"].astype(str).str.strip() == str(ticker)]
-                sig_dates_by_ticker[ticker] = apply_signal_filters(sub, t)
-                if _mid and _j == _mid:
-                    print(
-                        f"      … Mitte: {_j}/{_n_ft} Ticker für Schwelle {t:.2f} fertig.",
-                        flush=True,
-                    )
-
-            n_sig = 0
-            tp = 0
-            fp = 0
-            for ticker, sig_dates in sig_dates_by_ticker.items():
-                sub = df_final[df_final["ticker"].astype(str).str.strip() == str(ticker)]
-                for d in sig_dates:
-                    row = _rows_for_signal_calendar_day(sub, d)
-                    if row.empty:
-                        continue
-                    n_sig += 1
-                    if row["target"].values[0] == 1:
-                        tp += 1
-                    else:
-                        fp += 1
-            if n_sig == 0:
-                print(
-                    "      → 0 Signale nach allen Filtern (kein Tabelleneintrag für diese Schwelle).",
-                    flush=True,
-                )
-                continue
-            prec = tp / n_sig
-            check = "\u2713" if prec >= OPT_MIN_PRECISION else ""
-            rows_final.append(
-                {
-                    "Thr": f"{t:.2f}",
-                    "Prec": f"{prec:.2%}",
-                    "Signals": n_sig,
-                    "TP": tp,
-                    "FP": fp,
-                    f"≥{OPT_MIN_PRECISION:.0%}": check,
-                }
-            )
-            print(
-                f"      → {n_sig} Signale, Precision {prec:.1%}, TP={tp}, FP={fp}",
-                flush=True,
-            )
-        if rows_final:
-            print(pd.DataFrame(rows_final).to_string(index=False))
-        else:
-            print(
-                "  Hinweis: Bei keiner getesteten Schwelle (0.05…0.95) bleibt nach "
-                "Konsekutiv-/Cooldown-/Anti-Peak-/RSI-Filtern mindestens ein Signal übrig — "
-                "daher keine Sweep-Zeilen (nicht „eingefroren“, nur leeres Ergebnis).",
-                flush=True,
-            )
 
     print("\n── Result Summary ──")
     print(
-        f"  Hinweis: Die Sweep-Tabellen oben zeigen Precision für *jedes* t (was-wäre-wenn). "
-        f"Die Zeilen unten beziehen sich nur auf best_threshold={best_threshold:.3f} aus Phase 5 "
-        f"(niedrigstes t mit roher Precision ≥ OPT_MIN_PRECISION={OPT_MIN_PRECISION:.0%}, sonst Fallback). "
-        f"THRESHOLD (raw) = ohne Konsekutiv-/Cooldown-Filter; FINAL (filtered) = mit Filter."
+        f"  Produktiv bewertet wird nur FILTERED bei best_threshold={best_threshold:.3f} "
+        "aus Meta-Optuna (inkl. Konsekutiv/Cooldown/Anti-Peak/RSI)."
     )
-    for label, y_true, y_prob_arr, tickers_list, df_part in [
-        ("THRESHOLD (raw)", y_threshold, y_prob_threshold, threshold_tickers, df_threshold),
-        ("FINAL (filtered)", y_final, y_prob_final, final_tickers, df_final),
-    ]:
-        if label.startswith("THRESHOLD"):
-            preds = (y_prob_arr >= best_threshold).astype(int)
-            n_sig = preds.sum()
-            tp = int((preds * y_true).sum())
-            fp = n_sig - tp
-            prec = precision_score(y_true, preds, zero_division=0)
-        else:
-            n_sig = tp = fp = 0
-            for t in tickers_list:
-                sub = df_part[df_part["ticker"].astype(str).str.strip() == str(t)]
-                for d in apply_signal_filters(sub, best_threshold):
-                    row = _rows_for_signal_calendar_day(sub, d)
-                    if row.empty:
-                        continue
-                    n_sig += 1
-                    if row["target"].values[0] == 1:
-                        tp += 1
-                    else:
-                        fp += 1
-            prec = tp / n_sig if n_sig > 0 else 0.0
-
-        status = "PASS \u2713" if prec >= OPT_MIN_PRECISION else "MISS \u2717"
-        print(
-            f"  {label:20s} | Signals={n_sig:4d} | TP={tp:4d} | FP={fp:4d} | "
-            f"Precision={prec:.1%} | {status}  (gate: ≥{OPT_MIN_PRECISION:.0%})"
-        )
+    n_sig = tp = fp = 0
+    for t in final_tickers:
+        sub = df_final[df_final["ticker"].astype(str).str.strip() == str(t)]
+        for d in apply_signal_filters(sub, best_threshold):
+            row = _rows_for_signal_calendar_day(sub, d)
+            if row.empty:
+                continue
+            n_sig += 1
+            if row["target"].values[0] == 1:
+                tp += 1
+            else:
+                fp += 1
+    prec = tp / n_sig if n_sig > 0 else 0.0
+    status = "PASS \u2713" if prec >= OPT_MIN_PRECISION else "MISS \u2717"
+    print(
+        f"  FINAL (filtered)     | Signals={n_sig:4d} | TP={tp:4d} | FP={fp:4d} | "
+        f"Precision={prec:.1%} | {status}  (gate: ≥{OPT_MIN_PRECISION:.0%})"
+    )
 
     # ── Diagnose: wo verschwinden FINAL-Signale? (aggregiert über alle final_tickers)
     _dt_thr = pd.to_datetime(df_threshold["Date"])

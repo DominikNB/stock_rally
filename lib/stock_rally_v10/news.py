@@ -95,6 +95,45 @@ def _bq_escape_like(s: str) -> str:
     return str(s).replace("'", "''").replace("\\", "\\\\")
 
 
+def _bq_sector_keyword_conjunction_enabled(sector: str) -> bool:
+    if not bool(_c("BQ_SECTOR_THEME_KEYWORD_CONJUNCTION", False)):
+        return False
+    chosen = _c("BQ_SECTOR_THEME_KEYWORD_CHANNELS", ()) or ()
+    if not chosen:
+        return True
+    return str(sector) in {str(x) for x in chosen}
+
+
+def _bq_sector_keyword_or_sql(sector: str) -> str:
+    kws = list(getattr(cfg, "SECTOR_KEYWORDS", {}).get(sector) or [])
+    if not kws:
+        return ""
+    txt = (
+        "LOWER(CONCAT(IFNULL(V2Themes, ''), ' ', IFNULL(V2Organizations, ''), ' ', "
+        "IFNULL(V2Persons, ''), ' ', IFNULL(V2Locations, '')))"
+    )
+    parts = []
+    for kw in kws:
+        term = str(kw).strip().lower()
+        if not term:
+            continue
+        pat = re.escape(term).replace("'", "''")
+        parts.append(f"REGEXP_CONTAINS({txt}, r'{pat}')")
+    if not parts:
+        return ""
+    return "(" + " OR ".join(parts) + ")"
+
+
+def _bq_sector_theme_cond(sector: str) -> str:
+    base = str(cfg.SECTOR_BQ_THEME_WHERE.get(sector) or "(1=0)")
+    if not _bq_sector_keyword_conjunction_enabled(sector):
+        return base
+    kw_or = _bq_sector_keyword_or_sql(sector)
+    if not kw_or:
+        return base
+    return f"(({base}) AND ({kw_or}))"
+
+
 # Mindestabstand zwischen GDELT-HTTP-Calls (öffentliche API ist streng rate-limited).
 _GDELT_THROTTLE_LAST = [0.0]
 _ANCHOR_FILTER_LOGGED = False
@@ -965,8 +1004,8 @@ def _bq_gkg_theme_triple_cond(channel: str, raw_token: str, ref_date=None) -> st
     if channel == "macro":
         base = str(_c("MACRO_BQ_THEME_WHERE", "(1=1)"))
     else:
-        # Theme-Splits: sektoral nur V2Themes (Anker-OR-Filter separat im Single-Scan).
-        base = str(cfg.SECTOR_BQ_THEME_WHERE.get(channel) or "(1=0)")
+        # Theme-Splits: sektoral Basisbedingung inkl. optionalem Theme∧Keyword-AND.
+        base = _bq_sector_theme_cond(channel)
     return f"(({base}) AND ({like}))"
 
 
@@ -1082,7 +1121,7 @@ def _bq_query_all_channels_gkg(a, b):
     ref = pd.Timestamp(b).normalize()
     or_parts = [f"({cfg.MACRO_BQ_THEME_WHERE})"]
     for s in cfg.TICKERS_BY_SECTOR:
-        or_parts.append(f"({cfg.SECTOR_BQ_THEME_WHERE[s]})")
+        or_parts.append(f"({_bq_sector_theme_cond(s)})")
     combined_or = "(" + " OR ".join(or_parts) + ")"
     sel_parts = ["DATE(_PARTITIONTIME) AS d"]
     for ch in channels:
@@ -1097,7 +1136,7 @@ def _bq_query_all_channels_gkg(a, b):
                     f"AVG(IF( ({cond}), SAFE_CAST(REGEXP_EXTRACT(CAST(GCAM AS STRING), r'{pat}') AS FLOAT64), NULL)) AS {ch}_{cn}"
                 )
             continue
-        cond_b = cfg.SECTOR_BQ_THEME_WHERE[ch]
+        cond_b = _bq_sector_theme_cond(ch)
         sel_parts.append(f"AVG(IF( ({cond_b}), {tone_part}, NULL)) AS {ch}_tone")
         sel_parts.append(f"COUNTIF( ({cond_b}) ) AS {ch}_vol")
         for gk in cfg._gkg_gcam_keys_clean():
@@ -1107,7 +1146,9 @@ def _bq_query_all_channels_gkg(a, b):
                 f"AVG(IF( ({cond_b}), SAFE_CAST(REGEXP_EXTRACT(CAST(GCAM AS STRING), r'{pat}') AS FLOAT64), NULL)) AS {ch}_{cn}"
             )
         if cfg.sector_anchor_org_active(ch, ref):
-            cond_a = cfg.sector_news_theme_sql(ch, ref)
+            cond_a_base = cfg.sector_news_theme_sql(ch, ref)
+            kw_or = _bq_sector_keyword_or_sql(ch) if _bq_sector_keyword_conjunction_enabled(ch) else ""
+            cond_a = f"(({cond_a_base}) AND ({kw_or}))" if kw_or else cond_a_base
             sel_parts.append(
                 f"AVG(IF( ({cond_a}), {tone_part}, NULL)) AS {ch}_anchor_tone"
             )
@@ -1232,12 +1273,12 @@ def _bq_query_channel_date_range(channel, a, b):
         theme_anchor = None
     else:
         ref_b = pd.Timestamp(b).normalize()
-        theme_broad = str(cfg.SECTOR_BQ_THEME_WHERE[channel])
-        theme_anchor = (
-            cfg.sector_news_theme_sql(channel, ref_b)
-            if cfg.sector_anchor_org_active(channel, ref_b)
-            else None
-        )
+        theme_broad = _bq_sector_theme_cond(channel)
+        theme_anchor = None
+        if cfg.sector_anchor_org_active(channel, ref_b):
+            t_anchor = cfg.sector_news_theme_sql(channel, ref_b)
+            kw_or = _bq_sector_keyword_or_sql(channel) if _bq_sector_keyword_conjunction_enabled(channel) else ""
+            theme_anchor = f"(({t_anchor}) AND ({kw_or}))" if kw_or else t_anchor
     geo_sql = "" if use_gkg else _bq_geo_sql(is_macro, None if is_macro else channel)
     if use_gkg:
         return _bq_run_gkg_daily_agg(

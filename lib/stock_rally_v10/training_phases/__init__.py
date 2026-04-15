@@ -24,9 +24,47 @@ def _cfg_module(cfg_mod: Any | None):
     return cfg
 
 
+def _log_training_partition_calendar(c: Any) -> None:
+    """Min/Max-Datum und Zeilenzahl pro Partition — zu Beginn des Trainings."""
+    import pandas as pd
+
+    rows = (
+        ("BASE (Base-Optuna & Base-Modelle)", getattr(c, "df_train", None)),
+        ("META (Meta-Learner)", getattr(c, "df_test", None)),
+        ("THRESHOLD (Schwellen-Kalibrierung)", getattr(c, "df_threshold", None)),
+        ("FINAL (OOS-Eval)", getattr(c, "df_final", None)),
+    )
+    print("=" * 72, flush=True)
+    print(
+        "Trainings-/Kalibrierungs-Fenster (Wiederholung vor Phase 12 / Base-Optuna)",
+        flush=True,
+    )
+    print("=" * 72, flush=True)
+    _sm = getattr(c, "SPLIT_MODE", None)
+    if _sm is not None:
+        print(f"  SPLIT_MODE={_sm}", flush=True)
+    any_rows = False
+    for label, df in rows:
+        if df is None or not hasattr(df, "columns") or "Date" not in df.columns or len(df) == 0:
+            print(f"  {label}: — (keine Daten am cfg)", flush=True)
+            continue
+        any_rows = True
+        d = pd.to_datetime(df["Date"], errors="coerce").dt.normalize()
+        d0, d1 = d.min().date(), d.max().date()
+        n_days = int(d.nunique())
+        print(f"  {label}: {d0} … {d1}  |  {n_days} Handelstage  |  {len(df):,} Zeilen", flush=True)
+    if not any_rows:
+        print(
+            "  Hinweis: Keine Split-DataFrames — typisch bei SCORING_ONLY ohne vorherigen Split.",
+            flush=True,
+        )
+    print("=" * 72, flush=True)
+
+
 def run_training_scoring_and_export(cfg_mod: Any | None = None) -> None:
     """Volle Kette: Phase 12 → 17."""
     c = _cfg_module(cfg_mod)
+    _log_training_partition_calendar(c)
     run_phase_optuna_base_models(c)
     run_phase_meta_learner_and_threshold(c)
     run_phase_regime_benchmark_report(c)

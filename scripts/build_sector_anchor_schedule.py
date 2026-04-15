@@ -45,6 +45,32 @@ def _fetch_cap(sym: str):
         return None
 
 
+def _quarter_start(d: date) -> date:
+    q = (d.month - 1) // 3
+    m0 = q * 3 + 1
+    return date(d.year, m0, 1)
+
+
+def _next_quarter(d: date) -> date:
+    m = d.month + 3
+    y = d.year
+    if m > 12:
+        y += 1
+        m -= 12
+    return date(y, m, 1)
+
+
+def _quarter_points(start_date: date, end_date: date) -> list[date]:
+    if start_date > end_date:
+        return []
+    cur = _quarter_start(start_date)
+    out: list[date] = []
+    while cur <= end_date:
+        out.append(cur)
+        cur = _next_quarter(cur)
+    return out
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Sektor-Anker-Zeitplan (Market-Cap Top-N) erzeugen.")
     p.add_argument(
@@ -58,6 +84,18 @@ def main() -> None:
         type=str,
         default=None,
         help="Beliebiges Datum; Quartal wird abgeleitet (Alternative zu --quarter-end)",
+    )
+    p.add_argument(
+        "--from-date",
+        type=str,
+        default=None,
+        help="Startdatum für alle Quartale (YYYY-MM-DD).",
+    )
+    p.add_argument(
+        "--to-date",
+        type=str,
+        default=None,
+        help="Enddatum für alle Quartale (YYYY-MM-DD). Default: heute.",
     )
     p.add_argument(
         "--out",
@@ -79,31 +117,57 @@ def main() -> None:
     )
     args = p.parse_args()
 
-    if args.quarter_end:
-        qd = date.fromisoformat(args.quarter_end[:10])
-    elif args.date:
-        qd = date.fromisoformat(args.date[:10])
+    if args.from_date:
+        d0 = date.fromisoformat(args.from_date[:10])
+        d1 = date.fromisoformat(args.to_date[:10]) if args.to_date else date.today()
+        q_dates = _quarter_points(d0, d1)
+        if not q_dates:
+            raise SystemExit(f"Keine Quartale im Bereich {d0}..{d1}")
+        print(
+            f"Quartals-Range {q_dates[0]} .. {q_dates[-1]} "
+            f"({len(q_dates)} Quartale) — Top {args.top_n} pro Sektor",
+            flush=True,
+        )
     else:
-        qd = date.today()
+        if args.quarter_end:
+            qd = date.fromisoformat(args.quarter_end[:10])
+        elif args.date:
+            qd = date.fromisoformat(args.date[:10])
+        else:
+            qd = date.today()
+        q_dates = [qd]
+        q0, q1 = quarter_bounds(qd)
+        print(f"Quartal {q0} … (exkl.) {q1} — Top {args.top_n} pro Sektor", flush=True)
 
-    q0, q1 = quarter_bounds(qd)
-    print(f"Quartal {q0} … (exkl.) {q1} — Top {args.top_n} pro Sektor", flush=True)
+    cap_cache: dict[str, float | None] = {}
 
     def fetch_cap(sym: str):
+        s = str(sym).strip()
+        if s in cap_cache:
+            return cap_cache[s]
         time.sleep(max(0.0, float(args.sleep)))
-        return _fetch_cap(sym)
+        cap = _fetch_cap(s)
+        cap_cache[s] = cap
+        return cap
 
-    rows = build_quarter_snapshot_rows(
-        cfg.TICKERS_BY_SECTOR,
-        cfg.COMPANY_NAMES,
-        quarter_end=qd,
-        top_n=args.top_n,
-        fetch_cap=fetch_cap,
-    )
+    rows = []
+    n_q = len(q_dates)
+    for i, qd in enumerate(q_dates, start=1):
+        q0, q1 = quarter_bounds(qd)
+        print(f"[{i}/{n_q}] Quartal {q0} … (exkl.) {q1}", flush=True)
+        rows.extend(
+            build_quarter_snapshot_rows(
+                cfg.TICKERS_BY_SECTOR,
+                cfg.COMPANY_NAMES,
+                quarter_end=qd,
+                top_n=args.top_n,
+                fetch_cap=fetch_cap,
+            )
+        )
     out_path = Path(args.out)
     upsert_schedule_rows(out_path, rows)
-    print(f"Geschrieben: {out_path}  ({len(rows)} Sektoren)", flush=True)
-    for r in rows:
+    print(f"Geschrieben: {out_path}  ({len(rows)} Zeilen)", flush=True)
+    for r in rows[-min(len(rows), 20):]:
         print(f"  {r['sector']}: {r['tickers']}", flush=True)
 
 

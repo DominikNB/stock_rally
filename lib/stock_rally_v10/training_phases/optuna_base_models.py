@@ -10,6 +10,7 @@ import pandas as pd
 import shap
 import xgboost as xgb
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -49,6 +50,55 @@ def _resolve_meta_shap_top_k(c: Any, mean_shap: np.ndarray) -> tuple[int, float]
     order = np.argsort(mean_shap)[::-1][:k]
     mass = float(np.sum(mean_shap[order])) / total if total > 0 else 0.0
     return k, mass
+
+
+def _log_feature_health(dataset_label: str, df: pd.DataFrame, feat_cols: list[str], top_n: int = 15) -> None:
+    """Diagnose NaN/Inf in Feature-Spalten (Phase12, gleiche Struktur wie Phase17)."""
+    if df is None or len(df) == 0:
+        print(f"[Feature-Diagnose] {dataset_label}: leer.", flush=True)
+        return
+    if not feat_cols:
+        print(f"[Feature-Diagnose] {dataset_label}: keine FEAT_COLS.", flush=True)
+        return
+    feat_df = df[feat_cols]
+    bad_cols: list[tuple[str, int, int, int]] = []
+    bad_rows_mask = np.zeros(len(feat_df), dtype=bool)
+    nan_cells = 0
+    inf_cells = 0
+    for col in feat_cols:
+        s = pd.to_numeric(feat_df[col], errors="coerce")
+        arr = s.to_numpy(dtype=np.float64, copy=False)
+        n_nan = int(np.isnan(arr).sum())
+        n_inf = int(np.isinf(arr).sum())
+        n_bad = n_nan + n_inf
+        nan_cells += n_nan
+        inf_cells += n_inf
+        if n_bad:
+            bad_cols.append((col, n_bad, n_nan, n_inf))
+            bad_rows_mask |= np.isnan(arr) | np.isinf(arr)
+    bad_rows = int(bad_rows_mask.sum())
+    if not bad_cols:
+        print(
+            f"Phase12 [{dataset_label}]: FEAT_COLS ok (keine NaN/Inf in {len(feat_cols)} Spalten, {len(df):,} Zeilen).",
+            flush=True,
+        )
+        return
+    bad_cols.sort(key=lambda x: x[1], reverse=True)
+    print(
+        f"Phase12 [{dataset_label}]: Problematische FEAT_COLS erkannt "
+        f"(NaN={nan_cells}, Inf={inf_cells}, Zeilen mit >=1 Problemwert: {bad_rows}/{len(df):,}).",
+        flush=True,
+    )
+    n_rows = max(1, len(df))
+    print("  Top-Spalten nach Problemwerten (count = NaN+Inf):", flush=True)
+    for col, n_bad, n_nan, n_inf in bad_cols[:top_n]:
+        pct_bad = 100.0 * float(n_bad) / float(n_rows)
+        print(
+            f"    - {col}: {n_bad} ({pct_bad:.1f}%) (NaN={n_nan}, Inf={n_inf})",
+            flush=True,
+        )
+    if len(bad_cols) > top_n:
+        print(f"    ... +{len(bad_cols) - top_n} weitere Spalten", flush=True)
 
 
 def run_phase_optuna_base_models(cfg_mod: Any) -> None:
@@ -237,6 +287,14 @@ def _run_phase12(c: Any) -> None:
     y_train_all = df_train["target"].values.astype(np.int8)
 
     print("\n" + "=" * 60)
+    print("Feature-Diagnose vor Base-Training")
+    print("=" * 60)
+    _log_feature_health("BASE TRAIN", df_train, FEAT_COLS)
+    _log_feature_health("META TRAIN (for stacking inputs)", df_test, FEAT_COLS)
+    _log_feature_health("THRESHOLD", df_threshold, FEAT_COLS)
+    _log_feature_health("FINAL", df_final, FEAT_COLS)
+
+    print("\n" + "=" * 60)
     print("Phase 2: Training 10 base models")
     print("=" * 60)
     base_models = []
@@ -330,8 +388,10 @@ def _run_phase12(c: Any) -> None:
     print("  ET done.")
 
     print("  Training LR...")
+    # Macro-Regime/mr_* können NaN haben (Yahoo, Rollen); Bäume tolerieren das, LogisticRegression nicht.
     lr_pipe = Pipeline(
         [
+            ("impute", SimpleImputer(strategy="constant", fill_value=0.0)),
             ("scaler", StandardScaler()),
             (
                 "lr",

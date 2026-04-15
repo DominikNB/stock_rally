@@ -102,14 +102,58 @@ def _run_phase17(c: Any) -> None:
         print("[Gemini] Kein GEMINI_API_KEY — Smoke-Test übersprungen.", flush=True)
 
     print("Preparing full-history feature matrix …")
+    if c.df_features is None or len(c.df_features) == 0:
+        print(
+            "  FEHLER Phase17: c.df_features ist leer — Full-History-Scoring und HTML werden übersprungen.",
+            flush=True,
+        )
+        return
     df_s = c.df_features.copy()
     df_s = merge_news_shard_from_best_params(df_s, c.best_params)
+    if len(df_s) == 0:
+        print(
+            "  FEHLER Phase17: df_features nach News-Merge leer — Abbruch Phase17.",
+            flush=True,
+        )
+        return
     feat_arr = df_s[c.FEAT_COLS].values.astype(np.float32)
-    valid_mask = ~np.isnan(feat_arr).any(axis=1)
-    df_s = df_s[valid_mask].reset_index(drop=True)
-    feat_arr = feat_arr[valid_mask]
+    _arr_nan = np.isnan(feat_arr)
+    _arr_inf = np.isinf(feat_arr)
+    _nan_cells = int(_arr_nan.sum())
+    _inf_cells = int(_arr_inf.sum())
+    _bad_rows = int((_arr_nan | _arr_inf).any(axis=1).sum())
+    if _nan_cells or _inf_cells:
+        feat_df = df_s[c.FEAT_COLS]
+        bad_cols = []
+        for col in c.FEAT_COLS:
+            s = pd.to_numeric(feat_df[col], errors="coerce")
+            n_nan = int(s.isna().sum())
+            n_inf = int(np.isinf(s.to_numpy(dtype=np.float64, copy=False)).sum())
+            n_bad = n_nan + n_inf
+            if n_bad > 0:
+                bad_cols.append((col, n_bad, n_nan, n_inf))
+        bad_cols.sort(key=lambda x: x[1], reverse=True)
+        _top = bad_cols[:15]
+        print(
+            "  Phase17: Problematische FEAT_COLS erkannt "
+            f"(NaN={_nan_cells}, Inf={_inf_cells}, Zeilen mit ≥1 Problemwert: {_bad_rows}/{len(df_s)}).",
+            flush=True,
+        )
+        n_rows = max(1, len(df_s))
+        print("  Top-Spalten nach Problemwerten (count = NaN+Inf):", flush=True)
+        for col, n_bad, n_nan, n_inf in _top:
+            pct_bad = 100.0 * float(n_bad) / float(n_rows)
+            print(
+                f"    - {col}: {n_bad} ({pct_bad:.1f}%) (NaN={n_nan}, Inf={n_inf})",
+                flush=True,
+            )
+        if len(bad_cols) > len(_top):
+            print(f"    ... +{len(bad_cols) - len(_top)} weitere Spalten", flush=True)
+        print("  Für Phase17-Scoring werden diese Werte zu 0.0 imputiert.", flush=True)
+    feat_arr = np.nan_to_num(feat_arr, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
+    df_s = df_s.reset_index(drop=True)
     print(
-        f'  {len(df_s):,} valid rows across {df_s["ticker"].nunique()} tickers — building meta features …'
+        f'  {len(df_s):,} Zeilen, {df_s["ticker"].nunique()} Ticker — building meta features …'
     )
 
     X_meta_all = c.build_meta_features(feat_arr, dataset_label="FULL HISTORY")

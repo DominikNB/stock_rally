@@ -10,7 +10,6 @@ import optuna
 import pandas as pd
 import shap
 import xgboost as xgb
-from sklearn.metrics import precision_recall_curve, precision_score
 
 from lib.stock_rally_v10.features import merge_news_shard_from_best_params
 
@@ -37,6 +36,40 @@ def _run_phase13(c: Any) -> None:
     print("=" * 60)
     print("Phase 3b: Meta-Feature-Matrix aufbauen")
     print("=" * 60)
+
+    def _log_array_health(dataset_label: str, arr: np.ndarray, feat_cols: list[str], top_n: int = 15) -> None:
+        bad_mask = np.isnan(arr) | np.isinf(arr)
+        bad_cells = int(bad_mask.sum())
+        if bad_cells == 0:
+            print(f"[Feature-Diagnose] {dataset_label}: ok (keine NaN/Inf) — shape={arr.shape}", flush=True)
+            return
+        bad_rows = int(bad_mask.any(axis=1).sum())
+        print(
+            f"[Feature-Diagnose] {dataset_label}: NaN/Inf-Zellen={bad_cells}, "
+            f"Zeilen mit >=1 Problemwert={bad_rows}/{arr.shape[0]} — shape={arr.shape}",
+            flush=True,
+        )
+        n_rows = max(1, arr.shape[0])
+        bad_cols = []
+        for i, col in enumerate(feat_cols):
+            col_mask = bad_mask[:, i]
+            n_bad = int(col_mask.sum())
+            if n_bad == 0:
+                continue
+            col_arr = arr[:, i]
+            n_nan = int(np.isnan(col_arr).sum())
+            n_inf = int(np.isinf(col_arr).sum())
+            bad_cols.append((col, n_bad, n_nan, n_inf))
+        bad_cols.sort(key=lambda x: x[1], reverse=True)
+        print("  Top-Spalten nach Problemwerten (count = NaN+Inf):", flush=True)
+        for col, n_bad, n_nan, n_inf in bad_cols[:top_n]:
+            pct_bad = 100.0 * float(n_bad) / float(n_rows)
+            print(
+                f"    - {col}: {n_bad} ({pct_bad:.1f}%) (NaN={n_nan}, Inf={n_inf})",
+                flush=True,
+            )
+        if len(bad_cols) > top_n:
+            print(f"    ... +{len(bad_cols) - top_n} weitere Spalten", flush=True)
 
     def _predict_base_logged(model_tuple, X, dataset_label=""):
         name, model, mtype = model_tuple
@@ -81,8 +114,15 @@ def _run_phase13(c: Any) -> None:
     X_threshold_feat = df_threshold[FEAT_COLS].values.astype(np.float32)
     y_threshold = df_threshold["target"].values.astype(np.int8)
 
+    print("\n" + "=" * 60)
+    print("Feature-Diagnose vor Meta-Training")
+    print("=" * 60)
+    _log_array_health("META Input-Features", X_test_feat, FEAT_COLS)
+    _log_array_health("THRESHOLD Input-Features", X_threshold_feat, FEAT_COLS)
+    _log_array_health("FINAL Input-Features", X_final_feat, FEAT_COLS)
+
     t_total = time.time()
-    X_meta_test = build_meta_features(X_test_feat, "EARLY_TRAIN (df_test)")
+    X_meta_test = build_meta_features(X_test_feat, "META (zeitlich nach Base+Purge)")
     X_meta_final = build_meta_features(X_final_feat, "FINAL")
     X_meta_threshold = build_meta_features(X_threshold_feat, "THRESHOLD")
     print(f"\nAlle Meta-Matrizen fertig in {time.time()-t_total:.0f}s")
@@ -289,7 +329,7 @@ def _run_phase13(c: Any) -> None:
     plt.show()
 
     print("\n" + "=" * 60)
-    print("Phase 5: Threshold-Optimierung (saubere Partition)")
+    print("Phase 5: Produktiver Threshold direkt aus Meta-Optuna")
     print("=" * 60)
 
     print(f"Scoring THRESHOLD-Set ({len(y_threshold):,} Zeilen)...", flush=True)
@@ -298,55 +338,43 @@ def _run_phase13(c: Any) -> None:
     y_prob_final = meta_clf.predict_proba(X_meta_final)[:, 1]
 
     print(f"THRESHOLD-Set: Positive Rate = {y_threshold.mean():.1%}")
+    best_threshold = float(meta_study.best_params.get("meta_eval_threshold", 0.5))
+    f1_thresh = best_threshold  # Downstream-Kompatibilität (Plot-Linie).
+    print(
+        f"Gewählter produktiver Threshold (aus Meta-Optuna/CV): {best_threshold:.3f}",
+        flush=True,
+    )
 
-    opt_min_prec = c.OPT_MIN_PRECISION
-    phase5_min = int(getattr(c, "PHASE5_MIN_SIGNALS", 5))
+    _pred_thr_raw = (y_prob_threshold >= best_threshold).astype(int)
+    _raw_sig = int(_pred_thr_raw.sum())
+    _raw_tp = int(((_pred_thr_raw == 1) & (y_threshold == 1)).sum())
+    _raw_prec = (_raw_tp / _raw_sig) if _raw_sig > 0 else 0.0
+    print(
+        f"  THRESHOLD raw@{best_threshold:.3f}: signals={_raw_sig}, TP={_raw_tp}, precision={_raw_prec:.2%}",
+        flush=True,
+    )
 
-    def find_precision_threshold(y_true, y_prob, target_prec=None, min_signals=None):
-        if target_prec is None:
-            target_prec = opt_min_prec
-        if min_signals is None:
-            min_signals = phase5_min
-        for thr in np.arange(0.01, 0.991, 0.005):
-            preds = (y_prob >= thr).astype(int)
-            if preds.sum() < min_signals:
-                continue
-            if precision_score(y_true, preds, zero_division=0) >= target_prec:
-                return float(thr)
-        return None
-
-    prec_arr, rec_arr, thr_arr = precision_recall_curve(y_threshold, y_prob_threshold)
-    f1_arr = 2 * prec_arr * rec_arr / (prec_arr + rec_arr + 1e-10)
-    f1_thresh = float(thr_arr[np.argmax(f1_arr[:-1])])
-    prec_thresh = find_precision_threshold(y_threshold, y_prob_threshold)
-
-    if prec_thresh is not None:
-        best_threshold = prec_thresh
-        _p_ok = precision_score(
-            y_threshold, (y_prob_threshold >= best_threshold).astype(int), zero_division=0
-        )
-        print(
-            f"Precision-Ziel OPT_MIN_PRECISION={opt_min_prec:.0%} erreicht: "
-            f"threshold={best_threshold:.3f}, Roh-Precision={_p_ok:.2%} (THRESHOLD-Set) \u2713"
-        )
-    else:
-        best_prec, best_thresh_fb = 0.0, 0.50
-        for thr in np.arange(0.01, 0.991, 0.005):
-            preds = (y_prob_threshold >= thr).astype(int)
-            if preds.sum() < phase5_min:
-                continue
-            p = precision_score(y_threshold, preds, zero_division=0)
-            if p > best_prec:
-                best_prec, best_thresh_fb = p, float(thr)
-        best_threshold = float(best_thresh_fb)
-        print(
-            f"OPT_MIN_PRECISION={opt_min_prec:.0%} mit \u2265{phase5_min} Roh-Signalen nicht erreichbar. "
-            f"Fallback: threshold={best_threshold:.3f} (beste Roh-Precision={best_prec:.2%}). "
-            f"OPT_MIN_PRECISION senken oder PHASE5_MIN_SIGNALS reduzieren."
-        )
-
-    print(f"F1-optimaler Threshold:  {f1_thresh:.3f}")
-    print(f"Gew\u00e4hlter Threshold:     {best_threshold:.3f}")
+    n_tp_f, n_sig_f, max_cfp_f = _apply_filters_cv(
+        y_prob_threshold,
+        df_threshold["Date"].values,
+        df_threshold["ticker"].values,
+        y_threshold,
+        best_threshold,
+        CONSECUTIVE_DAYS,
+        SIGNAL_COOLDOWN_DAYS,
+        close_arr=df_threshold["close"].values,
+        rsi_window=rsi_w,
+        signal_skip_near_peak=SIGNAL_SKIP_NEAR_PEAK,
+        peak_lookback_days=PEAK_LOOKBACK_DAYS,
+        peak_min_dist_from_high_pct=PEAK_MIN_DIST_FROM_HIGH_PCT,
+        signal_max_rsi=SIGNAL_MAX_RSI,
+    )
+    _f_prec = (n_tp_f / n_sig_f) if n_sig_f > 0 else 0.0
+    print(
+        f"  THRESHOLD filtered@{best_threshold:.3f}: signals={n_sig_f}, TP={n_tp_f}, "
+        f"precision={_f_prec:.2%}, max_consec_fp={max_cfp_f}",
+        flush=True,
+    )
 
     df_threshold["prob"] = y_prob_threshold
     df_final["prob"] = y_prob_final
