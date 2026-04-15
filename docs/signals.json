@@ -1,90 +1,30 @@
 {
-  "generated": "2026-04-15 11:43",
-  "threshold": 0.8987727700094322,
+  "generated": "2026-04-15 12:05",
+  "threshold": 0.8879212384168864,
   "signals": [
     {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-04-13",
-      "prob": 0.8792323470115662
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
       "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-04-10",
-      "prob": 0.8334084153175354
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-04-09",
-      "prob": 0.9387429356575012
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-04-08",
-      "prob": 0.918133556842804
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Gold",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "gold",
       "date": "2026-04-06",
-      "prob": 0.9290004372596741
+      "prob": 0.747728168964386
     },
     {
-      "ticker": "BNR.DE",
-      "company": "Brenntag",
+      "ticker": "NEM",
+      "company": "Newmont",
       "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
+      "classification_standard": "GICS_Yahoo",
       "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
+      "gics_industry": "Gold",
       "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2026-03-27",
-      "prob": 0.7085779309272766
-    },
-    {
-      "ticker": "BNR.DE",
-      "company": "Brenntag",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2026-03-25",
-      "prob": 0.9152407646179199
+      "gics_industry_key": "gold",
+      "date": "2026-04-01",
+      "prob": 0.9120641350746155
     },
     {
       "ticker": "SMHN.DE",
@@ -95,20 +35,8 @@
       "gics_industry": "Semiconductor Equipment & Materials",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-03-18",
-      "prob": 0.8771805167198181
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-03-16",
-      "prob": 0.9178360104560852
+      "date": "2026-03-19",
+      "prob": 0.6005685329437256
     },
     {
       "ticker": "INTC",
@@ -119,68 +47,8 @@
       "gics_industry": "Semiconductors",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
-      "date": "2026-01-22",
-      "prob": 0.9432679414749146
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-01-15",
-      "prob": 0.8995683789253235
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-01-13",
-      "prob": 0.9092726111412048
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-12-11",
-      "prob": 0.9118056893348694
-    },
-    {
-      "ticker": "PAT.DE",
-      "company": "PATRIZIA",
-      "sector": "real_estate",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Real Estate",
-      "gics_industry": "Real Estate Services",
-      "gics_sector_key": "real estate",
-      "gics_industry_key": "real estate services",
-      "date": "2025-12-11",
-      "prob": 0.9198387265205383
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-12-09",
-      "prob": 0.9482356905937195
+      "date": "2026-01-07",
+      "prob": 0.9306854009628296
     },
     {
       "ticker": "PUM.DE",
@@ -191,8 +59,32 @@
       "gics_industry": "Footwear & Accessories",
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
-      "date": "2025-12-01",
-      "prob": 0.9103193283081055
+      "date": "2025-12-02",
+      "prob": 0.7832793593406677
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2025-11-28",
+      "prob": 0.9178549647331238
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Footwear & Accessories",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "footwear accessories",
+      "date": "2025-11-28",
+      "prob": 0.9335677027702332
     },
     {
       "ticker": "INTC",
@@ -204,7 +96,19 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-09-19",
-      "prob": 0.9024489521980286
+      "prob": 0.9240867495536804
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Footwear & Accessories",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "footwear accessories",
+      "date": "2025-08-26",
+      "prob": 0.9026206731796265
     },
     {
       "ticker": "HDD.DE",
@@ -216,7 +120,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2025-08-01",
-      "prob": 0.8547284007072449
+      "prob": 0.8276833295822144
     },
     {
       "ticker": "HDD.DE",
@@ -227,104 +131,44 @@
       "gics_industry": "Specialty Industrial Machinery",
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
-      "date": "2025-07-30",
-      "prob": 0.954592764377594
+      "date": "2025-07-22",
+      "prob": 0.46063777804374695
     },
     {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "sector": "industrial",
       "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Communication Services",
-      "gics_industry": "Broadcasting",
-      "gics_sector_key": "communication services",
-      "gics_industry_key": "broadcasting",
-      "date": "2025-07-30",
-      "prob": 0.917777955532074
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2025-07-18",
+      "prob": 0.9022374749183655
     },
     {
-      "ticker": "FIE.DE",
-      "company": "Fielmann",
-      "sector": "consumer",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-05-05",
-      "prob": 0.9279546737670898
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2025-04-28",
-      "prob": 0.8874109387397766
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2025-04-24",
-      "prob": 0.9352053999900818
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2025-04-22",
-      "prob": 0.9037668108940125
-    },
-    {
-      "ticker": "ZAL.DE",
-      "company": "Zalando",
-      "sector": "consumer",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Internet Retail",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "internet retail",
-      "date": "2025-04-16",
-      "prob": 0.8999648094177246
-    },
-    {
-      "ticker": "NEM",
-      "company": "Newmont",
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
       "sector": "materials",
-      "classification_standard": "GICS_Yahoo",
+      "classification_standard": "ICB_or_GICS_Yahoo",
       "gics_sector": "Basic Materials",
-      "gics_industry": "Gold",
+      "gics_industry": "Steel",
       "gics_sector_key": "basic materials",
-      "gics_industry_key": "gold",
-      "date": "2025-04-14",
-      "prob": 0.9459935426712036
+      "gics_industry_key": "steel",
+      "date": "2025-07-11",
+      "prob": 0.891787588596344
     },
     {
-      "ticker": "ZAL.DE",
-      "company": "Zalando",
-      "sector": "consumer",
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "healthcare",
       "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Internet Retail",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "internet retail",
-      "date": "2025-04-14",
-      "prob": 0.9277293086051941
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2025-04-08",
+      "prob": 0.8989549279212952
     },
     {
       "ticker": "EKT.DE",
@@ -335,20 +179,20 @@
       "gics_industry": "Utilities - Renewable",
       "gics_sector_key": "utilities",
       "gics_industry_key": "utilities renewable",
-      "date": "2025-03-19",
-      "prob": 0.9338558912277222
+      "date": "2025-03-21",
+      "prob": 0.8648464679718018
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
       "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Electrical Equipment & Parts",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "electrical equipment parts",
-      "date": "2025-03-18",
-      "prob": 0.9481564164161682
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2025-02-19",
+      "prob": 0.9113101363182068
     },
     {
       "ticker": "INTC",
@@ -359,68 +203,8 @@
       "gics_industry": "Semiconductors",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
-      "date": "2025-02-18",
-      "prob": 0.9192968010902405
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-02-11",
-      "prob": 0.9051392674446106
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-02-07",
-      "prob": 0.9354745745658875
-    },
-    {
-      "ticker": "HDD.DE",
-      "company": "Heidelberger Druck",
-      "sector": "industrial",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Specialty Industrial Machinery",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "specialty industrial machinery",
-      "date": "2025-01-24",
-      "prob": 0.9306685328483582
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2025-01-22",
-      "prob": 0.7995884418487549
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2025-01-20",
-      "prob": 0.9502338171005249
+      "date": "2025-02-19",
+      "prob": 0.8138939738273621
     },
     {
       "ticker": "HFG.DE",
@@ -431,8 +215,32 @@
       "gics_industry": "Restaurants",
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "restaurants",
-      "date": "2024-12-06",
-      "prob": 0.913976788520813
+      "date": "2025-02-12",
+      "prob": 0.8726209402084351
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2025-02-10",
+      "prob": 0.8944945335388184
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "sector": "tech",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2025-01-21",
+      "prob": 0.9041037559509277
     },
     {
       "ticker": "PSM.DE",
@@ -443,20 +251,8 @@
       "gics_industry": "Broadcasting",
       "gics_sector_key": "communication services",
       "gics_industry_key": "broadcasting",
-      "date": "2024-12-06",
-      "prob": 0.9196574687957764
-    },
-    {
-      "ticker": "HFG.DE",
-      "company": "HelloFresh",
-      "sector": "consumer",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Restaurants",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "restaurants",
-      "date": "2024-11-29",
-      "prob": 0.8994075655937195
+      "date": "2024-12-05",
+      "prob": 0.9323822855949402
     },
     {
       "ticker": "EVT.DE",
@@ -467,8 +263,8 @@
       "gics_industry": "Drug Manufacturers - Specialty & Generic",
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-11-05",
-      "prob": 0.9499656558036804
+      "date": "2024-11-19",
+      "prob": 0.8367998600006104
     },
     {
       "ticker": "HFG.DE",
@@ -479,94 +275,70 @@
       "gics_industry": "Restaurants",
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "restaurants",
-      "date": "2024-10-28",
-      "prob": 0.9169082045555115
+      "date": "2024-11-14",
+      "prob": 0.9229615330696106
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2024-11-13",
+      "prob": 0.9167254567146301
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2024-11-07",
+      "prob": 0.9061379432678223
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2024-10-30",
+      "prob": 0.8190272450447083
     }
   ],
   "signals_holdout_final": [
     {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-04-13",
-      "prob": 0.8792323470115662
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
+      "ticker": "NEM",
+      "company": "Newmont",
+      "sector": "materials",
       "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-04-10",
-      "prob": 0.8334084153175354
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-04-09",
-      "prob": 0.9387429356575012
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-04-08",
-      "prob": 0.918133556842804
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Gold",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "gold",
       "date": "2026-04-06",
-      "prob": 0.9290004372596741
+      "prob": 0.747728168964386
     },
     {
-      "ticker": "BNR.DE",
-      "company": "Brenntag",
+      "ticker": "NEM",
+      "company": "Newmont",
       "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
+      "classification_standard": "GICS_Yahoo",
       "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
+      "gics_industry": "Gold",
       "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2026-03-27",
-      "prob": 0.7085779309272766
-    },
-    {
-      "ticker": "BNR.DE",
-      "company": "Brenntag",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2026-03-25",
-      "prob": 0.9152407646179199
+      "gics_industry_key": "gold",
+      "date": "2026-04-01",
+      "prob": 0.9120641350746155
     },
     {
       "ticker": "SMHN.DE",
@@ -577,20 +349,8 @@
       "gics_industry": "Semiconductor Equipment & Materials",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-03-18",
-      "prob": 0.8771805167198181
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-03-16",
-      "prob": 0.9178360104560852
+      "date": "2026-03-19",
+      "prob": 0.6005685329437256
     },
     {
       "ticker": "INTC",
@@ -601,68 +361,8 @@
       "gics_industry": "Semiconductors",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
-      "date": "2026-01-22",
-      "prob": 0.9432679414749146
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-01-15",
-      "prob": 0.8995683789253235
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "tech",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-01-13",
-      "prob": 0.9092726111412048
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-12-11",
-      "prob": 0.9118056893348694
-    },
-    {
-      "ticker": "PAT.DE",
-      "company": "PATRIZIA",
-      "sector": "real_estate",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Real Estate",
-      "gics_industry": "Real Estate Services",
-      "gics_sector_key": "real estate",
-      "gics_industry_key": "real estate services",
-      "date": "2025-12-11",
-      "prob": 0.9198387265205383
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-12-09",
-      "prob": 0.9482356905937195
+      "date": "2026-01-07",
+      "prob": 0.9306854009628296
     },
     {
       "ticker": "PUM.DE",
@@ -673,8 +373,32 @@
       "gics_industry": "Footwear & Accessories",
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
-      "date": "2025-12-01",
-      "prob": 0.9103193283081055
+      "date": "2025-12-02",
+      "prob": 0.7832793593406677
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2025-11-28",
+      "prob": 0.9178549647331238
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Footwear & Accessories",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "footwear accessories",
+      "date": "2025-11-28",
+      "prob": 0.9335677027702332
     },
     {
       "ticker": "INTC",
@@ -686,7 +410,19 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-09-19",
-      "prob": 0.9024489521980286
+      "prob": 0.9240867495536804
+    },
+    {
+      "ticker": "PUM.DE",
+      "company": "PUMA",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Footwear & Accessories",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "footwear accessories",
+      "date": "2025-08-26",
+      "prob": 0.9026206731796265
     },
     {
       "ticker": "HDD.DE",
@@ -698,7 +434,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2025-08-01",
-      "prob": 0.8547284007072449
+      "prob": 0.8276833295822144
     },
     {
       "ticker": "HDD.DE",
@@ -709,104 +445,44 @@
       "gics_industry": "Specialty Industrial Machinery",
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
-      "date": "2025-07-30",
-      "prob": 0.954592764377594
+      "date": "2025-07-22",
+      "prob": 0.46063777804374695
     },
     {
-      "ticker": "PSM.DE",
-      "company": "ProSieben",
-      "sector": "media",
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "sector": "industrial",
       "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Communication Services",
-      "gics_industry": "Broadcasting",
-      "gics_sector_key": "communication services",
-      "gics_industry_key": "broadcasting",
-      "date": "2025-07-30",
-      "prob": 0.917777955532074
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2025-07-18",
+      "prob": 0.9022374749183655
     },
     {
-      "ticker": "FIE.DE",
-      "company": "Fielmann",
-      "sector": "consumer",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-05-05",
-      "prob": 0.9279546737670898
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2025-04-28",
-      "prob": 0.8874109387397766
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2025-04-24",
-      "prob": 0.9352053999900818
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2025-04-22",
-      "prob": 0.9037668108940125
-    },
-    {
-      "ticker": "ZAL.DE",
-      "company": "Zalando",
-      "sector": "consumer",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Internet Retail",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "internet retail",
-      "date": "2025-04-16",
-      "prob": 0.8999648094177246
-    },
-    {
-      "ticker": "NEM",
-      "company": "Newmont",
+      "ticker": "KCO.DE",
+      "company": "Kl\u00f6ckner & Co",
       "sector": "materials",
-      "classification_standard": "GICS_Yahoo",
+      "classification_standard": "ICB_or_GICS_Yahoo",
       "gics_sector": "Basic Materials",
-      "gics_industry": "Gold",
+      "gics_industry": "Steel",
       "gics_sector_key": "basic materials",
-      "gics_industry_key": "gold",
-      "date": "2025-04-14",
-      "prob": 0.9459935426712036
+      "gics_industry_key": "steel",
+      "date": "2025-07-11",
+      "prob": 0.891787588596344
     },
     {
-      "ticker": "ZAL.DE",
-      "company": "Zalando",
-      "sector": "consumer",
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "healthcare",
       "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Internet Retail",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "internet retail",
-      "date": "2025-04-14",
-      "prob": 0.9277293086051941
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2025-04-08",
+      "prob": 0.8989549279212952
     },
     {
       "ticker": "EKT.DE",
@@ -817,20 +493,20 @@
       "gics_industry": "Utilities - Renewable",
       "gics_sector_key": "utilities",
       "gics_industry_key": "utilities renewable",
-      "date": "2025-03-19",
-      "prob": 0.9338558912277222
+      "date": "2025-03-21",
+      "prob": 0.8648464679718018
     },
     {
-      "ticker": "F3C.DE",
-      "company": "SFC Energy",
-      "sector": "energy",
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
       "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Electrical Equipment & Parts",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "electrical equipment parts",
-      "date": "2025-03-18",
-      "prob": 0.9481564164161682
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2025-02-19",
+      "prob": 0.9113101363182068
     },
     {
       "ticker": "INTC",
@@ -841,68 +517,8 @@
       "gics_industry": "Semiconductors",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
-      "date": "2025-02-18",
-      "prob": 0.9192968010902405
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-02-11",
-      "prob": 0.9051392674446106
-    },
-    {
-      "ticker": "KCO.DE",
-      "company": "Kl\u00f6ckner & Co",
-      "sector": "materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Steel",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "steel",
-      "date": "2025-02-07",
-      "prob": 0.9354745745658875
-    },
-    {
-      "ticker": "HDD.DE",
-      "company": "Heidelberger Druck",
-      "sector": "industrial",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Specialty Industrial Machinery",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "specialty industrial machinery",
-      "date": "2025-01-24",
-      "prob": 0.9306685328483582
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2025-01-22",
-      "prob": 0.7995884418487549
-    },
-    {
-      "ticker": "SMHN.DE",
-      "company": "S\u00dcSS MicroTec",
-      "sector": "tech",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2025-01-20",
-      "prob": 0.9502338171005249
+      "date": "2025-02-19",
+      "prob": 0.8138939738273621
     },
     {
       "ticker": "HFG.DE",
@@ -913,8 +529,32 @@
       "gics_industry": "Restaurants",
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "restaurants",
-      "date": "2024-12-06",
-      "prob": 0.913976788520813
+      "date": "2025-02-12",
+      "prob": 0.8726209402084351
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2025-02-10",
+      "prob": 0.8944945335388184
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "sector": "tech",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2025-01-21",
+      "prob": 0.9041037559509277
     },
     {
       "ticker": "PSM.DE",
@@ -925,20 +565,8 @@
       "gics_industry": "Broadcasting",
       "gics_sector_key": "communication services",
       "gics_industry_key": "broadcasting",
-      "date": "2024-12-06",
-      "prob": 0.9196574687957764
-    },
-    {
-      "ticker": "HFG.DE",
-      "company": "HelloFresh",
-      "sector": "consumer",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Restaurants",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "restaurants",
-      "date": "2024-11-29",
-      "prob": 0.8994075655937195
+      "date": "2024-12-05",
+      "prob": 0.9323822855949402
     },
     {
       "ticker": "EVT.DE",
@@ -949,8 +577,8 @@
       "gics_industry": "Drug Manufacturers - Specialty & Generic",
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-11-05",
-      "prob": 0.9499656558036804
+      "date": "2024-11-19",
+      "prob": 0.8367998600006104
     },
     {
       "ticker": "HFG.DE",
@@ -961,10 +589,46 @@
       "gics_industry": "Restaurants",
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "restaurants",
-      "date": "2024-10-28",
-      "prob": 0.9169082045555115
+      "date": "2024-11-14",
+      "prob": 0.9229615330696106
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2024-11-13",
+      "prob": 0.9167254567146301
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2024-11-07",
+      "prob": 0.9061379432678223
+    },
+    {
+      "ticker": "HFG.DE",
+      "company": "HelloFresh",
+      "sector": "consumer",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Restaurants",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "restaurants",
+      "date": "2024-10-30",
+      "prob": 0.8190272450447083
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 442,
+  "signals_all_timeline_including_in_sample_count": 405,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website."
 }
