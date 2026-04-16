@@ -360,7 +360,9 @@ def _run_phase12(c: Any) -> None:
         verbose=-1,
     )
 
-    X_train_all = df_train[FEAT_COLS].values.astype(np.float32)
+    _nan_sentinel = np.float32(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    X_train_all = df_train[FEAT_COLS].to_numpy(dtype=np.float32, copy=True)
+    np.nan_to_num(X_train_all, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
     y_train_all = df_train["target"].values.astype(np.int8)
 
     print("\n" + "=" * 60)
@@ -493,8 +495,10 @@ def _run_phase12(c: Any) -> None:
     print("Phase 3: SHAP feature selection")
     print("=" * 60)
 
-    X_test_feat = df_test[FEAT_COLS].values.astype(np.float32)
-    X_final_feat = df_final[FEAT_COLS].values.astype(np.float32)
+    X_test_feat = df_test[FEAT_COLS].to_numpy(dtype=np.float32, copy=True)
+    X_final_feat = df_final[FEAT_COLS].to_numpy(dtype=np.float32, copy=True)
+    np.nan_to_num(X_test_feat, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
+    np.nan_to_num(X_final_feat, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
 
     rename_map = c.build_rename_map(
         rsi_w,

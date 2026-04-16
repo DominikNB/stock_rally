@@ -149,8 +149,16 @@ def _run_phase17(c: Any) -> None:
             )
         if len(bad_cols) > len(_top):
             print(f"    ... +{len(bad_cols) - len(_top)} weitere Spalten", flush=True)
-        print("  Für Phase17-Scoring werden diese Werte zu 0.0 imputiert.", flush=True)
-    feat_arr = np.nan_to_num(feat_arr, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
+        _nan_s = getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8)
+        print(f"  Für Phase17-Scoring werden diese Werte auf Sentinel {_nan_s} gesetzt.", flush=True)
+    _nan_sentinel = np.float32(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    feat_arr = np.nan_to_num(
+        feat_arr,
+        nan=_nan_sentinel,
+        posinf=_nan_sentinel,
+        neginf=_nan_sentinel,
+        copy=False,
+    ).astype(np.float32, copy=False)
     df_s = df_s.reset_index(drop=True)
     print(
         f'  {len(df_s):,} Zeilen, {df_s["ticker"].nunique()} Ticker — building meta features …'

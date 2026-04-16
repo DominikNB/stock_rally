@@ -15,8 +15,8 @@ from lib.stock_rally_v10.equity_classification import (
 )
 
 # Pro News-Fenster-Tripel (cfg.news_feat_tag = mom_w|vol_ma|tone_roll) ein Shard — nicht GKG-„Tag“.
-# Wert: DataFrame mit MultiIndex (Date normiert, ticker); vermeidet pro Optuna-Trial ein ``shard.copy()``.
-_NEWS_SHARD_FRAME_CACHE: dict[str, pd.DataFrame] = {}
+# Key: (tag, gewünschte news_*-Spalten als Tuple). So laden wir für Optuna nur benötigte Spalten.
+_NEWS_SHARD_FRAME_CACHE: dict[tuple[str, tuple[str, ...]], pd.DataFrame] = {}
 
 
 def _news_fill_column_list() -> list[str]:
@@ -420,7 +420,11 @@ def _apply_news_regime_tone_interactions(df: pd.DataFrame, tag: str) -> None:
             df[f"{tcol}_x_{safe}"] = (t * m).astype(np.float32)
 
 
-def merge_news_shard_into_df(df: pd.DataFrame, tag: str) -> pd.DataFrame:
+def merge_news_shard_into_df(
+    df: pd.DataFrame,
+    tag: str,
+    wanted_news_cols: list[str] | tuple[str, ...] | None = None,
+) -> pd.DataFrame:
     """Lädt News-Spalten für ``feat_tag`` (Fenster-Tripel-String, vgl. ``cfg.news_feat_tag``) an (Date, ticker)."""
     if not getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
         return df
@@ -441,17 +445,38 @@ def merge_news_shard_into_df(df: pd.DataFrame, tag: str) -> pd.DataFrame:
             f"merge_news_shard_into_df: kein Shard für feat_tag={tag!r} (Fenster-Tripel) — "
             f"assemble_features [News → Platte] gelaufen und NEWS_SHARD_MANIFEST gesetzt?"
         )
-    if tag not in _NEWS_SHARD_FRAME_CACHE:
+    wanted = tuple(sorted({str(c) for c in (wanted_news_cols or []) if str(c).startswith("news_")}))
+    # Optuna-Pfad: mit wanted_news_cols ist die Spaltenmenge je Trial variabel.
+    # Diese Varianten nicht cachen, sonst wächst der RAM über Trials.
+    use_cache = wanted_news_cols is None
+    cache_key = (str(tag), wanted)
+    if (not use_cache) or (cache_key not in _NEWS_SHARD_FRAME_CACHE):
+        usecols = ["Date", "ticker", "sector"] + list(wanted) if wanted else None
         if path.endswith(".parquet"):
-            shard = pd.read_parquet(path)
+            # Gewünschte Spalten können synthetische News-Interaktionen enthalten, die nicht im Shard liegen.
+            # Deshalb zuerst gegen die reale Parquet-Schema-Liste schneiden.
+            if usecols:
+                try:
+                    import pyarrow.parquet as pq
+
+                    pcols = set(pq.ParquetFile(path).schema.names)
+                    usecols = [c for c in usecols if c in pcols]
+                except Exception:
+                    pass
+            shard = pd.read_parquet(path, columns=usecols)
         else:
             shard = pd.read_pickle(path)
+            if usecols:
+                keep = [c for c in usecols if c in shard.columns]
+                shard = shard[keep]
         dt = pd.to_datetime(shard["Date"]).dt.normalize()
         s_ix = shard.set_index([dt, shard["ticker"]])
         if s_ix.index.has_duplicates:
             s_ix = s_ix[~s_ix.index.duplicated(keep="last")]
-        _NEWS_SHARD_FRAME_CACHE[tag] = s_ix
-    s_ix = _NEWS_SHARD_FRAME_CACHE[tag]
+        if use_cache:
+            _NEWS_SHARD_FRAME_CACHE[cache_key] = s_ix
+    else:
+        s_ix = _NEWS_SHARD_FRAME_CACHE[cache_key]
     kdf = df[["Date", "ticker"]].copy()
     kdf["Date"] = pd.to_datetime(kdf["Date"]).dt.normalize()
     # Shard enthält u. a. ticker/sector — nur echte news_* (und ähnliche) mergen, nie Schlüsselspalten.
@@ -462,9 +487,19 @@ def merge_news_shard_into_df(df: pd.DataFrame, tag: str) -> pd.DataFrame:
     for c in news_cols:
         ser = aligned[c]
         if pd.api.types.is_float_dtype(ser.dtype):
-            df[c] = ser.astype(np.float32).fillna(0.0).to_numpy()
+            arr = ser.to_numpy(dtype=np.float32, copy=False)
         else:
-            df[c] = pd.to_numeric(ser, errors="coerce").fillna(0.0).to_numpy()
+            arr = pd.to_numeric(ser, errors="coerce").to_numpy(dtype=np.float32, copy=False)
+        # NumPy-Pfad vermeidet pandas-internes fillna/where (BlockManager), das hier RAM-Spitzen auslösen kann.
+        _nan_sentinel = float(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+        arr = np.nan_to_num(
+            arr,
+            nan=_nan_sentinel,
+            posinf=_nan_sentinel,
+            neginf=_nan_sentinel,
+            copy=False,
+        ).astype(np.float32, copy=False)
+        df[c] = arr
     _apply_news_regime_tone_interactions(df, tag)
     return df
 

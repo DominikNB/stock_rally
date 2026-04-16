@@ -230,6 +230,9 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             return_window=return_window, rally_threshold=rally_threshold,
             min_rally_tail_days=min_rally_tail_days,
         )
+        # Kritisch für RAM: Trial darf df_base/andere Trials nie in-place aufblähen.
+        # Sonst akkumulieren news_*-Spalten über Trials und X_tr wird riesig.
+        df_trial = df_trial.copy()
 
         # ── Model params ───────────────────────────────────────────────────
         # ── Feature-window params: always optimised (affect all base models equally) ──
@@ -264,10 +267,6 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             news_extra_zscore_w = None
             news_extra_tone_accel = None
             news_extra_macro_sec_diff = None
-
-        if cfg.USE_NEWS_SENTIMENT and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
-            _tag = cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)
-            df_trial = merge_news_shard_into_df(df_trial, _tag)
 
         # ── Model params: optimised (Option A) or fixed from cfg.SEED_PARAMS (Option B) ─
         if cfg.OPT_MODEL_HYPERPARAMS:
@@ -309,6 +308,10 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             market_breadth_z_window=int(market_breadth_z_window),
             rel_momentum_window=int(rel_momentum_window),
         )
+        if cfg.USE_NEWS_SENTIMENT and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
+            _tag = cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)
+            _need_news = [c for c in feat_cols if str(c).startswith("news_")]
+            df_trial = merge_news_shard_into_df(df_trial, _tag, wanted_news_cols=_need_news)
         focal_obj = make_focal_objective(focal_gamma, focal_alpha)
 
         fold_scores = []
@@ -322,10 +325,13 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             val_mask   = (df_trial['_date_idx'] >= train_end) & \
                          (df_trial['_date_idx'] < val_end)
 
-            X_tr  = df_trial.loc[train_mask, feat_cols].values.astype(np.float32)
+            X_tr  = df_trial.loc[train_mask, feat_cols].to_numpy(dtype=np.float32, copy=True)
             y_tr  = df_trial.loc[train_mask, 'target'].values.astype(np.int8)
-            X_val = df_trial.loc[val_mask,   feat_cols].values.astype(np.float32)
+            X_val = df_trial.loc[val_mask,   feat_cols].to_numpy(dtype=np.float32, copy=True)
             y_val = df_trial.loc[val_mask,   'target'].values.astype(np.int8)
+            _nan_sentinel = np.float32(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+            np.nan_to_num(X_tr, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
+            np.nan_to_num(X_val, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
 
             if X_tr.shape[0] < 50 or X_val.shape[0] < 10:
                 continue

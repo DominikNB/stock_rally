@@ -516,6 +516,8 @@ NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS = [False, True]
 # "all_news_model" = alle Namen aus all_news_model_cols() (Legacy).
 # "none" = keinen News-Fill (nur was die Merges liefern; für Experten).
 FEATURE_ASSEMBLE_NEWS_FILL = "optuna_union"  # "all_news_model" | "optuna_union" | "none"
+# Fehlende/ungültige Werte als klarer Sentinel (statt 0.0), damit „missing“ getrennt von „neutral“ bleibt.
+FEATURE_NUMERIC_NAN_SENTINEL = -1e8
 
 # Kontext-Features: Optuna wählt je Trial ein Fenster (Indizes siehe SEED_PARAMS).
 BTC_MOMENTUM_Z_WINDOWS = [20, 40, 60, 120]
@@ -751,7 +753,7 @@ TICKERS_BY_SECTOR = {
     # SDAX: DUE, JST, SFQ, NOEJ, VOS, WAC, INH, MUX, STM, KSB, HDD
     'industrials': ['CAT', 'BA', 'HON', 'MMM', 'SHW', 'TRV', 'DOW', 'FDX',
                     'SIE.DE', 'RHM.DE', 'MTX.DE', 'AIR.DE', 'DHL.DE', 'G1A.DE',
-                    'KBX.DE', 'HOC.DE', 'KGX.DE', 'JUN3.DE', 'TKA.DE', 'HAG.DE',
+                    'KBX.DE', 'HOC.F', 'KGX.DE', 'JUN3.DE', 'TKA.DE', 'HAG.DE',
                     'R3NK.DE', 'LHA.DE', 'FRA.DE', 'HLAG.DE', 'RAA.DE',
                     'DUE.DE', 'JST.DE', 'SFQ.DE', 'NOEJ.DE', 'VOS.DE',
                     'WAC.DE', 'INH.DE', 'MUX.DE', 'STM.DE', 'KSB.DE', 'HDD.DE',
@@ -829,7 +831,7 @@ COMPANY_NAMES = {
     'SIE.DE': 'Siemens', 'RHM.DE': 'Rheinmetall', 'MTX.DE': 'MTU Aero',
     'AIR.DE': 'Airbus', 'DHL.DE': 'DHL Group', 'G1A.DE': 'GEA Group',
     # Industrial (MDAX)
-    'KBX.DE': 'Knorr-Bremse', 'HOC.DE': 'Hochtief', 'KGX.DE': 'KION Group',
+    'KBX.DE': 'Knorr-Bremse', 'HOC.F': 'Hochtief', 'KGX.DE': 'KION Group',
     'JUN3.DE': 'Jungheinrich', 'TKA.DE': 'Thyssenkrupp', 'HAG.DE': 'Hensoldt',
     'R3NK.DE': 'RENK Group', 'LHA.DE': 'Lufthansa', 'FRA.DE': 'Fraport',
     'HLAG.DE': 'Hapag-Lloyd', 'RAA.DE': 'Rational',
