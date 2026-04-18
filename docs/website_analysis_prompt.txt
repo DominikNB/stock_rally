@@ -6,6 +6,20 @@ Die Tabelle enthält **Meta-Classifier-Treffer**, die die Bedingung **prob ≥ t
 
 **Ausrichtung:** Das Modell zielt auf die Erkennung **kurzfristiger Kurs-Rallies** (Impulse über wenige Handelstage), nicht auf langfristige Trendwenden oder mehrmonatige Erholungsnarrative. Im automatisierten Lauf (Gemini / Notebook) wird **oberhalb dieses Textes** die konkrete Rally-/Label-Definition aus den gespeicherten Trainingsparametern (`models/scoring_artifacts.joblib`: z. B. `return_window`, `rally_threshold`, `lead_days`, …) eingefügt — diese Parameter **zwingend mitdenken**.
 
+**Zeitliche Grenzen für die Nachrichten-Recherche (verbindlich):**
+
+Die **exakten** Grenzen des **aktuellen** Laufs (Signaltag laut CSV, Ende Hauptfenster, Beginn Zusatzfenster, Scoring-Zeitpunkt) stehen im **Steuerblock** direkt **vor** diesem Prompt (von der Pipeline gesetzt, mit Zeitzone). Unten die **fachliche Regel** — die Logik des Prompts bleibt dieselbe wie bisher, nur mit **expliziter Obergrenze** für das Hauptfenster und einer **zusätzlichen** Recherchephase:
+
+• **Hauptfenster (bisherige Logik, jetzt explizit begrenzt):** Makro-, Unternehmens- und Branchenrecherche gemäß diesem Dokument (Signaltag, Vortag, zwei Kalendertage davor, sinnvoll ±1 Randtag, Such-Protokoll) bezieht sich auf Meldungen/Ereignisse, die **inhaltlich zum Hauptfenster** gehören, nur wenn ihr **bekannter Zeitstempel** (oder die datierte Berichterstattung) **nicht nach dem Kalendertagende des Signaltags** liegt. **Obergrenze Hauptfenster:** **Signaltag 24:00 Uhr Europe/Berlin** — gleichbedeutend mit **00:00 Uhr des Folgetags** (Kalenderdatum nach dem Signaltag) **Europe/Berlin**. Alles **strict später** fällt **nicht** ins Hauptfenster (auch wenn es „noch zum Signaltag“ inhaltlich passen würde).
+
+• **Zusatzfenster (zusätzliche Pflichtrecherche, gleiche Themenfelder):** **Zusätzlich** — ohne das Hauptfenster zu verkleinern — führst du eine **zweite** Recherche-Runde durch mit **denselben Interessenfeldern** (Makro/Top-Meldungen zum Markt, unternehmensspezifisch, Branche/Sektor, IR/regulatorisch wie oben). Zeitspanne: **ab** dem **ersten Moment nach** dem Hauptfenster (**00:00 Uhr Europe/Berlin** am **Kalendertag direkt nach dem Signaltag**) **bis einschließlich** des im Steuerblock genannten **Scoring-Ausführungszeitpunkts** (Wall-Clock).  
+  – Beispiel: Signaltag Donnerstag (Kurs-CSV), Scoring Freitag 06:00 Europe/Berlin → Zusatzfenster **Freitag 00:00–06:00** Europe/Berlin.  
+  – Beispiel Wochenende: Signaltag **Freitag** (letzter Handelstag in den Daten), Scoring **Montag** 06:00 → Zusatzfenster **Samstag 00:00** bis **Montag 06:00** Europe/Berlin (viele Quellen liefern weniger; trotzdem systematisch suchen, **fehlende** Berichterstattung **benennen**).
+
+• **CSV vs. Zusatzfenster:** Die Tabelle bleibt **unverändert** — alle Kurs- und Merkmalswerte gelten **nur bis einschließlich Signaltag**. Das Zusatzfenster **ändert keine** CSV-Zahlen. Neuigkeiten aus dem Zusatzfenster **müssen** die **Meinungsbildung** beeinflussen (Makro-Intro, **Die Story**, **Risiko-Faktor**, **Strategie-Zusammenfassung**, **Fazit**), klar getrennt von der **Hauptfenster**-Story (z. B. Unterpunkt **„Seit Signaltag 24:00 (Zusatzfenster)“**).
+
+• **Strenge Faktenbindung** gilt für **beide** Fenster gleichermaßen (Quelle, Datum/Uhrzeit; keine Ersatz-Narrative).
+
 **Priorität der Einordnung (wichtig):**
 
 1. **Makro-Kontext & Index-Grounding (zwingender Start)**  
@@ -21,7 +35,7 @@ Die Tabelle enthält **Meta-Classifier-Treffer**, die die Bedingung **prob ≥ t
 3. **Struktur & Kontext aus der CSV (Modell-Abgleich)**  
    Die enrich-Spalten beschreiben **Querschnitt, Liquidität, Korrelation im Titel-Cluster, Earnings-Timing, relative Stärke, Gap, Markt-/Sektor-Renditen, Short Interest** — im Klassifikator **nicht** als „Story“ modelliert; sie dienen dem **Abgleich** mit der Nachrichtenlage.  
    • **Kausalität & Divergenz:** Auf **Widersprüche** prüfen (z. B. starke News bei schwachem **volume_zscore_20d** / schlechter Liquidität; **Meta-Hit** ohne News bei hohem **short_float_pct** / **short_days_to_cover** → Kennzeichnung **„spekulativ“** oder **„Squeeze“**).  
-   • **Earnings:** **bdays_to_next_earnings** unter **5 Handelstage** = **Binary-Event-Risiko** (siehe Ablauf).  
+   • **Earnings:** **bdays_to_next_earnings** unter **5 Handelstage** = **Binary-Event-Risiko** — aber **narrativ nur gewichten**, wenn der Termin auch **innerhalb** des im Kopf genannten **trainierten Rally-Horizonts** (**return_window** Handelstage) liegt (siehe **Rally-Zieldefinition** oben). Sonst **kein** Earnings-Kernargument.  
    **Wichtig:** Alle Werte beziehen sich auf den **Signaltag** in der CSV (und die Historie **bis einschließlich** dieses Tages bei rollierenden Fenstern). Quelle der Kursdaten: **yfinance**-OHLCV (Bulk-Download), ggf. **yfinance**-Abfragen für Indizes/Sektor-ETFs und `Ticker.info` (Short/Institutionen).
 
    **Semantik und Berechnung (genau so interpretieren):**
@@ -52,9 +66,9 @@ Die Tabelle enthält **Meta-Classifier-Treffer**, die die Bedingung **prob ≥ t
    **Earnings (Kalender von yfinance, Arbeitstage USA/NYSE-Logik über `pandas`):**  
    • **next_earnings_date** — Nächstes bekanntes **Earnings-Datum** aus dem yfinance-Kalender (erstes Eintragsdatum); kann fehlen → NaN.  
    • **bdays_to_next_earnings** — Anzahl **Handelstage** (Business Days, Mo–Fr) vom **ersten Kalendertag nach dem Signaltag** bis **einschließlich** **next_earnings_date**. Liegt das Earnings **am oder vor** dem Signaltag → NaN.  
-   • **earnings_in_3_15_bday_window** — **True**, wenn **3 ≤ bdays_to_next_earnings ≤ 15** (Überlappung mit typischer Swing-Haltedauer im Label).  
+   • **earnings_in_3_15_bday_window** — **True**, wenn **3 ≤ bdays_to_next_earnings ≤ 15** (technisches CSV-Flag aus der Pipeline). **Für deine Text-Einordnung** gilt **zusätzlich** die **return_window**-Regel aus der **Rally-Zieldefinition**: Ein Earnings-Termin **jenseits** **return_window** Handelstage darf **nicht** als **Haupt**-Erklärung für die Modell-Rally dienen — auch wenn dieses Flag **True** ist.
    • **earnings_date_known** — **True**, wenn ein **next_earnings_date** existiert.  
-   • **earnings_beyond_swing_15b** — **True**, wenn **bdays_to_next_earnings** größer als 15.  
+   • **earnings_beyond_swing_15b** — **True**, wenn **bdays_to_next_earnings** größer als 15 (CSV-Hilfsflag). **Entscheidend für das Narrativ** ist **bdays_to_next_earnings** im Vergleich zu **return_window** (Kopf), nicht nur die **15**.
    • **earnings_too_soon_lt3b** — **True**, wenn **bdays_to_next_earnings** kleiner als 3 (Earnings sehr nah).
 
    **Relative Stärke und Gap (Definition „5 Handelstage“ identisch für Aktie, SPY und Sektor-ETF):**  
@@ -122,11 +136,13 @@ Deine Aufgabe (Ablauf):
 • **Kein unbelegtes „Plausibel-Schwafeln“:** Verknüpfe **keine** konkrete Nachricht oder **kein** konkretes Ereignis mit dem Kurs, ohne **Quelle und Datum**. Generische Branchenweisheiten („die Branche steigt oft, wenn …“) **ohne** passende Meldung im Fenster sind **untersagt**.  
 • **Hedging bei Inhalten:** Formulierungen wie „könnte“, „dürfte“, „vielleicht“, „scheint“ **nicht** verwenden, um **erfundene oder ungeprüfte** News zu kaschieren. Erlaubt: vorsichtige Formulierungen **nur**, wenn du **explizit** sagst, dass **keine** belastbare Meldung gefunden wurde — dann die **datengetriebene** Einordnung (siehe unten).  
 • **Belegpflicht:** Zu jeder **konkreten** Nachricht: **Quelle** (z. B. Reuters, Handelsblatt, dpa-AFX, **Unternehmens-IR** / Pressemitteilung) und **Datum oder Uhrzeit**, soweit aus der Quelle ersichtlich.  
-• **Zeitfenster Unternehmensnews (kurzfristige Rally):** Für die Einordnung sind **nicht nur** Meldungen **vom Signaltag** relevant, sondern auch vom **Vortag und dem Tag davor** (1–2 Kalendertage vor dem Signaltag) — Kursimpulse können durch IR, Medien oder Nachbörsliches **versetzt** wirken. Alles **mit Quelle und Datum** belegen; ältere Meldungen klar datieren.  
-• **Keine firmenspezifische Meldung:** Wenn die Suche im **Fenster Signaltag plus die zwei vorigen Kalendertage** (und sinnvoll: noch **±1 Tag** für Randfälle) **keine** zum **Unternehmen** passende **spezifische** Meldung liefert, **ausdrücklich** den Satz verwenden: **„Keine spezifischen unternehmensbezogenen Nachrichten im Zeitfenster identifiziert“** — **danach** (im selben Absatz **Die Story**) den **Branchen-/Geschäftsbereichs-Kontext** aus der **Pflicht-Recherche** (siehe Such-Protokoll) einfügen: entweder **konkrete Branchen-/Sektormeldungen mit Quelle und Datum**, oder bei fehlendem belastbaren Treffer: **„Für den Geschäftsbereich / die Branche ebenfalls keine belastbare Meldung im Fenster gefunden; die Einordnung bleibt datengetrieben oder technisch.“** Keine **Ersatz-Narrative** ohne Quelle.  
+• **Zeitfenster Unternehmensnews (kurzfristige Rally, Hauptfenster):** Für die Einordnung sind **nicht nur** Meldungen **vom Signaltag** relevant, sondern auch vom **Vortag und dem Tag davor** (1–2 Kalendertage vor dem Signaltag) — Kursimpulse können durch IR, Medien oder Nachbörsliches **versetzt** wirken. **Veröffentlichungen im Hauptfenster** nur **bis einschließlich Signaltag 24:00 Uhr Europe/Berlin** (siehe **Zeitliche Grenzen** oben). Alles **mit Quelle und Datum** belegen; ältere Meldungen klar datieren.  
+• **Keine firmenspezifische Meldung:** Wenn die Suche im **Fenster Signaltag plus die zwei vorigen Kalendertage** (und sinnvoll: noch **±1 Tag** für Randfälle) — jeweils **nur** Meldungen mit Zeitstempel **bis Signaltag 24:00 Europe/Berlin** — **keine** zum **Unternehmen** passende **spezifische** Meldung liefert, **ausdrücklich** den Satz verwenden: **„Keine spezifischen unternehmensbezogenen Nachrichten im Zeitfenster identifiziert“** — **danach** (im selben Absatz **Die Story**) den **Branchen-/Geschäftsbereichs-Kontext** aus der **Pflicht-Recherche** (siehe Such-Protokoll) einfügen: entweder **konkrete Branchen-/Sektormeldungen mit Quelle und Datum**, oder bei fehlendem belastbaren Treffer: **„Für den Geschäftsbereich / die Branche ebenfalls keine belastbare Meldung im Fenster gefunden; die Einordnung bleibt datengetrieben oder technisch.“** Keine **Ersatz-Narrative** ohne Quelle.  
 • **Index- und Sektor-Check (Pflicht, aus CSV):** Nutze **market_bench_symbol** / **sector_bench_symbol** zur Einordnung, dann **ret_1d_signal_day** vs. **market_ret_1d** und **sector_ret_1d**. Ergänzend **market_ret_2d/3d** und **sector_ret_2d/3d**: ein Move über **mehrere** Handelstage vs. **nur** ein Tag. Ist **market_ret_1d** deutlich positiv (z. B. **über +0,01** ≈ **1 %**), war der Gesamtmarkt am Tag stark — **Outperformer** / **Mitläufer** / **Underperformer** relativ zum **gewählten** Index (**market_bench_symbol**). Keine Behauptung „Sektor stark“, ohne **sector_ret_*** zu nennen.
 
-**Such-Protokoll (Google Search)** — **pro Ticker** mindestens **vier** **gezielte** Abfragen zum **Unternehmen** (mehr ist erlaubt) **plus** mindestens **zwei** **gezielte** Abfragen zum **Geschäftsbereich / zur Branche / zum Sektor** (Pflicht, siehe unten). Ziel: **aktuelle** und **kurzfristig wirksame** Informationen — **Signaltag** und **die 1–2 Kalendertage davor** systematisch abdecken (kein unspezifisches „nur Jahr“; wo möglich **konkretes Datum**, „letzte 72h“ oder Suchfilter nach **Zeitraum** nutzen).
+**Such-Protokoll (Google Search) — Hauptfenster** — **pro Ticker** mindestens **vier** **gezielte** Abfragen zum **Unternehmen** (mehr ist erlaubt) **plus** mindestens **zwei** **gezielte** Abfragen zum **Geschäftsbereich / zur Branche / zum Sektor** (Pflicht, siehe unten). Ziel: **aktuelle** und **kurzfristig wirksame** Informationen — **Signaltag** und **die 1–2 Kalendertage davor** systematisch abdecken (kein unspezifisches „nur Jahr“; wo möglich **konkretes Datum**, „letzte 72h“ oder Suchfilter nach **Zeitraum** nutzen). **Nur** Treffer, deren Zeitstempel/Datum **zum Hauptfenster** passen (**bis Signaltag 24:00 Europe/Berlin**).
+
+**Such-Protokoll — Zusatzfenster (zusätzlich, gleiche Tiefe):** **Pro Ticker** erneut mindestens **vier** Unternehmens- und **zwei** Branchen-/Sektor-Suchen, angepasst auf den **Zeitraum vom Steuerblock** (Beginn Zusatzfenster bis Scoring-Zeit). **Zusätzlich** **mindestens zwei** **Makro-/Markt**-Suchen (Breite: Leitindex, Top-Meldungen, Zins/Makro), die **explizit** diesen **späteren** Zeitraum abdecken. Gilt **Belegpflicht** wie oben. Wenn **nichts Belastbares** im Zusatzfenster: pro Ticker knapp **„Keine belastbaren Meldungen im Zusatzfenster.“**
 
 • **Signaltag:** `[Unternehmensname laut CSV] Nachrichten` + **konkretes Datum des Signaltags** (TT.MM.JJJJ bzw. lokal üblich) oder „News [Unternehmensname] [Signaltag]“.  
 • **Vortag:** gleiche Logik für **einen Kalendertag vor** dem Signaltag (Treiber oft am Tag vor der Kursreaktion).  
@@ -150,32 +166,34 @@ Ergänze die vier Basisabfragen um **weitere, zum jeweiligen Titel passende** Su
 • **Unternehmensnahe Ereignisse (generisch):** Wo sinnvoll zusätzlich zu kombinieren: **Guidance**, **Quartalszahlen**, **Dividende**, **Übernahme** / **M&A**, **Rating** / **Analyst**, **Auftrag**, **Kapitalerhöhung**, **Insider**, **Restrukturierung**, **Rechtsstreit** — jeweils nur, wenn für diesen Titel **plausibel** und **nicht** schon durch IR-Suche abgedeckt.  
 • **Sprache:** Suchstrings in der **Sprache der Hauptnotierung** oder **zweisprachig** (z. B. deutscher Name + englischer IR-Begriff), je nachdem, wo verlässliche Quellen liegen.
 
-**Qualität:** Keine oberflächliche Ein-Satz-Suche — jeden **Treffer** auf **Ticker + Börse** und **Datum** prüfen; **Jahres-Rückblicke**, ältere Artikel ohne Bezug zum **Fenster Signaltag ±2 Tage** oder generische Branchen-Texte ohne Firmenbezug **verwerfen**.
+**Qualität:** Keine oberflächliche Ein-Satz-Suche — jeden **Treffer** auf **Ticker + Börse** und **Datum** prüfen; **Jahres-Rückblicke**, ältere Artikel ohne Bezug zum **Hauptfenster (Signaltag ±2 Tage, bis Signaltag 24:00 Europe/Berlin)** bzw. zum **Zusatzfenster (Steuerblock)** oder generische Branchen-Texte ohne Firmenbezug **verwerfen**.
 
 **Reasoning-Prozess (Reihenfolge einhalten):**
 
 1. **Makro-Analyse (zuerst):** Welche **2–3** übergeordneten Markt- oder Makro-Themen / **Top-Meldungen** haben den **Leitindex** (**market_bench_symbol**) am Signaltag plausibel geprägt? Nur **belegbare** Aussagen mit **Quelle**; wenn nichts Verlässliches: knapp sagen, dass das Makrobild **unklar** oder **gemischt** ist — nichts erfinden.  
 2. **Alle Hits** des aktuellsten Signaltags je Ticker erfassen.  
-3. **Ticker-Recherche:** Pro Ticker mindestens **vier** gezielte **Unternehmens**-Suchen wie im **Such-Protokoll** (Signaltag, Vortag, zwei Tage zuvor, IR/ad hoc — kurzfristiges Fenster) **und** mindestens **zwei** **Branchen-/Geschäftsbereichs**-Suchen (Pflicht).  
+3. **Ticker-Recherche (Hauptfenster):** Pro Ticker mindestens **vier** gezielte **Unternehmens**-Suchen wie im **Such-Protokoll** (Signaltag, Vortag, zwei Tage zuvor, IR/ad hoc — kurzfristiges Fenster) **und** mindestens **zwei** **Branchen-/Geschäftsbereichs**-Suchen (Pflicht).  
+3b. **Ticker- und Makro-Recherche (Zusatzfenster, Pflicht):** Wie **Such-Protokoll — Zusatzfenster**; Ergebnisse für spätere Synthese festhalten (**getrennt** vom Hauptfenster).  
 4. **Kausalität Alpha vs. Beta:** **ret_1d_signal_day** mit **market_ret_1d** und **sector_ret_1d** (und bei Bedarf **2d/3d**) vergleichen. Liegt die Aktie nur im Rahmen des Marktes (Beta / **Mitläufer**), oder klar darüber (**Alpha**)? Bei **Alpha** gezielt nach **unternehmensspezifischem** Treiber mit Quelle suchen; wenn der nicht belegbar ist, prüfen, ob der Move durch **belegbare Branchen-/Sektormeldungen** plausibel wird (mit Quelle).  
-5. **Pro Ticker — Nachrichten:** Welche **konkreten** Meldungen lassen sich **mit Quelle und Datum** für das **Fenster um den Signaltag** belegen — **unternehmensspezifisch** und **Branchen-/Geschäftsbereich** getrennt aufführen? Bei fehlender Firmen-News **nicht** bei der Branchen-Recherche sparen; **Die Story** muss beide Ebenen abdecken (siehe **Strenge Faktenbindung** / Standard-Satz).  
+5. **Pro Ticker — Nachrichten (Hauptfenster):** Welche **konkreten** Meldungen lassen sich **mit Quelle und Datum** für das **Fenster um den Signaltag** belegen — **unternehmensspezifisch** und **Branchen-/Geschäftsbereich** getrennt aufführen? Bei fehlender Firmen-News **nicht** bei der Branchen-Recherche sparen; **Die Story** muss beide Ebenen abdecken (siehe **Strenge Faktenbindung** / Standard-Satz).  
+5b. **Zusatzfenster je Ticker:** Welche **konkreten** Meldungen **nach** Signaltag 24:00 Europe/Berlin bis Scoring — **getrennt** listen; wenn keine: Standardformulierung.  
 6. **Kausalität & Divergenzen (Pflicht):** Explizit auf **Widersprüche** zwischen Story und Daten prüfen — nicht nur auflisten:
    • Gibt es eine **starke** oder klare News-/Ereignislage (z. B. positive Guidance, großer Auftrag), aber **niedriges** volume_zscore_20d oder schlechte Liquidität (liquidity_tier / adv_*)?  
    • Oder ein **Treffer** **ohne** erkennbare begleitende Nachricht (rein datengetrieben / technisch)?  
    • Kurze Rallies sind oft **Short-Squeeze**-nah: Wenn **News positiv** und **short_float_pct** bzw. **short_days_to_cover** auffällig sind, diese Verknüpfung nennen — nicht nur Zahlen vorlesen.  
    Solche Fälle klar als **„spekulativ“** oder **„technisch getrieben“** kennzeichnen, wenn die Story nicht zur Datenlage passt oder keine Story erkennbar ist.
 
-7. **bdays_to_next_earnings als harter Kontext:** Liegt das nächste Earnings-Datum **weniger als 5 Handelstage** entfernt (Fenster **unter 5 Handelstagen**), **Binary-Event-Risiko** ausdrücklich diskutieren: Kann sich die Rally **vor** den Zahlen noch „auszahlen“ oder handelt es sich um einen **reinen Earnings-Zock**? Bei längeren Abständen Earnings nur dort einbeziehen, wo es für die Swing-These (3–15 Tage) relevant ist.
+7. **bdays_to_next_earnings — nur im Modell-Horizont:** Zuerst **return_window** aus der **Rally-Zieldefinition** (Kopf) ablesen. **Nur** wenn **bdays_to_next_earnings** **≤ return_window** (und nicht NaN), darf Earnings ein **tragfähiges** Argument sein. Liegt das Earnings **weiter** (**bdays_to_next_earnings** > **return_window**): **keine** Earnings-Schwerpunkt-Story („in 14 Tagen Zahlen“ usw.) — höchstens **ein Satz**, dass der Termin **außerhalb** des trainierten Rally-Horizonts liegt. **Innerhalb** des Horizonts **und** **bdays_to_next_earnings** < **5**: **Binary-Event-Risiko** ausdrücklich diskutieren (Auszahlung vor den Zahlen vs. Zock). **Innerhalb** des Horizonts **und** ≥ **5** Handelstage: nur erwähnen, wenn es die Story **konkret** stützt — nicht als Ersatz für fehlende Nah-Treiber.
 
 8. **Dann abgleichen:** Passen Cluster-, Korrelations-, Liquiditäts-, RS-, Gap-, Markt-/Sektor-Renditen, Short-/Institutions- und Earnings-Infos aus der CSV zu dieser Story — oder widersprechen sie sich?
 
 9. **Technik nur bei Bedarf:** Knapp erwähnen, wenn es die Einordnung schärft; sonst weglassen.
 
 10. **Synthese**  
-   Klar benennen, wo **Makro**, **Nachrichtenlage**, Liquidität, Termine, relative Stärke und Cluster zusammenpassen – und wo Risiken oder Lücken bestehen.
+   Klar benennen, wo **Makro**, **Nachrichtenlage** (**Hauptfenster**), **Zusatzfenster** (falls relevant: neue Risiken/Chancen **nach** den Kursdaten), Liquidität, Termine, relative Stärke und Cluster zusammenpassen – und wo Risiken oder Lücken bestehen. **Fazit** muss **Zusatzfenster** mitdenken, wenn dort belastbare Fakten lagen.
 
 11. **Rahmen**  
-   • Haltedauer: 3–15 Handelstage (Swing).  
+   • **Rally-These:** Orientierung an **return_window** (Handelstage) aus der **Rally-Zieldefinition** im Kopf — das ist der vom Modell optimierte Horizont; **nicht** pauschal eine längere Swing-Spanne unterstellen.  
    • Sachlich und nachvollziehbar formulieren.
 
 Output (für die Website):
@@ -183,22 +201,24 @@ Output (für die Website):
 • Format: Antwort in **klarem Markdown** (Überschriften mit ## oder ###, Aufzählungen mit - oder 1., **Fettdruck** für Kernthesen und das Fazit, kurze Absätze).
 
 • **Pflicht — Makro-Intro (zuerst, vor den Ticker-Blöcken):**  
-  Kurze **Zusammenfassung der Marktlage** am Signaltag: Was hat den **gewählten Leitindex** (**market_bench_symbol**) und ggf. den breiten Markt **plausibel** bewegt? (Nur **belegbare** Punkte mit Quelle; sonst: Makrobild **unklar/gemischt**.) Anschließend erst die **Ticker-Einordnungen**.
+  Kurze **Zusammenfassung der Marktlage** am Signaltag: Was hat den **gewählten Leitindex** (**market_bench_symbol**) und ggf. den breiten Markt **plausibel** bewegt? (Nur **belegbare** Punkte mit Quelle; sonst: Makrobild **unklar/gemischt**.) **Nur** Meldungen **bis Signaltag 24:00 Europe/Berlin**.  
+  **Direkt anschließend — Pflicht-Abschnitt „Makro & Markt (Zusatzfenster)“:** Kurz die **wichtigsten** belegbaren Entwicklungen **nach** Signaltag 24:00 bis Scoring (Steuerblock); wenn nichts Belastbares: ein Satz **„Im Zusatzfenster keine belastbaren neuen Makro-Meldungen.“**
 
 • **Pflicht — einheitliches Ticker-Layout (je Treffer, zum schnellen Scannen):**  
   Verwende pro Ticker genau diese Gliederung (Überschrift oder fett + Unterpunkte):
 
   **Ticker (Name): [News-Rating: Positiv / Neutral / Spekulativ]**  
-  - **Die Story:** Zuerst **unternehmensspezifisch** (mit **Quelle & Datum**); falls dort nichts Belegbares: den **vorgeschriebenen** Standard-Satz. **Immer** ergänzen: **Branchen-/Geschäftsbereich** — **belegbare** Sektormeldungen **mit Quelle & Datum**, oder der **vorgeschriebene** Satz, dass auch dort **keine** belastbare Meldung im Fenster gefunden wurde. **Rein technisch / datengetrieben** nur, wenn **weder** Firmen- **noch** Branchen-News belegbar sind (beide Ebenen ausdrücklich abgeschlossen).  
-  - **Der Daten-Check:** Verknüpfung von Story mit Liquidität, **ret_1d_signal_day** vs. **market_ret_1d** / **sector_ret_1d** (und bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**), RS (ret_vs_*), Gap, volume_zscore_20d, Short Interest / Inst., Earnings — **Alpha vs. Beta** kurz benennen.  
-  - **Risiko-Faktor:** Konkrete Warnung (z. B. **Earnings/Binary Event**, **spekulativer Squeeze**, **geringes Volumen trotz Narrativ**).
+  - **Die Story:** Zuerst **unternehmensspezifisch** (mit **Quelle & Datum**); falls dort nichts Belegbares: den **vorgeschriebenen** Standard-Satz. **Immer** ergänzen: **Branchen-/Geschäftsbereich** — **belegbare** Sektormeldungen **mit Quelle & Datum**, oder der **vorgeschriebene** Satz, dass auch dort **keine** belastbare Meldung im Fenster gefunden wurde. **Rein technisch / datengetrieben** nur, wenn **weder** Firmen- **noch** Branchen-News belegbar sind (beide Ebenen ausdrücklich abgeschlossen). **Alles in diesem Unterpunkt = Hauptfenster (bis Signaltag 24:00 Europe/Berlin).**  
+  - **Seit Signaltag 24:00 (Zusatzfenster):** **Pflicht-Unterpunkt.** Kurz **unternehmensspezifisch** und **Branche** (mit Quelle & Zeit), oder **„Keine belastbaren Meldungen im Zusatzfenster.“** Wenn etwas **die Einordnung verschärft oder widerspricht** (z. B. neue ad hoc), **hervorheben**.  
+  - **Der Daten-Check:** Verknüpfung von Story mit Liquidität, **ret_1d_signal_day** vs. **market_ret_1d** / **sector_ret_1d** (und bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**), RS (ret_vs_*), Gap, volume_zscore_20d, Short Interest / Inst., Earnings — **Alpha vs. Beta** kurz benennen. **Hinweis:** CSV nur bis Signaltag; Zusatzfenster-News **nicht** als neue Zahl in der Tabelle ausgeben.  
+  - **Risiko-Faktor:** Konkrete Warnung (z. B. **Earnings/Binary Event** — nur wenn **bdays_to_next_earnings** **≤ return_window**; sonst Earnings hier **nicht** überbewerten, **spekulativer Squeeze**, **geringes Volumen trotz Narrativ**, **neue Meldung im Zusatzfenster**).
 
 • Danach eine **Strategie-Zusammenfassung** über alle Ticker (wer passt am ehesten zur These, wer nicht).
 
 • Struktur insgesamt: Zuerst **Makro**, dann **Nachrichten & Daten-Synthese**; strukturelle CSV-Punkte einweben; Technik nur knapp wo sinnvoll — für Leser ohne technischen Hintergrund verständlich.
 
 • **Pflicht — abschließendes Fazit:**  
-  Klare Benennung **eines** Favoriten **oder** bewusste **Ablehnung** aller Treffer — gestützt auf **News-Daten-Synthese** und CSV-Abgleich (**nicht** nach **prob**, prob-Rankings oder Modell-Score; **nicht** auf Bauchgefühl). Kein Textende ohne diese Klärung; das letzte Wort gehört der **konkreten Aktienwahl oder der bewussten Nicht-Wahl**.
+  Klare Benennung **eines** Favoriten **oder** bewusste **Ablehnung** aller Treffer — gestützt auf **News-Daten-Synthese** (Hauptfenster **und** Zusatzfenster) und CSV-Abgleich (**nicht** nach **prob**, prob-Rankings oder Modell-Score; **nicht** auf Bauchgefühl). Kein Textende ohne diese Klärung; das letzte Wort gehört der **konkreten Aktienwahl oder der bewussten Nicht-Wahl**.
 
 Kurzbeschreibung (eine Zeile für die UI):
 

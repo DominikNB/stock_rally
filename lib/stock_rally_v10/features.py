@@ -334,44 +334,73 @@ def _write_news_shard_table(shard: pd.DataFrame, fpath_parquet: str) -> str:
         return fpath_pkl
 
 
+def _news_export_tags_for_mode() -> list[tuple[int, int, int, str]]:
+    """Bestimmt zu exportierende News-Shards je Modus.
+
+    - Training: volles Grid (NEWS_MOM_WINDOWS × NEWS_VOL_MA_WINDOWS × NEWS_TONE_ROLL_WINDOWS)
+    - SCORING_ONLY: bevorzugt nur das Tag aus cfg.best_params
+    """
+    if bool(getattr(cfg, "SCORING_ONLY", False)):
+        bp = getattr(cfg, "best_params", None) or {}
+        try:
+            mom_w = int(bp["news_mom_w"])
+            vol_ma = int(bp["news_vol_ma"])
+            tone_roll = int(bp["news_tone_roll"])
+            tag = cfg.news_feat_tag(mom_w, vol_ma, tone_roll)
+            return [(mom_w, vol_ma, tone_roll, tag)]
+        except Exception:
+            print(
+                "assemble_features [News → Platte]: SCORING_ONLY ohne gültige best_params-Newsfenster — "
+                "falle auf volles Grid zurück.",
+                flush=True,
+            )
+    out: list[tuple[int, int, int, str]] = []
+    for mom_w in list(cfg.NEWS_MOM_WINDOWS):
+        for vol_ma in list(cfg.NEWS_VOL_MA_WINDOWS):
+            for tone_roll in list(cfg.NEWS_TONE_ROLL_WINDOWS):
+                out.append((int(mom_w), int(vol_ma), int(tone_roll), cfg.news_feat_tag(mom_w, vol_ma, tone_roll)))
+    return out
+
+
 def _export_news_shards_for_grid(df_base: pd.DataFrame, s: pd.DataFrame) -> None:
     """Pro News-Grid-Tripel eine schmale Tabelle auf Platte — ``df_features`` bleibt ohne News-Spalten."""
     shard_dir = getattr(cfg, "FEATURE_SHARD_DIR", None) or os.path.join(
         os.getcwd(), "data", "feature_shards_news"
     )
     os.makedirs(shard_dir, exist_ok=True)
-    _mw = list(cfg.NEWS_MOM_WINDOWS)
-    _vma = list(cfg.NEWS_VOL_MA_WINDOWS)
-    _tr = list(cfg.NEWS_TONE_ROLL_WINDOWS)
-    _n_news = len(_mw) * len(_vma) * len(_tr)
+    export_tags = _news_export_tags_for_mode()
+    _n_news = len(export_tags)
+    _mode_txt = "SCORING_ONLY: nur Modell-Tag" if bool(getattr(cfg, "SCORING_ONLY", False)) and _n_news == 1 else "volles Grid"
+    if bool(getattr(cfg, "SCORING_ONLY", False)) and _n_news == 1:
+        _m, _v, _t, _tag = export_tags[0]
+        print(
+            "assemble_features [News → Platte]: SCORING_ONLY Modell-Tag "
+            f"feat_tag={_tag} (news_mom_w={_m}, news_vol_ma={_v}, news_tone_roll={_t}).",
+            flush=True,
+        )
     print(
         f"assemble_features [News → Platte]: schreibe {_n_news} Shard-Dateien nach {shard_dir!r} "
         f"(nur news_*-Spalten pro Fenster-Tripel feat_tag=mom_w|vol_ma|tone_roll; "
-        f"df_features enthält weiter keine news_*).",
+        f"df_features enthält weiter keine news_*; Modus: {_mode_txt}).",
         flush=True,
     )
     manifest: dict[str, str] = {}
-    _i_news = 0
-    for mom_w in _mw:
-        for vol_ma in _vma:
-            for tone_roll in _tr:
-                _i_news += 1
-                tag = cfg.news_feat_tag(mom_w, vol_ma, tone_roll)
-                print(
-                    f"  assemble_features [News-Shard {_i_news}/{_n_news}]: feat_tag={tag} "
-                    f"(Fenster-Tripel, kein GKG-Theme) — news_*-Merges → Datei …",
-                    flush=True,
-                )
-                df_w = df_base.copy()
-                _apply_news_merges_for_one_tag(df_w, s, mom_w, vol_ma, tone_roll, tag)
-                if True in cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
-                    _add_cross_macro_minus_sec_for_tag(df_w, tag)
-                news_cols = [c for c in df_w.columns if str(c).startswith("news_")]
-                shard = df_w[["Date", "ticker", "sector"] + news_cols].copy()
-                fpath = os.path.join(shard_dir, f"news_tag_{tag}.parquet")
-                written = _write_news_shard_table(shard, fpath)
-                manifest[tag] = os.path.basename(written)
-                del df_w
+    for _i_news, (mom_w, vol_ma, tone_roll, tag) in enumerate(export_tags, start=1):
+        print(
+            f"  assemble_features [News-Shard {_i_news}/{_n_news}]: feat_tag={tag} "
+            f"(Fenster-Tripel, kein GKG-Theme) — news_*-Merges → Datei …",
+            flush=True,
+        )
+        df_w = df_base.copy()
+        _apply_news_merges_for_one_tag(df_w, s, mom_w, vol_ma, tone_roll, tag)
+        if True in cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
+            _add_cross_macro_minus_sec_for_tag(df_w, tag)
+        news_cols = [c for c in df_w.columns if str(c).startswith("news_")]
+        shard = df_w[["Date", "ticker", "sector"] + news_cols].copy()
+        fpath = os.path.join(shard_dir, f"news_tag_{tag}.parquet")
+        written = _write_news_shard_table(shard, fpath)
+        manifest[tag] = os.path.basename(written)
+        del df_w
     manifest_path = os.path.join(shard_dir, "news_shards_manifest.json")
     abs_manifest = {tag: os.path.join(shard_dir, fname) for tag, fname in manifest.items()}
     with open(manifest_path, "w", encoding="utf-8") as fp:

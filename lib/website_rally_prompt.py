@@ -71,6 +71,25 @@ def load_rally_prompt_injection(root: Path | str) -> str:
             f"- **return_window** = {_fmt_param(rw)} Handelstage: "
             f"Im Label wird ein Fenster dieser Länge betrachtet."
         )
+        lines.append(
+            f"**Earnings & ähnliche Termine (verbindlich):** Der trainierte "
+            f"**Rally-Maximalhorizont** ist **{_fmt_param(rw)} Handelstage** "
+            f"(``return_window``). **Nur** wenn in der CSV **bdays_to_next_earnings** "
+            f"**≤ {_fmt_param(rw)}** ist (und nicht NaN), darfst du **Earnings** als "
+            f"**gewichtetes** inhaltliches Argument (Treiber, Risiko, „Vor-den-Zahlen“-Rally, "
+            f"Binary-Event) für **diese** Meta-Treffer-These nutzen. "
+            f"Liegt das nächste Earnings **weiter entfernt** (>**{_fmt_param(rw)}** Handelstage) "
+            f"oder fehlt der Termin: **kein** Earnings-Kernnarrativ — höchstens **ein kurzer** "
+            f"Hinweis, dass der Termin **außerhalb** des Modell-Horizonts liegt und für die "
+            f"trainierte Rally-Länge daher **nicht** als Erklärung dient."
+        )
+    else:
+        lines.append(
+            "- **return_window:** *(nicht im Artefakt.)* **Earnings:** Keine "
+            "**return_window**-basierte Grenze — **Earnings** nicht als Kernnarrativ, wenn "
+            "**bdays_to_next_earnings** offensichtlich **weit** (> 15 Handelstage) liegt; "
+            "**Binary-Event** (<5 Handelstage) höchstens **kurz** erwähnen."
+        )
     if rt is not None:
         lines.append(
             f"- **rally_threshold** = {_fmt_param(rt)}: "

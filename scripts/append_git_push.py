@@ -26,6 +26,7 @@ print('\\nPushing docs/ to GitHub Pages ...')
 _git_docs = [
     'docs/index.html', 'docs/signals.json', 'docs/website_analysis_prompt.txt',
     'docs/analysis_llm_last.html', 'docs/analysis_llm_last.txt',
+    'docs/analysis_llm_last_run_meta.json',
 ]
 _git_to_add = [p for p in _git_docs if (_Path(_repo) / p.replace('/', _os.sep)).is_file()]
 if not _git_to_add:

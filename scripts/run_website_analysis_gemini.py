@@ -14,11 +14,14 @@ python scripts/run_website_analysis_gemini.py
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import tempfile
 import time
+from datetime import date, datetime, time as dt_time, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 _SCRIPTS = Path(__file__).resolve().parent
@@ -42,6 +45,43 @@ from website_analysis_common import (
     analysis_text_to_html,
     read_signals_for_latest_day,
 )
+
+_LLM_TZ = ZoneInfo("Europe/Berlin")
+OUT_RUN_META = DOCS / "analysis_llm_last_run_meta.json"
+
+
+def _build_llm_steering_block(latest: str) -> tuple[str, dict]:
+    """
+    Zeitgrenzen für Hauptfenster (bis Signaltag 24:00 Europe/Berlin) und Zusatzfenster
+    (bis Scoring-Lauf). ``latest`` ist YYYY-MM-DD (Signaltag laut CSV).
+    """
+    sig_d = date.fromisoformat(latest)
+    gap_start = datetime.combine(sig_d + timedelta(days=1), dt_time.min, tzinfo=_LLM_TZ)
+    scoring_berlin = datetime.now(_LLM_TZ)
+    scoring_utc = datetime.now(timezone.utc)
+    meta = {
+        "signaltag_csv": latest,
+        "hauptfenster_end_europe_berlin_inclusive": (
+            f"{latest} 24:00 Europe/Berlin (identisch mit Beginn Folgetag 00:00)"
+        ),
+        "hauptfenster_end_instant_europe_berlin": gap_start.isoformat(),
+        "zusatzfenster_start_europe_berlin": gap_start.isoformat(),
+        "zusatzfenster_end_europe_berlin_inclusive": scoring_berlin.isoformat(),
+        "scoring_run_utc": scoring_utc.isoformat(),
+    }
+    block = (
+        "=== Steuerblock (Zeitgrenzen, von der Pipeline gesetzt) ===\n"
+        f"Signaltag (Datum laut CSV, Kurs- und Merkmalsstand): {latest}\n"
+        f"Hauptfenster Nachrichten: Meldungen nur, wenn Einordnung/Zeitstempel bis einschließlich "
+        f"{latest} 24:00 Uhr Europe/Berlin — gleichbedeutend: strikt vor "
+        f"{gap_start.isoformat()} (Europe/Berlin).\n"
+        f"Zusatzfenster Nachrichten: von {gap_start.isoformat()} (einschließlich) "
+        f"bis {scoring_berlin.isoformat()} (einschließlich) Europe/Berlin — "
+        "gleiche Themenfelder wie Hauptfenster (siehe Prompt); CSV-Werte unverändert nur bis Signaltag.\n"
+        f"Scoring-Ausführung UTC: {scoring_utc.isoformat()}\n"
+        "=== Ende Steuerblock ===\n\n"
+    )
+    return block, meta
 
 
 def _model_id_for_genai(raw: str) -> str:
@@ -194,9 +234,17 @@ def main() -> None:
         )
         _wait_file_ready(client, uploaded.name)
 
+        _steering, _run_meta = _build_llm_steering_block(latest)
+        print(
+            f"Gemini Steuerblock: Zusatzfenster {_run_meta['zusatzfenster_start_europe_berlin']} "
+            f"… {_run_meta['zusatzfenster_end_europe_berlin_inclusive']} (Europe/Berlin)",
+            flush=True,
+        )
+
         user_block = (
             f"Signaltag (aktuellster Tag in den Daten): {latest}\n"
             f"Anzahl Treffer (Meta ≥ Schwelle, ggf. gekappt): {len(sub)}\n\n"
+            f"{_steering}"
             "Die angehängte CSV enthält die Tabellenzeilen zu diesen Treffern. "
             "Recherchiere bei Bedarf im Web zu News, Kursen und Kontext; nutze die CSV-Spalten "
             "für Liquidität, Cluster, Korrelation, Earnings usw. wie im Prompt beschrieben.\n\n"
@@ -301,7 +349,14 @@ def main() -> None:
             ),
             encoding="utf-8",
         )
-        print(f"Geschrieben: {OUT_TXT}, {OUT_HTML}")
+        try:
+            OUT_RUN_META.write_text(
+                json.dumps(_run_meta, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+        print(f"Geschrieben: {OUT_TXT}, {OUT_HTML}, {OUT_RUN_META}")
     finally:
         if uploaded is not None:
             try:
