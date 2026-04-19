@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-19 11:08",
+  "generated": "2026-04-19 21:39",
   "threshold": 0.7659520512374928,
   "signals": [
     {
@@ -831,18 +831,6 @@
       "prob": 0.813399612903595
     },
     {
-      "ticker": "DMP.DE",
-      "company": "Dermapharm",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2026-03-10",
-      "prob": 0.7739900350570679
-    },
-    {
       "ticker": "GXI.DE",
       "company": "Gerresheimer",
       "sector": "Healthcare",
@@ -1057,18 +1045,6 @@
       "gics_industry_key": "semiconductors",
       "date": "2026-02-10",
       "prob": 0.8801908493041992
-    },
-    {
-      "ticker": "AMGN",
-      "company": "Amgen",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - General",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers general",
-      "date": "2026-02-06",
-      "prob": 0.8818381428718567
     },
     {
       "ticker": "JCI",
@@ -1332,7 +1308,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers general",
       "date": "2026-01-19",
-      "prob": 0.8294842839241028
+      "prob": 0.8216134309768677
     },
     {
       "ticker": "VBK.DE",
@@ -1728,7 +1704,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-12-12",
-      "prob": 0.8029260635375977
+      "prob": 0.7952010631561279
     },
     {
       "ticker": "DHER.DE",
@@ -2148,7 +2124,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-11-27",
-      "prob": 0.7875466346740723
+      "prob": 0.7788645029067993
     },
     {
       "ticker": "SZG.DE",
@@ -2235,18 +2211,6 @@
       "prob": 0.8274706602096558
     },
     {
-      "ticker": "MRK",
-      "company": "Merck US",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - General",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers general",
-      "date": "2025-11-26",
-      "prob": 0.7669956684112549
-    },
-    {
       "ticker": "PUM.DE",
       "company": "PUMA",
       "sector": "Consumer Cyclical",
@@ -2257,18 +2221,6 @@
       "gics_industry_key": "footwear accessories",
       "date": "2025-11-26",
       "prob": 0.8053396344184875
-    },
-    {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-11-25",
-      "prob": 0.7751016616821289
     },
     {
       "ticker": "EVD.DE",
@@ -2292,7 +2244,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers general",
       "date": "2025-11-24",
-      "prob": 0.8032127618789673
+      "prob": 0.804705023765564
     },
     {
       "ticker": "S92.DE",
@@ -2449,18 +2401,6 @@
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-10",
       "prob": 0.8543686866760254
-    },
-    {
-      "ticker": "AMGN",
-      "company": "Amgen",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - General",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers general",
-      "date": "2025-11-05",
-      "prob": 0.8044363856315613
     },
     {
       "ticker": "ELG.DE",
@@ -2952,7 +2892,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-10-02",
-      "prob": 0.8283857703208923
+      "prob": 0.8364181518554688
     },
     {
       "ticker": "MRK",
@@ -3447,18 +3387,6 @@
       "prob": 0.7925389409065247
     },
     {
-      "ticker": "ILMN",
-      "company": "Illumina",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Diagnostics & Research",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "diagnostics research",
-      "date": "2025-07-25",
-      "prob": 0.7831212878227234
-    },
-    {
       "ticker": "NEM",
       "company": "Newmont",
       "sector": "Basic Materials",
@@ -3517,6 +3445,18 @@
       "gics_industry_key": "banks regional",
       "date": "2025-07-24",
       "prob": 0.837550938129425
+    },
+    {
+      "ticker": "ILMN",
+      "company": "Illumina",
+      "sector": "Healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2025-07-24",
+      "prob": 0.774848997592926
     },
     {
       "ticker": "VBK.DE",
@@ -4263,18 +4203,6 @@
       "prob": 0.9055793881416321
     },
     {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-05-14",
-      "prob": 0.7849305272102356
-    },
-    {
       "ticker": "AMD",
       "company": "AMD",
       "sector": "Technology",
@@ -4441,18 +4369,6 @@
       "gics_industry_key": "entertainment",
       "date": "2025-05-07",
       "prob": 0.8132985234260559
-    },
-    {
-      "ticker": "FME.DE",
-      "company": "Fresenius Med.",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Care Facilities",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical care facilities",
-      "date": "2025-05-07",
-      "prob": 0.8270114660263062
     },
     {
       "ticker": "EKT.DE",
@@ -5415,18 +5331,6 @@
       "prob": 0.8077030777931213
     },
     {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-03-17",
-      "prob": 0.7815026640892029
-    },
-    {
       "ticker": "ENR.DE",
       "company": "Siemens Energy",
       "sector": "Industrials",
@@ -5736,7 +5640,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-03-06",
-      "prob": 0.8395784497261047
+      "prob": 0.8569480776786804
     },
     {
       "ticker": "KBX.DE",
@@ -5809,18 +5713,6 @@
       "gics_industry_key": "specialty chemicals",
       "date": "2025-03-06",
       "prob": 0.8259415626525879
-    },
-    {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-03-05",
-      "prob": 0.7737914323806763
     },
     {
       "ticker": "BC8.DE",
@@ -6504,7 +6396,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2025-01-24",
-      "prob": 0.8031046390533447
+      "prob": 0.8003804087638855
     },
     {
       "ticker": "ENR.DE",
@@ -6541,18 +6433,6 @@
       "gics_industry_key": "railroads",
       "date": "2025-01-23",
       "prob": 0.8341271877288818
-    },
-    {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-01-22",
-      "prob": 0.7811488509178162
     },
     {
       "ticker": "HYQ.DE",
@@ -6636,7 +6516,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2025-01-20",
-      "prob": 0.7785132527351379
+      "prob": 0.7854629755020142
     },
     {
       "ticker": "HDD.DE",
@@ -6732,7 +6612,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-01-10",
-      "prob": 0.7920135855674744
+      "prob": 0.7953663468360901
     },
     {
       "ticker": "EUZ.DE",
@@ -7057,18 +6937,6 @@
       "gics_industry_key": "engineering construction",
       "date": "2024-11-21",
       "prob": 0.876299262046814
-    },
-    {
-      "ticker": "DMP.DE",
-      "company": "Dermapharm",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-11-19",
-      "prob": 0.8070211410522461
     },
     {
       "ticker": "TKA.DE",
@@ -7537,18 +7405,6 @@
       "gics_industry_key": "information technology services",
       "date": "2024-10-01",
       "prob": 0.7742266058921814
-    },
-    {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2024-09-27",
-      "prob": 0.8914850950241089
     },
     {
       "ticker": "MC.PA",
@@ -8597,18 +8453,6 @@
       "prob": 0.813399612903595
     },
     {
-      "ticker": "DMP.DE",
-      "company": "Dermapharm",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2026-03-10",
-      "prob": 0.7739900350570679
-    },
-    {
       "ticker": "GXI.DE",
       "company": "Gerresheimer",
       "sector": "Healthcare",
@@ -8823,18 +8667,6 @@
       "gics_industry_key": "semiconductors",
       "date": "2026-02-10",
       "prob": 0.8801908493041992
-    },
-    {
-      "ticker": "AMGN",
-      "company": "Amgen",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - General",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers general",
-      "date": "2026-02-06",
-      "prob": 0.8818381428718567
     },
     {
       "ticker": "JCI",
@@ -9098,7 +8930,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers general",
       "date": "2026-01-19",
-      "prob": 0.8294842839241028
+      "prob": 0.8216134309768677
     },
     {
       "ticker": "VBK.DE",
@@ -9494,7 +9326,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-12-12",
-      "prob": 0.8029260635375977
+      "prob": 0.7952010631561279
     },
     {
       "ticker": "DHER.DE",
@@ -9914,7 +9746,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-11-27",
-      "prob": 0.7875466346740723
+      "prob": 0.7788645029067993
     },
     {
       "ticker": "SZG.DE",
@@ -10001,18 +9833,6 @@
       "prob": 0.8274706602096558
     },
     {
-      "ticker": "MRK",
-      "company": "Merck US",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - General",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers general",
-      "date": "2025-11-26",
-      "prob": 0.7669956684112549
-    },
-    {
       "ticker": "PUM.DE",
       "company": "PUMA",
       "sector": "Consumer Cyclical",
@@ -10023,18 +9843,6 @@
       "gics_industry_key": "footwear accessories",
       "date": "2025-11-26",
       "prob": 0.8053396344184875
-    },
-    {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-11-25",
-      "prob": 0.7751016616821289
     },
     {
       "ticker": "EVD.DE",
@@ -10058,7 +9866,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers general",
       "date": "2025-11-24",
-      "prob": 0.8032127618789673
+      "prob": 0.804705023765564
     },
     {
       "ticker": "S92.DE",
@@ -10215,18 +10023,6 @@
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-10",
       "prob": 0.8543686866760254
-    },
-    {
-      "ticker": "AMGN",
-      "company": "Amgen",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - General",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers general",
-      "date": "2025-11-05",
-      "prob": 0.8044363856315613
     },
     {
       "ticker": "ELG.DE",
@@ -10718,7 +10514,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-10-02",
-      "prob": 0.8283857703208923
+      "prob": 0.8364181518554688
     },
     {
       "ticker": "MRK",
@@ -11213,18 +11009,6 @@
       "prob": 0.7925389409065247
     },
     {
-      "ticker": "ILMN",
-      "company": "Illumina",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Diagnostics & Research",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "diagnostics research",
-      "date": "2025-07-25",
-      "prob": 0.7831212878227234
-    },
-    {
       "ticker": "NEM",
       "company": "Newmont",
       "sector": "Basic Materials",
@@ -11283,6 +11067,18 @@
       "gics_industry_key": "banks regional",
       "date": "2025-07-24",
       "prob": 0.837550938129425
+    },
+    {
+      "ticker": "ILMN",
+      "company": "Illumina",
+      "sector": "Healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2025-07-24",
+      "prob": 0.774848997592926
     },
     {
       "ticker": "VBK.DE",
@@ -12029,18 +11825,6 @@
       "prob": 0.9055793881416321
     },
     {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-05-14",
-      "prob": 0.7849305272102356
-    },
-    {
       "ticker": "AMD",
       "company": "AMD",
       "sector": "Technology",
@@ -12207,18 +11991,6 @@
       "gics_industry_key": "entertainment",
       "date": "2025-05-07",
       "prob": 0.8132985234260559
-    },
-    {
-      "ticker": "FME.DE",
-      "company": "Fresenius Med.",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Care Facilities",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical care facilities",
-      "date": "2025-05-07",
-      "prob": 0.8270114660263062
     },
     {
       "ticker": "EKT.DE",
@@ -13181,18 +12953,6 @@
       "prob": 0.8077030777931213
     },
     {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-03-17",
-      "prob": 0.7815026640892029
-    },
-    {
       "ticker": "ENR.DE",
       "company": "Siemens Energy",
       "sector": "Industrials",
@@ -13502,7 +13262,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-03-06",
-      "prob": 0.8395784497261047
+      "prob": 0.8569480776786804
     },
     {
       "ticker": "KBX.DE",
@@ -13575,18 +13335,6 @@
       "gics_industry_key": "specialty chemicals",
       "date": "2025-03-06",
       "prob": 0.8259415626525879
-    },
-    {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-03-05",
-      "prob": 0.7737914323806763
     },
     {
       "ticker": "BC8.DE",
@@ -14270,7 +14018,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2025-01-24",
-      "prob": 0.8031046390533447
+      "prob": 0.8003804087638855
     },
     {
       "ticker": "ENR.DE",
@@ -14307,18 +14055,6 @@
       "gics_industry_key": "railroads",
       "date": "2025-01-23",
       "prob": 0.8341271877288818
-    },
-    {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2025-01-22",
-      "prob": 0.7811488509178162
     },
     {
       "ticker": "HYQ.DE",
@@ -14402,7 +14138,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2025-01-20",
-      "prob": 0.7785132527351379
+      "prob": 0.7854629755020142
     },
     {
       "ticker": "HDD.DE",
@@ -14498,7 +14234,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2025-01-10",
-      "prob": 0.7920135855674744
+      "prob": 0.7953663468360901
     },
     {
       "ticker": "EUZ.DE",
@@ -14823,18 +14559,6 @@
       "gics_industry_key": "engineering construction",
       "date": "2024-11-21",
       "prob": 0.876299262046814
-    },
-    {
-      "ticker": "DMP.DE",
-      "company": "Dermapharm",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-11-19",
-      "prob": 0.8070211410522461
     },
     {
       "ticker": "TKA.DE",
@@ -15305,18 +15029,6 @@
       "prob": 0.7742266058921814
     },
     {
-      "ticker": "AFX.DE",
-      "company": "Carl Zeiss Meditec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Medical Instruments & Supplies",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "medical instruments supplies",
-      "date": "2024-09-27",
-      "prob": 0.8914850950241089
-    },
-    {
       "ticker": "MC.PA",
       "company": "LVMH",
       "sector": "Consumer Cyclical",
@@ -15533,6 +15245,6 @@
       "prob": 0.787126898765564
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 3704,
+  "signals_all_timeline_including_in_sample_count": 3651,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website."
 }
