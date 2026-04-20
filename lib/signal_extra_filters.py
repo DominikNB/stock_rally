@@ -45,6 +45,8 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
+_LAST_ENRICH_DIAGNOSTICS: dict = {}
+
 # --- Liquidität -----------------------------------------------------------------
 
 LIQ_VERY_THIN_PCT = 15.0  # unter diesem Perzentil am Signaltag
@@ -101,6 +103,7 @@ _LLM_EXTRA_COLS = (
     "open_gap_pct",
     "short_float_pct",
     "short_days_to_cover",
+    "short_float_confidence",
     "inst_own_pct",
     "market_ret_1d",
     "market_ret_2d",
@@ -143,19 +146,30 @@ def ordered_llm_daily_columns(classification_column_keys: Sequence[str]) -> list
     return out
 
 
+def get_last_enrich_diagnostics() -> dict:
+    """Letzten Enrich-Diagnosebericht (für Logging/Debug im Pipeline-Ende)."""
+    return dict(_LAST_ENRICH_DIAGNOSTICS) if isinstance(_LAST_ENRICH_DIAGNOSTICS, dict) else {}
+
+
 # Grobe US-Sektor-ETFs (Vergleich „eigene Story vs. Sektor“); unbekannte Sektoren → NaN in ret_vs_sector_5d
 _SECTOR_TO_BENCH_ETF: dict[str, str] = {
     "tech": "XLK",
+    "technology": "XLK",
     "finance": "XLF",
+    "financial_services": "XLF",
     "healthcare": "XLV",
     "energy": "XLE",
     "industrial": "XLI",
+    "industrials": "XLI",
     "materials": "XLB",
+    "basic_materials": "XLB",
     "consumer": "XLY",
+    "consumer_cyclical": "XLY",
     "automotive": "CARZ",
     "real_estate": "XLRE",
     "telecom": "VOX",
     "media": "XLC",
+    "communication_services": "XLC",
     "crypto": "BITO",
 }
 # Interne Modell-Labels ohne SPDR-Zeile (Yahoo-GICS i.d.R. „Industrials“ o.ä.)
@@ -189,16 +203,22 @@ _LEAD_INDEX_BY_TICKER_SUFFIX: list[tuple[tuple[str, ...], str]] = [
 # EU: iShares STOXX Europe 600 Sector UCITS (DE-Listing) — grobe Branchen-Zuordnung
 _EU_SECTOR_TO_BENCH_ETF: dict[str, str] = {
     "tech": "EXV3.DE",
+    "technology": "EXV3.DE",
     "finance": "EXH1.DE",
+    "financial_services": "EXH1.DE",
     "healthcare": "EXV2.DE",
     "energy": "EXV4.DE",
     "industrial": "EXV1.DE",
+    "industrials": "EXV1.DE",
     "materials": "EXV5.DE",
+    "basic_materials": "EXV5.DE",
     "consumer": "EXV6.DE",
+    "consumer_cyclical": "EXV6.DE",
     "automotive": "EXV1.DE",
     "real_estate": "EXV7.DE",
     "telecom": "EXV8.DE",
     "media": "EXV9.DE",
+    "communication_services": "EXV8.DE",
     "crypto": "BITO",
 }
 
@@ -485,18 +505,40 @@ def cluster_mean_corr_by_date(
 # --- Earnings (yfinance calendar) -----------------------------------------------
 
 
-def _parse_earnings_date(cal: dict | None) -> date | None:
-    if not cal or "Earnings Date" not in cal:
+def _parse_earnings_date(cal) -> date | None:
+    if cal is None:
         return None
-    ed = cal["Earnings Date"]
-    if ed is None:
-        return None
-    if isinstance(ed, (list, tuple)) and len(ed):
-        ed = ed[0]
-    if isinstance(ed, datetime):
-        return ed.date()
-    if isinstance(ed, date):
-        return ed
+    vals = []
+    if isinstance(cal, dict):
+        if "Earnings Date" in cal:
+            vals = [cal.get("Earnings Date")]
+    elif isinstance(cal, pd.DataFrame):
+        if cal.empty:
+            return None
+        if "Earnings Date" in cal.columns:
+            vals = cal["Earnings Date"].tolist()
+        elif "Earnings Date" in cal.index:
+            try:
+                vals = [cal.loc["Earnings Date"].iloc[0]]
+            except Exception:
+                vals = []
+        else:
+            vals = cal.values.ravel().tolist()
+    else:
+        vals = [cal]
+
+    for ed in vals:
+        if ed is None:
+            continue
+        if isinstance(ed, (list, tuple)) and len(ed):
+            ed = ed[0]
+        try:
+            ts = pd.to_datetime(ed, errors="coerce")
+        except Exception:
+            ts = pd.NaT
+        if pd.isna(ts):
+            continue
+        return pd.Timestamp(ts).date()
     return None
 
 
@@ -520,9 +562,11 @@ def next_earnings_date(ticker: str) -> date | None:
                 cal = yf.Ticker(ticker).calendar
         except Exception:
             return None
-    if not cal:
+    if cal is None:
         return None
-    return _parse_earnings_date(cal if isinstance(cal, dict) else None)
+    if isinstance(cal, pd.DataFrame) and cal.empty:
+        return None
+    return _parse_earnings_date(cal)
 
 
 def bdays_from_signal_to(
@@ -795,23 +839,80 @@ def _open_gap_pct_raw(raw: pd.DataFrame, ticker: str, d: pd.Timestamp) -> float:
     return _open_gap_pct_ohlc(_ohlc_for_ticker(raw, ticker), d)
 
 
-def _yf_info_short_snapshot(ticker: str, cache: dict[str, dict]) -> tuple[float, float, float]:
-    """(short_float_pct 0–100, short_days_to_cover, inst_own_pct). Fehler → NaN."""
+def _avg_volume_last_n(ohlc: pd.DataFrame | None, signal_d: pd.Timestamp, n: int = 30) -> float:
+    if ohlc is None or ohlc.empty or "Volume" not in ohlc.columns:
+        return float("nan")
+    dn = pd.Timestamp(signal_d).normalize()
+    sub = ohlc.copy()
+    sub.index = pd.to_datetime(sub.index).normalize()
+    sub = sub[sub.index <= dn].tail(n)
+    if sub.empty:
+        return float("nan")
+    v = pd.to_numeric(sub["Volume"], errors="coerce").dropna()
+    if v.empty:
+        return float("nan")
+    m = float(v.mean())
+    return m if np.isfinite(m) and m > 0 else float("nan")
+
+
+def _safe_float(v) -> float:
+    try:
+        x = float(v)
+    except Exception:
+        return float("nan")
+    return x if np.isfinite(x) else float("nan")
+
+
+def _yf_info_short_snapshot(
+    ticker: str, cache: dict[str, dict], ohlc: pd.DataFrame | None, signal_d: pd.Timestamp
+) -> tuple[float, float, float, str]:
+    """(short_float_pct 0–100, short_days_to_cover, inst_own_pct, source)."""
     if ticker not in cache:
         try:
             cache[ticker] = yf.Ticker(ticker).info or {}
         except Exception:
             cache[ticker] = {}
     inf = cache[ticker]
-    sf = inf.get("shortPercentOfFloat")
-    if sf is not None:
-        sf = float(sf)
-        if sf <= 1.0:
-            sf *= 100.0
+    shares_short = _safe_float(
+        inf.get("sharesShort")
+        if inf.get("sharesShort") is not None
+        else inf.get("sharesShortPriorMonth")
+    )
+    float_shares = _safe_float(inf.get("floatShares"))
+    if not np.isfinite(float_shares) or float_shares <= 0:
+        float_shares = _safe_float(inf.get("sharesOutstanding"))
+
+    sf = float("nan")
+    short_src = "missing"
+    if np.isfinite(shares_short) and shares_short > 0 and np.isfinite(float_shares) and float_shares > 0:
+        sf = float((shares_short / float_shares) * 100.0)
+        short_src = "computed_sharesShort_float"
     else:
-        sf = float("nan")
-    sdc = inf.get("shortRatio")
-    sdc = float(sdc) if sdc is not None else float("nan")
+        sf_raw = _safe_float(inf.get("shortPercentOfFloat"))
+        if np.isfinite(sf_raw):
+            sf = float(sf_raw * 100.0 if sf_raw <= 1.0 else sf_raw)
+            short_src = "yahoo_shortPercentOfFloat"
+
+    avg_vol_30 = _avg_volume_last_n(ohlc, signal_d, n=30)
+    avg_vol_info = _safe_float(inf.get("averageVolume10days"))
+    if not np.isfinite(avg_vol_info) or avg_vol_info <= 0:
+        avg_vol_info = _safe_float(inf.get("averageVolume"))
+    den = avg_vol_30 if np.isfinite(avg_vol_30) and avg_vol_30 > 0 else avg_vol_info
+    sdc = float("nan")
+    if np.isfinite(shares_short) and shares_short > 0 and np.isfinite(den) and den > 0:
+        sdc = float(shares_short / den)
+        short_src = short_src + "+computed_dtc"
+    else:
+        sr = _safe_float(inf.get("shortRatio"))
+        if np.isfinite(sr):
+            sdc = sr
+            short_src = short_src + "+yahoo_shortRatio"
+
+    if np.isfinite(sf):
+        sf = float(np.clip(sf, 0.0, 100.0))
+    if np.isfinite(sdc):
+        sdc = float(np.clip(sdc, 0.0, 365.0))
+
     inst = inf.get("heldPercentInstitutions")
     if inst is not None:
         inst = float(inst)
@@ -819,7 +920,7 @@ def _yf_info_short_snapshot(ticker: str, cache: dict[str, dict]) -> tuple[float,
             inst *= 100.0
     else:
         inst = float("nan")
-    return sf, sdc, inst
+    return sf, sdc, inst, short_src
 
 
 def _add_rs_gap_short_columns(
@@ -915,14 +1016,32 @@ def _add_rs_gap_short_columns(
     sf_l: list[float] = []
     sd_l: list[float] = []
     inst_l: list[float] = []
-    for t in o["ticker"]:
-        sf, sd, inst = _yf_info_short_snapshot(str(t), info_cache)
+    short_src_l: list[str] = []
+    for _, r in o.iterrows():
+        t = str(r["ticker"])
+        d = pd.Timestamp(r["Date"]).normalize()
+        st = _st(t)
+        sf, sd, inst, src = _yf_info_short_snapshot(t, info_cache, st, d)
         sf_l.append(sf)
         sd_l.append(sd)
         inst_l.append(inst)
+        short_src_l.append(src)
     o["short_float_pct"] = sf_l
     o["short_days_to_cover"] = sd_l
     o["inst_own_pct"] = inst_l
+    o["short_metrics_source"] = short_src_l
+    conf = []
+    for src in short_src_l:
+        s = str(src)
+        if "computed_sharesShort_float" in s and "computed_dtc" in s:
+            conf.append(1.0)
+        elif "computed_sharesShort_float" in s or "computed_dtc" in s:
+            conf.append(0.6)
+        elif "yahoo_shortPercentOfFloat" in s or "yahoo_shortRatio" in s:
+            conf.append(0.3)
+        else:
+            conf.append(0.0)
+    o["short_float_confidence"] = conf
 
     return o
 
@@ -1082,6 +1201,57 @@ def _add_beta_alpha_columns(
     return o.merge(feat, on=["ticker", "Date"], how="left")
 
 
+def _build_metric_failure_report(out: pd.DataFrame) -> dict:
+    n = int(len(out))
+    if n <= 0:
+        return {"row_count": 0, "metrics": []}
+    reasons = {
+        "cluster_mean_corr_60d": "zu wenig gemeinsame Historie oder <2 Signale am Tag",
+        "adv_20d_local": "fehlende OHLCV-/Volumenhistorie bis Signaltag",
+        "next_earnings_date": "kein verwertbarer yfinance Earnings-Kalender",
+        "bdays_to_next_earnings": "kein/ungueltiger Earnings-Termin nach Signaltag",
+        "ret_vs_spy_5d": "zu kurze Historie fuer Aktie oder Benchmark",
+        "ret_vs_sector_5d": "fehlendes/ungueltiges Sektor-ETF-Mapping oder Historie",
+        "open_gap_pct": "fehlendes Open oder Vortages-Close",
+        "short_float_pct": "sharesShort/floatShares bzw Yahoo-Wert nicht verlässlich verfuegbar",
+        "short_days_to_cover": "sharesShort/Volume-Fenster nicht verfuegbar",
+        "market_ret_1d": "fehlende Indexhistorie am Signaltag",
+        "sector_ret_1d": "fehlende Sektor-ETF-Historie am Signaltag",
+        "beta_mkt_60d": "zu wenig Daten fuer Rolling-Beta (60d)",
+        "alpha_mkt_5d": "zu wenig Daten fuer 5d-Alpha/Beta",
+        "beta_sec_60d": "zu wenig Daten oder fehlender Sektor-ETF",
+        "alpha_sec_5d": "zu wenig Daten oder fehlender Sektor-ETF",
+        "regime_vix_level": "fehlende ^VIX-Daten",
+        "regime_spy_realvol_5d_ann": "zu wenig SPY-Historie fuer 5d RealVol",
+        "regime_tnx_ret_5d": "zu wenig ^TNX-Historie fuer 5d-Rendite",
+    }
+    metrics: list[dict] = []
+    for col in reasons:
+        if col not in out.columns:
+            metrics.append(
+                {"metric": col, "status": "missing_column", "reason": reasons[col]}
+            )
+            continue
+        s = pd.to_numeric(out[col], errors="coerce")
+        miss = int(s.isna().sum())
+        if miss <= 0:
+            continue
+        metrics.append(
+            {
+                "metric": col,
+                "missing_count": miss,
+                "missing_pct": float((miss / max(1, n)) * 100.0),
+                "reason": reasons[col],
+            }
+        )
+    metrics.sort(key=lambda x: float(x.get("missing_pct", 100.0)), reverse=True)
+    src_counts = {}
+    if "short_metrics_source" in out.columns:
+        vc = out["short_metrics_source"].fillna("missing").astype(str).value_counts()
+        src_counts = {str(k): int(v) for k, v in vc.items()}
+    return {"row_count": n, "metrics": metrics, "short_metrics_source_counts": src_counts}
+
+
 def enrich_signal_frame(
     sig: pd.DataFrame,
     raw: pd.DataFrame,
@@ -1209,5 +1379,7 @@ def enrich_signal_frame(
         flush=True,
     )
     out = _add_short_horizon_macro_regime_columns(out)
-
-    return ensure_llm_signal_columns(out)
+    out = ensure_llm_signal_columns(out)
+    global _LAST_ENRICH_DIAGNOSTICS
+    _LAST_ENRICH_DIAGNOSTICS = _build_metric_failure_report(out)
+    return out

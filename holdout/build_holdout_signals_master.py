@@ -418,7 +418,11 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
 
     if WITH_FILTERS:
         try:
-            from lib.signal_extra_filters import enrich_signal_frame, ensure_llm_signal_columns
+            from lib.signal_extra_filters import (
+                enrich_signal_frame,
+                ensure_llm_signal_columns,
+                get_last_enrich_diagnostics,
+            )
 
             print("  … Zusatzfilter (Cross-Section, Technik, …) …", flush=True)
             _t_f = time.perf_counter()
@@ -431,6 +435,29 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
             out = out[base_cols + tail]
             out = ensure_llm_signal_columns(out)
             print(f"Zusätzliche Filter-Spalten: {', '.join(tail)}")
+            _diag = get_last_enrich_diagnostics()
+            if _diag:
+                print("\nZusatzfilter-Diagnose (fehlende Kennzahlen):", flush=True)
+                _mx = _diag.get("metrics", [])[:15]
+                if not _mx:
+                    print("  keine fehlenden Kern-Kennzahlen erkannt.", flush=True)
+                else:
+                    for m in _mx:
+                        if m.get("status") == "missing_column":
+                            print(
+                                f"  - {m.get('metric')}: Spalte fehlt ({m.get('reason')})",
+                                flush=True,
+                            )
+                        else:
+                            print(
+                                f"  - {m.get('metric')}: missing={m.get('missing_count')}/{_diag.get('row_count', 0)} "
+                                f"({m.get('missing_pct', 0.0):.1f}%) | {m.get('reason')}",
+                                flush=True,
+                            )
+                _ss = _diag.get("short_metrics_source_counts") or {}
+                if _ss:
+                    _src = ", ".join(f"{k}={v}" for k, v in _ss.items())
+                    print(f"  short_metrics_source: {_src}", flush=True)
         except Exception as e:
             print(f"Warnung: Zusatzfilter fehlgeschlagen ({e}). Export mit leeren LLM-Strukturspalten.", file=sys.stderr)
             from lib.signal_extra_filters import ensure_llm_signal_columns

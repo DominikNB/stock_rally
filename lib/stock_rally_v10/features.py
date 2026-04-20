@@ -589,6 +589,12 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
     btc = df[df["ticker"] == "BTC-USD"][["Date", "momentum_20d"]].rename(
         columns={"momentum_20d": "btc_momentum"}
     )
+    _btc_close = (
+        df[df["ticker"] == "BTC-USD"][["Date", "close"]]
+        .dropna()
+        .sort_values("Date")
+        .drop_duplicates(subset=["Date"], keep="last")
+    )
     if btc.empty:
         print(
             "assemble_features: kein BTC-USD im aktuellen Ticker-Set — "
@@ -598,6 +604,8 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         df["btc_momentum"] = np.float32(0.0)
         for _zw in cfg.BTC_MOMENTUM_Z_WINDOWS:
             df[f"btc_momentum_z_w{int(_zw)}"] = np.float32(0.0)
+        for _cw in cfg.BTC_CORR_WINDOWS:
+            df[f"corr_stock_btc_{int(_cw)}d"] = np.float32(0.0)
     else:
         btc = btc.sort_values("Date").copy()
         _assign_cols = ["Date", "btc_momentum"]
@@ -615,6 +623,28 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         for _zw in cfg.BTC_MOMENTUM_Z_WINDOWS:
             _cn = f"btc_momentum_z_w{int(_zw)}"
             df[_cn] = df[_cn].fillna(0.0)
+        if _btc_close.empty:
+            for _cw in cfg.BTC_CORR_WINDOWS:
+                df[f"corr_stock_btc_{int(_cw)}d"] = np.float32(0.0)
+        else:
+            _btc_close["Date"] = pd.to_datetime(_btc_close["Date"]).dt.normalize()
+            _btc_close["btc_ret_1d"] = pd.to_numeric(
+                _btc_close["close"], errors="coerce"
+            ).pct_change()
+            _btc_ret_map = _btc_close.set_index("Date")["btc_ret_1d"]
+            df["_btc_ret_1d"] = pd.to_datetime(df["Date"]).dt.normalize().map(_btc_ret_map)
+            _stock_ret = pd.to_numeric(df["close"], errors="coerce").pct_change()
+            _grp = df.groupby("ticker", sort=False)
+            for _cw in cfg.BTC_CORR_WINDOWS:
+                _cw = int(_cw)
+                _cn = f"corr_stock_btc_{_cw}d"
+                df[_cn] = _grp.apply(
+                    lambda g: _stock_ret.loc[g.index]
+                    .rolling(_cw, min_periods=max(5, _cw // 2))
+                    .corr(df.loc[g.index, "_btc_ret_1d"])
+                ).reset_index(level=0, drop=True)
+                df[_cn] = pd.to_numeric(df[_cn], errors="coerce").fillna(0.0)
+            df = df.drop(columns=["_btc_ret_1d"], errors="ignore")
 
     if meta_only:
         _swm = cfg.__dict__["sma_w"]
@@ -772,6 +802,12 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             rel_momentum_window=int(
                 _bp.get("rel_momentum_window", _sp.get("rel_momentum_window", 20))
             ),
+            adr_window=int(_bp.get("adr_window", _sp.get("adr_window", 20))),
+            breakout_lookback_window=int(
+                _bp.get("breakout_lookback_window", _sp.get("breakout_lookback_window", 252))
+            ),
+            vcp_window=int(_bp.get("vcp_window", _sp.get("vcp_window", 10))),
+            btc_corr_window=int(_bp.get("btc_corr_window", _sp.get("btc_corr_window", 20))),
         )
     else:
         worst_case_cols = [

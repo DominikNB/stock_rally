@@ -22,8 +22,10 @@ def _compute_indicators_one_ticker(df_t):
     Returns a DataFrame with all precomputed columns.
     """
     df = df_t.sort_values('Date').copy().reset_index(drop=True)
-    close  = df['close']
+    close = df['close']
     volume = df['volume']
+    high = pd.to_numeric(df.get("high", close), errors="coerce").fillna(close)
+    low = pd.to_numeric(df.get("low", close), errors="coerce").fillna(close)
 
     # ── Log return for vol_stress ───────────────────────────────────────────
     log_ret = np.log(close / close.shift(1))
@@ -57,6 +59,13 @@ def _compute_indicators_one_ticker(df_t):
 
     df['vol_ratio']     = vol_5d_mean / (vol_20d_mean + 1e-10)
     df['volume_zscore'] = (vol_5d_mean - vol_60d_mean) / (vol_60d_std + 1e-10)
+    dv = (close.astype(float) * volume.astype(float)).replace([np.inf, -np.inf], np.nan)
+    dv_mean20 = dv.rolling(20, min_periods=10).mean()
+    dv_mean60 = dv.rolling(60, min_periods=20).mean()
+    dv_std60 = dv.rolling(60, min_periods=20).std()
+    df["dollar_volume_zscore"] = (dv_mean20 - dv_mean60) / (dv_std60 + 1e-10)
+    ret_1d = close.pct_change()
+    df["volume_force_1d"] = df["dollar_volume_zscore"] * np.sign(ret_1d.fillna(0.0))
 
     # ── Momentum (20d für Accel/BTC; weitere Fenster für rel_momentum_* in assemble) ─
     df['momentum_20d'] = close.pct_change(20)
@@ -66,6 +75,21 @@ def _compute_indicators_one_ticker(df_t):
         if _mw == 20:
             continue
         df[f'momentum_{_mw}d'] = close.pct_change(_mw)
+    _ret_abs_pct = close.pct_change().abs() * 100.0
+    for _aw in cfg.ADR_WINDOWS:
+        _aw = int(_aw)
+        df[f"adr_pct_{_aw}d"] = _ret_abs_pct.rolling(_aw, min_periods=max(3, _aw // 2)).mean()
+    for _vw in cfg.VCP_WINDOWS:
+        _vw = int(_vw)
+        _short = _ret_abs_pct.rolling(_vw, min_periods=max(3, _vw // 2)).mean()
+        _long = _ret_abs_pct.rolling(_vw * 3, min_periods=max(5, _vw)).mean()
+        df[f"vcp_tightness_{_vw}d"] = _short / (_long + 1e-10)
+    hl_range_pct = (high - low) / (close.abs() + 1e-10)
+    for _vw in cfg.VCP_WINDOWS:
+        _vw = int(_vw)
+        _short_hl = hl_range_pct.rolling(_vw, min_periods=max(3, _vw // 2)).mean()
+        _long_hl = hl_range_pct.rolling(_vw * 3, min_periods=max(5, _vw)).mean()
+        df[f"vcp_tightness_hl_{_vw}d"] = _short_hl / (_long_hl + 1e-10)
 
     # ── Regime features ────────────────────────────────────────────────────
     sma200 = close.rolling(200, min_periods=150).mean()
@@ -98,6 +122,7 @@ def _compute_indicators_one_ticker(df_t):
     for w in cfg.BB_WINDOWS:
         bb = ta.volatility.BollingerBands(close, window=w, window_dev=2)
         df[f'bb_pband_{w}'] = bb.bollinger_pband()
+        df[f"bb_squeeze_factor_{w}"] = bb.bollinger_wband() / 100.0
         df[f'bb_delta_3d_{w}'] = df[f'bb_pband_{w}'].diff(3)
 
         # Bollinger slope (rolling OLS over 5 points)
@@ -120,15 +145,24 @@ def _compute_indicators_one_ticker(df_t):
         sma_sw = close.rolling(sw, min_periods=int(0.6 * sw)).mean()
         df[f'sma_cross_20_{sw}'] = sma20 / (sma_sw + 1e-10)
         df[f'sma_ratio_{sw}']    = close / (sma_sw + 1e-10)
+    for _bwk in cfg.BREAKOUT_LOOKBACK_WINDOWS:
+        _bwk = int(_bwk)
+        prior_hi = close.shift(1).rolling(_bwk, min_periods=max(20, _bwk // 3)).max()
+        df[f"blue_sky_breakout_{_bwk}d"] = (close > prior_hi).astype(float)
+        df[f"dist_to_prior_hi_pct_{_bwk}d"] = close / (prior_hi + 1e-10) - 1.0
+        near_hi = ((prior_hi - close) / (prior_hi + 1e-10) <= 0.02).astype(float)
+        df[f"volume_at_resistance_{_bwk}d"] = near_hi * df["volume_zscore"].fillna(0.0)
 
     return df
 
 
-def _compute_indicators_one_ticker_for_meta(df_t, rsi_w, bb_w, sma_w):
+def _compute_indicators_one_ticker_for_meta(df_t, rsi_w, bb_w, sma_w, adr_w, breakout_w, vcp_w):
     """Nur Indikatoren für die trainierten Fenster rsi_w/bb_w/sma_w (entspricht FEAT_COLS-Technik)."""
     df = df_t.sort_values("Date").copy().reset_index(drop=True)
     close = df["close"]
     volume = df["volume"]
+    high = pd.to_numeric(df.get("high", close), errors="coerce").fillna(close)
+    low = pd.to_numeric(df.get("low", close), errors="coerce").fillna(close)
     log_ret = np.log(close / close.shift(1))
     df["vol_stress"] = (
         log_ret.rolling(10, min_periods=5).std() / log_ret.rolling(60, min_periods=20).std()
@@ -148,6 +182,13 @@ def _compute_indicators_one_ticker_for_meta(df_t, rsi_w, bb_w, sma_w):
     vol_60d_std = volume.rolling(60, min_periods=20).std()
     df["vol_ratio"] = vol_5d_mean / (vol_20d_mean + 1e-10)
     df["volume_zscore"] = (vol_5d_mean - vol_60d_mean) / (vol_60d_std + 1e-10)
+    dv = (close.astype(float) * volume.astype(float)).replace([np.inf, -np.inf], np.nan)
+    dv_mean20 = dv.rolling(20, min_periods=10).mean()
+    dv_mean60 = dv.rolling(60, min_periods=20).mean()
+    dv_std60 = dv.rolling(60, min_periods=20).std()
+    df["dollar_volume_zscore"] = (dv_mean20 - dv_mean60) / (dv_std60 + 1e-10)
+    ret_1d = close.pct_change()
+    df["volume_force_1d"] = df["dollar_volume_zscore"] * np.sign(ret_1d.fillna(0.0))
     df["momentum_20d"] = close.pct_change(20)
     df["momentum_accel"] = df["momentum_20d"].diff(5)
     for _mw in cfg.REL_MOMENTUM_WINDOWS:
@@ -155,6 +196,17 @@ def _compute_indicators_one_ticker_for_meta(df_t, rsi_w, bb_w, sma_w):
         if _mw == 20:
             continue
         df[f"momentum_{_mw}d"] = close.pct_change(_mw)
+    _ret_abs_pct = close.pct_change().abs() * 100.0
+    _aw = int(adr_w)
+    df[f"adr_pct_{_aw}d"] = _ret_abs_pct.rolling(_aw, min_periods=max(3, _aw // 2)).mean()
+    _vw = int(vcp_w)
+    _short = _ret_abs_pct.rolling(_vw, min_periods=max(3, _vw // 2)).mean()
+    _long = _ret_abs_pct.rolling(_vw * 3, min_periods=max(5, _vw)).mean()
+    df[f"vcp_tightness_{_vw}d"] = _short / (_long + 1e-10)
+    hl_range_pct = (high - low) / (close.abs() + 1e-10)
+    _short_hl = hl_range_pct.rolling(_vw, min_periods=max(3, _vw // 2)).mean()
+    _long_hl = hl_range_pct.rolling(_vw * 3, min_periods=max(5, _vw)).mean()
+    df[f"vcp_tightness_hl_{_vw}d"] = _short_hl / (_long_hl + 1e-10)
     sma200 = close.rolling(200, min_periods=150).mean()
     df["close_vs_sma200"] = close / sma200
     df["sma200_delta_5d"] = df["close_vs_sma200"].diff(5)
@@ -178,6 +230,7 @@ def _compute_indicators_one_ticker_for_meta(df_t, rsi_w, bb_w, sma_w):
     bw = int(bb_w)
     bb = ta.volatility.BollingerBands(close, window=bw, window_dev=2)
     df[f"bb_pband_{bw}"] = bb.bollinger_pband()
+    df[f"bb_squeeze_factor_{bw}"] = bb.bollinger_wband() / 100.0
     df[f"bb_delta_3d_{bw}"] = df[f"bb_pband_{bw}"].diff(3)
     df[f"bb_slope_5d_{bw}"] = df[f"bb_pband_{bw}"].rolling(5).apply(_linreg_slope, raw=True)
     df[f"bb_x_rsi_{bw}_{rw}"] = df[f"bb_pband_{bw}"] * (df[f"rsi_{rw}"] / 100.0)
@@ -186,6 +239,12 @@ def _compute_indicators_one_ticker_for_meta(df_t, rsi_w, bb_w, sma_w):
     sma_sw = close.rolling(sw, min_periods=int(0.6 * sw)).mean()
     df[f"sma_cross_20_{sw}"] = sma20 / (sma_sw + 1e-10)
     df[f"sma_ratio_{sw}"] = close / (sma_sw + 1e-10)
+    _bwk = int(breakout_w)
+    prior_hi = close.shift(1).rolling(_bwk, min_periods=max(20, _bwk // 3)).max()
+    df[f"blue_sky_breakout_{_bwk}d"] = (close > prior_hi).astype(float)
+    df[f"dist_to_prior_hi_pct_{_bwk}d"] = close / (prior_hi + 1e-10) - 1.0
+    near_hi = ((prior_hi - close) / (prior_hi + 1e-10) <= 0.02).astype(float)
+    df[f"volume_at_resistance_{_bwk}d"] = near_hi * df["volume_zscore"].fillna(0.0)
     return df
 
 
@@ -199,17 +258,36 @@ def add_technical_indicators(df, meta_only=False):
         _rw = cfg.__dict__.get("rsi_w")
         _bw = cfg.__dict__.get("bb_w")
         _sw = cfg.__dict__.get("sma_w")
+        _bp = getattr(cfg, "best_params", None) or {}
+        _aw = int(
+            cfg.__dict__.get(
+                "adr_w", _bp.get("adr_window", cfg.SEED_PARAMS.get("adr_window", cfg.ADR_WINDOWS[0]))
+            )
+        )
+        _brkw = int(
+            cfg.__dict__.get(
+                "breakout_lookback_w",
+                _bp.get(
+                    "breakout_lookback_window",
+                    cfg.SEED_PARAMS.get("breakout_lookback_window", cfg.BREAKOUT_LOOKBACK_WINDOWS[0]),
+                ),
+            )
+        )
+        _vw = int(
+            cfg.__dict__.get("vcp_w", _bp.get("vcp_window", cfg.SEED_PARAMS.get("vcp_window", cfg.VCP_WINDOWS[0])))
+        )
         if _rw is None or _bw is None or _sw is None:
             raise ValueError("meta_only=True: rsi_w, bb_w, sma_w müssen gesetzt sein (nach Meta-/Phase-4-Params).")
 
         def _fn(g):
-            return _compute_indicators_one_ticker_for_meta(g[1], _rw, _bw, _sw)
+            return _compute_indicators_one_ticker_for_meta(g[1], _rw, _bw, _sw, _aw, _brkw, _vw)
 
         with ThreadPoolExecutor(max_workers=cfg.N_WORKERS) as ex:
             results = list(ex.map(_fn, groups))
         out = pd.concat(results, ignore_index=True)
         print(
-            f"Indicators computed (meta-only windows RSI={_rw}, BB={_bw}, SMA={_sw}). Shape: {out.shape}"
+            f"Indicators computed (meta-only windows RSI={_rw}, BB={_bw}, SMA={_sw}, "
+            f"ADR={_aw}, Breakout={_brkw}, VCP={_vw}). Shape: {out.shape}"
         )
         return out
     with ThreadPoolExecutor(max_workers=cfg.N_WORKERS) as ex:

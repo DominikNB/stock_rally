@@ -1,8 +1,10 @@
 """Phase 13: Meta-Features, Meta-Optuna, Schwellenfindung, Artefakt-Speichern."""
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -322,6 +324,27 @@ def _run_phase13(c: Any) -> None:
     for fname, imp in sorted_meta:
         bar = "\u2588" * max(1, int(imp / meta_mean_shap.max() * 25))
         print(f"  {fname:30s}  {imp:.4f}  {bar}")
+    try:
+        out_path = Path("data") / "meta_feature_shap_report.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        _rows = [
+            {
+                "rank": int(i + 1),
+                "feature": str(fname),
+                "mean_abs_shap": float(imp),
+            }
+            for i, (fname, imp) in enumerate(sorted_meta)
+        ]
+        payload = {
+            "phase": "meta_training_phase13",
+            "feature_count": int(len(meta_feature_names)),
+            "features": [str(x) for x in meta_feature_names],
+            "shap_mean_abs_sorted": _rows,
+        }
+        out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"Meta-SHAP-Export geschrieben: {out_path}", flush=True)
+    except Exception as _e_meta_export:
+        print(f"Warnung: Meta-SHAP-Export fehlgeschlagen ({_e_meta_export})", flush=True)
 
     fig, ax = plt.subplots(figsize=(10, max(4, len(meta_feature_names) * 0.5)))
     names_s = [p[0] for p in sorted_meta[::-1]]

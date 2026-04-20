@@ -866,6 +866,43 @@ def _run_phase17(c: Any) -> None:
         f"({len(all_hist_signals)} mit Schwelle über alle Zeiten nur intern gezählt)"
     )
     print("\nOpen docs/index.html in a browser to preview.")
+    _dl = getattr(c, "DATA_LOAD_REPORT", None)
+    if isinstance(_dl, dict):
+        _missing = list(_dl.get("missing_tickers", []) or [])
+        print("\n[Scoring-Ende] Ticker ohne ladbare Kursdaten:", flush=True)
+        if not _missing:
+            print("  keine", flush=True)
+        else:
+            print(f"  {len(_missing)} von {_dl.get('requested_count', '?')} Ticker:", flush=True)
+            _reasons = _dl.get("failure_reasons", {}) or {}
+            for t in _missing[:100]:
+                print(f"  - {t}: {_reasons.get(t, 'unbekannt')}", flush=True)
+            if len(_missing) > 100:
+                print(f"  ... und {len(_missing) - 100} weitere", flush=True)
+    try:
+        from lib.signal_extra_filters import get_last_enrich_diagnostics as _get_enrich_diag
+
+        _diag = _get_enrich_diag()
+    except Exception:
+        _diag = {}
+    if isinstance(_diag, dict) and _diag.get("metrics"):
+        print("\n[Scoring-Ende] Kennzahlen nicht berechnet (Top 15):", flush=True)
+        for m in list(_diag.get("metrics", []))[:15]:
+            if m.get("status") == "missing_column":
+                print(f"  - {m.get('metric')}: Spalte fehlt | {m.get('reason')}", flush=True)
+            else:
+                print(
+                    f"  - {m.get('metric')}: {m.get('missing_count')}/{_diag.get('row_count', 0)} "
+                    f"({m.get('missing_pct', 0.0):.1f}%) | {m.get('reason')}",
+                    flush=True,
+                )
+        _ss = _diag.get("short_metrics_source_counts") or {}
+        if _ss:
+            print(
+                "  short_metrics_source: "
+                + ", ".join(f"{k}={v}" for k, v in _ss.items()),
+                flush=True,
+            )
 
     _msg = (
         f"Daily signal update {today_str} "

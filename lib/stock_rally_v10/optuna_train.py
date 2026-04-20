@@ -249,6 +249,12 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         rel_momentum_window = trial.suggest_categorical(
             'rel_momentum_window', cfg.REL_MOMENTUM_WINDOWS
         )
+        adr_window = trial.suggest_categorical('adr_window', cfg.ADR_WINDOWS)
+        breakout_lookback_window = trial.suggest_categorical(
+            'breakout_lookback_window', cfg.BREAKOUT_LOOKBACK_WINDOWS
+        )
+        vcp_window = trial.suggest_categorical('vcp_window', cfg.VCP_WINDOWS)
+        btc_corr_window = trial.suggest_categorical('btc_corr_window', cfg.BTC_CORR_WINDOWS)
         if cfg.USE_NEWS_SENTIMENT:
             news_mom_w = trial.suggest_categorical('news_mom_w', cfg.NEWS_MOM_WINDOWS)
             news_vol_ma = trial.suggest_categorical('news_vol_ma', cfg.NEWS_VOL_MA_WINDOWS)
@@ -307,6 +313,10 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             btc_momentum_z_window=int(btc_momentum_z_window),
             market_breadth_z_window=int(market_breadth_z_window),
             rel_momentum_window=int(rel_momentum_window),
+            adr_window=int(adr_window),
+            breakout_lookback_window=int(breakout_lookback_window),
+            vcp_window=int(vcp_window),
+            btc_corr_window=int(btc_corr_window),
         )
         if cfg.USE_NEWS_SENTIMENT and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
             _tag = cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)

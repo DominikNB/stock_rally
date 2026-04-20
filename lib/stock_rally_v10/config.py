@@ -77,7 +77,7 @@ START_DATE = '2015-01-01'  # Kurs-Download / Labels; News siehe NEWS_EXTRA_HISTO
 END_DATE        = datetime.date.today().strftime('%Y-%m-%d')           # Download bis heute
 TRAIN_END_DATE  = datetime.date.today().strftime('%Y-%m-%d')           # gleiches Kalenderende wie END_DATE
 YF_DOWNLOAD_BATCH_SIZE = 20
-YF_DOWNLOAD_BATCH_SLEEP_SEC = 1.0
+YF_DOWNLOAD_BATCH_SLEEP_SEC = 2.0
 print(f'Download:  {START_DATE} -> {END_DATE}')
 print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 
@@ -144,8 +144,8 @@ def log_pipeline_mode_banner() -> None:
 # ── Fixed pipeline constants ─────────────────────────────────────────────────────
 N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
-OPT_MIN_PRECISION_BASE   = 0.6   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.85  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
+OPT_MIN_PRECISION_BASE   = 0.65   # Phase 1 Base-XGB
+OPT_MIN_PRECISION_META   = 0.9  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_META  # Reports/PR-Plots: gleiches Gate wie Meta
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
 PHASE5_MIN_SIGNALS    = 5
@@ -383,7 +383,7 @@ def html_target_definition_section(c=None) -> str:
 
 
 EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 50  # erhöht wegen News-Feature-Grid
+N_OPTUNA_TRIALS       = 120  # mehr Coverage im großen Kombinationsraum (TPE warm-up + Exploitation)
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
 # N_OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
@@ -476,6 +476,10 @@ SEED_PARAMS = dict(
     btc_momentum_z_window=60,
     market_breadth_z_window=60,
     rel_momentum_window=20,
+    adr_window=20,
+    breakout_lookback_window=252,
+    vcp_window=10,
+    btc_corr_window=20,
     grow_policy='lossguide',
     max_leaves=686,
     max_bin=256,
@@ -505,8 +509,8 @@ USE_NEWS_SENTIMENT = True
 # Momentum auf geglätteter Ton-Serie; Vol-MA für Spike; zusätzliche Ton-Glättung vor Momentum
 NEWS_MOM_WINDOWS = [3, 5, 7]
 NEWS_VOL_MA_WINDOWS = [10, 20]
-# 0 = kein Roll auf Tone (reaktiv); 1 = leicht; 3 = noch kompakt. Lange Rollings verwischen Börsen-„Spikes“.
-NEWS_TONE_ROLL_WINDOWS = [0, 1, 3]
+# Fokus auf stabilere Drift-/Trendreaktionen (T+1/T+2), weniger ultra-kurzfristiges Rauschen.
+NEWS_TONE_ROLL_WINDOWS = [3, 5, 10]
 
 # Zusätzliche News-Spalten — Optuna Phase 1 wählt je Trial ein Tripel (wie news_mom_w …)
 # 5 = kurzes „Shock“-Fenster (relativ zur lokalen 5d-Basis); 0 = kein Z-Block in FEAT_COLS (Optuna darf das wählen)
@@ -522,9 +526,13 @@ FEATURE_ASSEMBLE_NEWS_FILL = "optuna_union"  # "all_news_model" | "optuna_union"
 FEATURE_NUMERIC_NAN_SENTINEL = -1e8
 
 # Kontext-Features: Optuna wählt je Trial ein Fenster (Indizes siehe SEED_PARAMS).
-BTC_MOMENTUM_Z_WINDOWS = [20, 40, 60, 120]
-MARKET_BREADTH_Z_WINDOWS = [20, 40, 60, 120]
+BTC_MOMENTUM_Z_WINDOWS = [20, 60, 120]
+MARKET_BREADTH_Z_WINDOWS = [20, 60, 120]
 REL_MOMENTUM_WINDOWS = [10, 20, 60]
+ADR_WINDOWS = [10, 20]
+BREAKOUT_LOOKBACK_WINDOWS = [60, 120, 252]
+VCP_WINDOWS = [5, 10, 20]
+BTC_CORR_WINDOWS = [20, 60, 120]
 
 # Volles News-Fenster-Grid: News liegt nur in Shard-Dateien (FEATURE_SHARD_DIR), nicht als breite Spalten in df_features.
 FEATURE_SHARD_DIR = os.path.join(os.getcwd(), "data", "feature_shards_news")
@@ -716,7 +724,8 @@ TICKERS_BY_SECTOR = {
     # ── Technology ─────────────────────────────────────────────────────────
     # DAX: SAP, IFX  |  MDAX: NEM(Nemetschek), BC8  |  SDAX: TMV, COK, YSN, GFT, NA9, AOF, ELG, AIXA, SMHN, SANT
     'technology': ['AAPL', 'MSFT', 'NVDA', 'CRM', 'CSCO', 'INTC', 'IBM', 'ASML',
-                   'TSM', 'AMD', 'PANW',
+                   'TSM', 'AMD', 'PANW', 'ADBE', 'STX', 'WDC', 'MU', 'NXPI', 'TER',
+                   'LRCX', 'NOW', 'ANET', 'FI',
                    'SAP.DE', 'IFX.DE',
                    'NEM.DE', 'BC8.DE',
                    'TMV.DE', 'COK.DE', 'YSN.DE', 'GFT.DE', 'NA9.DE',
@@ -724,7 +733,7 @@ TICKERS_BY_SECTOR = {
 
     # ── Financial Services ─────────────────────────────────────────────────
     # DAX: DB1, HNR1  |  MDAX: TLX  |  SDAX: MLP, GLJ, PBB, HABA, WUW, DBAG, HYQ
-    'financial_services': ['JPM', 'GS', 'AXP', 'V',
+    'financial_services': ['JPM', 'GS', 'AXP', 'V', 'MS', 'MCO', 'SPGI', 'SCHW', 'TROW', 'AMP',
                            'ALV.DE', 'MUV2.DE', 'DBK.DE', 'CBK.DE', 'BNP.PA',
                            'DB1.DE', 'HNR1.DE',
                            'TLX.DE',
@@ -732,7 +741,7 @@ TICKERS_BY_SECTOR = {
 
     # ── Healthcare ─────────────────────────────────────────────────────────
     # DAX: FME, SHL  |  MDAX: SRT3  |  SDAX: AFX, EUZ, DMP, GXI, DRW3, O2BC, EVT
-    'healthcare': ['JNJ', 'UNH', 'MRK', 'AMGN', 'NVS',
+    'healthcare': ['JNJ', 'UNH', 'MRK', 'AMGN', 'NVS', 'REGN', 'VRTX', 'BIIB', 'GILD', 'ALGN', 'IDXX',
                    'ISRG', 'ILMN',
                    'BAYN.DE', 'FRE.DE', 'MRK.DE', 'FME.DE', 'SHL.DE',
                    'SRT3.DE',
@@ -742,6 +751,7 @@ TICKERS_BY_SECTOR = {
     # DAX: BEI  |  SDAX: FIE, HBH, DOU, SZU, HFG, KWS, EVD, DHER
     # DAX Automotive: VOW3, BMW, MBG, CON, PAH3, P911, DTG  |  MDAX: TGR, SHA
     'consumer_cyclical': ['KO', 'MCD', 'NKE', 'PG', 'WMT', 'HD', 'DIS',
+                          'AMZN', 'NFLX', 'BKNG', 'TSLA', 'TJX', 'ORLY', 'ULTA', 'LULU',
                           'ADS.DE', 'BOSS.DE', 'HEN3.DE', 'PUM.DE', 'ZAL.DE', 'MC.PA',
                           'BEI.DE',
                           'FIE.DE', 'HBH.DE', 'DOU.DE', 'SZU.DE', 'HFG.DE', 'KWS.DE',
@@ -754,6 +764,7 @@ TICKERS_BY_SECTOR = {
     # DAX: SIE, RHM, MTX, AIR, DHL, G1A  |  MDAX: KBX, HOC, KGX, JUN3, TKA, HAG, R3NK, LHA, FRA, HLAG, RAA
     # SDAX: DUE, JST, SFQ, NOEJ, VOS, WAC, INH, MUX, STM, KSB, HDD
     'industrials': ['CAT', 'BA', 'HON', 'MMM', 'SHW', 'TRV', 'DOW', 'FDX',
+                    'URI', 'DE', 'FAST', 'ODFL', 'ETN',
                     'SIE.DE', 'RHM.DE', 'MTX.DE', 'AIR.DE', 'DHL.DE', 'G1A.DE',
                     'KBX.DE', 'HOC.F', 'KGX.DE', 'JUN3.DE', 'TKA.DE', 'HAG.DE',
                     'R3NK.DE', 'LHA.DE', 'FRA.DE', 'HLAG.DE', 'RAA.DE',
@@ -776,6 +787,7 @@ TICKERS_BY_SECTOR = {
     # ── Basic Materials ─────────────────────────────────────────────────────
     # DAX: BAS, BNR, HEI, SY1  |  MDAX: EVK, LXS, NDA, SDO, FPE3  |  SDAX: ACT, WAF, BFSA, KCO
     'basic_materials': ['BAS.DE', 'LIN', 'WCH.DE', 'APD', 'LYB', 'BNR.DE', 'NEM', 'RIO',
+                        'ALB', 'FMC', 'FCX',
                         'HEI.DE', 'SY1.DE',
                         'EVK.DE', 'LXS.DE', 'NDA.DE', 'SZG.DE', 'FPE3.DE',
                         'ACT.DE', 'WAF.DE', 'BFSA.DE', 'KCO.DE'],
@@ -811,24 +823,35 @@ COMPANY_NAMES = {
     'AAPL': 'Apple', 'MSFT': 'Microsoft', 'NVDA': 'NVIDIA', 'CRM': 'Salesforce',
     'CSCO': 'Cisco', 'INTC': 'Intel', 'IBM': 'IBM',
     'TSM': 'TSMC', 'AMD': 'AMD', 'PANW': 'Palo Alto Networks',
+    'ADBE': 'Adobe', 'STX': 'Seagate', 'WDC': 'Western Digital', 'MU': 'Micron',
+    'NXPI': 'NXP Semiconductors', 'TER': 'Teradyne', 'LRCX': 'Lam Research',
+    'NOW': 'ServiceNow', 'ANET': 'Arista Networks', 'FI': 'Fiserv',
     'SAP.DE': 'SAP', 'IFX.DE': 'Infineon', 'ASML': 'ASML',
     # Finance
     'JPM': 'JPMorgan', 'GS': 'Goldman Sachs', 'AXP': 'AmEx', 'V': 'Visa',
+    'MS': 'Morgan Stanley', 'MCO': "Moody's", 'SPGI': 'S&P Global',
+    'SCHW': 'Charles Schwab', 'TROW': 'T. Rowe Price', 'AMP': 'Ameriprise',
     'ALV.DE': 'Allianz', 'MUV2.DE': 'Munich Re', 'DBK.DE': 'Deutsche Bank',
     'CBK.DE': 'Commerzbank', 'BNP.PA': 'BNP Paribas',
     # Healthcare
     'JNJ': 'J&J', 'UNH': 'UnitedHealth', 'MRK': 'Merck US', 'AMGN': 'Amgen',
     'ISRG': 'Intuitive Surgical', 'ILMN': 'Illumina',
+    'REGN': 'Regeneron', 'VRTX': 'Vertex', 'BIIB': 'Biogen',
+    'GILD': 'Gilead', 'ALGN': 'Align Technology', 'IDXX': 'IDEXX Labs',
     'BAYN.DE': 'Bayer', 'FRE.DE': 'Fresenius', 'MRK.DE': 'Merck KGaA',
     'SRT3.DE': 'Sartorius', 'NVS': 'Novartis',
     # Consumer
     'KO': 'Coca-Cola', 'MCD': "McDonald's", 'NKE': 'Nike', 'PG': 'P&G',
     'WMT': 'Walmart', 'HD': 'Home Depot', 'DIS': 'Disney',
+    'AMZN': 'Amazon', 'NFLX': 'Netflix', 'BKNG': 'Booking', 'TSLA': 'Tesla',
+    'TJX': 'TJX', 'ORLY': "O'Reilly Auto", 'ULTA': 'Ulta Beauty', 'LULU': 'Lululemon',
     'ADS.DE': 'Adidas', 'BOSS.DE': 'Hugo Boss', 'HEN3.DE': 'Henkel',
     'PUM.DE': 'PUMA', 'ZAL.DE': 'Zalando', 'MC.PA': 'LVMH',
     # Industrial (DAX)
     'CAT': 'Caterpillar', 'BA': 'Boeing', 'HON': 'Honeywell', 'MMM': '3M',
     'FDX': 'FedEx',
+    'URI': 'United Rentals', 'DE': 'Deere', 'FAST': 'Fastenal',
+    'ODFL': 'Old Dominion Freight Line', 'ETN': 'Eaton',
     'SHW': 'Sherwin-Williams', 'TRV': 'Travelers', 'DOW': 'Dow Inc.',
     'SIE.DE': 'Siemens', 'RHM.DE': 'Rheinmetall', 'MTX.DE': 'MTU Aero',
     'AIR.DE': 'Airbus', 'DHL.DE': 'DHL Group', 'G1A.DE': 'GEA Group',
@@ -860,7 +883,8 @@ COMPANY_NAMES = {
     # Materials (DAX)
     'BAS.DE': 'BASF', 'LIN': 'Linde', 'WCH.DE': 'Wacker Chemie',
     'APD': 'Air Products', 'LYB': 'LyondellBasell', 'BNR.DE': 'Brenntag',
-    'NEM': 'Newmont', 'RIO': 'Rio Tinto', 'HEI.DE': 'Heidelberg Materials', 'SY1.DE': 'Symrise',
+    'NEM': 'Newmont', 'RIO': 'Rio Tinto', 'ALB': 'Albemarle', 'FMC': 'FMC Corp', 'FCX': 'Freeport-McMoRan',
+    'HEI.DE': 'Heidelberg Materials', 'SY1.DE': 'Symrise',
     # Materials (MDAX)
     'EVK.DE': 'Evonik', 'LXS.DE': 'LANXESS', 'NDA.DE': 'Aurubis',
     'SZG.DE': 'Salzgitter', 'FPE3.DE': 'Fuchs SE',
@@ -1256,6 +1280,26 @@ def _default_rel_momentum_window():
     return int(w[len(w) // 2])
 
 
+def _default_adr_window():
+    w = ADR_WINDOWS
+    return int(w[len(w) // 2])
+
+
+def _default_breakout_lookback_window():
+    w = BREAKOUT_LOOKBACK_WINDOWS
+    return int(w[len(w) // 2])
+
+
+def _default_vcp_window():
+    w = VCP_WINDOWS
+    return int(w[len(w) // 2])
+
+
+def _default_btc_corr_window():
+    w = BTC_CORR_WINDOWS
+    return int(w[len(w) // 2])
+
+
 def build_technical_cols(
     rsi_w,
     bb_w,
@@ -1264,6 +1308,10 @@ def build_technical_cols(
     btc_momentum_z_window=None,
     market_breadth_z_window=None,
     rel_momentum_window=None,
+    adr_window=None,
+    breakout_lookback_window=None,
+    vcp_window=None,
+    btc_corr_window=None,
 ):
     bz = int(
         btc_momentum_z_window
@@ -1280,6 +1328,14 @@ def build_technical_cols(
         if rel_momentum_window is not None
         else _default_rel_momentum_window()
     )
+    aw = int(adr_window if adr_window is not None else _default_adr_window())
+    bwk = int(
+        breakout_lookback_window
+        if breakout_lookback_window is not None
+        else _default_breakout_lookback_window()
+    )
+    vw = int(vcp_window if vcp_window is not None else _default_vcp_window())
+    bcw = int(btc_corr_window if btc_corr_window is not None else _default_btc_corr_window())
     return [
         f'rsi_{rsi_w}',
         f'bb_pband_{bb_w}',
@@ -1305,7 +1361,17 @@ def build_technical_cols(
         f'sector_avg_rsi_{rsi_w}',
         'btc_momentum',
         f'btc_momentum_z_w{bz}',
+        f'corr_stock_btc_{bcw}d',
         f'rel_momentum_{rm}d',
+        f'adr_pct_{aw}d',
+        f'vcp_tightness_{vw}d',
+        f'vcp_tightness_hl_{vw}d',
+        f'blue_sky_breakout_{bwk}d',
+        f'dist_to_prior_hi_pct_{bwk}d',
+        f'volume_at_resistance_{bwk}d',
+        'dollar_volume_zscore',
+        'volume_force_1d',
+        f'bb_squeeze_factor_{bb_w}',
         'month',
         'sector_id',
         'gics_sector_id',
@@ -1322,15 +1388,23 @@ def all_model_tech_col_names_for_assemble_dropna() -> list[str]:
                 for bz in BTC_MOMENTUM_Z_WINDOWS:
                     for brz in MARKET_BREADTH_Z_WINDOWS:
                         for relm in REL_MOMENTUM_WINDOWS:
-                            for c in build_technical_cols(
-                                rw,
-                                bw,
-                                sw,
-                                btc_momentum_z_window=bz,
-                                market_breadth_z_window=brz,
-                                rel_momentum_window=relm,
-                            ):
-                                names.add(c)
+                            for aw in ADR_WINDOWS:
+                                for bwk in BREAKOUT_LOOKBACK_WINDOWS:
+                                    for vw in VCP_WINDOWS:
+                                        for bcw in BTC_CORR_WINDOWS:
+                                            for c in build_technical_cols(
+                                                rw,
+                                                bw,
+                                                sw,
+                                                btc_momentum_z_window=bz,
+                                                market_breadth_z_window=brz,
+                                                rel_momentum_window=relm,
+                                                adr_window=aw,
+                                                breakout_lookback_window=bwk,
+                                                vcp_window=vw,
+                                                btc_corr_window=bcw,
+                                            ):
+                                                names.add(c)
     return sorted(names)
 
 
@@ -1341,6 +1415,10 @@ def build_feature_cols(
     btc_momentum_z_window=None,
     market_breadth_z_window=None,
     rel_momentum_window=None,
+    adr_window=None,
+    breakout_lookback_window=None,
+    vcp_window=None,
+    btc_corr_window=None,
 ):
     out = build_technical_cols(
         rsi_w,
@@ -1349,6 +1427,10 @@ def build_feature_cols(
         btc_momentum_z_window=btc_momentum_z_window,
         market_breadth_z_window=market_breadth_z_window,
         rel_momentum_window=rel_momentum_window,
+        adr_window=adr_window,
+        breakout_lookback_window=breakout_lookback_window,
+        vcp_window=vcp_window,
+        btc_corr_window=btc_corr_window,
     )
     if USE_NEWS_SENTIMENT:
         if news_mom_w is None:
@@ -1378,6 +1460,10 @@ def build_rename_map(
     btc_momentum_z_window=None,
     market_breadth_z_window=None,
     rel_momentum_window=None,
+    adr_window=None,
+    breakout_lookback_window=None,
+    vcp_window=None,
+    btc_corr_window=None,
 ):
     bz = int(
         btc_momentum_z_window
@@ -1394,6 +1480,14 @@ def build_rename_map(
         if rel_momentum_window is not None
         else _default_rel_momentum_window()
     )
+    aw = int(adr_window if adr_window is not None else _default_adr_window())
+    bwk = int(
+        breakout_lookback_window
+        if breakout_lookback_window is not None
+        else _default_breakout_lookback_window()
+    )
+    vw = int(vcp_window if vcp_window is not None else _default_vcp_window())
+    bcw = int(btc_corr_window if btc_corr_window is not None else _default_btc_corr_window())
     m = {
         f'rsi_{rsi_w}':              f'RSI ({rsi_w}d)',
         f'bb_pband_{bb_w}':          f'Bollinger %B ({bb_w}d)',
@@ -1419,7 +1513,17 @@ def build_rename_map(
         'volume_zscore':   'Volume Z-Score',
         'btc_momentum':    'BTC Momentum',
         f'btc_momentum_z_w{bz}': f'BTC Mom Z roll{bz}',
+        f'corr_stock_btc_{bcw}d': f'Corr Stock/BTC {bcw}d',
         f'rel_momentum_{rm}d': f'Rel. Mom {rm}d vs sector',
+        f'adr_pct_{aw}d': f'ADR Proxy {aw}d',
+        f'vcp_tightness_{vw}d': f'VCP Tightness {vw}d',
+        f'vcp_tightness_hl_{vw}d': f'VCP Tightness HL {vw}d',
+        f'blue_sky_breakout_{bwk}d': f'Blue Sky Breakout {bwk}d',
+        f'dist_to_prior_hi_pct_{bwk}d': f'Dist to Prior High {bwk}d',
+        f'volume_at_resistance_{bwk}d': f'Vol@Resistance {bwk}d',
+        'dollar_volume_zscore': 'Dollar Volume Z-Score',
+        'volume_force_1d': 'Volume Force 1d',
+        f'bb_squeeze_factor_{bb_w}': f'BB Squeeze Factor ({bb_w}d)',
         'month':           'Month',
         'sector_id':          'Sector ID (Research-Cluster)',
         'gics_sector_id':     'Yahoo GICS Sector ID',

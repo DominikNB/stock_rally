@@ -1,7 +1,9 @@
 """Phase 12: Optuna, Rebuild, Base-Modelle, SHAP."""
 from __future__ import annotations
 
+import json
 from typing import Any
+from pathlib import Path
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
@@ -276,6 +278,10 @@ def _run_phase12(c: Any) -> None:
     _btc_z = int(best_params.get("btc_momentum_z_window", sp.get("btc_momentum_z_window", 60)))
     _brd_z = int(best_params.get("market_breadth_z_window", sp.get("market_breadth_z_window", 60)))
     _rel_m = int(best_params.get("rel_momentum_window", sp.get("rel_momentum_window", 20)))
+    _adr_w = int(best_params.get("adr_window", sp.get("adr_window", 20)))
+    _brk_w = int(best_params.get("breakout_lookback_window", sp.get("breakout_lookback_window", 252)))
+    _vcp_w = int(best_params.get("vcp_window", sp.get("vcp_window", 10)))
+    _btc_cw = int(best_params.get("btc_corr_window", sp.get("btc_corr_window", 20)))
     if c.USE_NEWS_SENTIMENT:
         FEAT_COLS = c.build_feature_cols(
             rsi_w,
@@ -290,6 +296,10 @@ def _run_phase12(c: Any) -> None:
             btc_momentum_z_window=_btc_z,
             market_breadth_z_window=_brd_z,
             rel_momentum_window=_rel_m,
+            adr_window=_adr_w,
+            breakout_lookback_window=_brk_w,
+            vcp_window=_vcp_w,
+            btc_corr_window=_btc_cw,
         )
     else:
         FEAT_COLS = c.build_feature_cols(
@@ -299,11 +309,16 @@ def _run_phase12(c: Any) -> None:
             btc_momentum_z_window=_btc_z,
             market_breadth_z_window=_brd_z,
             rel_momentum_window=_rel_m,
+            adr_window=_adr_w,
+            breakout_lookback_window=_brk_w,
+            vcp_window=_vcp_w,
+            btc_corr_window=_btc_cw,
         )
     FEAT_COLS = append_macro_regime_vol_numeric_cols(FEAT_COLS, df_train)
     print(
         f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, "
-        f"BTCz={_btc_z}, BreadthZ={_brd_z}, relMom={_rel_m}d  ({len(FEAT_COLS)} features)"
+        f"BTCz={_btc_z}, BTCcorr={_btc_cw}, BreadthZ={_brd_z}, relMom={_rel_m}d, "
+        f"ADR={_adr_w}, BRK={_brk_w}, VCP={_vcp_w}  ({len(FEAT_COLS)} features)"
     )
     if c.USE_NEWS_SENTIMENT:
         _log_news_feature_constancy(df_train, FEAT_COLS, label="df_train (BASE, nach News-Shard)")
@@ -329,6 +344,10 @@ def _run_phase12(c: Any) -> None:
             "btc_momentum_z_window",
             "market_breadth_z_window",
             "rel_momentum_window",
+            "adr_window",
+            "breakout_lookback_window",
+            "vcp_window",
+            "btc_corr_window",
             "focal_gamma",
             "focal_alpha",
             "return_window",
@@ -513,6 +532,10 @@ def _run_phase12(c: Any) -> None:
         btc_momentum_z_window=_btc_z,
         market_breadth_z_window=_brd_z,
         rel_momentum_window=_rel_m,
+        adr_window=_adr_w,
+        breakout_lookback_window=_brk_w,
+        vcp_window=_vcp_w,
+        btc_corr_window=_btc_cw,
     )
     feat_display = [rename_map.get(col, col) for col in FEAT_COLS]
 
@@ -542,12 +565,39 @@ def _run_phase12(c: Any) -> None:
     mean_shap = np.abs(shap_vals).mean(axis=0)
 
     shap_df = (
-        pd.DataFrame({"feature": feat_display, "mean_abs_shap": mean_shap})
+        pd.DataFrame(
+            {"feature_raw": FEAT_COLS, "feature": feat_display, "mean_abs_shap": mean_shap}
+        )
         .sort_values("mean_abs_shap", ascending=False)
         .reset_index(drop=True)
     )
     print("\nMittlere |SHAP| (alle Features, absteigend):")
     print(shap_df.to_string(index=False))
+    try:
+        out_path = Path("data") / "base_feature_shap_report.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        _records = []
+        for i, row in shap_df.iterrows():
+            _records.append(
+                {
+                    "rank": int(i + 1),
+                    "feature_display": str(row["feature"]),
+                    "feature_raw": str(row["feature_raw"]),
+                    "mean_abs_shap": float(row["mean_abs_shap"]),
+                }
+            )
+        payload = {
+            "phase": "base_training_phase12",
+            "feature_count": int(len(FEAT_COLS)),
+            "features_raw": [str(x) for x in FEAT_COLS],
+            "features_display": [str(x) for x in feat_display],
+            "topk_names_raw": [str(x) for x in topk_names],
+            "shap_mean_abs_sorted": _records,
+        }
+        out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"Base-SHAP-Export geschrieben: {out_path}", flush=True)
+    except Exception as _e_shap_export:
+        print(f"Warnung: Base-SHAP-Export fehlgeschlagen ({_e_shap_export})", flush=True)
     _shap_zeroish = (shap_df["mean_abs_shap"] <= 1e-12).sum()
     if _shap_zeroish:
         print(
@@ -615,6 +665,10 @@ def _run_phase12(c: Any) -> None:
     c.rsi_w = rsi_w
     c.bb_w = bb_w
     c.sma_w = sma_w
+    c.adr_w = _adr_w
+    c.breakout_lookback_w = _brk_w
+    c.vcp_w = _vcp_w
+    c.btc_corr_w = _btc_cw
     c.FEAT_COLS = FEAT_COLS
     c.base_models = base_models
     c.rename_map = rename_map
