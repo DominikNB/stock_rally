@@ -433,6 +433,35 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     if not cfg.opt_optimize_y_targets():
         for _k in ('return_window', 'rally_threshold', 'lead_days', 'entry_days', 'min_rally_tail_days'):
             _seed_enq.pop(_k, None)
+    _cat_choices = {
+        "rsi_window": list(cfg.RSI_WINDOWS),
+        "bb_window": list(cfg.BB_WINDOWS),
+        "sma_window": list(cfg.SMA_WINDOWS),
+        "btc_momentum_z_window": list(cfg.BTC_MOMENTUM_Z_WINDOWS),
+        "market_breadth_z_window": list(cfg.MARKET_BREADTH_Z_WINDOWS),
+        "rel_momentum_window": list(cfg.REL_MOMENTUM_WINDOWS),
+        "adr_window": list(cfg.ADR_WINDOWS),
+        "breakout_lookback_window": list(cfg.BREAKOUT_LOOKBACK_WINDOWS),
+        "vcp_window": list(cfg.VCP_WINDOWS),
+        "btc_corr_window": list(cfg.BTC_CORR_WINDOWS),
+        "news_mom_w": list(cfg.NEWS_MOM_WINDOWS),
+        "news_vol_ma": list(cfg.NEWS_VOL_MA_WINDOWS),
+        "news_tone_roll": list(cfg.NEWS_TONE_ROLL_WINDOWS),
+        "news_extra_zscore_w": list(cfg.NEWS_EXTRA_ZSCORE_WINDOWS),
+        "news_extra_tone_accel": list(cfg.NEWS_EXTRA_TONE_ACCEL_OPTIONS),
+        "news_extra_macro_sec_diff": list(cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS),
+    }
+    for _k, _choices in _cat_choices.items():
+        if _k not in _seed_enq or not _choices:
+            continue
+        if _seed_enq[_k] not in _choices:
+            _old = _seed_enq[_k]
+            _seed_enq[_k] = _choices[0]
+            print(
+                f"Seed-Parameter angepasst: {_k}={_old!r} nicht im aktuellen Grid {_choices} "
+                f"-> nutze {_seed_enq[_k]!r}.",
+                flush=True,
+            )
     study.enqueue_trial(_seed_enq)
     # Nur tqdm-Fortschritt (eine Zeile); Optuna-INFO würde jeden Trial doppelt loggen
     optuna.logging.set_verbosity(optuna.logging.WARNING)

@@ -89,7 +89,7 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
-SCORING_ONLY = True
+SCORING_ONLY = False
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
@@ -144,8 +144,8 @@ def log_pipeline_mode_banner() -> None:
 # ── Fixed pipeline constants ─────────────────────────────────────────────────────
 N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
-OPT_MIN_PRECISION_BASE   = 0.65   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.9  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
+OPT_MIN_PRECISION_BASE   = 0.625   # Phase 1 Base-XGB
+OPT_MIN_PRECISION_META   = 0.875  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_META  # Reports/PR-Plots: gleiches Gate wie Meta
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
 PHASE5_MIN_SIGNALS    = 5
