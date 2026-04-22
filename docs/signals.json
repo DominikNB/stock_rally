@@ -1,7 +1,19 @@
 {
-  "generated": "2026-04-21 12:40",
+  "generated": "2026-04-22 06:51",
   "threshold": 0.8207739735706956,
   "signals": [
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-04-21",
+      "prob": 0.9261858463287354
+    },
     {
       "ticker": "AIXA.DE",
       "company": "Aixtron",
@@ -12,7 +24,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2026-04-20",
-      "prob": 0.9074443578720093
+      "prob": 0.9380183219909668
     },
     {
       "ticker": "GXI.DE",
@@ -24,7 +36,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2026-04-20",
-      "prob": 0.9094613790512085
+      "prob": 0.9587816596031189
     },
     {
       "ticker": "HFG.DE",
@@ -36,7 +48,55 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "restaurants",
       "date": "2026-04-20",
-      "prob": 0.8873475193977356
+      "prob": 0.9312574863433838
+    },
+    {
+      "ticker": "NOW",
+      "company": "ServiceNow",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-04-20",
+      "prob": 0.8405480980873108
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-04-20",
+      "prob": 0.8665628433227539
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-04-20",
+      "prob": 0.9031550288200378
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-04-20",
+      "prob": 0.838335394859314
     },
     {
       "ticker": "DHER.DE",
@@ -4013,6 +4073,18 @@
   ],
   "signals_holdout_final": [
     {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-04-21",
+      "prob": 0.9261858463287354
+    },
+    {
       "ticker": "AIXA.DE",
       "company": "Aixtron",
       "sector": "Technology",
@@ -4022,7 +4094,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2026-04-20",
-      "prob": 0.9074443578720093
+      "prob": 0.9380183219909668
     },
     {
       "ticker": "GXI.DE",
@@ -4034,7 +4106,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2026-04-20",
-      "prob": 0.9094613790512085
+      "prob": 0.9587816596031189
     },
     {
       "ticker": "HFG.DE",
@@ -4046,7 +4118,55 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "restaurants",
       "date": "2026-04-20",
-      "prob": 0.8873475193977356
+      "prob": 0.9312574863433838
+    },
+    {
+      "ticker": "NOW",
+      "company": "ServiceNow",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-04-20",
+      "prob": 0.8405480980873108
+    },
+    {
+      "ticker": "SMHN.DE",
+      "company": "S\u00dcSS MicroTec",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-04-20",
+      "prob": 0.8665628433227539
+    },
+    {
+      "ticker": "TMV.DE",
+      "company": "TeamViewer",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-04-20",
+      "prob": 0.9031550288200378
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-04-20",
+      "prob": 0.838335394859314
     },
     {
       "ticker": "DHER.DE",
@@ -8021,6 +8141,6 @@
       "prob": 0.8772550225257874
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 1981,
+  "signals_all_timeline_including_in_sample_count": 1983,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website."
 }
