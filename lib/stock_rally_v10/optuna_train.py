@@ -54,13 +54,99 @@ def _peak_rsi_mask_1d(close, rsi, skip_peak, N, min_dist, max_rsi):
     return not_at_peak & rsi_ok
 
 
+def _vol_stress_mask_1d(close, vol_stress, max_vol_stress_z):
+    """True = Signal besteht Vol-Stress-Hardfilter."""
+    if max_vol_stress_z is None:
+        return np.ones(len(close), dtype=bool)
+    close = np.asarray(close, dtype=np.float64)
+    vs = np.asarray(vol_stress, dtype=np.float64)
+    n = len(close)
+    if len(vs) != n:
+        return np.ones(n, dtype=bool)
+    ret1 = np.full(n, np.nan, dtype=np.float64)
+    if n >= 2:
+        prev = close[:-1]
+        curr = close[1:]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ret1[1:] = np.where(np.isfinite(prev) & (prev > 0.0), curr / prev - 1.0, np.nan)
+    s = pd.Series(vs)
+    mu = s.rolling(20, min_periods=10).mean()
+    sd = s.rolling(20, min_periods=10).std(ddof=0)
+    z = (s - mu) / sd.replace(0.0, np.nan)
+    bad = np.isfinite(ret1) & (ret1 > 0.0) & np.isfinite(z.values) & (z.values > float(max_vol_stress_z))
+    return ~bad
+
+
+def _blue_sky_weak_volume_mask_1d(blue_sky_breakout, volume_zscore, min_volume_z):
+    """True = Signal besteht Blue-Sky-Volumen-Check."""
+    if min_volume_z is None:
+        return np.ones(len(blue_sky_breakout), dtype=bool)
+    b = np.asarray(blue_sky_breakout, dtype=np.float64)
+    vz = np.asarray(volume_zscore, dtype=np.float64)
+    n = len(b)
+    if len(vz) != n:
+        return np.ones(n, dtype=bool)
+    prev_vz = np.full(n, np.nan, dtype=np.float64)
+    if n >= 2:
+        prev_vz[1:] = vz[:-1]
+    bad = (b >= 0.5) & np.isfinite(prev_vz) & (prev_vz < float(min_volume_z))
+    return ~bad
+
+
+def _dynamic_threshold_mask_1d(
+    probs,
+    base_threshold,
+    vvix_ratio=None,
+    rsi_arr=None,
+    bb_pband_arr=None,
+    vvix_trigger=None,
+    rsi_trigger=None,
+    bb_pband_trigger=None,
+    mult1=1.0,
+    mult2=1.0,
+    mult3=1.0,
+):
+    """True = prob liegt über dynamisch erhöhtem Threshold."""
+    p = np.asarray(probs, dtype=np.float64)
+    n = len(p)
+    thr = np.full(n, float(base_threshold), dtype=np.float64)
+    if vvix_ratio is not None and vvix_trigger is not None:
+        v = np.asarray(vvix_ratio, dtype=np.float64)
+        if len(v) == n:
+            thr = np.where(np.isfinite(v) & (v > float(vvix_trigger)), thr * float(mult1), thr)
+    if rsi_arr is not None and rsi_trigger is not None:
+        r = np.asarray(rsi_arr, dtype=np.float64)
+        if len(r) == n:
+            thr = np.where(np.isfinite(r) & (r > float(rsi_trigger)), thr * float(mult2), thr)
+    if bb_pband_arr is not None and bb_pband_trigger is not None:
+        b = np.asarray(bb_pband_arr, dtype=np.float64)
+        if len(b) == n:
+            thr = np.where(np.isfinite(b) & (b > float(bb_pband_trigger)), thr * float(mult3), thr)
+    return p >= thr
+
+
 def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
                       threshold, consecutive_days, signal_cooldown_days,
                       close_arr=None, rsi_window=None,
                       signal_skip_near_peak=True,
                       peak_lookback_days=20,
                       peak_min_dist_from_high_pct=0.012,
-                      signal_max_rsi=78.0):
+                      signal_max_rsi=78.0,
+                      vol_stress_arr=None,
+                      signal_max_vol_stress_z=None,
+                      blue_sky_breakout_arr=None,
+                      volume_zscore_arr=None,
+                      signal_min_blue_sky_volume_z=None,
+                      vvix_ratio_arr=None,
+                      rsi_arr=None,
+                      bb_pband_arr=None,
+                      dyn_vvix_trigger=None,
+                      dyn_rsi_trigger=None,
+                      dyn_bb_pband_trigger=None,
+                      dyn_mult_1=1.0,
+                      dyn_mult_2=1.0,
+                      dyn_mult_3=1.0,
+                      return_details=False):
     """
     Apply consecutive + cooldown filter per ticker on a fold's val set.
     Anti-Peak/RSI: RSI aus close via rsi_window (ta); rsi_window=None → cfg.__dict__['rsi_w'].
@@ -69,6 +155,7 @@ def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
     n_tp = 0
     n_signals = 0
     max_consec_fp = 0
+    n_raw_signals = 0
     df_v = pd.DataFrame({
         'ticker': tickers_arr,
         'Date':   dates_arr,
@@ -77,12 +164,38 @@ def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
     })
     if close_arr is not None:
         df_v['close'] = close_arr
+    if vol_stress_arr is not None:
+        df_v['vol_stress'] = vol_stress_arr
+    if blue_sky_breakout_arr is not None:
+        df_v['blue_sky_breakout'] = blue_sky_breakout_arr
+    if volume_zscore_arr is not None:
+        df_v['volume_zscore'] = volume_zscore_arr
+    if vvix_ratio_arr is not None:
+        df_v['vvix_ratio'] = vvix_ratio_arr
+    if rsi_arr is not None:
+        df_v['rsi_dyn'] = rsi_arr
+    if bb_pband_arr is not None:
+        df_v['bb_pband_dyn'] = bb_pband_arr
 
     _rw = rsi_window if rsi_window is not None else cfg.__dict__.get('rsi_w')
 
     for ticker, sub in df_v.groupby('ticker'):
         sub = sub.sort_values('Date').reset_index(drop=True)
-        raw = (sub['prob'].values >= threshold).astype(np.int8)
+        raw_mask = _dynamic_threshold_mask_1d(
+            sub['prob'].values,
+            threshold,
+            vvix_ratio=sub['vvix_ratio'].values if 'vvix_ratio' in sub.columns else None,
+            rsi_arr=sub['rsi_dyn'].values if 'rsi_dyn' in sub.columns else None,
+            bb_pband_arr=sub['bb_pband_dyn'].values if 'bb_pband_dyn' in sub.columns else None,
+            vvix_trigger=dyn_vvix_trigger,
+            rsi_trigger=dyn_rsi_trigger,
+            bb_pband_trigger=dyn_bb_pband_trigger,
+            mult1=dyn_mult_1,
+            mult2=dyn_mult_2,
+            mult3=dyn_mult_3,
+        )
+        raw = raw_mask.astype(np.int8)
+        n_raw_signals += int(raw.sum())
         n   = len(raw)
 
         # Consecutive filter: at least consecutive_days of 3 must be positive
@@ -111,6 +224,28 @@ def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
             for i in range(n):
                 if final[i] == 1 and not mask_ok[i]:
                     final[i] = 0
+            if signal_max_vol_stress_z is not None and 'vol_stress' in sub.columns:
+                stress_ok = _vol_stress_mask_1d(
+                    sub['close'].values,
+                    sub['vol_stress'].values,
+                    signal_max_vol_stress_z,
+                )
+                for i in range(n):
+                    if final[i] == 1 and not stress_ok[i]:
+                        final[i] = 0
+            if (
+                signal_min_blue_sky_volume_z is not None
+                and 'blue_sky_breakout' in sub.columns
+                and 'volume_zscore' in sub.columns
+            ):
+                blue_ok = _blue_sky_weak_volume_mask_1d(
+                    sub['blue_sky_breakout'].values,
+                    sub['volume_zscore'].values,
+                    signal_min_blue_sky_volume_z,
+                )
+                for i in range(n):
+                    if final[i] == 1 and not blue_ok[i]:
+                        final[i] = 0
 
         sig_targets = sub.loc[final == 1, 'target'].values
         n_tp      += int(sig_targets.sum())
@@ -126,6 +261,13 @@ def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
             else:
                 run = 0
 
+    if return_details:
+        details = {
+            "n_raw_signals": int(n_raw_signals),
+            "n_final_signals": int(n_signals),
+            "n_filtered_out": int(max(0, n_raw_signals - n_signals)),
+        }
+        return n_tp, n_signals, max_consec_fp, details
     return n_tp, n_signals, max_consec_fp
 
 
@@ -223,6 +365,23 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         peak_min_dist_from_high_pct = float(seed_params.get('peak_min_dist_from_high_pct', 0.012))
         _sr = seed_params.get('signal_max_rsi', 78.0)
         signal_max_rsi = float(_sr) if _sr is not None else None
+        _svs = seed_params.get('signal_max_vol_stress_z', getattr(cfg, 'SIGNAL_MAX_VOL_STRESS_Z', None))
+        signal_max_vol_stress_z = float(_svs) if _svs is not None else None
+        _bsv = seed_params.get(
+            'signal_min_blue_sky_volume_z',
+            getattr(cfg, 'SIGNAL_MIN_BLUE_SKY_VOLUME_Z', None),
+        )
+        signal_min_blue_sky_volume_z = float(_bsv) if _bsv is not None else None
+        dyn_mult_1 = float(seed_params.get('mult_final_threshold_1', getattr(cfg, 'MULT_FINAL_THRESHOLD_1', 1.0)))
+        dyn_mult_2 = float(seed_params.get('mult_final_threshold_2', getattr(cfg, 'MULT_FINAL_THRESHOLD_2', 1.0)))
+        dyn_mult_3 = float(seed_params.get('mult_final_threshold_3', getattr(cfg, 'MULT_FINAL_THRESHOLD_3', 1.0)))
+        dyn_vvix_trigger = float(
+            seed_params.get('dyn_vvix_trigger', getattr(cfg, 'DYN_VVIX_TRIGGER', 8.2))
+        )
+        dyn_rsi_trigger = float(seed_params.get('dyn_rsi_trigger', getattr(cfg, 'DYN_RSI_TRIGGER', 75.0)))
+        dyn_bb_pband_trigger = float(
+            seed_params.get('dyn_bb_pband_trigger', getattr(cfg, 'DYN_BB_PBAND_TRIGGER', 1.02))
+        )
 
         # Rebuild targets for this trial's label params
         df_trial = rebuild_target_for_train(
@@ -384,6 +543,39 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             dates_val   = df_trial.loc[val_mask, 'Date'].values
             tickers_val = df_trial.loc[val_mask, 'ticker'].values
             close_val = df_trial.loc[val_mask, 'close'].values
+            vol_stress_val = (
+                df_trial.loc[val_mask, 'vol_stress'].values
+                if 'vol_stress' in df_trial.columns
+                else None
+            )
+            blue_col = f"blue_sky_breakout_{int(breakout_lookback_window)}d"
+            blue_sky_val = (
+                df_trial.loc[val_mask, blue_col].values
+                if blue_col in df_trial.columns
+                else None
+            )
+            volume_z_val = (
+                df_trial.loc[val_mask, 'volume_zscore'].values
+                if 'volume_zscore' in df_trial.columns
+                else None
+            )
+            vvix_ratio_val = (
+                df_trial.loc[val_mask, 'mr_vvix_div_vix'].values
+                if 'mr_vvix_div_vix' in df_trial.columns
+                else None
+            )
+            rsi_dyn_col = f"rsi_{int(rsi_w)}d"
+            rsi_dyn_val = (
+                df_trial.loc[val_mask, rsi_dyn_col].values
+                if rsi_dyn_col in df_trial.columns
+                else None
+            )
+            bb_dyn_col = f"bb_pband_{int(bb_w)}"
+            bb_dyn_val = (
+                df_trial.loc[val_mask, bb_dyn_col].values
+                if bb_dyn_col in df_trial.columns
+                else None
+            )
 
             n_tp, n_sig, max_cfp = _apply_filters_cv(
                 probs_val, dates_val, tickers_val, y_val,
@@ -394,6 +586,20 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 peak_lookback_days=peak_lookback_days,
                 peak_min_dist_from_high_pct=peak_min_dist_from_high_pct,
                 signal_max_rsi=signal_max_rsi,
+                vol_stress_arr=vol_stress_val,
+                signal_max_vol_stress_z=signal_max_vol_stress_z,
+                blue_sky_breakout_arr=blue_sky_val,
+                volume_zscore_arr=volume_z_val,
+                signal_min_blue_sky_volume_z=signal_min_blue_sky_volume_z,
+                vvix_ratio_arr=vvix_ratio_val,
+                rsi_arr=rsi_dyn_val,
+                bb_pband_arr=bb_dyn_val,
+                dyn_vvix_trigger=dyn_vvix_trigger,
+                dyn_rsi_trigger=dyn_rsi_trigger,
+                dyn_bb_pband_trigger=dyn_bb_pband_trigger,
+                dyn_mult_1=dyn_mult_1,
+                dyn_mult_2=dyn_mult_2,
+                dyn_mult_3=dyn_mult_3,
             )
 
             # ── Compound objective ─────────────────────────────────────────
@@ -490,5 +696,7 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     print(f'\nBest trial score={study.best_value:.4f}  '
           f'(= mean TP/fold bei Filter-Prec>={_OPT_MIN_PRECISION:.0%}, '
           f'max consec FP <= {_OPT_MAX_CONSEC_FP})  [{mode}]')
-    print(f'Best params: {best}')
+    print("Optuna Phase 1 — finale Bestwerte (alle Parameter):", flush=True)
+    for _k in sorted(best.keys()):
+        print(f"  {_k} = {best[_k]!r}", flush=True)
     return best

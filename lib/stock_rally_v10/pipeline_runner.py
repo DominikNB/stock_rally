@@ -75,6 +75,16 @@ def _log_loaded_config_snapshot() -> None:
     p = Path(cfg.__file__).resolve()
     mtime = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     _opt_y = cfg.opt_optimize_y_targets()
+    _meta_obj = str(getattr(cfg, "META_OBJECTIVE_MODE", "tp_precision"))
+    _meta_h = getattr(cfg, "META_SIGNAL_RETURN_HORIZONS", None)
+    _meta_min_sig = getattr(cfg, "META_OBJECTIVE_MIN_SIGNALS_PER_FOLD", None)
+    if str(_meta_obj).strip().lower() == "signal_mean_return":
+        _meta_line = (
+            f"META objective={_meta_obj} horizons={_meta_h} "
+            f"min_signals_per_fold={_meta_min_sig}"
+        )
+    else:
+        _meta_line = f"META objective={_meta_obj}"
     if _opt_y:
         _rw = getattr(cfg, "RETURN_WINDOW", None)
         _rt = getattr(cfg, "RALLY_THRESHOLD", None)
@@ -93,12 +103,15 @@ def _log_loaded_config_snapshot() -> None:
             f"split={getattr(cfg, 'FIXED_Y_SEGMENT_SPLIT', None)} "
             f"lead={getattr(cfg, 'FIXED_Y_LEAD_DAYS', None)} "
             f"entry={getattr(cfg, 'FIXED_Y_ENTRY_DAYS', None)} "
-            f"tail_excl={getattr(cfg, 'FIXED_Y_TAIL_EXCLUDE_DAYS', None)}"
+            f"tail_excl={getattr(cfg, 'FIXED_Y_TAIL_EXCLUDE_DAYS', None)} "
+            f"strict_up={getattr(cfg, 'FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY', None)}"
         )
     print(
         f"Pipeline: config = {p}  (mtime {mtime})\n"
         f"  OPT_OPTIMIZE_Y_TARGETS={_opt_y}  SCORING_ONLY={getattr(cfg, 'SCORING_ONLY', None)}  "
+        f"RETRAIN_META_ONLY={getattr(cfg, 'RETRAIN_META_ONLY', None)}  "
         f"UNIVERSE_FRACTION={getattr(cfg, 'UNIVERSE_FRACTION', None)}\n"
+        f"  {_meta_line}\n"
         f"  {_y_line}",
         flush=True,
     )

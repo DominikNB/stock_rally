@@ -778,7 +778,17 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                 # Immer Shard-Export: keine monolithische Wide-Matrix (tausende news_*-Spalten) im RAM.
                 _export_news_shards_for_grid(df, s)
 
+    _need_macro_regime = False
     if not meta_only:
+        _need_macro_regime = True
+    else:
+        # RETRAIN_META_ONLY: FEAT_COLS kommen aus Artefakt und enthalten oft mr_/regime_*.
+        # Diese Spalten müssen auch ohne Phase-12-Basislauf vorhanden sein.
+        _need_macro_regime = any(
+            str(c).startswith("mr_") or str(c).startswith("regime_")
+            for c in (getattr(cfg, "FEAT_COLS", []) or [])
+        )
+    if _need_macro_regime:
         from lib.stock_rally_v10.extended_base_features import augment_df_macro_regime_and_vol
 
         df = augment_df_macro_regime_and_vol(df)

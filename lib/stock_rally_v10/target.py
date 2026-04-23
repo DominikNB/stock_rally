@@ -88,6 +88,7 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
         FIXED_Y_TAIL_EXCLUDE_DAYS.
     """
     w_lo, w_hi, rt, split, ld, ed, tail_ex = cfg.fixed_y_rule_params()
+    strict_daily_up = bool(cfg.fixed_y_require_strict_daily_up_in_rally())
 
     close = df_ticker["close"].values.astype(np.float64)
     n = len(close)
@@ -104,6 +105,9 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
             for j in range(end_idx - w + 1, end_idx + 1):
                 dr = daily_ret[j]
                 if np.isnan(dr):
+                    bad = True
+                    break
+                if strict_daily_up and dr <= 0.0:
                     bad = True
                     break
                 product *= 1.0 + dr
@@ -217,10 +221,11 @@ def create_target(df):
         print(f"Target created. Positive rate: {pos_rate:.1%}", flush=True)
     if not cfg.opt_optimize_y_targets():
         _w_lo, _w_hi, _rt, _sp, _ld, _ed, _tex = cfg.fixed_y_rule_params()
+        _strict = bool(cfg.fixed_y_require_strict_daily_up_in_rally())
         print(
             f"  Feste Band-Regel: Fenster w ∈ [{_w_lo}, {_w_hi}] Handelstage, "
             f"kum. Rendite ≥ {_rt:.2%}, Segment-Split {_sp}d, "
-            f"lead={_ld} entry={_ed} tail_excl={_tex} (cfg.FIXED_Y_*)",
+            f"lead={_ld} entry={_ed} tail_excl={_tex} strict_up={_strict} (cfg.FIXED_Y_*)",
             flush=True,
         )
     return df

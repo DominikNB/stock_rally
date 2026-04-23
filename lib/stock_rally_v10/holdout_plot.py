@@ -7,7 +7,13 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 from lib.stock_rally_v10 import config as cfg
-from lib.stock_rally_v10.optuna_train import _peak_rsi_mask_1d, _rsi_from_close_1d
+from lib.stock_rally_v10.optuna_train import (
+    _dynamic_threshold_mask_1d,
+    _blue_sky_weak_volume_mask_1d,
+    _peak_rsi_mask_1d,
+    _rsi_from_close_1d,
+    _vol_stress_mask_1d,
+)
 
 def plot_holdout_results(df_final, final_tickers, filtered_signals, title='FINAL Holdout'):
     """
@@ -79,6 +85,20 @@ def _rows_for_signal_calendar_day(sub, d):
     sig_day = pd.Timestamp(d).normalize().date()
     m = sub['Date'].map(lambda x: pd.Timestamp(x).normalize().date()) == sig_day
     return sub.loc[m]
+
+
+def _blue_sky_col_from_df(df: pd.DataFrame) -> str | None:
+    if "blue_sky_breakout" in df.columns:
+        return "blue_sky_breakout"
+    pref = "blue_sky_breakout_"
+    cands = [c for c in df.columns if isinstance(c, str) and c.startswith(pref) and c.endswith("d")]
+    if not cands:
+        return None
+    cfg_w = int(getattr(cfg, "breakout_lookback_window", 0) or cfg.SEED_PARAMS.get("breakout_lookback_window", 20))
+    target = f"{pref}{cfg_w}d"
+    if target in cands:
+        return target
+    return sorted(cands)[0]
 
 
 def _offset_from_rally_start(rally):
@@ -185,6 +205,14 @@ def apply_signal_filters(
     peak_lookback_days=None,
     peak_min_dist_from_high_pct=None,
     signal_max_rsi=None,
+    signal_max_vol_stress_z=None,
+    signal_min_blue_sky_volume_z=None,
+    mult_final_threshold_1=None,
+    mult_final_threshold_2=None,
+    mult_final_threshold_3=None,
+    dyn_vvix_trigger=None,
+    dyn_rsi_trigger=None,
+    dyn_bb_pband_trigger=None,
 ):
     """
     Apply consecutive filter then cooldown filter for a single ticker.
@@ -199,7 +227,54 @@ def apply_signal_filters(
     scd = cfg.SIGNAL_COOLDOWN_DAYS if signal_cooldown_days is None else signal_cooldown_days
 
     df_s = df_ticker_prob.sort_values('Date').reset_index(drop=True)
-    raw = (df_s['prob'].values >= threshold).astype(np.int8)
+    _m1 = (
+        float(mult_final_threshold_1)
+        if mult_final_threshold_1 is not None
+        else float(getattr(cfg, "MULT_FINAL_THRESHOLD_1", 1.0))
+    )
+    _m2 = (
+        float(mult_final_threshold_2)
+        if mult_final_threshold_2 is not None
+        else float(getattr(cfg, "MULT_FINAL_THRESHOLD_2", 1.0))
+    )
+    _m3 = (
+        float(mult_final_threshold_3)
+        if mult_final_threshold_3 is not None
+        else float(getattr(cfg, "MULT_FINAL_THRESHOLD_3", 1.0))
+    )
+    _tv = (
+        float(dyn_vvix_trigger)
+        if dyn_vvix_trigger is not None
+        else float(getattr(cfg, "DYN_VVIX_TRIGGER", 8.2))
+    )
+    _tr = (
+        float(dyn_rsi_trigger)
+        if dyn_rsi_trigger is not None
+        else float(getattr(cfg, "DYN_RSI_TRIGGER", 75.0))
+    )
+    _tb = (
+        float(dyn_bb_pband_trigger)
+        if dyn_bb_pband_trigger is not None
+        else float(getattr(cfg, "DYN_BB_PBAND_TRIGGER", 1.02))
+    )
+    _rw_dyn = int(rsi_window) if rsi_window is not None else int(getattr(cfg, "rsi_w", cfg.SEED_PARAMS.get("rsi_window", 14)))
+    _bb_w_dyn = int(getattr(cfg, "bb_w", cfg.SEED_PARAMS.get("bb_window", 20)))
+    _rsi_col = f"rsi_{_rw_dyn}d"
+    _bb_col = f"bb_pband_{_bb_w_dyn}"
+    raw_mask = _dynamic_threshold_mask_1d(
+        df_s['prob'].values,
+        threshold,
+        vvix_ratio=df_s["mr_vvix_div_vix"].values if "mr_vvix_div_vix" in df_s.columns else None,
+        rsi_arr=df_s[_rsi_col].values if _rsi_col in df_s.columns else None,
+        bb_pband_arr=df_s[_bb_col].values if _bb_col in df_s.columns else None,
+        vvix_trigger=_tv,
+        rsi_trigger=_tr,
+        bb_pband_trigger=_tb,
+        mult1=_m1,
+        mult2=_m2,
+        mult3=_m3,
+    )
+    raw = raw_mask.astype(np.int8)
     n = len(raw)
 
     consec = np.zeros(n, dtype=np.int8)
@@ -251,6 +326,39 @@ def apply_signal_filters(
         for i in range(n):
             if final[i] == 1 and not mask_ok[i]:
                 final[i] = 0
+        max_stress_z = (
+            signal_max_vol_stress_z
+            if signal_max_vol_stress_z is not None
+            else getattr(cfg, "SIGNAL_MAX_VOL_STRESS_Z", None)
+        )
+        if max_stress_z is not None and "vol_stress" in df_s.columns:
+            stress_ok = _vol_stress_mask_1d(
+                df_s["close"].values,
+                df_s["vol_stress"].values,
+                max_stress_z,
+            )
+            for i in range(n):
+                if final[i] == 1 and not stress_ok[i]:
+                    final[i] = 0
+        min_blue_vol_z = (
+            signal_min_blue_sky_volume_z
+            if signal_min_blue_sky_volume_z is not None
+            else getattr(cfg, "SIGNAL_MIN_BLUE_SKY_VOLUME_Z", None)
+        )
+        _blue_col = _blue_sky_col_from_df(df_s)
+        if (
+            min_blue_vol_z is not None
+            and _blue_col is not None
+            and "volume_zscore" in df_s.columns
+        ):
+            blue_ok = _blue_sky_weak_volume_mask_1d(
+                df_s[_blue_col].values,
+                df_s["volume_zscore"].values,
+                min_blue_vol_z,
+            )
+            for i in range(n):
+                if final[i] == 1 and not blue_ok[i]:
+                    final[i] = 0
 
     return df_s.loc[final == 1, 'Date'].values
 
@@ -266,6 +374,14 @@ def diagnose_signal_filter_stages(
     peak_lookback_days: int | None = None,
     peak_min_dist_from_high_pct: float | None = None,
     signal_max_rsi: float | None = None,
+    signal_max_vol_stress_z: float | None = None,
+    signal_min_blue_sky_volume_z: float | None = None,
+    mult_final_threshold_1: float | None = None,
+    mult_final_threshold_2: float | None = None,
+    mult_final_threshold_3: float | None = None,
+    dyn_vvix_trigger: float | None = None,
+    dyn_rsi_trigger: float | None = None,
+    dyn_bb_pband_trigger: float | None = None,
 ) -> dict[str, int | bool]:
     """
     Gleiche Stufen wie ``apply_signal_filters``, aber nur Zähler (ein Ticker).
@@ -274,7 +390,54 @@ def diagnose_signal_filter_stages(
     cd = cfg.CONSECUTIVE_DAYS if consecutive_days is None else consecutive_days
     scd = cfg.SIGNAL_COOLDOWN_DAYS if signal_cooldown_days is None else signal_cooldown_days
     df_s = df_ticker_prob.sort_values("Date").reset_index(drop=True)
-    raw = (df_s["prob"].values >= threshold).astype(np.int8)
+    _m1 = (
+        float(mult_final_threshold_1)
+        if mult_final_threshold_1 is not None
+        else float(getattr(cfg, "MULT_FINAL_THRESHOLD_1", 1.0))
+    )
+    _m2 = (
+        float(mult_final_threshold_2)
+        if mult_final_threshold_2 is not None
+        else float(getattr(cfg, "MULT_FINAL_THRESHOLD_2", 1.0))
+    )
+    _m3 = (
+        float(mult_final_threshold_3)
+        if mult_final_threshold_3 is not None
+        else float(getattr(cfg, "MULT_FINAL_THRESHOLD_3", 1.0))
+    )
+    _tv = (
+        float(dyn_vvix_trigger)
+        if dyn_vvix_trigger is not None
+        else float(getattr(cfg, "DYN_VVIX_TRIGGER", 8.2))
+    )
+    _tr = (
+        float(dyn_rsi_trigger)
+        if dyn_rsi_trigger is not None
+        else float(getattr(cfg, "DYN_RSI_TRIGGER", 75.0))
+    )
+    _tb = (
+        float(dyn_bb_pband_trigger)
+        if dyn_bb_pband_trigger is not None
+        else float(getattr(cfg, "DYN_BB_PBAND_TRIGGER", 1.02))
+    )
+    _rw_dyn = int(rsi_window) if rsi_window is not None else int(getattr(cfg, "rsi_w", cfg.SEED_PARAMS.get("rsi_window", 14)))
+    _bb_w_dyn = int(getattr(cfg, "bb_w", cfg.SEED_PARAMS.get("bb_window", 20)))
+    _rsi_col = f"rsi_{_rw_dyn}d"
+    _bb_col = f"bb_pband_{_bb_w_dyn}"
+    raw_mask = _dynamic_threshold_mask_1d(
+        df_s["prob"].values,
+        threshold,
+        vvix_ratio=df_s["mr_vvix_div_vix"].values if "mr_vvix_div_vix" in df_s.columns else None,
+        rsi_arr=df_s[_rsi_col].values if _rsi_col in df_s.columns else None,
+        bb_pband_arr=df_s[_bb_col].values if _bb_col in df_s.columns else None,
+        vvix_trigger=_tv,
+        rsi_trigger=_tr,
+        bb_pband_trigger=_tb,
+        mult1=_m1,
+        mult2=_m2,
+        mult3=_m3,
+    )
+    raw = raw_mask.astype(np.int8)
     n = len(raw)
     consec = np.zeros(n, dtype=np.int8)
     for i in range(2, n):
@@ -289,6 +452,8 @@ def diagnose_signal_filter_stages(
     n_pre_peak = int(pre_peak.sum())
     post = pre_peak.copy()
     killed_peak = 0
+    killed_stress = 0
+    killed_blue = 0
     if "close" in df_s.columns:
         if rsi_window is not None:
             rw = int(rsi_window)
@@ -327,12 +492,49 @@ def diagnose_signal_filter_stages(
             if post[i] == 1 and not mask_ok[i]:
                 killed_peak += 1
                 post[i] = 0
+        max_stress_z = (
+            signal_max_vol_stress_z
+            if signal_max_vol_stress_z is not None
+            else getattr(cfg, "SIGNAL_MAX_VOL_STRESS_Z", None)
+        )
+        if max_stress_z is not None and "vol_stress" in df_s.columns:
+            stress_ok = _vol_stress_mask_1d(
+                df_s["close"].values,
+                df_s["vol_stress"].values,
+                max_stress_z,
+            )
+            for i in range(n):
+                if post[i] == 1 and not stress_ok[i]:
+                    killed_stress += 1
+                    post[i] = 0
+        min_blue_vol_z = (
+            signal_min_blue_sky_volume_z
+            if signal_min_blue_sky_volume_z is not None
+            else getattr(cfg, "SIGNAL_MIN_BLUE_SKY_VOLUME_Z", None)
+        )
+        _blue_col = _blue_sky_col_from_df(df_s)
+        if (
+            min_blue_vol_z is not None
+            and _blue_col is not None
+            and "volume_zscore" in df_s.columns
+        ):
+            blue_ok = _blue_sky_weak_volume_mask_1d(
+                df_s[_blue_col].values,
+                df_s["volume_zscore"].values,
+                min_blue_vol_z,
+            )
+            for i in range(n):
+                if post[i] == 1 and not blue_ok[i]:
+                    killed_blue += 1
+                    post[i] = 0
     return {
         "n_rows": n,
         "n_raw_prob_ge_thr": int(raw.sum()),
         "n_consec_slots": int(consec.sum()),
         "n_after_cooldown_pre_peak": n_pre_peak,
         "n_killed_by_peak_or_rsi": killed_peak,
+        "n_killed_by_vol_stress": killed_stress,
+        "n_killed_by_blue_sky_weak_volume": killed_blue,
         "n_final_signals": int(post.sum()),
         "has_close": bool("close" in df_s.columns),
     }

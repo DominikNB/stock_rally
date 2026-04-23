@@ -179,9 +179,15 @@ def _print_training_windows_summary(
 def run_data_download_and_split() -> None:
     """Download → Target → Indikatoren → Features → Split (Zeit oder Legacy-Ticker)."""
     cfg.log_pipeline_mode_banner()
+    _retrain_meta_only = bool(getattr(cfg, "RETRAIN_META_ONLY", False))
     # ── 1. Load data ────────────────────────────────────────────────────────
-    if getattr(cfg, "SCORING_ONLY", False):
+    if getattr(cfg, "SCORING_ONLY", False) or _retrain_meta_only:
         load_scoring_artifacts()
+        if _retrain_meta_only and not getattr(cfg, "SCORING_ONLY", False):
+            print(
+                "RETRAIN_META_ONLY: Artefakt für Base-Modelle/Best-Params vor Feature-Build geladen.",
+                flush=True,
+            )
 
     if getattr(cfg, "SCORING_ONLY", False) and getattr(cfg, "_tickers_for_run", None):
         _tickers_for_run = list(cfg._tickers_for_run)
@@ -216,7 +222,11 @@ def run_data_download_and_split() -> None:
     df_with_target = create_target(df_raw)
     df_with_indicators = add_technical_indicators(df_with_target)
     sentiment_df = fetch_news_sentiment(df_with_indicators)
-    df_features = assemble_features(df_with_indicators, sentiment_df)
+    df_features = assemble_features(
+        df_with_indicators,
+        sentiment_df,
+        meta_only=_retrain_meta_only,
+    )
 
     cfg.df_raw = df_raw
     cfg.df_with_target = df_with_target

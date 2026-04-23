@@ -214,6 +214,14 @@ def _run_phase17(c: Any) -> None:
         "peak_lookback_days": int(c.PEAK_LOOKBACK_DAYS),
         "peak_min_dist_from_high_pct": float(c.PEAK_MIN_DIST_FROM_HIGH_PCT),
         "signal_max_rsi": getattr(c, "SIGNAL_MAX_RSI", None),
+        "signal_max_vol_stress_z": getattr(c, "SIGNAL_MAX_VOL_STRESS_Z", None),
+        "signal_min_blue_sky_volume_z": getattr(c, "SIGNAL_MIN_BLUE_SKY_VOLUME_Z", None),
+        "mult_final_threshold_1": getattr(c, "MULT_FINAL_THRESHOLD_1", 1.0),
+        "mult_final_threshold_2": getattr(c, "MULT_FINAL_THRESHOLD_2", 1.0),
+        "mult_final_threshold_3": getattr(c, "MULT_FINAL_THRESHOLD_3", 1.0),
+        "dyn_vvix_trigger": getattr(c, "DYN_VVIX_TRIGGER", 8.2),
+        "dyn_rsi_trigger": getattr(c, "DYN_RSI_TRIGGER", 75.0),
+        "dyn_bb_pband_trigger": getattr(c, "DYN_BB_PBAND_TRIGGER", 1.02),
     }
     _ts_norm = df_s["ticker"].astype(str).str.strip()
     _tasks = [

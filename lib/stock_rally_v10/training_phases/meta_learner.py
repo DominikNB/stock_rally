@@ -14,6 +14,11 @@ import shap
 import xgboost as xgb
 
 from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+from lib.stock_rally_v10.optuna_train import (
+    _blue_sky_weak_volume_mask_1d,
+    _dynamic_threshold_mask_1d,
+    _vol_stress_mask_1d,
+)
 
 
 def run_phase_meta_learner_and_threshold(cfg_mod: Any) -> None:
@@ -27,7 +32,9 @@ def _run_phase13(c: Any) -> None:
     base_models = c.base_models
     topk_idx = c.topk_idx
     topk_names = c.topk_names
-    rename_map = c.rename_map
+    # Im RETRAIN_META_ONLY-Pfad kann Phase 12 (wo rename_map gesetzt wird) übersprungen sein.
+    # Dann für Darstellungszwecke auf leeres Mapping fallen.
+    rename_map = getattr(c, "rename_map", {}) or {}
     FEAT_COLS = c.FEAT_COLS
     df_test = c.df_test
     df_final = c.df_final
@@ -143,6 +150,32 @@ def _run_phase13(c: Any) -> None:
     _OPT_MIN_PRECISION = c.OPT_MIN_PRECISION_META
     _apply_filters_cv = c._apply_filters_cv
     _OPT_MAX_CONSEC_FP = c._OPT_MAX_CONSEC_FP
+    _meta_obj_mode = str(getattr(c, "META_OBJECTIVE_MODE", "tp_precision")).strip().lower()
+    _hold_horizons = tuple(
+        sorted({int(h) for h in (getattr(c, "META_SIGNAL_RETURN_HORIZONS", (1, 2, 3, 4, 5)) or ()) if int(h) > 0})
+    )
+    _meta_min_signals = int(getattr(c, "META_OBJECTIVE_MIN_SIGNALS_PER_FOLD", 1) or 1)
+    if _meta_obj_mode not in {"tp_precision", "signal_mean_return"}:
+        print(
+            f"WARNUNG: Unbekanntes META_OBJECTIVE_MODE={_meta_obj_mode!r} -> fallback 'tp_precision'.",
+            flush=True,
+        )
+        _meta_obj_mode = "tp_precision"
+    if _meta_obj_mode == "signal_mean_return" and not _hold_horizons:
+        print(
+            "WARNUNG: META_SIGNAL_RETURN_HORIZONS leer -> fallback (1,2,3,4,5).",
+            flush=True,
+        )
+        _hold_horizons = (1, 2, 3, 4, 5)
+    print(
+        f"Meta-Objective-Modus: {_meta_obj_mode}"
+        + (
+            f" | horizons={_hold_horizons} | min_signals_per_fold={_meta_min_signals}"
+            if _meta_obj_mode == "signal_mean_return"
+            else ""
+        ),
+        flush=True,
+    )
 
     N_META_FOLDS = 3
     all_dates_test = np.sort(df_test["Date"].unique())
@@ -154,13 +187,174 @@ def _run_phase13(c: Any) -> None:
 
     CONSECUTIVE_DAYS = c.CONSECUTIVE_DAYS
     SIGNAL_COOLDOWN_DAYS = c.SIGNAL_COOLDOWN_DAYS
+    _blue_breakout_w = int(
+        getattr(c, "breakout_lookback_window", 0)
+        or getattr(c, "best_params", {}).get("breakout_lookback_window", 0)
+        or c.SEED_PARAMS.get("breakout_lookback_window", 20)
+    )
+    _blue_col = f"blue_sky_breakout_{_blue_breakout_w}d"
+
+    def _signal_forward_return_scores_cv(
+        probs_arr,
+        dates_arr,
+        tickers_arr,
+        threshold,
+        consecutive_days,
+        signal_cooldown_days,
+        close_arr,
+        rsi_window,
+        signal_skip_near_peak,
+        peak_lookback_days,
+        peak_min_dist_from_high_pct,
+        signal_max_rsi,
+        signal_max_vol_stress_z,
+        signal_min_blue_sky_volume_z,
+        dyn_vvix_trigger,
+        dyn_rsi_trigger,
+        dyn_bb_pband_trigger,
+        dyn_mult_1,
+        dyn_mult_2,
+        dyn_mult_3,
+        hold_horizons,
+        vol_stress_arr=None,
+        blue_sky_breakout_arr=None,
+        volume_zscore_arr=None,
+        vvix_ratio_arr=None,
+        rsi_arr=None,
+        bb_pband_arr=None,
+    ):
+        """
+        Wie _apply_filters_cv, aber liefert Rendite-Score je gefiltertem Signal:
+        pro Signal Mittel über hold_horizons, dann über alle Signale mitteln.
+        """
+        df_v = pd.DataFrame(
+            {
+                "ticker": tickers_arr,
+                "Date": dates_arr,
+                "prob": probs_arr,
+                "close": close_arr,
+            }
+        )
+        if vol_stress_arr is not None:
+            df_v["vol_stress"] = vol_stress_arr
+        if blue_sky_breakout_arr is not None:
+            df_v["blue_sky_breakout"] = blue_sky_breakout_arr
+        if volume_zscore_arr is not None:
+            df_v["volume_zscore"] = volume_zscore_arr
+        if vvix_ratio_arr is not None:
+            df_v["vvix_ratio"] = vvix_ratio_arr
+        if rsi_arr is not None:
+            df_v["rsi_dyn"] = rsi_arr
+        if bb_pband_arr is not None:
+            df_v["bb_pband_dyn"] = bb_pband_arr
+        signal_scores: list[float] = []
+        n_signals = 0
+        n_raw_signals = 0
+        for _, sub in df_v.groupby("ticker"):
+            sub = sub.sort_values("Date").reset_index(drop=True)
+            raw = _dynamic_threshold_mask_1d(
+                sub["prob"].to_numpy(dtype=np.float64, copy=False),
+                float(threshold),
+                vvix_ratio=sub["vvix_ratio"].to_numpy(dtype=np.float64, copy=False) if "vvix_ratio" in sub.columns else None,
+                rsi_arr=sub["rsi_dyn"].to_numpy(dtype=np.float64, copy=False) if "rsi_dyn" in sub.columns else None,
+                bb_pband_arr=sub["bb_pband_dyn"].to_numpy(dtype=np.float64, copy=False) if "bb_pband_dyn" in sub.columns else None,
+                vvix_trigger=dyn_vvix_trigger,
+                rsi_trigger=dyn_rsi_trigger,
+                bb_pband_trigger=dyn_bb_pband_trigger,
+                mult1=dyn_mult_1,
+                mult2=dyn_mult_2,
+                mult3=dyn_mult_3,
+            ).astype(np.int8)
+            n_raw_signals += int(raw.sum())
+            n = len(raw)
+            if n == 0:
+                continue
+            consec = np.zeros(n, dtype=np.int8)
+            for i in range(2, n):
+                if raw[i - 2] + raw[i - 1] + raw[i] >= consecutive_days:
+                    consec[i] = 1
+            final = np.zeros(n, dtype=np.int8)
+            last_sig = -999
+            for i in range(n):
+                if consec[i] == 1 and (i - last_sig) >= signal_cooldown_days:
+                    final[i] = 1
+                    last_sig = i
+            close_sub = pd.to_numeric(sub["close"], errors="coerce").to_numpy(dtype=np.float64, copy=False)
+            rsi_sub = c._rsi_from_close_1d(close_sub, rsi_window)
+            mask_ok = c._peak_rsi_mask_1d(
+                close_sub,
+                rsi_sub,
+                signal_skip_near_peak,
+                peak_lookback_days,
+                peak_min_dist_from_high_pct,
+                signal_max_rsi,
+            )
+            for i in range(n):
+                if final[i] == 1 and not bool(mask_ok[i]):
+                    final[i] = 0
+            if signal_max_vol_stress_z is not None and "vol_stress" in sub.columns:
+                stress_ok = _vol_stress_mask_1d(
+                    close_sub,
+                    sub["vol_stress"].to_numpy(dtype=np.float64, copy=False),
+                    signal_max_vol_stress_z,
+                )
+                for i in range(n):
+                    if final[i] == 1 and not bool(stress_ok[i]):
+                        final[i] = 0
+            if (
+                signal_min_blue_sky_volume_z is not None
+                and "blue_sky_breakout" in sub.columns
+                and "volume_zscore" in sub.columns
+            ):
+                blue_ok = _blue_sky_weak_volume_mask_1d(
+                    sub["blue_sky_breakout"].to_numpy(dtype=np.float64, copy=False),
+                    sub["volume_zscore"].to_numpy(dtype=np.float64, copy=False),
+                    signal_min_blue_sky_volume_z,
+                )
+                for i in range(n):
+                    if final[i] == 1 and not bool(blue_ok[i]):
+                        final[i] = 0
+            idxs = np.where(final == 1)[0]
+            for i in idxs:
+                p0 = float(close_sub[i])
+                if not np.isfinite(p0) or p0 <= 0.0:
+                    continue
+                # Nur Signale mit vollständig verfügbarem Zukunftshorizont bewerten/zählen.
+                if any(int(i + h) >= n for h in hold_horizons):
+                    continue
+                rlist: list[float] = []
+                for h in hold_horizons:
+                    j = int(i + h)
+                    if j >= n:
+                        continue
+                    pj = float(close_sub[j])
+                    if np.isfinite(pj) and pj > 0.0:
+                        rlist.append(pj / p0 - 1.0)
+                if rlist:
+                    n_signals += 1
+                    signal_scores.append(float(np.mean(rlist)))
+        return signal_scores, n_signals, n_raw_signals
 
     def meta_objective(trial):
         signal_skip_near_peak = trial.suggest_categorical("signal_skip_near_peak", [True, False])
         peak_lookback_days = trial.suggest_int("peak_lookback_days", 10, 40)
         peak_min_dist_from_high_pct = trial.suggest_float("peak_min_dist_from_high_pct", 0.004, 0.035)
-        signal_max_rsi = trial.suggest_float("signal_max_rsi", 68.0, 88.0)
+        dyn_rsi_trigger = trial.suggest_float("dyn_rsi_trigger", 70.0, 75.0)
+        # RSI-Logik entkoppeln: dyn_rsi_trigger = weicher Bereich (70-75),
+        # signal_max_rsi = harter Kill-Switch (>=80) und immer oberhalb dyn_rsi_trigger.
+        signal_max_rsi = trial.suggest_float(
+            "signal_max_rsi",
+            max(80.0, float(dyn_rsi_trigger) + 1.0),
+            90.0,
+        )
+        signal_max_vol_stress_z = trial.suggest_float("signal_max_vol_stress_z", 1.5, 3.5)
         meta_eval_threshold = trial.suggest_float("meta_eval_threshold", 0.05, 0.95)
+        mult_final_threshold_1 = trial.suggest_float("mult_final_threshold_1", 1.0, 1.5)
+        mult_final_threshold_2 = trial.suggest_float("mult_final_threshold_2", 1.0, 1.5)
+        mult_final_threshold_3 = trial.suggest_float("mult_final_threshold_3", 1.0, 1.5)
+        dyn_vvix_trigger = trial.suggest_float("dyn_vvix_trigger", 6.0, 10.0)
+        dyn_bb_pband_trigger = trial.suggest_float("dyn_bb_pband_trigger", 0.98, 1.10)
+        signal_min_blue_sky_volume_z = trial.suggest_float("signal_min_blue_sky_volume_z", 0.0, 1.5)
 
         params = dict(
             max_depth=trial.suggest_int("max_depth", 2, 6),
@@ -181,8 +375,18 @@ def _run_phase13(c: Any) -> None:
         _dates_test = df_test["Date"].values
         _tickers_test = df_test["ticker"].values
         _close_test = df_test["close"].values
+        _vol_stress_test = df_test["vol_stress"].values if "vol_stress" in df_test.columns else None
+        _blue_test = df_test[_blue_col].values if _blue_col in df_test.columns else None
+        _volume_z_test = df_test["volume_zscore"].values if "volume_zscore" in df_test.columns else None
+        _vvix_ratio_test = df_test["mr_vvix_div_vix"].values if "mr_vvix_div_vix" in df_test.columns else None
+        _rsi_col = f"rsi_{int(rsi_w)}d"
+        _bb_col = f"bb_pband_{int(getattr(c, 'bb_w', c.SEED_PARAMS.get('bb_window', 20)))}"
+        _rsi_test = df_test[_rsi_col].values if _rsi_col in df_test.columns else None
+        _bb_test = df_test[_bb_col].values if _bb_col in df_test.columns else None
 
         fold_scores = []
+        trial_raw_signals = 0
+        trial_final_signals = 0
         for fold_i in range(N_META_FOLDS):
             train_end = meta_min_train + fold_i * meta_fold_size
             val_end = meta_min_train + (fold_i + 1) * meta_fold_size
@@ -213,58 +417,154 @@ def _run_phase13(c: Any) -> None:
             )
             probs = clf.predict_proba(X_val)[:, 1]
 
-            n_tp, n_sig, max_cfp = _apply_filters_cv(
-                probs,
-                _dates_test[val_mask],
-                _tickers_test[val_mask],
-                y_val,
-                meta_eval_threshold,
-                CONSECUTIVE_DAYS,
-                SIGNAL_COOLDOWN_DAYS,
-                close_arr=_close_test[val_mask],
-                rsi_window=rsi_w,
-                signal_skip_near_peak=signal_skip_near_peak,
-                peak_lookback_days=peak_lookback_days,
-                peak_min_dist_from_high_pct=peak_min_dist_from_high_pct,
-                signal_max_rsi=signal_max_rsi,
-            )
-
-            if max_cfp > _OPT_MAX_CONSEC_FP:
-                fs = -2.0 - (max_cfp - _OPT_MAX_CONSEC_FP) * 0.1
-            elif n_sig == 0:
-                p = np.clip(probs.astype(np.float64), 1e-7, 1.0 - 1e-7)
-                pos_m = y_val == 1
-                neg_m = y_val == 0
-                if pos_m.any() and neg_m.any():
-                    fs = float(np.mean(p[pos_m]) - np.mean(p[neg_m]))
-                elif pos_m.any():
-                    fs = float(np.mean(p[pos_m]) - 0.5)
-                elif neg_m.any():
-                    fs = float(0.5 - np.mean(p[neg_m]))
+            if _meta_obj_mode == "signal_mean_return":
+                sig_scores, n_sig, n_raw_sig = _signal_forward_return_scores_cv(
+                    probs,
+                    _dates_test[val_mask],
+                    _tickers_test[val_mask],
+                    meta_eval_threshold,
+                    CONSECUTIVE_DAYS,
+                    SIGNAL_COOLDOWN_DAYS,
+                    _close_test[val_mask],
+                    rsi_w,
+                    signal_skip_near_peak,
+                    peak_lookback_days,
+                    peak_min_dist_from_high_pct,
+                    signal_max_rsi,
+                    signal_max_vol_stress_z,
+                    signal_min_blue_sky_volume_z,
+                    dyn_vvix_trigger,
+                    dyn_rsi_trigger,
+                    dyn_bb_pband_trigger,
+                    mult_final_threshold_1,
+                    mult_final_threshold_2,
+                    mult_final_threshold_3,
+                    _hold_horizons,
+                    vol_stress_arr=None if _vol_stress_test is None else _vol_stress_test[val_mask],
+                    blue_sky_breakout_arr=None if _blue_test is None else _blue_test[val_mask],
+                    volume_zscore_arr=None if _volume_z_test is None else _volume_z_test[val_mask],
+                    vvix_ratio_arr=None if _vvix_ratio_test is None else _vvix_ratio_test[val_mask],
+                    rsi_arr=None if _rsi_test is None else _rsi_test[val_mask],
+                    bb_pband_arr=None if _bb_test is None else _bb_test[val_mask],
+                )
+                trial_raw_signals += int(n_raw_sig)
+                trial_final_signals += int(n_sig)
+                if n_sig == 0 or not sig_scores:
+                    fs = -1.0
                 else:
-                    fs = 0.0
-            elif (n_tp / n_sig) >= _OPT_MIN_PRECISION:
-                fs = float(n_tp)
+                    fs = float(np.mean(sig_scores))
+                    if n_sig < _meta_min_signals:
+                        fs -= 0.05 * float(_meta_min_signals - n_sig)
             else:
-                fs = (n_tp / n_sig) - 1.0
+                n_tp, n_sig, max_cfp, _det = _apply_filters_cv(
+                    probs,
+                    _dates_test[val_mask],
+                    _tickers_test[val_mask],
+                    y_val,
+                    meta_eval_threshold,
+                    CONSECUTIVE_DAYS,
+                    SIGNAL_COOLDOWN_DAYS,
+                    close_arr=_close_test[val_mask],
+                    rsi_window=rsi_w,
+                    signal_skip_near_peak=signal_skip_near_peak,
+                    peak_lookback_days=peak_lookback_days,
+                    peak_min_dist_from_high_pct=peak_min_dist_from_high_pct,
+                    signal_max_rsi=signal_max_rsi,
+                    vol_stress_arr=None if _vol_stress_test is None else _vol_stress_test[val_mask],
+                    signal_max_vol_stress_z=signal_max_vol_stress_z,
+                    blue_sky_breakout_arr=None if _blue_test is None else _blue_test[val_mask],
+                    volume_zscore_arr=None if _volume_z_test is None else _volume_z_test[val_mask],
+                    signal_min_blue_sky_volume_z=signal_min_blue_sky_volume_z,
+                    vvix_ratio_arr=None if _vvix_ratio_test is None else _vvix_ratio_test[val_mask],
+                    rsi_arr=None if _rsi_test is None else _rsi_test[val_mask],
+                    bb_pband_arr=None if _bb_test is None else _bb_test[val_mask],
+                    dyn_vvix_trigger=dyn_vvix_trigger,
+                    dyn_rsi_trigger=dyn_rsi_trigger,
+                    dyn_bb_pband_trigger=dyn_bb_pband_trigger,
+                    dyn_mult_1=mult_final_threshold_1,
+                    dyn_mult_2=mult_final_threshold_2,
+                    dyn_mult_3=mult_final_threshold_3,
+                    return_details=True,
+                )
+                trial_raw_signals += int(_det.get("n_raw_signals", 0))
+                trial_final_signals += int(_det.get("n_final_signals", n_sig))
+                if max_cfp > _OPT_MAX_CONSEC_FP:
+                    fs = -2.0 - (max_cfp - _OPT_MAX_CONSEC_FP) * 0.1
+                elif n_sig == 0:
+                    p = np.clip(probs.astype(np.float64), 1e-7, 1.0 - 1e-7)
+                    pos_m = y_val == 1
+                    neg_m = y_val == 0
+                    if pos_m.any() and neg_m.any():
+                        fs = float(np.mean(p[pos_m]) - np.mean(p[neg_m]))
+                    elif pos_m.any():
+                        fs = float(np.mean(p[pos_m]) - 0.5)
+                    elif neg_m.any():
+                        fs = float(0.5 - np.mean(p[neg_m]))
+                    else:
+                        fs = 0.0
+                elif (n_tp / n_sig) >= _OPT_MIN_PRECISION:
+                    fs = float(n_tp)
+                else:
+                    fs = (n_tp / n_sig) - 1.0
             fold_scores.append(fs)
             trial.report(fs, fold_i)
+            trial.set_user_attr("n_raw_signals", int(trial_raw_signals))
+            trial.set_user_attr("n_final_signals", int(trial_final_signals))
+            trial.set_user_attr("n_filtered_out", int(max(0, trial_raw_signals - trial_final_signals)))
             if trial.should_prune():
                 raise optuna.exceptions.TrialPruned()
-
+        trial.set_user_attr("n_raw_signals", int(trial_raw_signals))
+        trial.set_user_attr("n_final_signals", int(trial_final_signals))
+        trial.set_user_attr("n_filtered_out", int(max(0, trial_raw_signals - trial_final_signals)))
         return np.mean(fold_scores) if fold_scores else -1.0
+
+    def _meta_trial_log_callback(study, frozen_trial):
+        _raw = frozen_trial.user_attrs.get("n_raw_signals")
+        _final = frozen_trial.user_attrs.get("n_final_signals")
+        _filt = frozen_trial.user_attrs.get("n_filtered_out")
+        _state = str(getattr(frozen_trial.state, "name", frozen_trial.state))
+        _val = frozen_trial.value
+        _val_s = "nan" if _val is None else f"{float(_val):.6f}"
+        if _raw is None or _final is None or _filt is None:
+            print(
+                f"[Meta-Optuna Trial {frozen_trial.number:03d}] state={_state} value={_val_s} "
+                "(Signalzähler nicht verfügbar)",
+                flush=True,
+            )
+            return
+        print(
+            f"[Meta-Optuna Trial {frozen_trial.number:03d}] state={_state} value={_val_s} "
+            f"signals_raw={int(_raw)} filtered_out={int(_filt)} signals_final={int(_final)}",
+            flush=True,
+        )
 
     meta_sampler = optuna.samplers.TPESampler(multivariate=True, constant_liar=True, seed=42)
     meta_pruner = optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=1)
     meta_study = optuna.create_study(direction="maximize", sampler=meta_sampler, pruner=meta_pruner)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
-    meta_study.optimize(meta_objective, n_trials=c.N_META_TRIALS, show_progress_bar=True)
+    meta_study.optimize(
+        meta_objective,
+        n_trials=c.N_META_TRIALS,
+        show_progress_bar=True,
+        callbacks=[_meta_trial_log_callback],
+    )
+    print("Meta-Optuna — finale Bestwerte (alle Trial-Parameter):", flush=True)
+    for _k in sorted(meta_study.best_params.keys()):
+        print(f"  {_k} = {meta_study.best_params[_k]!r}", flush=True)
 
     _META_NONMODEL = {
         "signal_skip_near_peak",
         "peak_lookback_days",
         "peak_min_dist_from_high_pct",
         "signal_max_rsi",
+        "signal_max_vol_stress_z",
+        "mult_final_threshold_1",
+        "mult_final_threshold_2",
+        "mult_final_threshold_3",
+        "dyn_vvix_trigger",
+        "dyn_rsi_trigger",
+        "dyn_bb_pband_trigger",
+        "signal_min_blue_sky_volume_z",
         "meta_eval_threshold",
     }
     meta_best = {k: v for k, v in meta_study.best_params.items() if k not in _META_NONMODEL}
@@ -281,17 +581,44 @@ def _run_phase13(c: Any) -> None:
     )
     _mv = meta_study.best_params.get("signal_max_rsi", c.SIGNAL_MAX_RSI)
     SIGNAL_MAX_RSI = float(_mv) if _mv is not None else None
+    _msz = meta_study.best_params.get("signal_max_vol_stress_z", getattr(c, "SIGNAL_MAX_VOL_STRESS_Z", 2.0))
+    SIGNAL_MAX_VOL_STRESS_Z = float(_msz) if _msz is not None else None
+    MULT_FINAL_THRESHOLD_1 = float(meta_study.best_params.get("mult_final_threshold_1", getattr(c, "MULT_FINAL_THRESHOLD_1", 1.0)))
+    MULT_FINAL_THRESHOLD_2 = float(meta_study.best_params.get("mult_final_threshold_2", getattr(c, "MULT_FINAL_THRESHOLD_2", 1.0)))
+    MULT_FINAL_THRESHOLD_3 = float(meta_study.best_params.get("mult_final_threshold_3", getattr(c, "MULT_FINAL_THRESHOLD_3", 1.0)))
+    DYN_VVIX_TRIGGER = float(meta_study.best_params.get("dyn_vvix_trigger", getattr(c, "DYN_VVIX_TRIGGER", 8.2)))
+    DYN_RSI_TRIGGER = float(meta_study.best_params.get("dyn_rsi_trigger", getattr(c, "DYN_RSI_TRIGGER", 75.0)))
+    DYN_BB_PBAND_TRIGGER = float(meta_study.best_params.get("dyn_bb_pband_trigger", getattr(c, "DYN_BB_PBAND_TRIGGER", 1.02)))
+    SIGNAL_MIN_BLUE_SKY_VOLUME_Z = float(
+        meta_study.best_params.get(
+            "signal_min_blue_sky_volume_z",
+            getattr(c, "SIGNAL_MIN_BLUE_SKY_VOLUME_Z", 0.5),
+        )
+    )
     _mrsi_s = f"{SIGNAL_MAX_RSI:.1f}" if SIGNAL_MAX_RSI is not None else "off"
+    _mvs_s = f"{SIGNAL_MAX_VOL_STRESS_Z:.2f}" if SIGNAL_MAX_VOL_STRESS_Z is not None else "off"
+    _mbs_s = f"{SIGNAL_MIN_BLUE_SKY_VOLUME_Z:.2f}"
     print(
         f"Meta anti-peak: skip={SIGNAL_SKIP_NEAR_PEAK}, lookback={PEAK_LOOKBACK_DAYS}d, "
-        f"minDist={PEAK_MIN_DIST_FROM_HIGH_PCT:.4f}, maxRSI={_mrsi_s}"
+        f"minDist={PEAK_MIN_DIST_FROM_HIGH_PCT:.4f}, maxRSI={_mrsi_s}, maxVolStressZ={_mvs_s}, "
+        f"blueSkyPrevVolZ>={_mbs_s} (col={_blue_col})"
+    )
+    print(
+        f"Dynamic threshold: mult=({MULT_FINAL_THRESHOLD_1:.3f},{MULT_FINAL_THRESHOLD_2:.3f},{MULT_FINAL_THRESHOLD_3:.3f}) "
+        f"triggers(vvix>{DYN_VVIX_TRIGGER:.2f}, rsi>{DYN_RSI_TRIGGER:.1f}, bb>{DYN_BB_PBAND_TRIGGER:.3f})"
     )
 
-    print(
-        f"\nMeta-Learner best score={meta_study.best_value:.4f}  "
-        f"(= mean TP/fold bei Filter-Prec>={_OPT_MIN_PRECISION:.0%}, "
-        f"max consec FP <= {_OPT_MAX_CONSEC_FP})"
-    )
+    if _meta_obj_mode == "signal_mean_return":
+        print(
+            f"\nMeta-Learner best score={meta_study.best_value:.4f}  "
+            f"(= mean signal return per fold, Signal-Score über horizons={_hold_horizons})"
+        )
+    else:
+        print(
+            f"\nMeta-Learner best score={meta_study.best_value:.4f}  "
+            f"(= mean TP/fold bei Filter-Prec>={_OPT_MIN_PRECISION:.0%}, "
+            f"max consec FP <= {_OPT_MAX_CONSEC_FP})"
+        )
     _met = meta_study.best_params.get("meta_eval_threshold")
     if _met is not None:
         print(
@@ -395,6 +722,22 @@ def _run_phase13(c: Any) -> None:
         peak_lookback_days=PEAK_LOOKBACK_DAYS,
         peak_min_dist_from_high_pct=PEAK_MIN_DIST_FROM_HIGH_PCT,
         signal_max_rsi=SIGNAL_MAX_RSI,
+        vol_stress_arr=df_threshold["vol_stress"].values if "vol_stress" in df_threshold.columns else None,
+        signal_max_vol_stress_z=SIGNAL_MAX_VOL_STRESS_Z,
+        blue_sky_breakout_arr=df_threshold[_blue_col].values if _blue_col in df_threshold.columns else None,
+        volume_zscore_arr=df_threshold["volume_zscore"].values if "volume_zscore" in df_threshold.columns else None,
+        signal_min_blue_sky_volume_z=(
+            SIGNAL_MIN_BLUE_SKY_VOLUME_Z
+        ),
+        vvix_ratio_arr=df_threshold["mr_vvix_div_vix"].values if "mr_vvix_div_vix" in df_threshold.columns else None,
+        rsi_arr=df_threshold[f"rsi_{int(rsi_w)}d"].values if f"rsi_{int(rsi_w)}d" in df_threshold.columns else None,
+        bb_pband_arr=df_threshold[f"bb_pband_{int(getattr(c, 'bb_w', c.SEED_PARAMS.get('bb_window', 20)))}"].values if f"bb_pband_{int(getattr(c, 'bb_w', c.SEED_PARAMS.get('bb_window', 20)))}" in df_threshold.columns else None,
+        dyn_vvix_trigger=DYN_VVIX_TRIGGER,
+        dyn_rsi_trigger=DYN_RSI_TRIGGER,
+        dyn_bb_pband_trigger=DYN_BB_PBAND_TRIGGER,
+        dyn_mult_1=MULT_FINAL_THRESHOLD_1,
+        dyn_mult_2=MULT_FINAL_THRESHOLD_2,
+        dyn_mult_3=MULT_FINAL_THRESHOLD_3,
     )
     _f_prec = (n_tp_f / n_sig_f) if n_sig_f > 0 else 0.0
     print(
@@ -412,6 +755,14 @@ def _run_phase13(c: Any) -> None:
     c.PEAK_LOOKBACK_DAYS = PEAK_LOOKBACK_DAYS
     c.PEAK_MIN_DIST_FROM_HIGH_PCT = PEAK_MIN_DIST_FROM_HIGH_PCT
     c.SIGNAL_MAX_RSI = SIGNAL_MAX_RSI
+    c.SIGNAL_MAX_VOL_STRESS_Z = SIGNAL_MAX_VOL_STRESS_Z
+    c.MULT_FINAL_THRESHOLD_1 = MULT_FINAL_THRESHOLD_1
+    c.MULT_FINAL_THRESHOLD_2 = MULT_FINAL_THRESHOLD_2
+    c.MULT_FINAL_THRESHOLD_3 = MULT_FINAL_THRESHOLD_3
+    c.DYN_VVIX_TRIGGER = DYN_VVIX_TRIGGER
+    c.DYN_RSI_TRIGGER = DYN_RSI_TRIGGER
+    c.DYN_BB_PBAND_TRIGGER = DYN_BB_PBAND_TRIGGER
+    c.SIGNAL_MIN_BLUE_SKY_VOLUME_Z = SIGNAL_MIN_BLUE_SKY_VOLUME_Z
     c.build_meta_features = build_meta_features
     c.meta_clf = meta_clf
     c.best_threshold = best_threshold

@@ -120,6 +120,18 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         "signal_max_rsi": None
         if g.get("SIGNAL_MAX_RSI") is None
         else float(g["SIGNAL_MAX_RSI"]),
+        "signal_max_vol_stress_z": None
+        if g.get("SIGNAL_MAX_VOL_STRESS_Z") is None
+        else float(g["SIGNAL_MAX_VOL_STRESS_Z"]),
+        "signal_min_blue_sky_volume_z": None
+        if g.get("SIGNAL_MIN_BLUE_SKY_VOLUME_Z") is None
+        else float(g["SIGNAL_MIN_BLUE_SKY_VOLUME_Z"]),
+        "mult_final_threshold_1": float(g.get("MULT_FINAL_THRESHOLD_1", 1.0)),
+        "mult_final_threshold_2": float(g.get("MULT_FINAL_THRESHOLD_2", 1.0)),
+        "mult_final_threshold_3": float(g.get("MULT_FINAL_THRESHOLD_3", 1.0)),
+        "dyn_vvix_trigger": float(g.get("DYN_VVIX_TRIGGER", 8.2)),
+        "dyn_rsi_trigger": float(g.get("DYN_RSI_TRIGGER", 75.0)),
+        "dyn_bb_pband_trigger": float(g.get("DYN_BB_PBAND_TRIGGER", 1.02)),
         "threshold_calibration_end_date": g.get("threshold_calibration_end_date"),
         "news_sql_manifest": _news_sql_manifest_from_g(g),
         "OPT_OPTIMIZE_Y_TARGETS": bool(g.get("OPT_OPTIMIZE_Y_TARGETS", _opt_y_default)),
@@ -165,6 +177,16 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
     g["PEAK_MIN_DIST_FROM_HIGH_PCT"] = float(b.get("peak_min_dist_from_high_pct", 0.012))
     _sr = b.get("signal_max_rsi")
     g["SIGNAL_MAX_RSI"] = None if _sr is None else float(_sr)
+    _svs = b.get("signal_max_vol_stress_z")
+    g["SIGNAL_MAX_VOL_STRESS_Z"] = None if _svs is None else float(_svs)
+    _bsv = b.get("signal_min_blue_sky_volume_z")
+    g["SIGNAL_MIN_BLUE_SKY_VOLUME_Z"] = None if _bsv is None else float(_bsv)
+    g["MULT_FINAL_THRESHOLD_1"] = float(b.get("mult_final_threshold_1", 1.0))
+    g["MULT_FINAL_THRESHOLD_2"] = float(b.get("mult_final_threshold_2", 1.0))
+    g["MULT_FINAL_THRESHOLD_3"] = float(b.get("mult_final_threshold_3", 1.0))
+    g["DYN_VVIX_TRIGGER"] = float(b.get("dyn_vvix_trigger", 8.2))
+    g["DYN_RSI_TRIGGER"] = float(b.get("dyn_rsi_trigger", 75.0))
+    g["DYN_BB_PBAND_TRIGGER"] = float(b.get("dyn_bb_pband_trigger", 1.02))
     if b.get("tickers_for_run"):
         g["_tickers_for_run"] = list(b["tickers_for_run"])
     _tce = b.get("threshold_calibration_end_date")

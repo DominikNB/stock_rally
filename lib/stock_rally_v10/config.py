@@ -90,6 +90,9 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
 SCORING_ONLY = False
+# True → Base-Optuna/Base-Modelle bleiben aus Artefakt bestehen; Training startet direkt bei Meta.
+# Voraussetzung: SCORING_ONLY=False und ein vorhandenes ``SCORING_ARTIFACT_PATH``.
+RETRAIN_META_ONLY = True
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
@@ -123,10 +126,17 @@ def load_scoring_artifacts(path=None):
 def log_pipeline_mode_banner() -> None:
     """Schreibt einmal pro Prozess, ob nur gescored wird (``SCORING_ONLY``) oder trainiert wird."""
     sc = bool(globals().get("SCORING_ONLY", False))
+    meta_only = bool(globals().get("RETRAIN_META_ONLY", False))
     if sc:
         print(
             "Pipeline-Modus: SCORING_ONLY — nur Scoring/Export "
             "(Phasen 12–16 Training übersprungen; Artefakt wird geladen).",
+            flush=True,
+        )
+    elif meta_only:
+        print(
+            "Pipeline-Modus: RETRAIN_META_ONLY — Base-Training übersprungen; "
+            "lade Base-Artefakt und starte direkt bei Meta (Phasen 13–17).",
             flush=True,
         )
     else:
@@ -172,6 +182,9 @@ def opt_optimize_y_targets() -> bool:
 # Festes Y (OPT_OPTIMIZE_Y_TARGETS=False) — ``target._create_target_one_ticker_fixed_bands``:
 # (1) Grün: ∃ Fenster w ∈ [FIXED_Y_WINDOW_MIN, FIXED_Y_WINDOW_MAX] mit kum. Rendite ≥ FIXED_Y_RALLY_THRESHOLD;
 #     alle Tage solcher Fenster werden zu grünen Segmenten vereinigt.
+#     Optionaler Zusatz-Constraint: FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY=True erzwingt,
+#     dass innerhalb eines qualifizierenden Fensters jeder Tages-Return strikt > 0 ist
+#     (keine Einbrüche/Seitwärts-Tage im Rally-Fenster).
 # (2) Label 1: FIXED_Y_LEAD_DAYS vor Segmentbeginn; bei L < FIXED_Y_SEGMENT_SPLIT zusätzlich die ersten
 #     FIXED_Y_ENTRY_DAYS grüne Tage; bei L ≥ split alle grünen außer den letzten FIXED_Y_TAIL_EXCLUDE_DAYS.
 # Entspricht: w ∈ [3, 10], 6 %, 3 Vorlauf-Tage, Split 5, 2 Einstiegs-Tage auf Grün, 3 Tage Rally-Ende ausgeschlossen.
@@ -182,6 +195,7 @@ FIXED_Y_SEGMENT_SPLIT = 5
 FIXED_Y_LEAD_DAYS = 3
 FIXED_Y_ENTRY_DAYS = 2
 FIXED_Y_TAIL_EXCLUDE_DAYS = 3
+FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY = False
 
 
 def fixed_y_rule_params() -> tuple[int, int, float, int, int, int, int]:
@@ -200,15 +214,24 @@ def fixed_y_rule_params() -> tuple[int, int, float, int, int, int, int]:
     return w_lo, w_hi, rt, split, ld, ed, tail_ex
 
 
+def fixed_y_require_strict_daily_up_in_rally() -> bool:
+    """True: feste Band-Regel lässt nur Fenster mit strikt positiven Tages-Returns zu."""
+    m = sys.modules[__name__]
+    return bool(getattr(m, "FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY", False))
+
+
 def describe_target_rule_fixed_bands() -> str:
     """Feste Band-Regel (OPT_OPTIMIZE_Y_TARGETS=False); Zahlen = ``fixed_y_rule_params()`` wie in der Pipeline."""
     w_lo, w_hi, rt, split, ld, ed, tail_ex = fixed_y_rule_params()
+    strict_up = fixed_y_require_strict_daily_up_in_rally()
+    strict_txt = " Ja (jeder Tages-Return im Rally-Fenster muss > 0 sein)." if strict_up else " Nein."
     return (
         "Zieldefinition (feste Band-Regel — dieselben Konstanten wie in der Pipeline):\n\n"
         "(1) Grüne Rally-Phase: Ein Handelstag ist „grün“, wenn es mindestens ein Fenster "
         "mit Länge w ∈ [{w_lo}, {w_hi}] Handelstagen gibt, über das die kumulierte Rendite "
         "(Produkt der Tagesrenditen) mindestens {rt_str} beträgt; alle Tage solcher Fenster werden "
-        "zu grünen Segmenten vereinigt.\n\n"
+        "zu grünen Segmenten vereinigt.\n"
+        "Zusatz-Constraint „strict daily up“ aktiv?{strict_txt}\n\n"
         "(2) Positives Klassenlabel: Am ersten Tag eines neuen grünen Segments sei L die "
         "Segmentlänge in Handelstagen. Label 1 erhalten die {ld} Handelstage unmittelbar vor "
         "Segmentbeginn; bei L < {split} zusätzlich die ersten {ed} grünen Tage des Segments; "
@@ -221,6 +244,7 @@ def describe_target_rule_fixed_bands() -> str:
         ld=ld,
         ed=ed,
         tail_ex=tail_ex,
+        strict_txt=strict_txt,
     )
 
 
@@ -304,7 +328,14 @@ def describe_target_rule_narrative_for_website(c=None) -> str:
 
 def _describe_target_rule_fixed_bands_narrative() -> str:
     w_lo, w_hi, rt, split, ld, ed, tail_ex = fixed_y_rule_params()
+    strict_up = fixed_y_require_strict_daily_up_in_rally()
     rt_str = f"{rt:.2%}"
+    strict_sentence = (
+        " Zusätzlich ist ein strikter Tagesanstiegs-Constraint aktiv: Ein Rally-Fenster zählt nur, "
+        "wenn jeder enthaltene Tages-Return > 0 ist (keine Tagesrückgänge innerhalb des Fensters)."
+        if strict_up
+        else ""
+    )
     return (
         "Was das Modell vorhersagen soll: Das Klassenlabel „positiv“ markiert Tage, an denen sich ein "
         "Einstieg vor oder am Anfang einer späteren Kursaufwertsphase lohnt — nicht die gesamte Rally, "
@@ -314,7 +345,7 @@ def _describe_target_rule_fixed_bands_narrative() -> str:
         "wenn es mindestens ein Fenster aus {w_lo} bis {w_hi} aufeinanderfolgenden Handelstagen gibt, "
         "über das die kumulierte Rendite (Produkt der Tagesrenditen) mindestens {rt_str} beträgt. "
         "Alle Tage, die in ein solches Fenster fallen, werden zu zusammenhängenden grünen Segmenten "
-        "vereinigt — so entsteht die Rally-Spur.\n\n"
+        "vereinigt — so entsteht die Rally-Spur.{strict_sentence}\n\n"
         "Daraus werden die Trainings-Labels abgeleitet: Betrachtet wird jeweils der erste Tag "
         "eines neuen grünen Segments (nach einer Rally-Pause). Seine Länge sei L Handelstage. "
         "Dann erhalten die {ld} Handelstage unmittelbar vor Segmentbeginn das positive Label; "
@@ -330,6 +361,7 @@ def _describe_target_rule_fixed_bands_narrative() -> str:
         ld=ld,
         ed=ed,
         tail_ex=tail_ex,
+        strict_sentence=strict_sentence,
     )
 
 
@@ -390,7 +422,15 @@ N_OPTUNA_TRIALS       = 120  # mehr Coverage im großen Kombinationsraum (TPE wa
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
 # tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
 OPTUNA_SHOW_PROGRESS_BAR = None
-N_META_TRIALS         = 250
+N_META_TRIALS         = 1000
+# Meta-Objective in den Fold-Validierungen:
+# - "tp_precision": bisherige Zielfunktion (TP/Precision/FP-Run Constraints).
+# - "signal_mean_return": mittlere Signal-Rendite über Haltehorizonte (z. B. 1..5 Tage).
+META_OBJECTIVE_MODE = "signal_mean_return"
+# Für signal_mean_return: pro Signal Mittelwert dieser Forward-Renditen, dann Mittel über alle Signale.
+META_SIGNAL_RETURN_HORIZONS = (1, 2, 3, 4, 5)
+# Optionaler Mindest-Count gefilterter Signale je Fold (darunter leichter Penalty).
+META_OBJECTIVE_MIN_SIGNALS_PER_FOLD = 1
 # Meta-Stacking: Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``).
 # Standard: feste Anzahl META_SHAP_TOP_K. Alternativ: META_SHAP_CUM_FRAC z. B. 0.75 =
 # kleinstes K, sodass Summe der K größten mean|SHAP| ≥ 75 % der Summe über alle Spalten.
@@ -418,6 +458,17 @@ SIGNAL_SKIP_NEAR_PEAK = True
 PEAK_LOOKBACK_DAYS = 20
 PEAK_MIN_DIST_FROM_HIGH_PCT = 0.012   # mind. 1.2 % unter Rolling-High (tunable 0.008–0.02)
 SIGNAL_MAX_RSI = 78.0                 # kein Kauf-Signal wenn RSI darüber; None = aus
+# Hard-Filter: wenn Vortag positiv und vol_stress als 20d-ZScore darüber liegt -> Signal löschen.
+SIGNAL_MAX_VOL_STRESS_Z = 2.0         # None = aus
+# Blue-Sky-Schutz: Breakout ohne Volumen-Bestätigung (Vortag) wird verworfen.
+SIGNAL_MIN_BLUE_SKY_VOLUME_Z = 0.5    # None = aus
+# Dynamischer Threshold-Veto-Block (Meta/Scoring): baseline threshold * multipliers.
+MULT_FINAL_THRESHOLD_1 = 1.0
+MULT_FINAL_THRESHOLD_2 = 1.0
+MULT_FINAL_THRESHOLD_3 = 1.0
+DYN_VVIX_TRIGGER = 8.2
+DYN_RSI_TRIGGER = 75.0
+DYN_BB_PBAND_TRIGGER = 1.02
 
 # ── Ticker-Universum (Symbole) ──────────────────────────────────────────────
 # Maximale Anzahl Wertpapiere im TRAIN_BASE-Set — nur bei SPLIT_MODE="ticker" (Legacy).
@@ -498,6 +549,14 @@ SEED_PARAMS = dict(
     peak_lookback_days=20,
     peak_min_dist_from_high_pct=0.012,
     signal_max_rsi=78.0,
+    signal_max_vol_stress_z=2.0,
+    signal_min_blue_sky_volume_z=0.5,
+    mult_final_threshold_1=1.0,
+    mult_final_threshold_2=1.0,
+    mult_final_threshold_3=1.0,
+    dyn_vvix_trigger=8.2,
+    dyn_rsi_trigger=75.0,
+    dyn_bb_pband_trigger=1.02,
 )
 
 # =============================================================================
