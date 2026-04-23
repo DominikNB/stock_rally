@@ -353,6 +353,81 @@ def _run_phase17(c: Any) -> None:
     recent_cutoff = (pd.Timestamp(c.END_DATE) - pd.Timedelta(days=30)).strftime("%Y-%m-%d")
     recent_signals = [s for s in website_signals if s["date"] >= recent_cutoff]
     print(f"{len(recent_signals)} OOS-Signale in den letzten 30 Tagen (Website).")
+    latest_signal_date = website_signals[0]["date"] if website_signals else None
+    latest_day_signals = [s for s in website_signals if s["date"] == latest_signal_date] if latest_signal_date else []
+
+    def _minmax_norm(vals: list[float], *, invert: bool = False) -> list[float]:
+        if not vals:
+            return []
+        arr = np.asarray(vals, dtype=np.float64)
+        if not np.isfinite(arr).any():
+            return [0.0 for _ in vals]
+        lo = float(np.nanmin(arr))
+        hi = float(np.nanmax(arr))
+        if hi - lo <= 1e-12:
+            base = np.full_like(arr, 0.5, dtype=np.float64)
+        else:
+            base = (arr - lo) / (hi - lo)
+        if invert:
+            base = 1.0 - base
+        return [float(x) for x in base]
+
+    ranking_rows: list[dict[str, Any]] = []
+    if latest_day_signals:
+        rsi_col = f"rsi_{int(getattr(c, 'rsi_w', c.SEED_PARAMS.get('rsi_window', 14)))}d"
+        rsi_cap = getattr(c, "SIGNAL_MAX_RSI", None)
+        for sig in latest_day_signals:
+            t = str(sig["ticker"])
+            d = pd.Timestamp(sig["date"]).normalize()
+            sub = df_s[df_s["ticker"].astype(str).str.strip() == t].copy()
+            if sub.empty:
+                continue
+            sub["Date"] = pd.to_datetime(sub["Date"]).dt.normalize()
+            sub = sub.sort_values("Date").reset_index(drop=True)
+            row = sub[sub["Date"] == d]
+            if row.empty:
+                continue
+            ridx = int(row.index[0])
+            close_hist = pd.to_numeric(sub.loc[max(0, ridx - 5) : ridx, "close"], errors="coerce").to_numpy(dtype=np.float64)
+            if close_hist.size >= 3:
+                rets = close_hist[1:] / np.where(close_hist[:-1] != 0.0, close_hist[:-1], np.nan) - 1.0
+                stability_std = float(np.nanstd(rets))
+            else:
+                stability_std = np.nan
+            rsi_val = (
+                float(pd.to_numeric(row[rsi_col], errors="coerce").iloc[0])
+                if rsi_col in row.columns
+                else np.nan
+            )
+            if rsi_cap is None or not np.isfinite(rsi_val):
+                safety_buffer = 0.0
+            else:
+                safety_buffer = float(rsi_cap) - float(rsi_val)
+            vol_z = (
+                float(pd.to_numeric(row["volume_zscore"], errors="coerce").iloc[0])
+                if "volume_zscore" in row.columns
+                else 0.0
+            )
+            ranking_rows.append(
+                {
+                    "ticker": t,
+                    "company": sig.get("company", t),
+                    "date": sig["date"],
+                    "prob": float(sig.get("prob", 0.0)),
+                    "stability_std": stability_std if np.isfinite(stability_std) else 1.0,
+                    "safety_buffer": float(safety_buffer),
+                    "volume_z": float(vol_z) if np.isfinite(vol_z) else 0.0,
+                }
+            )
+    if ranking_rows:
+        st_n = _minmax_norm([r["stability_std"] for r in ranking_rows], invert=True)  # niedrige Std ist besser
+        sf_n = _minmax_norm([r["safety_buffer"] for r in ranking_rows], invert=False)
+        vz_n = _minmax_norm([r["volume_z"] for r in ranking_rows], invert=False)
+        for i, r in enumerate(ranking_rows):
+            r["rank_score"] = 0.50 * st_n[i] + 0.30 * sf_n[i] + 0.20 * vz_n[i]
+        ranking_rows.sort(key=lambda x: x["rank_score"], reverse=True)
+        for i, r in enumerate(ranking_rows, start=1):
+            r["rank"] = i
 
     _chart_yf_failures: list[tuple[Any, ...]] = []
 
@@ -627,6 +702,46 @@ def _run_phase17(c: Any) -> None:
         "".join(_signal_card(s) for s in website_signals[:600])
         or '<p class="empty">Keine OOS-Signale.</p>'
     )
+    if ranking_rows:
+        _rows_html = []
+        for r in ranking_rows:
+            _rows_html.append(
+                "<tr>"
+                f"<td>{int(r['rank'])}</td>"
+                f"<td>{_html_std.escape(str(r['ticker']))}</td>"
+                f"<td>{_html_std.escape(str(r['company']))}</td>"
+                f"<td>{float(r['prob']):.3f}</td>"
+                f"<td>{float(r['rank_score']):.3f}</td>"
+                f"<td>{float(r['stability_std']):.4f}</td>"
+                f"<td>{float(r['safety_buffer']):.2f}</td>"
+                f"<td>{float(r['volume_z']):.2f}</td>"
+                "</tr>"
+            )
+        ranking_html = (
+            f'<div class="section"><h2>Ranking aktuellster Signale '
+            f'<span class="badge">{len(ranking_rows)}</span></h2>'
+            f'<p class="prompt-lead">Datum: <strong>{_html_std.escape(str(latest_signal_date))}</strong> '
+            f'| Score = 0.50·Stabilität + 0.30·RSI-Puffer + 0.20·Volumen-Z.</p>'
+            '<div style="overflow-x:auto">'
+            '<table style="width:100%;border-collapse:collapse;font-size:.82em">'
+            '<thead><tr>'
+            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">#</th>'
+            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">Ticker</th>'
+            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">Unternehmen</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Prob</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Score</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Std(5d)</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">RSI-Puffer</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Vol-Z</th>'
+            '</tr></thead><tbody>'
+            + "".join(_rows_html)
+            + "</tbody></table></div></div>"
+        )
+    else:
+        ranking_html = (
+            '<div class="section"><h2>Ranking aktuellster Signale</h2>'
+            '<p class="empty">Kein Ranking verfügbar (keine oder nur unvollständige aktuelle OOS-Signale).</p></div>'
+        )
 
     pr_section = (
         f'<div class="section"><h2>Model Quality &#8212; Precision-Recall</h2>'
@@ -787,6 +902,8 @@ def _run_phase17(c: Any) -> None:
 </header>
 <div class="page-wrap">
 <main class="main-col">
+
+  {ranking_html}
 
   <div class="section">
     <h2>Letzte 30 Tage <span class="badge{recent_badge_cls}">{len(recent_signals)}</span></h2>

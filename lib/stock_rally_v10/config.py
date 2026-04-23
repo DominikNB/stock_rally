@@ -422,15 +422,21 @@ N_OPTUNA_TRIALS       = 120  # mehr Coverage im großen Kombinationsraum (TPE wa
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
 # tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
 OPTUNA_SHOW_PROGRESS_BAR = None
-N_META_TRIALS         = 1000
+N_META_TRIALS         = 5000
 # Meta-Objective in den Fold-Validierungen:
 # - "tp_precision": bisherige Zielfunktion (TP/Precision/FP-Run Constraints).
 # - "signal_mean_return": mittlere Signal-Rendite über Haltehorizonte (z. B. 1..5 Tage).
-META_OBJECTIVE_MODE = "signal_mean_return"
+# - "signal_win_rate": Anteil der Signale mit positivem mittlerem Horizon-Return.
+META_OBJECTIVE_MODE = "signal_win_rate"
 # Für signal_mean_return: pro Signal Mittelwert dieser Forward-Renditen, dann Mittel über alle Signale.
 META_SIGNAL_RETURN_HORIZONS = (1, 2, 3, 4, 5)
+# Für signal_win_rate: optionaler Tiebreaker auf mean return (0.0 = nur Win-Rate).
+META_OBJECTIVE_WINRATE_RETURN_TIEBREAKER = 0.1
 # Optionaler Mindest-Count gefilterter Signale je Fold (darunter leichter Penalty).
 META_OBJECTIVE_MIN_SIGNALS_PER_FOLD = 1
+# Für signal_mean_return: Mindest-Signaldichte je Fold (Signale pro Handelstag, nach allen Filtern).
+# 1.0 bedeutet im Schnitt mindestens 1 Signal pro Handelstag im Validierungs-Fold.
+META_OBJECTIVE_MIN_SIGNALS_PER_DAY_PER_FOLD = 0.5
 # Meta-Stacking: Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``).
 # Standard: feste Anzahl META_SHAP_TOP_K. Alternativ: META_SHAP_CUM_FRAC z. B. 0.75 =
 # kleinstes K, sodass Summe der K größten mean|SHAP| ≥ 75 % der Summe über alle Spalten.

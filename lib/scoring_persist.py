@@ -135,6 +135,15 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         "threshold_calibration_end_date": g.get("threshold_calibration_end_date"),
         "news_sql_manifest": _news_sql_manifest_from_g(g),
         "OPT_OPTIMIZE_Y_TARGETS": bool(g.get("OPT_OPTIMIZE_Y_TARGETS", _opt_y_default)),
+        "base_optuna_best_params": dict(g.get("base_optuna_best_params") or {}),
+        "base_optuna_best_value": (
+            None if g.get("base_optuna_best_value") is None else float(g.get("base_optuna_best_value"))
+        ),
+        "meta_optuna_best_params": dict(g.get("meta_optuna_best_params") or {}),
+        "meta_optuna_best_value": (
+            None if g.get("meta_optuna_best_value") is None else float(g.get("meta_optuna_best_value"))
+        ),
+        "meta_optuna_best_user_attrs": dict(g.get("meta_optuna_best_user_attrs") or {}),
     }
     joblib.dump(bundle, path)
     print(f"Gespeichert: {path}  (threshold={bundle['best_threshold']:.4f})")
@@ -187,6 +196,13 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
     g["DYN_VVIX_TRIGGER"] = float(b.get("dyn_vvix_trigger", 8.2))
     g["DYN_RSI_TRIGGER"] = float(b.get("dyn_rsi_trigger", 75.0))
     g["DYN_BB_PBAND_TRIGGER"] = float(b.get("dyn_bb_pband_trigger", 1.02))
+    g["base_optuna_best_params"] = dict(b.get("base_optuna_best_params") or {})
+    _bbv = b.get("base_optuna_best_value")
+    g["base_optuna_best_value"] = None if _bbv is None else float(_bbv)
+    g["meta_optuna_best_params"] = dict(b.get("meta_optuna_best_params") or {})
+    _mbv = b.get("meta_optuna_best_value")
+    g["meta_optuna_best_value"] = None if _mbv is None else float(_mbv)
+    g["meta_optuna_best_user_attrs"] = dict(b.get("meta_optuna_best_user_attrs") or {})
     if b.get("tickers_for_run"):
         g["_tickers_for_run"] = list(b["tickers_for_run"])
     _tce = b.get("threshold_calibration_end_date")

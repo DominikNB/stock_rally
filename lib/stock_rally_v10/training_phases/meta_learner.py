@@ -155,13 +155,17 @@ def _run_phase13(c: Any) -> None:
         sorted({int(h) for h in (getattr(c, "META_SIGNAL_RETURN_HORIZONS", (1, 2, 3, 4, 5)) or ()) if int(h) > 0})
     )
     _meta_min_signals = int(getattr(c, "META_OBJECTIVE_MIN_SIGNALS_PER_FOLD", 1) or 1)
-    if _meta_obj_mode not in {"tp_precision", "signal_mean_return"}:
+    _meta_min_signals_per_day = float(
+        getattr(c, "META_OBJECTIVE_MIN_SIGNALS_PER_DAY_PER_FOLD", 1.0) or 1.0
+    )
+    _meta_winrate_tie = float(getattr(c, "META_OBJECTIVE_WINRATE_RETURN_TIEBREAKER", 0.1) or 0.0)
+    if _meta_obj_mode not in {"tp_precision", "signal_mean_return", "signal_win_rate"}:
         print(
             f"WARNUNG: Unbekanntes META_OBJECTIVE_MODE={_meta_obj_mode!r} -> fallback 'tp_precision'.",
             flush=True,
         )
         _meta_obj_mode = "tp_precision"
-    if _meta_obj_mode == "signal_mean_return" and not _hold_horizons:
+    if _meta_obj_mode in {"signal_mean_return", "signal_win_rate"} and not _hold_horizons:
         print(
             "WARNUNG: META_SIGNAL_RETURN_HORIZONS leer -> fallback (1,2,3,4,5).",
             flush=True,
@@ -170,8 +174,10 @@ def _run_phase13(c: Any) -> None:
     print(
         f"Meta-Objective-Modus: {_meta_obj_mode}"
         + (
-            f" | horizons={_hold_horizons} | min_signals_per_fold={_meta_min_signals}"
-            if _meta_obj_mode == "signal_mean_return"
+            f" | horizons={_hold_horizons} | min_signals_per_fold={_meta_min_signals} "
+            f"| min_signals_per_day_per_fold={_meta_min_signals_per_day:.3f} "
+            f"| winrate_return_tiebreaker={_meta_winrate_tie:.3f}"
+            if _meta_obj_mode in {"signal_mean_return", "signal_win_rate"}
             else ""
         ),
         flush=True,
@@ -201,6 +207,7 @@ def _run_phase13(c: Any) -> None:
         threshold,
         consecutive_days,
         signal_cooldown_days,
+        open_arr,
         close_arr,
         rsi_window,
         signal_skip_near_peak,
@@ -232,6 +239,7 @@ def _run_phase13(c: Any) -> None:
                 "ticker": tickers_arr,
                 "Date": dates_arr,
                 "prob": probs_arr,
+                "open": open_arr,
                 "close": close_arr,
             }
         )
@@ -250,6 +258,7 @@ def _run_phase13(c: Any) -> None:
         signal_scores: list[float] = []
         n_signals = 0
         n_raw_signals = 0
+        signal_days_any: set[pd.Timestamp] = set()
         for _, sub in df_v.groupby("ticker"):
             sub = sub.sort_values("Date").reset_index(drop=True)
             raw = _dynamic_threshold_mask_1d(
@@ -316,8 +325,14 @@ def _run_phase13(c: Any) -> None:
                         final[i] = 0
             idxs = np.where(final == 1)[0]
             for i in idxs:
-                p0 = float(close_sub[i])
-                if not np.isfinite(p0) or p0 <= 0.0:
+                # Coverage-Zähler: Tag gilt als "abgedeckt", sobald irgendein finales Signal existiert.
+                signal_days_any.add(pd.Timestamp(sub["Date"].iloc[i]).normalize())
+                # Einstiegskurs: Open des Folgetags (Tag 1 relativ zum Signaltag).
+                entry_idx = int(i + 1)
+                if entry_idx >= n:
+                    continue
+                entry_open = float(pd.to_numeric(sub["open"].iloc[entry_idx], errors="coerce"))
+                if not np.isfinite(entry_open) or entry_open <= 0.0:
                     continue
                 # Nur Signale mit vollständig verfügbarem Zukunftshorizont bewerten/zählen.
                 if any(int(i + h) >= n for h in hold_horizons):
@@ -329,11 +344,12 @@ def _run_phase13(c: Any) -> None:
                         continue
                     pj = float(close_sub[j])
                     if np.isfinite(pj) and pj > 0.0:
-                        rlist.append(pj / p0 - 1.0)
+                        # h=1: close(Tag1)/open(Tag1), h=2: close(Tag2)/open(Tag1), ...
+                        rlist.append(pj / entry_open - 1.0)
                 if rlist:
                     n_signals += 1
                     signal_scores.append(float(np.mean(rlist)))
-        return signal_scores, n_signals, n_raw_signals
+        return signal_scores, n_signals, n_raw_signals, len(signal_days_any)
 
     def meta_objective(trial):
         signal_skip_near_peak = trial.suggest_categorical("signal_skip_near_peak", [True, False])
@@ -374,6 +390,7 @@ def _run_phase13(c: Any) -> None:
 
         _dates_test = df_test["Date"].values
         _tickers_test = df_test["ticker"].values
+        _open_test = df_test["open"].values if "open" in df_test.columns else None
         _close_test = df_test["close"].values
         _vol_stress_test = df_test["vol_stress"].values if "vol_stress" in df_test.columns else None
         _blue_test = df_test[_blue_col].values if _blue_col in df_test.columns else None
@@ -387,6 +404,8 @@ def _run_phase13(c: Any) -> None:
         fold_scores = []
         trial_raw_signals = 0
         trial_final_signals = 0
+        trial_sig_per_day_sum = 0.0
+        trial_sig_per_day_n = 0
         for fold_i in range(N_META_FOLDS):
             train_end = meta_min_train + fold_i * meta_fold_size
             val_end = meta_min_train + (fold_i + 1) * meta_fold_size
@@ -417,14 +436,17 @@ def _run_phase13(c: Any) -> None:
             )
             probs = clf.predict_proba(X_val)[:, 1]
 
-            if _meta_obj_mode == "signal_mean_return":
-                sig_scores, n_sig, n_raw_sig = _signal_forward_return_scores_cv(
+            if _meta_obj_mode in {"signal_mean_return", "signal_win_rate"}:
+                val_dates = _dates_test[val_mask]
+                n_val_days = int(pd.Series(val_dates).nunique())
+                sig_scores, n_sig, n_raw_sig, n_sig_days = _signal_forward_return_scores_cv(
                     probs,
-                    _dates_test[val_mask],
+                    val_dates,
                     _tickers_test[val_mask],
                     meta_eval_threshold,
                     CONSECUTIVE_DAYS,
                     SIGNAL_COOLDOWN_DAYS,
+                    _open_test[val_mask] if _open_test is not None else _close_test[val_mask],
                     _close_test[val_mask],
                     rsi_w,
                     signal_skip_near_peak,
@@ -449,12 +471,41 @@ def _run_phase13(c: Any) -> None:
                 )
                 trial_raw_signals += int(n_raw_sig)
                 trial_final_signals += int(n_sig)
-                if n_sig == 0 or not sig_scores:
-                    fs = -1.0
+                # Tagesabdeckung: Anteil Validierungstage mit >= 1 gefiltertem Signal über alle Ticker.
+                # Für die Coverage zählen finale Signale (auch ohne vollständigen Return-Horizont),
+                # damit das Coverage-Ziel durch die Filterlogik erreichbar bleibt.
+                day_coverage = (float(n_sig_days) / float(n_val_days)) if n_val_days > 0 else 0.0
+                trial_sig_per_day_sum += float(day_coverage)
+                trial_sig_per_day_n += 1
+                # Stufenweise Optimierung mit Regime-Wechsel:
+                # 1) Unterhalb Ziel-Signaldichte: stark negativer Dichte-Score dominiert.
+                # 2) Ab Zielerfüllung: Umschalten auf Return-Optimierung.
+                if n_val_days <= 0:
+                    fs = -3.0
                 else:
-                    fs = float(np.mean(sig_scores))
-                    if n_sig < _meta_min_signals:
-                        fs -= 0.05 * float(_meta_min_signals - n_sig)
+                    density_gap = max(0.0, _meta_min_signals_per_day - day_coverage)
+                    if day_coverage < _meta_min_signals_per_day:
+                        # Phase A (Coverage nicht erreicht): nur Coverage-Lücke optimieren.
+                        # Wertebereich [-1, 0): je kleiner die Lücke, desto näher an 0.
+                        fs = -float(density_gap)
+                    else:
+                        # Phase B (Coverage erreicht): auf Return umschalten.
+                        # +1.0 Offset trennt die Regime klar:
+                        # jeder Trial in Phase B schlägt jeden Trial in Phase A.
+                        if n_sig == 0 or not sig_scores:
+                            base_return_score = -1.0
+                            win_rate = 0.0
+                        else:
+                            base_return_score = float(np.mean(sig_scores))
+                            win_rate = float(np.mean(np.asarray(sig_scores, dtype=np.float64) > 0.0))
+                        if _meta_obj_mode == "signal_win_rate":
+                            # Kernziel: Anteil profitabler Signale maximieren.
+                            # Optionaler Return-Anteil dient nur als feiner Tiebreaker.
+                            fs = 1.0 + win_rate + (_meta_winrate_tie * base_return_score)
+                        else:
+                            fs = 1.0 + base_return_score
+                        if n_sig < _meta_min_signals:
+                            fs -= 0.05 * float(_meta_min_signals - n_sig)
             else:
                 n_tp, n_sig, max_cfp, _det = _apply_filters_cv(
                     probs,
@@ -511,17 +562,26 @@ def _run_phase13(c: Any) -> None:
             trial.set_user_attr("n_raw_signals", int(trial_raw_signals))
             trial.set_user_attr("n_final_signals", int(trial_final_signals))
             trial.set_user_attr("n_filtered_out", int(max(0, trial_raw_signals - trial_final_signals)))
+            trial.set_user_attr(
+                "avg_signals_per_day",
+                float(trial_sig_per_day_sum / trial_sig_per_day_n) if trial_sig_per_day_n > 0 else 0.0,
+            )
             if trial.should_prune():
                 raise optuna.exceptions.TrialPruned()
         trial.set_user_attr("n_raw_signals", int(trial_raw_signals))
         trial.set_user_attr("n_final_signals", int(trial_final_signals))
         trial.set_user_attr("n_filtered_out", int(max(0, trial_raw_signals - trial_final_signals)))
+        trial.set_user_attr(
+            "avg_signals_per_day",
+            float(trial_sig_per_day_sum / trial_sig_per_day_n) if trial_sig_per_day_n > 0 else 0.0,
+        )
         return np.mean(fold_scores) if fold_scores else -1.0
 
     def _meta_trial_log_callback(study, frozen_trial):
         _raw = frozen_trial.user_attrs.get("n_raw_signals")
         _final = frozen_trial.user_attrs.get("n_final_signals")
         _filt = frozen_trial.user_attrs.get("n_filtered_out")
+        _spd = frozen_trial.user_attrs.get("avg_signals_per_day")
         _state = str(getattr(frozen_trial.state, "name", frozen_trial.state))
         _val = frozen_trial.value
         _val_s = "nan" if _val is None else f"{float(_val):.6f}"
@@ -534,7 +594,8 @@ def _run_phase13(c: Any) -> None:
             return
         print(
             f"[Meta-Optuna Trial {frozen_trial.number:03d}] state={_state} value={_val_s} "
-            f"signals_raw={int(_raw)} filtered_out={int(_filt)} signals_final={int(_final)}",
+            f"signals_raw={int(_raw)} filtered_out={int(_filt)} signals_final={int(_final)} "
+            f"avg_signals_per_day={float(_spd) if _spd is not None else 0.0:.3f}",
             flush=True,
         )
 
@@ -542,6 +603,40 @@ def _run_phase13(c: Any) -> None:
     meta_pruner = optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=1)
     meta_study = optuna.create_study(direction="maximize", sampler=meta_sampler, pruner=meta_pruner)
     optuna.logging.set_verbosity(optuna.logging.WARNING)
+    _meta_seed = getattr(c, "meta_optuna_best_params", None)
+    if isinstance(_meta_seed, dict) and _meta_seed:
+        _allowed = {
+            "signal_skip_near_peak",
+            "peak_lookback_days",
+            "peak_min_dist_from_high_pct",
+            "dyn_rsi_trigger",
+            "signal_max_rsi",
+            "signal_max_vol_stress_z",
+            "meta_eval_threshold",
+            "mult_final_threshold_1",
+            "mult_final_threshold_2",
+            "mult_final_threshold_3",
+            "dyn_vvix_trigger",
+            "dyn_bb_pband_trigger",
+            "signal_min_blue_sky_volume_z",
+            "max_depth",
+            "min_child_weight",
+            "gamma",
+            "reg_alpha",
+            "reg_lambda",
+            "learning_rate",
+            "n_estimators",
+            "subsample",
+            "colsample_bytree",
+        }
+        _seed_trial = {k: _meta_seed[k] for k in _allowed if k in _meta_seed}
+        if _seed_trial:
+            meta_study.enqueue_trial(_seed_trial)
+            print(
+                f"Meta-Optuna: Seed-Trial aus gespeichertem meta_optuna_best_params enqueued "
+                f"({len(_seed_trial)} Parameter).",
+                flush=True,
+            )
     meta_study.optimize(
         meta_objective,
         n_trials=c.N_META_TRIALS,
@@ -612,6 +707,12 @@ def _run_phase13(c: Any) -> None:
         print(
             f"\nMeta-Learner best score={meta_study.best_value:.4f}  "
             f"(= mean signal return per fold, Signal-Score über horizons={_hold_horizons})"
+        )
+    elif _meta_obj_mode == "signal_win_rate":
+        print(
+            f"\nMeta-Learner best score={meta_study.best_value:.4f}  "
+            f"(= signal win-rate per fold + {_meta_winrate_tie:.3f}*mean_return, "
+            f"horizons={_hold_horizons})"
         )
     else:
         print(
@@ -767,6 +868,9 @@ def _run_phase13(c: Any) -> None:
     c.meta_clf = meta_clf
     c.best_threshold = best_threshold
     c.f1_thresh = f1_thresh
+    c.meta_optuna_best_params = dict(meta_study.best_params)
+    c.meta_optuna_best_value = float(meta_study.best_value)
+    c.meta_optuna_best_user_attrs = dict(meta_study.best_trial.user_attrs)
     c.df_test = df_test
     c.df_threshold = df_threshold
     c.df_final = df_final

@@ -635,7 +635,16 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     pruner  = optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=1)
     study   = optuna.create_study(direction='maximize', sampler=sampler, pruner=pruner)
 
-    _seed_enq = dict(seed_params)
+    _base_seed_src = getattr(cfg, "base_optuna_best_params", None)
+    if isinstance(_base_seed_src, dict) and _base_seed_src:
+        _seed_enq = dict(_base_seed_src)
+        print(
+            f"Optuna Phase 1: Seed-Trial aus gespeichertem base_optuna_best_params "
+            f"({len(_seed_enq)} Parameter).",
+            flush=True,
+        )
+    else:
+        _seed_enq = dict(seed_params)
     if not cfg.opt_optimize_y_targets():
         for _k in ('return_window', 'rally_threshold', 'lead_days', 'entry_days', 'min_rally_tail_days'):
             _seed_enq.pop(_k, None)
@@ -699,4 +708,6 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     print("Optuna Phase 1 — finale Bestwerte (alle Parameter):", flush=True)
     for _k in sorted(best.keys()):
         print(f"  {_k} = {best[_k]!r}", flush=True)
+    cfg.base_optuna_best_params = dict(best)
+    cfg.base_optuna_best_value = float(study.best_value)
     return best

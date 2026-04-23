@@ -1,8 +1,8 @@
 {
-  "signaltag_csv": "2026-04-21",
-  "hauptfenster_end_europe_berlin_inclusive": "2026-04-21 24:00 Europe/Berlin (identisch mit Beginn Folgetag 00:00)",
-  "hauptfenster_end_instant_europe_berlin": "2026-04-22T00:00:00+02:00",
-  "zusatzfenster_start_europe_berlin": "2026-04-22T00:00:00+02:00",
-  "zusatzfenster_end_europe_berlin_inclusive": "2026-04-23T07:51:12.447510+02:00",
-  "scoring_run_utc": "2026-04-23T05:51:12.447517+00:00"
+  "signaltag_csv": "2026-04-22",
+  "hauptfenster_end_europe_berlin_inclusive": "2026-04-22 24:00 Europe/Berlin (identisch mit Beginn Folgetag 00:00)",
+  "hauptfenster_end_instant_europe_berlin": "2026-04-23T00:00:00+02:00",
+  "zusatzfenster_start_europe_berlin": "2026-04-23T00:00:00+02:00",
+  "zusatzfenster_end_europe_berlin_inclusive": "2026-04-23T19:53:43.218284+02:00",
+  "scoring_run_utc": "2026-04-23T17:53:43.218295+00:00"
 }

@@ -78,10 +78,14 @@ def _log_loaded_config_snapshot() -> None:
     _meta_obj = str(getattr(cfg, "META_OBJECTIVE_MODE", "tp_precision"))
     _meta_h = getattr(cfg, "META_SIGNAL_RETURN_HORIZONS", None)
     _meta_min_sig = getattr(cfg, "META_OBJECTIVE_MIN_SIGNALS_PER_FOLD", None)
-    if str(_meta_obj).strip().lower() == "signal_mean_return":
+    _meta_min_sig_day = getattr(cfg, "META_OBJECTIVE_MIN_SIGNALS_PER_DAY_PER_FOLD", None)
+    _meta_wr_tie = getattr(cfg, "META_OBJECTIVE_WINRATE_RETURN_TIEBREAKER", None)
+    if str(_meta_obj).strip().lower() in {"signal_mean_return", "signal_win_rate"}:
         _meta_line = (
             f"META objective={_meta_obj} horizons={_meta_h} "
-            f"min_signals_per_fold={_meta_min_sig}"
+            f"min_signals_per_fold={_meta_min_sig} "
+            f"min_signals_per_day_per_fold={_meta_min_sig_day} "
+            f"winrate_return_tiebreaker={_meta_wr_tie}"
         )
     else:
         _meta_line = f"META objective={_meta_obj}"
