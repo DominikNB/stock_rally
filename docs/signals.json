@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-22 06:51",
+  "generated": "2026-04-23 07:42",
   "threshold": 0.8207739735706956,
   "signals": [
     {
@@ -12,7 +12,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-04-21",
-      "prob": 0.9261858463287354
+      "prob": 0.9551618695259094
     },
     {
       "ticker": "AIXA.DE",
@@ -4082,7 +4082,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-04-21",
-      "prob": 0.9261858463287354
+      "prob": 0.9551618695259094
     },
     {
       "ticker": "AIXA.DE",
@@ -8141,6 +8141,6 @@
       "prob": 0.8772550225257874
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 1983,
+  "signals_all_timeline_including_in_sample_count": 1984,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website."
 }
