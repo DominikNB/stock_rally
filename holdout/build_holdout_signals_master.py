@@ -244,7 +244,10 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
         if df is not None and len(df) >= 20:
             dfs[t] = df
         if _ti % _step_t == 0 or _ti == _nt:
-            print(f"  … Ticker-Serien {_ti}/{_nt} (davon {len(dfs)} mit ≥20 Tagen)", flush=True)
+            print(
+                f"  … Ticker-Serien {_ti}/{_nt} (davon {len(dfs)} mit >=20 Tagen)",
+                flush=True,
+            )
 
     ret_cols = [f"ret_{h}d" for h in HORIZONS]
     rows_fwd: list[dict] = []

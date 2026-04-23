@@ -655,15 +655,19 @@ def _run_phase17(c: Any) -> None:
     _analysis_llm_section = ""
     _script_gemini = Path("scripts") / "run_website_analysis_gemini.py"
     _gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    _matrix_last_date = str(pd.to_datetime(df_s["Date"]).max().date())
     if _gemini_key and _script_gemini.is_file():
         try:
             print("Gemini: KI-Analyse (CSV-Upload + Google Search) …", flush=True)
+            _env_llm = os.environ.copy()
+            _env_llm["ANALYSIS_EXPECT_SIGNAL_DATE"] = _matrix_last_date
             _r = subprocess.run(
                 [sys.executable, str(_script_gemini)],
                 cwd=str(Path.cwd()),
                 capture_output=True,
                 text=True,
                 timeout=600,
+                env=_env_llm,
             )
             if _r.returncode != 0:
                 print("LLM-Analyse Fehler:", (_r.stderr or _r.stdout or "")[:2500], flush=True)
@@ -682,7 +686,6 @@ def _run_phase17(c: Any) -> None:
         if not _gemini_key:
             print("Hinweis: GEMINI_API_KEY setzen — keine automatische KI-Analyse.", flush=True)
 
-    _matrix_last_date = str(pd.to_datetime(df_s["Date"]).max().date())
     _thr_cal = getattr(c, "threshold_calibration_end_date", None)
     if _thr_cal is None and getattr(c, "df_threshold", None) is not None:
         try:

@@ -48,6 +48,17 @@ from website_analysis_common import (
 
 _LLM_TZ = ZoneInfo("Europe/Berlin")
 OUT_RUN_META = DOCS / "analysis_llm_last_run_meta.json"
+_CHECK_NUMERIC_COLS = (
+    "adv_20d_local",
+    "liquidity_tier",
+    "short_float_pct",
+    "short_days_to_cover",
+    "open_gap_pct",
+    "volume_zscore_20d",
+    "inst_own_pct",
+    "market_ret_1d",
+    "sector_ret_1d",
+)
 
 
 def _build_llm_steering_block(latest: str) -> tuple[str, dict]:
@@ -82,6 +93,36 @@ def _build_llm_steering_block(latest: str) -> tuple[str, dict]:
         "=== Ende Steuerblock ===\n\n"
     )
     return block, meta
+
+
+def _build_data_availability_block(sub) -> str:
+    """Kompakter, deterministischer Hinweis für das LLM: welche Kernspalten sind je Treffer befüllt."""
+    import pandas as pd
+
+    lines: list[str] = [
+        "=== Datenverfuegbarkeit (aus CSV, fuer den Daten-Check) ===",
+        (
+            "Regel: Behaupte fehlende Kennzahlen nur dann, wenn der jeweilige CSV-Zellwert "
+            "fuer den konkreten Treffer wirklich NaN/leer ist. Wenn Wert vorhanden: nicht als fehlend darstellen."
+        ),
+    ]
+    for _, r in sub.iterrows():
+        t = str(r.get("ticker", ""))
+        d = str(r.get("Date", ""))
+        miss: list[str] = []
+        have: list[str] = []
+        for c in _CHECK_NUMERIC_COLS:
+            v = r.get(c, None)
+            if pd.isna(v) or (isinstance(v, str) and v.strip() == ""):
+                miss.append(c)
+            else:
+                have.append(c)
+        lines.append(
+            f"- {t} @ {d}: verfügbar={len(have)}/{len(_CHECK_NUMERIC_COLS)}; "
+            f"missing=[{', '.join(miss)}]"
+        )
+    lines.append("=== Ende Datenverfuegbarkeit ===")
+    return "\n".join(lines) + "\n\n"
 
 
 def _model_id_for_genai(raw: str) -> str:
@@ -235,6 +276,7 @@ def main() -> None:
         _wait_file_ready(client, uploaded.name)
 
         _steering, _run_meta = _build_llm_steering_block(latest)
+        _avail = _build_data_availability_block(sub)
         print(
             f"Gemini Steuerblock: Zusatzfenster {_run_meta['zusatzfenster_start_europe_berlin']} "
             f"… {_run_meta['zusatzfenster_end_europe_berlin_inclusive']} (Europe/Berlin)",
@@ -245,6 +287,7 @@ def main() -> None:
             f"Signaltag (aktuellster Tag in den Daten): {latest}\n"
             f"Anzahl Treffer (Meta ≥ Schwelle, ggf. gekappt): {len(sub)}\n\n"
             f"{_steering}"
+            f"{_avail}"
             "Die angehängte CSV enthält die Tabellenzeilen zu diesen Treffern. "
             "Recherchiere bei Bedarf im Web zu News, Kursen und Kontext; nutze die CSV-Spalten "
             "für Liquidität, Cluster, Korrelation, Earnings usw. wie im Prompt beschrieben.\n\n"

@@ -51,6 +51,16 @@ def read_signals_for_latest_day():
         )
         sys.exit(1)
 
+    expected_latest = os.environ.get("ANALYSIS_EXPECT_SIGNAL_DATE", "").strip()
+    if expected_latest:
+        try:
+            _exp = pd.to_datetime(expected_latest).strftime("%Y-%m-%d")
+            if latest < _exp:
+                # Aktueller Datenstand ist neuer als letzter Signaltag: explizit "heute keine Signale".
+                return _exp, pd.DataFrame()
+        except Exception:
+            pass
+
     from lib.signal_extra_filters import ordered_llm_daily_columns
     from lib.stock_rally_v10.equity_classification import CLASSIFICATION_COLUMN_KEYS
 

@@ -390,11 +390,22 @@ def ensure_llm_signal_columns(out: pd.DataFrame) -> pd.DataFrame:
 def _ohlc_for_ticker(raw: pd.DataFrame, ticker: str) -> pd.DataFrame | None:
     try:
         if isinstance(raw.columns, pd.MultiIndex):
-            o = raw["Open"][ticker]
-            c = raw["Close"][ticker]
-            v = raw["Volume"][ticker]
-            h = raw["High"][ticker]
-            l = raw["Low"][ticker]
+            # yfinance liefert je nach Version/Call beide Varianten:
+            # (Field, Ticker) ODER (Ticker, Field). Beide sauber unterstützen.
+            lvl0 = raw.columns.get_level_values(0)
+            if "Open" in lvl0:
+                o = raw["Open"][ticker]
+                c = raw["Close"][ticker]
+                v = raw["Volume"][ticker]
+                h = raw["High"][ticker]
+                l = raw["Low"][ticker]
+            else:
+                tdf = raw[ticker]
+                o = tdf["Open"]
+                c = tdf["Close"]
+                v = tdf["Volume"]
+                h = tdf["High"]
+                l = tdf["Low"]
         else:
             o, c, v = raw["Open"], raw["Close"], raw["Volume"]
             h, l = raw["High"], raw["Low"]
@@ -536,6 +547,14 @@ def _parse_earnings_date(cal) -> date | None:
             ts = pd.to_datetime(ed, errors="coerce")
         except Exception:
             ts = pd.NaT
+        # yfinance kann hier auch Sequenzen liefern (ndarray/Index/Series).
+        # Daraus das erste valide Datum ziehen statt bool-ambiguous Vergleiche.
+        if isinstance(ts, (pd.Series, pd.Index, np.ndarray, list, tuple)):
+            _cand = pd.to_datetime(pd.Series(ts).dropna(), errors="coerce")
+            _cand = _cand[~pd.isna(_cand)]
+            if len(_cand) == 0:
+                continue
+            return pd.Timestamp(_cand.iloc[0]).date()
         if pd.isna(ts):
             continue
         return pd.Timestamp(ts).date()
