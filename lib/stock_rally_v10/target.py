@@ -223,8 +223,8 @@ def create_target(df):
         _w_lo, _w_hi, _rt, _sp, _ld, _ed, _tex = cfg.fixed_y_rule_params()
         _strict = bool(cfg.fixed_y_require_strict_daily_up_in_rally())
         print(
-            f"  Feste Band-Regel: Fenster w ∈ [{_w_lo}, {_w_hi}] Handelstage, "
-            f"kum. Rendite ≥ {_rt:.2%}, Segment-Split {_sp}d, "
+            f"  Feste Band-Regel: Fenster w in [{_w_lo}, {_w_hi}] Handelstage, "
+            f"kum. Rendite >= {_rt:.2%}, Segment-Split {_sp}d, "
             f"lead={_ld} entry={_ed} tail_excl={_tex} strict_up={_strict} (cfg.FIXED_Y_*)",
             flush=True,
         )

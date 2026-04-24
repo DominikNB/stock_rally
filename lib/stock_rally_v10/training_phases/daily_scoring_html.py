@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from matplotlib.patches import Rectangle
 from sklearn.metrics import average_precision_score, precision_recall_curve
 
 from lib.stock_rally_v10 import config as cfg
@@ -374,7 +375,9 @@ def _run_phase17(c: Any) -> None:
 
     ranking_rows: list[dict[str, Any]] = []
     if latest_day_signals:
-        rsi_col = f"rsi_{int(getattr(c, 'rsi_w', c.SEED_PARAMS.get('rsi_window', 14)))}d"
+        rsi_w = int(getattr(c, "rsi_w", c.SEED_PARAMS.get("rsi_window", 14)))
+        rsi_col = f"rsi_{rsi_w}"
+        rsi_col_alt = f"rsi_{rsi_w}d"
         rsi_cap = getattr(c, "SIGNAL_MAX_RSI", None)
         for sig in latest_day_signals:
             t = str(sig["ticker"])
@@ -394,11 +397,13 @@ def _run_phase17(c: Any) -> None:
                 stability_std = float(np.nanstd(rets))
             else:
                 stability_std = np.nan
-            rsi_val = (
-                float(pd.to_numeric(row[rsi_col], errors="coerce").iloc[0])
-                if rsi_col in row.columns
-                else np.nan
-            )
+            if rsi_col in row.columns:
+                rsi_val = float(pd.to_numeric(row[rsi_col], errors="coerce").iloc[0])
+            elif rsi_col_alt in row.columns:
+                # Backward-compatible fallback in case older datasets used "rsi_<w>d".
+                rsi_val = float(pd.to_numeric(row[rsi_col_alt], errors="coerce").iloc[0])
+            else:
+                rsi_val = np.nan
             if rsi_cap is None or not np.isfinite(rsi_val):
                 safety_buffer = 0.0
             else:
@@ -431,13 +436,28 @@ def _run_phase17(c: Any) -> None:
 
     _chart_yf_failures: list[tuple[Any, ...]] = []
 
-    def _yf_close_rows_from_series(ser):
+    def _yf_ohlcv_rows_from_df(df_hist):
         rows = []
-        if ser is None or len(ser) == 0:
+        if df_hist is None or len(df_hist) == 0:
             return rows
-        s = ser.dropna()
-        for _ti, _px in s.items():
-            rows.append({"Date": pd.Timestamp(pd.Timestamp(_ti).date()), "close": float(_px)})
+        _candidates = {
+            "open": ("Open", "open"),
+            "high": ("High", "high"),
+            "low": ("Low", "low"),
+            "close": ("Close", "close"),
+            "volume": ("Volume", "volume"),
+        }
+        for _ti, _row in df_hist.iterrows():
+            _d = pd.Timestamp(pd.Timestamp(_ti).date())
+            _rec = {"Date": _d}
+            for _dst, _srcs in _candidates.items():
+                _val = np.nan
+                for _src in _srcs:
+                    if _src in df_hist.columns:
+                        _val = float(pd.to_numeric(_row.get(_src), errors="coerce"))
+                        break
+                _rec[_dst] = _val
+            rows.append(_rec)
         return rows
 
     def _extend_chart_close_yfinance(ticker, win, win_lo, win_hi):
@@ -460,15 +480,14 @@ def _run_phase17(c: Any) -> None:
                     auto_adjust=True,
                     actions=False,
                 )
-                if _hist is not None and len(_hist) and "Close" in _hist.columns:
-                    _rows = _yf_close_rows_from_series(_hist["Close"])
+                if _hist is not None and len(_hist):
+                    _rows = _yf_ohlcv_rows_from_df(_hist)
                 if not _rows:
                     _ext = yf.download(ticker, start=_d0, end=_d1, progress=False, threads=False)
                     if _ext is not None and len(_ext) > 0:
-                        _ser = _ext["Close"]
-                        if isinstance(_ser, pd.DataFrame):
-                            _ser = _ser.iloc[:, 0]
-                        _rows = _yf_close_rows_from_series(_ser)
+                        if isinstance(_ext.columns, pd.MultiIndex):
+                            _ext.columns = [str(c[0]) for c in _ext.columns]
+                        _rows = _yf_ohlcv_rows_from_df(_ext)
                 if _rows:
                     break
             except Exception as _e:
@@ -479,22 +498,86 @@ def _run_phase17(c: Any) -> None:
                 (ticker, _d0, _d1, repr(_last_err) if _last_err else "keine Zeilen")
             )
             return win
-        _w = pd.concat([win[["Date", "close"]].copy(), pd.DataFrame(_rows)], ignore_index=True)
+        _base_cols = ["Date", "open", "high", "low", "close", "volume", "volume_zscore"]
+        _left = win[[c for c in _base_cols if c in win.columns]].copy()
+        _w = pd.concat([_left, pd.DataFrame(_rows)], ignore_index=True)
         _w["Date"] = pd.to_datetime(_w["Date"]).dt.normalize()
         _w = _w.drop_duplicates(subset=["Date"], keep="last").sort_values("Date")
         return _w[(_w["Date"] >= win_lo) & (_w["Date"] <= win_hi)].copy()
 
+    _df_raw_all = getattr(c, "df_raw", None)
+    _ohlcv_cache: dict[str, pd.DataFrame] = {}
+
+    def _get_base_ohlcv_for_ticker(ticker: str) -> pd.DataFrame:
+        if ticker in _ohlcv_cache:
+            return _ohlcv_cache[ticker]
+        base = pd.DataFrame()
+        if isinstance(_df_raw_all, pd.DataFrame) and len(_df_raw_all) > 0:
+            cand = _df_raw_all[_df_raw_all["ticker"].astype(str).str.strip() == str(ticker)].copy()
+            if len(cand) > 0:
+                keep = [c for c in ("Date", "open", "high", "low", "close", "volume") if c in cand.columns]
+                base = cand[keep].copy()
+        if len(base) == 0:
+            # Fallback: aus Feature-Matrix (falls df_raw in diesem Lauf nicht am cfg hängt).
+            cand = df_s[df_s["ticker"].astype(str).str.strip() == str(ticker)].copy()
+            keep = [c for c in ("Date", "open", "high", "low", "close", "volume", "volume_zscore") if c in cand.columns]
+            base = cand[keep].copy() if keep else pd.DataFrame()
+        if len(base) > 0 and "Date" in base.columns:
+            base["Date"] = pd.to_datetime(base["Date"]).dt.normalize()
+            base = base.sort_values("Date").drop_duplicates(subset=["Date"], keep="last").reset_index(drop=True)
+        _ohlcv_cache[ticker] = base
+        return base
+
     def _make_chart(ticker, sig_date_str):
-        sub = df_s[df_s["ticker"] == ticker].sort_values("Date").reset_index(drop=True)
+        def _norm_ts(x) -> pd.Timestamp:
+            t = pd.Timestamp(x)
+            try:
+                if t.tz is not None:
+                    t = t.tz_convert(None)
+            except Exception:
+                try:
+                    t = t.tz_localize(None)
+                except Exception:
+                    pass
+            return t.normalize()
+
+        sub = _get_base_ohlcv_for_ticker(str(ticker))
         if "close" not in sub.columns or len(sub) < 5:
             return None
         sig_ts = pd.Timestamp(sig_date_str).normalize()
         win_lo = sig_ts - pd.DateOffset(months=1)
         win_hi = sig_ts + pd.DateOffset(months=1)
-        win = sub[(sub["Date"] >= win_lo) & (sub["Date"] <= win_hi)].copy()
+        # Warmup-Historie für stabilere Indikatoren (RSI/BB/EMA) im sichtbaren Fenster.
+        calc_lo = win_lo - pd.Timedelta(days=90)
+        win = sub[(sub["Date"] >= calc_lo) & (sub["Date"] <= win_hi)].copy()
         if len(win) < 5:
             return None
-        win = _extend_chart_close_yfinance(ticker, win, win_lo, win_hi)
+        win = _extend_chart_close_yfinance(ticker, win, calc_lo, win_hi)
+        if "close" not in win.columns:
+            return None
+        win["close"] = pd.to_numeric(win["close"], errors="coerce")
+        # Robust fallback: bei fehlendem OHLC (z. B. wenn nur feature-close vorhanden ist)
+        # Candles aus close rekonstruieren, damit Charts nicht komplett ausfallen.
+        if "open" not in win.columns:
+            win["open"] = np.nan
+        if "high" not in win.columns:
+            win["high"] = np.nan
+        if "low" not in win.columns:
+            win["low"] = np.nan
+        if "volume" not in win.columns:
+            win["volume"] = 0.0
+        for _col in ("open", "high", "low", "volume"):
+            win[_col] = pd.to_numeric(win[_col], errors="coerce")
+        prev_close = win["close"].shift(1)
+        win["open"] = win["open"].fillna(prev_close).fillna(win["close"])
+        _oc_max = np.maximum(win["open"].to_numpy(dtype=np.float64), win["close"].to_numpy(dtype=np.float64))
+        _oc_min = np.minimum(win["open"].to_numpy(dtype=np.float64), win["close"].to_numpy(dtype=np.float64))
+        win["high"] = win["high"].fillna(pd.Series(_oc_max, index=win.index))
+        win["low"] = win["low"].fillna(pd.Series(_oc_min, index=win.index))
+        win["volume"] = win["volume"].fillna(0.0)
+        win = win.dropna(subset=["close", "open", "high", "low"]).copy()
+        if len(win) < 5:
+            return None
         sig_row = win[pd.to_datetime(win["Date"]).dt.normalize() == sig_ts]
         if not sig_row.empty:
             ref = float(sig_row["close"].iloc[0])
@@ -505,35 +588,109 @@ def _run_phase17(c: Any) -> None:
         if not np.isfinite(ref) or ref <= 0:
             return None
         try:
-            close = win["close"].astype(float)
             dt = pd.to_datetime(win["Date"])
-            pct = (close / ref - 1.0) * 100.0
-            fig, ax = plt.subplots(figsize=(9, 3.2))
-            ax.plot(dt, close, color="#42a5f5", lw=1.5, label="Close")
-            ax.fill_between(dt, close, alpha=0.10, color="#42a5f5")
-            ax2 = ax.twinx()
-            ax2.plot(dt, pct, color="#ce93d8", lw=1.2, label="% vs. Datenstandstag")
-            ax2.axhline(0.0, color="#66bb6a", lw=1.0, ls="-", alpha=0.9, zorder=4)
-            ax.axvline(sig_ts, color="#66bb6a", lw=2, ls="--", zorder=5, label="Datenstand (0 %)")
-            ax.set_xlim(win_lo, win_hi)
-            ymin, ymax = float(close.min()), float(close.max())
-            if ymax > ymin:
-                pad = (ymax - ymin) * 0.02
-                ax.set_ylim(ymin - pad, ymax + pad)
+            x = mdates.date2num(pd.DatetimeIndex(dt).to_pydatetime())
+            close = win["close"].astype(float)
+            open_ = win["open"].astype(float)
+            high = win["high"].astype(float)
+            low = win["low"].astype(float)
+            volume = pd.to_numeric(win["volume"], errors="coerce").fillna(0.0).astype(float)
+
+            ema20 = close.ewm(span=20, adjust=False, min_periods=1).mean()
+            bb_mid = close.rolling(20, min_periods=5).mean()
+            bb_std = close.rolling(20, min_periods=5).std()
+            bb_up = bb_mid + 2.0 * bb_std
+            bb_lo = bb_mid - 2.0 * bb_std
+
+            delta = close.diff()
+            gain = delta.clip(lower=0.0)
+            loss = -delta.clip(upper=0.0)
+            avg_gain = gain.ewm(alpha=1.0 / 14.0, adjust=False, min_periods=14).mean()
+            avg_loss = loss.ewm(alpha=1.0 / 14.0, adjust=False, min_periods=14).mean()
+            rs = avg_gain / (avg_loss + 1e-10)
+            rsi14 = 100.0 - (100.0 / (1.0 + rs))
+
+            if "volume_zscore" in win.columns:
+                vol_z = pd.to_numeric(win["volume_zscore"], errors="coerce")
             else:
-                span = max(abs(ymax), 1e-6) * 0.02
-                ax.set_ylim(ymin - span, ymax + span)
-            pmin, pmax = float(np.nanmin(pct)), float(np.nanmax(pct))
-            ppad = max((pmax - pmin) * 0.06, 0.8)
-            ax2.set_ylim(pmin - ppad, pmax + ppad)
-            today_ts = pd.Timestamp(datetime.today().date()).normalize()
-            if win_lo <= today_ts <= win_hi:
-                ax.axvline(today_ts, color="#ffa726", lw=1.5, ls=":", zorder=5, label="Heute")
-            h1, l1 = ax.get_legend_handles_labels()
-            h2, l2 = ax2.get_legend_handles_labels()
-            ax.legend(
-                h1 + h2,
-                l1 + l2,
+                v_mean = volume.rolling(20, min_periods=5).mean()
+                v_std = volume.rolling(20, min_periods=5).std()
+                vol_z = (volume - v_mean) / (v_std + 1e-10)
+            vol_z = vol_z.fillna(0.0)
+
+            bb_width = (bb_up - bb_lo) / (bb_mid.abs() + 1e-10)
+
+            fig, (ax_price, ax_bw, ax_rsi, ax_vol) = plt.subplots(
+                4,
+                1,
+                figsize=(9.4, 7.3),
+                sharex=True,
+                gridspec_kw={"height_ratios": [3.3, 1.0, 1.4, 1.6]},
+            )
+
+            candle_w = 0.6
+            up_color = "#66bb6a"
+            dn_color = "#ef5350"
+            for i in range(len(x)):
+                o, h, l, c_ = float(open_.iloc[i]), float(high.iloc[i]), float(low.iloc[i]), float(close.iloc[i])
+                col = up_color if c_ >= o else dn_color
+                ax_price.vlines(x[i], l, h, color=col, linewidth=0.9, alpha=0.95, zorder=2)
+                body_y = min(o, c_)
+                body_h = max(abs(c_ - o), 1e-6)
+                ax_price.add_patch(
+                    Rectangle(
+                        (x[i] - candle_w / 2.0, body_y),
+                        candle_w,
+                        body_h,
+                        facecolor=col,
+                        edgecolor=col,
+                        alpha=0.95,
+                        linewidth=0.7,
+                        zorder=3,
+                    )
+                )
+            # Zusatz zur Candle-Ansicht: durchgehende Kurslinie wie im alten Plot-Layout.
+            ax_price.plot(dt, close, color="#00e676", lw=1.1, alpha=0.9, label="Close", zorder=4)
+            ax_price.plot(dt, ema20, color="#42a5f5", lw=1.2, label="EMA 20", zorder=4)
+            ax_price.plot(dt, bb_up, color="#ab47bc", lw=1.0, ls="--", label="BB Upper (20,2)", zorder=3)
+            ax_price.plot(dt, bb_mid, color="#8d6e63", lw=0.9, ls="-.", label="BB Mid (20)", zorder=3)
+            ax_price.plot(dt, bb_lo, color="#ab47bc", lw=1.0, ls="--", label="BB Lower (20,2)", zorder=3)
+            ax_price.fill_between(dt, bb_lo.to_numpy(), bb_up.to_numpy(), color="#ab47bc", alpha=0.08, zorder=1)
+
+            ax_bw.plot(dt, bb_width, color="#ba68c8", lw=1.2, label="BB Width (20,2)")
+            ax_bw.axhline(float(np.nanmedian(bb_width)), color="#8e24aa", lw=0.9, ls="--", alpha=0.7)
+
+            ax_rsi.plot(dt, rsi14, color="#ffb74d", lw=1.2, label="RSI 14")
+            for _lvl, _col, _ls in ((70, "#ef5350", "--"), (30, "#66bb6a", "--"), (75, "#ff7043", ":"), (25, "#26a69a", ":")):
+                ax_rsi.axhline(_lvl, color=_col, lw=0.9, ls=_ls, alpha=0.95)
+            ax_rsi.set_ylim(0, 100)
+
+            bar_colors = np.where(close.to_numpy() >= open_.to_numpy(), up_color, dn_color)
+            ax_vol.bar(dt, volume.to_numpy(), width=0.8, color=bar_colors, alpha=0.72, label="Volume")
+            ax_vol_z = ax_vol.twinx()
+            ax_vol_z.plot(dt, vol_z.to_numpy(), color="#80cbc4", lw=1.2, label="Volume Z-Score")
+            ax_vol_z.axhline(0.0, color="#607d8b", lw=0.9, ls="--", alpha=0.8)
+
+            ax_price.axvline(sig_ts, color="#66bb6a", lw=1.8, ls="--", zorder=5, label="Datenstand")
+            ax_bw.axvline(sig_ts, color="#66bb6a", lw=1.3, ls="--", zorder=5)
+            ax_rsi.axvline(sig_ts, color="#66bb6a", lw=1.4, ls="--", zorder=5)
+            ax_vol.axvline(sig_ts, color="#66bb6a", lw=1.4, ls="--", zorder=5)
+            today_ts = _norm_ts(datetime.today().date())
+            _last_dt = _norm_ts(dt.max())
+            _view_hi = min(_norm_ts(win_hi), _last_dt)
+            _view_hi = max(_view_hi, sig_ts + pd.Timedelta(days=2))
+            if win_lo <= today_ts <= _view_hi:
+                ax_price.axvline(today_ts, color="#ffa726", lw=1.4, ls=":", zorder=5, label="Heute")
+                ax_bw.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
+                ax_rsi.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
+                ax_vol.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
+
+            # Nach dem Signal nur so viel Platz wie echte verfügbare Kurstage.
+            ax_price.set_xlim(win_lo, _view_hi)
+            h1, l1 = ax_price.get_legend_handles_labels()
+            ax_price.legend(
+                h1,
+                l1,
                 fontsize=7,
                 loc="upper left",
                 facecolor="#1a1a2e",
@@ -541,32 +698,46 @@ def _run_phase17(c: Any) -> None:
                 labelcolor="#e0e0e0",
             )
             _ds = pd.Timestamp(sig_date_str).strftime("%d.%m.%Y")
-            ax.set_title(
+            ax_price.set_title(
                 f"{ticker} — {COMPANY_NAMES.get(ticker, ticker)}\n"
                 f"Datenstand Modell: bis einschl. {_ds} (grüner Strich); rechts nur Kurs (Anzeige)",
                 fontsize=8,
                 color="#81d4fa",
             )
-            ax.set_ylabel("Close", color="#90a4ae", fontsize=8)
-            ax2.set_ylabel("% vs. Datenstand (Close)", color="#e1bee7", fontsize=8)
-            ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-            ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m.%y"))
-            plt.setp(ax.xaxis.get_majorticklabels(), rotation=20, ha="right", fontsize=7)
-            ax.tick_params(colors="#90a4ae", labelsize=7)
-            ax2.tick_params(colors="#ce93d8", labelsize=7)
-            ax.grid(True, alpha=0.18)
-            ax.set_facecolor("#0d1117")
+            ax_price.set_ylabel("Preis", color="#90a4ae", fontsize=8)
+            ax_bw.set_ylabel("BB Width", color="#ba68c8", fontsize=8)
+            ax_rsi.set_ylabel("RSI 14", color="#90a4ae", fontsize=8)
+            ax_vol.set_ylabel("Volume", color="#90a4ae", fontsize=8)
+            ax_vol_z.set_ylabel("Vol Z", color="#80cbc4", fontsize=8)
+            ax_bw.legend(fontsize=7, loc="upper left", frameon=False, labelcolor="#ce93d8")
+            ax_rsi.legend(fontsize=7, loc="upper left", frameon=False, labelcolor="#ffcc80")
+            h3, l3 = ax_vol.get_legend_handles_labels()
+            h4, l4 = ax_vol_z.get_legend_handles_labels()
+            ax_vol.legend(h3 + h4, l3 + l4, fontsize=7, loc="upper left", frameon=False, labelcolor="#e0e0e0")
+
+            ax_vol.xaxis.set_major_locator(mdates.AutoDateLocator())
+            ax_vol.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m.%y"))
+            plt.setp(ax_vol.xaxis.get_majorticklabels(), rotation=20, ha="right", fontsize=7)
+            for _ax in (ax_price, ax_bw, ax_rsi, ax_vol):
+                _ax.tick_params(colors="#90a4ae", labelsize=7)
+                _ax.grid(True, alpha=0.18)
+                _ax.set_facecolor("#0d1117")
+                for sp in _ax.spines.values():
+                    sp.set_edgecolor("#2d2d4e")
+            ax_vol_z.tick_params(colors="#80cbc4", labelsize=7)
+            ax_vol_z.spines["right"].set_edgecolor("#2d2d4e")
             fig.patch.set_facecolor("#1a1a2e")
-            for sp in ax.spines.values():
-                sp.set_edgecolor("#2d2d4e")
-            ax2.spines["right"].set_edgecolor("#4a3f55")
             plt.tight_layout(pad=0.8)
             buf = io.BytesIO()
             plt.savefig(buf, format="png", dpi=95, bbox_inches="tight", facecolor=fig.get_facecolor())
             plt.close()
             buf.seek(0)
             return base64.b64encode(buf.read()).decode()
-        except Exception:
+        except Exception as _e_chart:
+            print(
+                f"Chart failed for {ticker} @ {sig_date_str}: {type(_e_chart).__name__}: {_e_chart}",
+                flush=True,
+            )
             plt.close("all")
             return None
 

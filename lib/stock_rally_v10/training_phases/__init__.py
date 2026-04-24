@@ -66,12 +66,14 @@ def run_training_scoring_and_export(cfg_mod: Any | None = None) -> None:
     c = _cfg_module(cfg_mod)
     _log_training_partition_calendar(c)
     retrain_meta_only = bool(getattr(c, "RETRAIN_META_ONLY", False))
+    scoring_only = bool(getattr(c, "SCORING_ONLY", False))
+    if scoring_only and retrain_meta_only:
+        print(
+            "Hinweis: SCORING_ONLY=True hat Vorrang; RETRAIN_META_ONLY wird ignoriert.",
+            flush=True,
+        )
+        retrain_meta_only = False
     if retrain_meta_only:
-        if bool(getattr(c, "SCORING_ONLY", False)):
-            raise ValueError(
-                "RETRAIN_META_ONLY=True erfordert SCORING_ONLY=False "
-                "(Meta-Training wird bei SCORING_ONLY sonst übersprungen)."
-            )
         print(
             "Phase 12 übersprungen: RETRAIN_META_ONLY=True — lade Base-Modelle/Parameter aus Artefakt.",
             flush=True,
