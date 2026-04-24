@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-24 10:55",
+  "generated": "2026-04-24 11:19",
   "threshold": 0.5439170661707691,
   "signals": [
     {
@@ -22709,6 +22709,6 @@
       "prob": 0.967965304851532
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 6644,
+  "signals_all_timeline_including_in_sample_count": 6648,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website."
 }
