@@ -1,0 +1,8 @@
+idx=9
+homogeneity_score=0.1110312578051107
+inner_homogeneity=nan
+uniqueness=nan
+n_pos=221030
+pos_rate=0.3299423052522373
+row_label=rt=0.04 w=[2,8] strict=False no_dip=False
+outdir=figures\target_debug_grid_idx9_max_npos

@@ -35,6 +35,17 @@ TRAINING_MACRO_VOL_COLS: tuple[str, ...] = (
     "mr_vvix_vix_ret1d_spread",
     "mr_vvix_vix_ret5d_spread",
     "mr_momentum20_div_spyrv",
+    # Cross-Asset Regime — Risk-on/-off Indikatoren jenseits der Vola-Indizes.
+    # HY-Spread = ICE BofA US High Yield Index OAS (FRED: BAMLH0A0HYM2); spreitet
+    # bei Stress aus, kontrahiert in „risk-on"-Phasen.
+    "mr_hy_spread",
+    "mr_hy_spread_ret5d",
+    "mr_hy_spread_ret1d",
+    # DXY = US-Dollar-Index (Yahoo: ``DX-Y.NYB``/``DX=F``). Starker Dollar belastet
+    # tendenziell Rohstoffe/EM/Tech-Margins; rollendes Momentum als Regime-Signal.
+    "mr_dxy_level",
+    "mr_dxy_mom_20d",
+    "mr_dxy_mom_60d",
 )
 
 
@@ -223,6 +234,82 @@ def _vol_index_series_with_fallback(
     return None
 
 
+def _vix_utils_vvix_series(
+    d_min: pd.Timestamp,
+    d_max: pd.Timestamp,
+) -> pd.Series | None:
+    """
+    VVIX primär direkt über vix_utils/CBOE laden.
+    Unterstützt sowohl Long-Format (Spalte Symbol) als auch Wide-Format (Spalte VVIX).
+    """
+    try:
+        import vix_utils
+    except ImportError:
+        return None
+    try:
+        raw = vix_utils.get_vix_index_histories()
+    except Exception:
+        return None
+    if raw is None or len(raw) == 0:
+        return None
+
+    df = pd.DataFrame(raw).copy()
+    vvix = None
+
+    # Long-Format: Trade Date / Symbol / Close
+    if {"Symbol", "Close"}.issubset(df.columns):
+        sym = df["Symbol"].astype(str).str.upper()
+        vv = df.loc[sym == "VVIX"].copy()
+        if len(vv) > 0:
+            date_col = "Trade Date" if "Trade Date" in vv.columns else ("Date" if "Date" in vv.columns else None)
+            if date_col is not None:
+                vv[date_col] = pd.to_datetime(vv[date_col], errors="coerce").dt.normalize()
+                vv["Close"] = pd.to_numeric(vv["Close"], errors="coerce")
+                vv = vv.dropna(subset=[date_col, "Close"]).sort_values(date_col, kind="mergesort")
+                if len(vv) > 0:
+                    vvix = pd.Series(vv["Close"].to_numpy(dtype=float), index=vv[date_col].to_numpy())
+
+    # Wide-Format: Date-Index und Spalte VVIX.
+    if vvix is None and "VVIX" in df.columns:
+        date_col = "Trade Date" if "Trade Date" in df.columns else ("Date" if "Date" in df.columns else None)
+        vv = df.copy()
+        if date_col is not None:
+            vv[date_col] = pd.to_datetime(vv[date_col], errors="coerce").dt.normalize()
+            idx = vv[date_col]
+        else:
+            idx = pd.to_datetime(vv.index, errors="coerce")
+            try:
+                idx = idx.tz_localize(None)
+            except (TypeError, AttributeError):
+                pass
+            idx = pd.Series(idx).dt.normalize()
+        vals = pd.to_numeric(vv["VVIX"], errors="coerce")
+        out = pd.DataFrame({"Date": idx, "VVIX": vals}).dropna(subset=["Date", "VVIX"]).sort_values(
+            "Date", kind="mergesort"
+        )
+        if len(out) > 0:
+            vvix = pd.Series(out["VVIX"].to_numpy(dtype=float), index=out["Date"].to_numpy())
+
+    if vvix is None or len(vvix) == 0:
+        return None
+
+    vvix.index = pd.to_datetime(vvix.index, errors="coerce")
+    try:
+        vvix.index = vvix.index.tz_localize(None)
+    except (TypeError, AttributeError):
+        pass
+    vvix.index = vvix.index.normalize()
+    vvix = vvix.sort_index().astype(float)
+
+    # Etwas Puffer vor/nach dem Bedarf wie bei Yahoo/FRED.
+    start = pd.Timestamp(d_min).normalize() - pd.Timedelta(days=45)
+    end = pd.Timestamp(d_max).normalize() + pd.Timedelta(days=5)
+    vvix = vvix[(vvix.index >= start) & (vvix.index <= end)]
+    if len(vvix) == 0:
+        return None
+    return vvix
+
+
 def _merge_yahoo_level(
     out: pd.DataFrame,
     series: pd.Series | None,
@@ -240,6 +327,35 @@ def _merge_yahoo_level(
     return out
 
 
+def _impute_vvix_level_series(
+    out: pd.DataFrame,
+    *,
+    col_name: str = "mr_vvix_level",
+    ffill_limit: int = 5,
+    bfill_limit: int = 1,
+) -> pd.DataFrame:
+    """Imputiert kurze VVIX-Lücken, damit abgeleitete Returns/Spreads nicht kaskadierend ausfallen."""
+    if col_name not in out.columns:
+        return out
+    s_raw = pd.to_numeric(out[col_name], errors="coerce")
+    miss_raw = s_raw.isna()
+    s_imp = s_raw.ffill(limit=max(0, int(ffill_limit)))
+    if int(bfill_limit) > 0:
+        s_imp = s_imp.bfill(limit=int(bfill_limit))
+    out[col_name] = s_imp
+    out["mr_vvix_missing_flag"] = miss_raw.astype(np.int8)
+    miss_after = out[col_name].isna()
+    n = max(1, len(out))
+    print(
+        "[MacroVola] mr_vvix_level Imputation: "
+        f"raw_missing={int(miss_raw.sum())}/{n} ({100.0 * float(miss_raw.sum()) / float(n):.1f}%), "
+        f"after_missing={int(miss_after.sum())}/{n} ({100.0 * float(miss_after.sum()) / float(n):.1f}%), "
+        f"ffill_limit={int(ffill_limit)}, bfill_limit={int(bfill_limit)}",
+        flush=True,
+    )
+    return out
+
+
 def enrich_macro_volatility_features(df: pd.DataFrame) -> pd.DataFrame:
     """Nur Spalten aus ``TRAINING_MACRO_VOL_COLS`` (ohne ``regime_*`` — die kommen vom Regime-Merge)."""
     out = df.copy()
@@ -250,17 +366,19 @@ def enrich_macro_volatility_features(df: pd.DataFrame) -> pd.DataFrame:
     d_min = out["Date"].min()
     d_max = out["Date"].max()
 
-    out = _merge_yahoo_level(
-        out,
-        _vol_index_series_with_fallback(
+    vvix_series = _vix_utils_vvix_series(d_min=d_min, d_max=d_max)
+    if vvix_series is not None and len(vvix_series) > 0:
+        print("[MacroVola] mr_vvix_level: nutze vix_utils (CBOE direkt).", flush=True)
+    else:
+        vvix_series = _vol_index_series_with_fallback(
             label="mr_vvix_level",
             d_min=d_min,
             d_max=d_max,
             fred_ids=("VVIXCLS",),
             yahoo_symbols=("^VVIX",),
-        ),
-        "mr_vvix_level",
-    )
+        )
+    out = _merge_yahoo_level(out, vvix_series, "mr_vvix_level")
+    out = _impute_vvix_level_series(out, col_name="mr_vvix_level", ffill_limit=5, bfill_limit=1)
     out = _merge_yahoo_level(
         out,
         _vol_index_series_with_fallback(
@@ -357,5 +475,64 @@ def enrich_macro_volatility_features(df: pd.DataFrame) -> pd.DataFrame:
     if "momentum_20d" in out.columns and "regime_spy_realvol_5d_ann" in out.columns:
         rv = pd.to_numeric(out["regime_spy_realvol_5d_ann"], errors="coerce").clip(lower=1e-6)
         out["mr_momentum20_div_spyrv"] = pd.to_numeric(out["momentum_20d"], errors="coerce") / rv
+
+    # ── HY-Spread (FRED: ICE BofA US HY OAS) ───────────────────────────────
+    out = _merge_yahoo_level(
+        out,
+        _vol_index_series_with_fallback(
+            label="mr_hy_spread",
+            d_min=d_min,
+            d_max=d_max,
+            fred_ids=("BAMLH0A0HYM2",),
+            yahoo_symbols=(),  # Yahoo führt keine direkte HY-OAS-Serie.
+        ),
+        "mr_hy_spread",
+    )
+    if "mr_hy_spread" in out.columns:
+        ud_hy = (
+            out[["Date", "mr_hy_spread"]]
+            .drop_duplicates(subset=["Date"])
+            .sort_values("Date", kind="mergesort")
+        )
+        # FRED-OAS ist ein „business day"-Stream mit gelegentlichen NaNs (Feiertage) —
+        # ffill auf den Tageskalender, damit Returns nicht in NaN-Lücken laufen.
+        hy = pd.to_numeric(ud_hy["mr_hy_spread"], errors="coerce").ffill(limit=5)
+        ud_hy = ud_hy.assign(
+            mr_hy_spread=hy.values,
+            mr_hy_spread_ret5d=hy / hy.shift(5).replace(0, np.nan) - 1.0,
+            mr_hy_spread_ret1d=hy / hy.shift(1).replace(0, np.nan) - 1.0,
+        )
+        out = out.drop(columns=["mr_hy_spread"], errors="ignore").merge(
+            ud_hy[["Date", "mr_hy_spread", "mr_hy_spread_ret5d", "mr_hy_spread_ret1d"]],
+            on="Date",
+            how="left",
+        )
+
+    # ── DXY (US-Dollar-Index) — Yahoo, mit FRED-DTWEXBGS-Fallback ──────────
+    dxy_ser = _vol_index_series_with_fallback(
+        label="mr_dxy_level",
+        d_min=d_min,
+        d_max=d_max,
+        fred_ids=("DTWEXBGS",),
+        yahoo_symbols=("DX-Y.NYB", "DX=F"),
+    )
+    out = _merge_yahoo_level(out, dxy_ser, "mr_dxy_level")
+    if "mr_dxy_level" in out.columns:
+        ud_dxy = (
+            out[["Date", "mr_dxy_level"]]
+            .drop_duplicates(subset=["Date"])
+            .sort_values("Date", kind="mergesort")
+        )
+        dxy = pd.to_numeric(ud_dxy["mr_dxy_level"], errors="coerce").ffill(limit=5)
+        ud_dxy = ud_dxy.assign(
+            mr_dxy_level=dxy.values,
+            mr_dxy_mom_20d=dxy / dxy.shift(20).replace(0, np.nan) - 1.0,
+            mr_dxy_mom_60d=dxy / dxy.shift(60).replace(0, np.nan) - 1.0,
+        )
+        out = out.drop(columns=["mr_dxy_level"], errors="ignore").merge(
+            ud_dxy[["Date", "mr_dxy_level", "mr_dxy_mom_20d", "mr_dxy_mom_60d"]],
+            on="Date",
+            how="left",
+        )
 
     return out

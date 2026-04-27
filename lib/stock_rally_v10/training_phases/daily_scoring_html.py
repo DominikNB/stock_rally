@@ -167,6 +167,19 @@ def _run_phase17(c: Any) -> None:
 
     X_meta_all = c.build_meta_features(feat_arr, dataset_label="FULL HISTORY")
     probs_all = c.meta_clf.predict_proba(X_meta_all)[:, 1]
+    _cal = getattr(c, "meta_proba_calibrator", None)
+    if isinstance(_cal, dict):
+        _m = str(_cal.get("method", "")).strip().lower()
+        _mdl = _cal.get("model")
+        try:
+            p = np.clip(np.asarray(probs_all, dtype=np.float64), 1e-6, 1.0 - 1e-6)
+            if _m == "sigmoid" and _mdl is not None:
+                lg = np.log(p / (1.0 - p)).reshape(-1, 1)
+                probs_all = _mdl.predict_proba(lg)[:, 1]
+            elif _m == "isotonic" and _mdl is not None:
+                probs_all = np.asarray(_mdl.predict(p), dtype=np.float64)
+        except Exception as _e_cal:
+            print(f"Warnung: Meta-Proba-Kalibrierung im Scoring fehlgeschlagen ({_e_cal!r}).", flush=True)
     df_s["prob"] = probs_all
     print("  Scoring done.", flush=True)
 

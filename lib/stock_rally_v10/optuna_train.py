@@ -20,7 +20,20 @@ from lib.stock_rally_v10.target import rebuild_target_for_train
 # Gates: cfg.OPT_MIN_PRECISION_BASE; Phase 5 nutzt cfg.OPT_MIN_PRECISION (= THRESHOLD-Ziel)
 _OPT_MIN_PRECISION = cfg.OPT_MIN_PRECISION_BASE
 # Maximum consecutive FP signals per ticker before a trial is penalised
-_OPT_MAX_CONSEC_FP = 3
+_OPT_MAX_CONSEC_FP = 4
+# Walk-Forward-Fold: zu wenig Zeilen/Positive zum sinnvollen nested Threshold + Val-Test
+# (schlägt sichtbar vs. 0,03-0,2 Kalibrier-Lücke; Optuna-Pruner sieht niedrigen report-Schritt)
+_FOLD_PENALTY_INSUFFICIENT_LABELED_DATA = -2.0
+
+
+def _auto_scale_pos_weight(y: np.ndarray) -> float:
+    """XGBoost-Klassengewicht aus Neg/Pos-Verhältnis (>=1.0)."""
+    yy = np.asarray(y, dtype=np.int8)
+    n_pos = int((yy == 1).sum())
+    n_neg = int((yy == 0).sum())
+    if n_pos <= 0 or n_neg <= 0:
+        return 1.0
+    return float(max(1.0, n_neg / n_pos))
 
 
 def _rsi_from_close_1d(close_arr, window):
@@ -156,6 +169,7 @@ def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
     n_signals = 0
     max_consec_fp = 0
     n_raw_signals = 0
+    signal_days: set = set()
     df_v = pd.DataFrame({
         'ticker': tickers_arr,
         'Date':   dates_arr,
@@ -247,9 +261,18 @@ def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
                     if final[i] == 1 and not blue_ok[i]:
                         final[i] = 0
 
-        sig_targets = sub.loc[final == 1, 'target'].values
+        sig_mask_idx = (final == 1)
+        sig_targets = sub.loc[sig_mask_idx, 'target'].values
         n_tp      += int(sig_targets.sum())
         n_signals += int(sig_targets.size)
+
+        # Tagesabdeckung: alle Tage mit >= 1 finalem Signal (über alle Ticker zusammen).
+        # Wird vom tp_precision-Pfad gebraucht, um avg_signals_per_day korrekt zu loggen.
+        if int(sig_mask_idx.sum()) > 0:
+            sig_days_t = pd.to_datetime(
+                sub.loc[sig_mask_idx, 'Date'], errors='coerce'
+            ).dt.normalize().dropna()
+            signal_days.update(sig_days_t.tolist())
 
         # Max consecutive FP run for this ticker
         run = 0
@@ -266,9 +289,174 @@ def _apply_filters_cv(probs_arr, dates_arr, tickers_arr, targets_arr,
             "n_raw_signals": int(n_raw_signals),
             "n_final_signals": int(n_signals),
             "n_filtered_out": int(max(0, n_raw_signals - n_signals)),
+            "n_signal_days": int(len(signal_days)),
         }
         return n_tp, n_signals, max_consec_fp, details
     return n_tp, n_signals, max_consec_fp
+
+
+def _score_tp_precision_fold(
+    probs_arr,
+    dates_arr,
+    tickers_arr,
+    targets_arr,
+    threshold,
+    consecutive_days,
+    signal_cooldown_days,
+    *,
+    close_arr=None,
+    rsi_window=None,
+    signal_skip_near_peak=True,
+    peak_lookback_days=20,
+    peak_min_dist_from_high_pct=0.012,
+    signal_max_rsi=78.0,
+    vol_stress_arr=None,
+    signal_max_vol_stress_z=None,
+    blue_sky_breakout_arr=None,
+    volume_zscore_arr=None,
+    signal_min_blue_sky_volume_z=None,
+    vvix_ratio_arr=None,
+    rsi_arr=None,
+    bb_pband_arr=None,
+    dyn_vvix_trigger=None,
+    dyn_rsi_trigger=None,
+    dyn_bb_pband_trigger=None,
+    dyn_mult_1=1.0,
+    dyn_mult_2=1.0,
+    dyn_mult_3=1.0,
+):
+    n_tp, n_sig, max_cfp = _apply_filters_cv(
+        probs_arr,
+        dates_arr,
+        tickers_arr,
+        targets_arr,
+        float(threshold),
+        int(consecutive_days),
+        int(signal_cooldown_days),
+        close_arr=close_arr,
+        rsi_window=rsi_window,
+        signal_skip_near_peak=signal_skip_near_peak,
+        peak_lookback_days=peak_lookback_days,
+        peak_min_dist_from_high_pct=peak_min_dist_from_high_pct,
+        signal_max_rsi=signal_max_rsi,
+        vol_stress_arr=vol_stress_arr,
+        signal_max_vol_stress_z=signal_max_vol_stress_z,
+        blue_sky_breakout_arr=blue_sky_breakout_arr,
+        volume_zscore_arr=volume_zscore_arr,
+        signal_min_blue_sky_volume_z=signal_min_blue_sky_volume_z,
+        vvix_ratio_arr=vvix_ratio_arr,
+        rsi_arr=rsi_arr,
+        bb_pband_arr=bb_pband_arr,
+        dyn_vvix_trigger=dyn_vvix_trigger,
+        dyn_rsi_trigger=dyn_rsi_trigger,
+        dyn_bb_pband_trigger=dyn_bb_pband_trigger,
+        dyn_mult_1=dyn_mult_1,
+        dyn_mult_2=dyn_mult_2,
+        dyn_mult_3=dyn_mult_3,
+    )
+    if max_cfp > _OPT_MAX_CONSEC_FP:
+        return float(-2.0 - (max_cfp - _OPT_MAX_CONSEC_FP) * 0.1), int(n_tp), int(n_sig), int(max_cfp)
+    if n_sig == 0:
+        p = np.clip(np.asarray(probs_arr, dtype=np.float64), 1e-7, 1.0 - 1e-7)
+        yy = np.asarray(targets_arr, dtype=np.int8)
+        pos_m = yy == 1
+        neg_m = yy == 0
+        if pos_m.any() and neg_m.any():
+            score = float(np.mean(p[pos_m]) - np.mean(p[neg_m]))
+        elif pos_m.any():
+            score = float(np.mean(p[pos_m]) - 0.5)
+        elif neg_m.any():
+            score = float(0.5 - np.mean(p[neg_m]))
+        else:
+            score = 0.0
+        return score, int(n_tp), int(n_sig), int(max_cfp)
+    precision = float(n_tp) / float(n_sig)
+    if precision >= _OPT_MIN_PRECISION:
+        return float(n_tp), int(n_tp), int(n_sig), int(max_cfp)
+    return float(precision - 1.0), int(n_tp), int(n_sig), int(max_cfp)
+
+
+def _pick_threshold_nested_base(
+    seed_threshold,
+    *,
+    probs_cal,
+    dates_cal,
+    tickers_cal,
+    y_cal,
+    consecutive_days,
+    signal_cooldown_days,
+    close_cal=None,
+    rsi_window=None,
+    signal_skip_near_peak=True,
+    peak_lookback_days=20,
+    peak_min_dist_from_high_pct=0.012,
+    signal_max_rsi=78.0,
+    vol_stress_cal=None,
+    signal_max_vol_stress_z=None,
+    blue_sky_cal=None,
+    volume_z_cal=None,
+    signal_min_blue_sky_volume_z=None,
+    vvix_ratio_cal=None,
+    rsi_cal=None,
+    bb_cal=None,
+    dyn_vvix_trigger=None,
+    dyn_rsi_trigger=None,
+    dyn_bb_pband_trigger=None,
+    dyn_mult_1=1.0,
+    dyn_mult_2=1.0,
+    dyn_mult_3=1.0,
+):
+    thr_grid = np.unique(
+        np.clip(
+            np.concatenate(
+                [
+                    np.linspace(0.05, 0.95, 19, dtype=np.float64),
+                    np.array([float(seed_threshold)], dtype=np.float64),
+                ]
+            ),
+            0.001,
+            0.999,
+        )
+    )
+    best_thr = float(seed_threshold)
+    best_score = -np.inf
+    for thr in thr_grid:
+        fold_score, _, _, _ = _score_tp_precision_fold(
+            probs_cal,
+            dates_cal,
+            tickers_cal,
+            y_cal,
+            float(thr),
+            consecutive_days,
+            signal_cooldown_days,
+            close_arr=close_cal,
+            rsi_window=rsi_window,
+            signal_skip_near_peak=signal_skip_near_peak,
+            peak_lookback_days=peak_lookback_days,
+            peak_min_dist_from_high_pct=peak_min_dist_from_high_pct,
+            signal_max_rsi=signal_max_rsi,
+            vol_stress_arr=vol_stress_cal,
+            signal_max_vol_stress_z=signal_max_vol_stress_z,
+            blue_sky_breakout_arr=blue_sky_cal,
+            volume_zscore_arr=volume_z_cal,
+            signal_min_blue_sky_volume_z=signal_min_blue_sky_volume_z,
+            vvix_ratio_arr=vvix_ratio_cal,
+            rsi_arr=rsi_cal,
+            bb_pband_arr=bb_cal,
+            dyn_vvix_trigger=dyn_vvix_trigger,
+            dyn_rsi_trigger=dyn_rsi_trigger,
+            dyn_bb_pband_trigger=dyn_bb_pband_trigger,
+            dyn_mult_1=dyn_mult_1,
+            dyn_mult_2=dyn_mult_2,
+            dyn_mult_3=dyn_mult_3,
+        )
+        if (fold_score > best_score) or (
+            np.isclose(fold_score, best_score)
+            and abs(float(thr) - float(seed_threshold)) < abs(best_thr - float(seed_threshold))
+        ):
+            best_score = float(fold_score)
+            best_thr = float(thr)
+    return float(best_thr), float(best_score)
 
 
 def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
@@ -281,8 +469,11 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
       cfg.OPT_MODEL_HYPERPARAMS=True:  auch XGBoost-Hyperparameter (Option A)
       cfg.OPT_MODEL_HYPERPARAMS=False: Modell-HPs aus cfg.SEED_PARAMS (Option B)
 
-    Nicht optimiert hier (wird in späteren Phasen überschrieben):
-      - Schwelle ``threshold`` für CV: fest aus ``seed_params`` (Phase 5 setzt ``best_threshold``).
+    Nicht final festgelegt hier (wird in späteren Phasen überschrieben):
+      - ``base_eval_threshold`` als Seed; pro Fold wird die productive Schwelle nested
+        auf inner-cal gewählt und erst dann auf outer-val bewertet.
+      - Folds mit zu wenig Val-/Cal-Positiven (u. a. <2) u. a.: Straf-Score
+        ``_FOLD_PENALTY_INSUFFICIENT_LABELED_DATA``, ``trial.report`` + user_attrs, kein stilles Weglassen.
       - Anti-Peak/RSI: fest aus ``seed_params`` (Phase 4 Meta-Optuna optimiert diese Werte).
 
     Objective (compound, precision-first):
@@ -358,8 +549,12 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         # ── Post-processing params ─────────────────────────────────────────
         consecutive_days     = trial.suggest_int('consecutive_days',     1, 3)
         signal_cooldown_days = trial.suggest_int('signal_cooldown_days', 1, 10)
-        # Schwelle + Anti-Peak: fest aus seed_params (Phase 5 / Meta überschreiben später)
-        threshold = float(seed_params['threshold'])
+        # Schwelle: Seed wird pro Fold auf inner-cal nested kalibriert (wie Meta-Optuna).
+        base_eval_threshold = trial.suggest_float(
+            'base_eval_threshold',
+            0.05,
+            0.95,
+        )
         signal_skip_near_peak = seed_params.get('signal_skip_near_peak', True)
         peak_lookback_days = int(seed_params.get('peak_lookback_days', 20))
         peak_min_dist_from_high_pct = float(seed_params.get('peak_min_dist_from_high_pct', 0.012))
@@ -396,24 +591,48 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         # ── Model params ───────────────────────────────────────────────────
         # ── Feature-window params: always optimised (affect all base models equally) ──
         # News: Tag-Tripel + news_extra_* (Z-Score-Fenster, Accel, macro−sec) wenn cfg.USE_NEWS_SENTIMENT
-        rsi_w = trial.suggest_categorical('rsi_window', cfg.RSI_WINDOWS)
-        bb_w  = trial.suggest_categorical('bb_window',  cfg.BB_WINDOWS)
-        sma_w = trial.suggest_categorical('sma_window', cfg.SMA_WINDOWS)
+        # cfg.effective_window_grid(name) liefert das vom Pre-Screen ggf. eingeschränkte
+        # Grid (Original-Reihenfolge bleibt erhalten); ohne Pre-Screen-Artefakt = Original.
+        rsi_w = trial.suggest_categorical('rsi_window', cfg.effective_window_grid('RSI_WINDOWS'))
+        bb_w  = trial.suggest_categorical('bb_window',  cfg.effective_window_grid('BB_WINDOWS'))
+        sma_w = trial.suggest_categorical('sma_window', cfg.effective_window_grid('SMA_WINDOWS'))
         btc_momentum_z_window = trial.suggest_categorical(
-            'btc_momentum_z_window', cfg.BTC_MOMENTUM_Z_WINDOWS
+            'btc_momentum_z_window', cfg.effective_window_grid('BTC_MOMENTUM_Z_WINDOWS')
         )
         market_breadth_z_window = trial.suggest_categorical(
-            'market_breadth_z_window', cfg.MARKET_BREADTH_Z_WINDOWS
+            'market_breadth_z_window', cfg.effective_window_grid('MARKET_BREADTH_Z_WINDOWS')
         )
         rel_momentum_window = trial.suggest_categorical(
-            'rel_momentum_window', cfg.REL_MOMENTUM_WINDOWS
+            'rel_momentum_window', cfg.effective_window_grid('REL_MOMENTUM_WINDOWS')
         )
-        adr_window = trial.suggest_categorical('adr_window', cfg.ADR_WINDOWS)
+        adr_window = trial.suggest_categorical('adr_window', cfg.effective_window_grid('ADR_WINDOWS'))
         breakout_lookback_window = trial.suggest_categorical(
-            'breakout_lookback_window', cfg.BREAKOUT_LOOKBACK_WINDOWS
+            'breakout_lookback_window', cfg.effective_window_grid('BREAKOUT_LOOKBACK_WINDOWS')
         )
-        vcp_window = trial.suggest_categorical('vcp_window', cfg.VCP_WINDOWS)
-        btc_corr_window = trial.suggest_categorical('btc_corr_window', cfg.BTC_CORR_WINDOWS)
+        vcp_window = trial.suggest_categorical('vcp_window', cfg.effective_window_grid('VCP_WINDOWS'))
+        btc_corr_window = trial.suggest_categorical(
+            'btc_corr_window', cfg.effective_window_grid('BTC_CORR_WINDOWS')
+        )
+        # ── Risk / Liquidity / VCP-Lower-Low / Breakout-Volumen — pro Trial ein Pick ──
+        yz_vol_window = trial.suggest_categorical(
+            'yz_vol_window', cfg.effective_window_grid('YANG_ZHANG_WINDOWS')
+        )
+        downside_vol_window = trial.suggest_categorical(
+            'downside_vol_window', cfg.effective_window_grid('DOWNSIDE_VOL_WINDOWS')
+        )
+        ret_moment_window = trial.suggest_categorical(
+            'ret_moment_window', cfg.effective_window_grid('RET_MOMENT_WINDOWS')
+        )
+        amihud_window = trial.suggest_categorical(
+            'amihud_window', cfg.effective_window_grid('AMIHUD_WINDOWS')
+        )
+        vcp_lower_low_window = trial.suggest_categorical(
+            'vcp_lower_low_window', cfg.effective_window_grid('VCP_LOWER_LOW_WINDOWS')
+        )
+        breakout_volume_trigger_z = trial.suggest_categorical(
+            'breakout_volume_trigger_z',
+            cfg.effective_window_grid('BREAKOUT_VOLUME_TRIGGER_Z_OPTIONS'),
+        )
         if cfg.USE_NEWS_SENTIMENT:
             news_mom_w = trial.suggest_categorical('news_mom_w', cfg.NEWS_MOM_WINDOWS)
             news_vol_ma = trial.suggest_categorical('news_vol_ma', cfg.NEWS_VOL_MA_WINDOWS)
@@ -425,6 +644,9 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             news_extra_macro_sec_diff = trial.suggest_categorical(
                 'news_extra_macro_sec_diff', cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS
             )
+            news_add_sign_confirmation = trial.suggest_categorical(
+                'news_add_sign_confirmation', cfg.NEWS_ADD_SIGN_CONFIRMATION_OPTIONS
+            )
         else:
             news_mom_w = seed_params.get('news_mom_w', cfg.NEWS_MOM_WINDOWS[len(cfg.NEWS_MOM_WINDOWS) // 2])
             news_vol_ma = seed_params.get('news_vol_ma', cfg.NEWS_VOL_MA_WINDOWS[len(cfg.NEWS_VOL_MA_WINDOWS) // 2])
@@ -432,6 +654,7 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             news_extra_zscore_w = None
             news_extra_tone_accel = None
             news_extra_macro_sec_diff = None
+            news_add_sign_confirmation = None
 
         # ── Model params: optimised (Option A) or fixed from cfg.SEED_PARAMS (Option B) ─
         if cfg.OPT_MODEL_HYPERPARAMS:
@@ -476,14 +699,51 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             breakout_lookback_window=int(breakout_lookback_window),
             vcp_window=int(vcp_window),
             btc_corr_window=int(btc_corr_window),
+            yz_vol_window=int(yz_vol_window),
+            downside_vol_window=int(downside_vol_window),
+            ret_moment_window=int(ret_moment_window),
+            amihud_window=int(amihud_window),
+            vcp_lower_low_window=int(vcp_lower_low_window),
+            breakout_volume_trigger_z=float(breakout_volume_trigger_z),
+            news_add_sign_confirmation=(
+                bool(news_add_sign_confirmation)
+                if news_add_sign_confirmation is not None
+                else None
+            ),
         )
         if cfg.USE_NEWS_SENTIMENT and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
             _tag = cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)
             _need_news = [c for c in feat_cols if str(c).startswith("news_")]
-            df_trial = merge_news_shard_into_df(df_trial, _tag, wanted_news_cols=_need_news)
+            df_trial = merge_news_shard_into_df(
+                df_trial,
+                _tag,
+                wanted_news_cols=_need_news,
+                add_sign_confirmation=(
+                    bool(news_add_sign_confirmation)
+                    if news_add_sign_confirmation is not None
+                    else None
+                ),
+            )
         focal_obj = make_focal_objective(focal_gamma, focal_alpha)
 
-        fold_scores = []
+        fold_scores: list[float] = []
+        trial_nested_thresholds: list[float] = []
+        insufficient_fold_tags: list[str] = []
+        date_norm = pd.to_datetime(df_trial['Date'], errors='coerce').dt.normalize().values
+
+        def _register_insufficient_wf_fold(reason: str) -> None:
+            fold_scores.append(float(_FOLD_PENALTY_INSUFFICIENT_LABELED_DATA))
+            insufficient_fold_tags.append(f"{fold_i}:{reason}")
+            trial.set_user_attr("n_base_insufficient_wf_folds", len(insufficient_fold_tags))
+            trial.set_user_attr(
+                "base_insufficient_wf_folds",
+                ";".join(insufficient_fold_tags[-20:])[:1000],
+            )
+            m = float(np.mean(fold_scores)) if fold_scores else float(_FOLD_PENALTY_INSUFFICIENT_LABELED_DATA)
+            trial.report(m, int(fold_i))
+            if trial.should_prune():
+                raise optuna.exceptions.TrialPruned()
+
         for fold_i in range(wf):
             train_end = min_train + fold_i * fold_size
             val_end   = min_train + (fold_i + 1) * fold_size
@@ -494,27 +754,53 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             val_mask   = (df_trial['_date_idx'] >= train_end) & \
                          (df_trial['_date_idx'] < val_end)
 
-            X_tr  = df_trial.loc[train_mask, feat_cols].to_numpy(dtype=np.float32, copy=True)
-            y_tr  = df_trial.loc[train_mask, 'target'].values.astype(np.int8)
             X_val = df_trial.loc[val_mask,   feat_cols].to_numpy(dtype=np.float32, copy=True)
             y_val = df_trial.loc[val_mask,   'target'].values.astype(np.int8)
             _nan_sentinel = np.float32(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
-            np.nan_to_num(X_tr, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
             np.nan_to_num(X_val, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
 
-            if X_tr.shape[0] < 50 or X_val.shape[0] < 10:
+            if X_val.shape[0] < 10:
+                _register_insufficient_wf_fold("val_rows_lt10")
                 continue
             if y_val.sum() < 2:
+                _register_insufficient_wf_fold("y_val_pos_lt2")
                 continue
 
-            # Inner 90/10 split for early stopping
+            tr_date_vals = date_norm[train_mask]
+            tr_date_vals = tr_date_vals[pd.notna(tr_date_vals)]
+            tr_unique_dates = np.sort(np.unique(tr_date_vals))
+            if len(tr_unique_dates) < 20:
+                _register_insufficient_wf_fold("train_unique_dates_lt20")
+                continue
+            split_pos = max(1, int(len(tr_unique_dates) * 0.80))
+            split_pos = min(split_pos, len(tr_unique_dates) - 1)
+            cal_start_date = tr_unique_dates[split_pos]
+            inner_train_mask = train_mask & (date_norm < cal_start_date)
+            inner_cal_mask = train_mask & (date_norm >= cal_start_date)
+            if int(inner_train_mask.sum()) < 50 or int(inner_cal_mask.sum()) < 20:
+                _register_insufficient_wf_fold("inner_train_or_cal_too_shallow")
+                continue
+
+            X_inner_train = df_trial.loc[inner_train_mask, feat_cols].to_numpy(dtype=np.float32, copy=True)
+            y_inner_train = df_trial.loc[inner_train_mask, 'target'].values.astype(np.int8)
+            X_inner_cal = df_trial.loc[inner_cal_mask, feat_cols].to_numpy(dtype=np.float32, copy=True)
+            y_inner_cal = df_trial.loc[inner_cal_mask, 'target'].values.astype(np.int8)
+            if y_inner_cal.sum() < 2:
+                _register_insufficient_wf_fold("y_cal_pos_lt2")
+                continue
+            np.nan_to_num(X_inner_train, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
+            np.nan_to_num(X_inner_cal, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
+
+            # Inner 90/10 split for early stopping (on inner-train only)
             rng_es  = np.random.RandomState(cfg.RANDOM_STATE + fold_i)
-            perm    = rng_es.permutation(len(X_tr))
+            perm    = rng_es.permutation(len(X_inner_train))
             n_fit   = int(len(perm) * 0.9)
+            n_fit = max(1, min(n_fit, len(perm) - 1))
             fit_idx, es_idx = perm[:n_fit], perm[n_fit:]
 
-            dtrain = xgb.DMatrix(X_tr[fit_idx], label=y_tr[fit_idx])
-            des    = xgb.DMatrix(X_tr[es_idx],  label=y_tr[es_idx])
+            dtrain = xgb.DMatrix(X_inner_train[fit_idx], label=y_inner_train[fit_idx])
+            des    = xgb.DMatrix(X_inner_train[es_idx],  label=y_inner_train[es_idx])
+            dcal   = xgb.DMatrix(X_inner_cal, label=y_inner_cal)
             dval   = xgb.DMatrix(X_val, label=y_val)
 
             # n_estimators = sklearn-Name; xgb.train nutzt num_boost_round (XGBoost 2.x warnt sonst)
@@ -522,6 +808,8 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             xgb_params = {k: v for k, v in params.items() if k != 'n_estimators'}
             xgb_params.update({'tree_method': 'hist', 'seed': cfg.RANDOM_STATE,
                  'disable_default_eval_metric': 1})
+            if bool(getattr(cfg, "BASE_USE_SCALE_POS_WEIGHT", True)):
+                xgb_params["scale_pos_weight"] = _auto_scale_pos_weight(y_inner_train[fit_idx])
             bst = xgb.train(
                 xgb_params,
                 dtrain,
@@ -537,10 +825,36 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 verbose_eval=False,
             )
 
-            raw_preds = bst.predict(dval)
-            probs_val = 1.0 / (1.0 + np.exp(-raw_preds))
+            raw_preds_cal = bst.predict(dcal)
+            probs_cal = 1.0 / (1.0 + np.exp(-raw_preds_cal))
+            raw_preds_val = bst.predict(dval)
+            probs_val = 1.0 / (1.0 + np.exp(-raw_preds_val))
 
-            dates_val   = df_trial.loc[val_mask, 'Date'].values
+            dates_cal = df_trial.loc[inner_cal_mask, 'Date'].values
+            tickers_cal = df_trial.loc[inner_cal_mask, 'ticker'].values
+            close_cal = df_trial.loc[inner_cal_mask, 'close'].values
+            vol_stress_cal = (
+                df_trial.loc[inner_cal_mask, 'vol_stress'].values
+                if 'vol_stress' in df_trial.columns
+                else None
+            )
+            blue_col = f"blue_sky_breakout_{int(breakout_lookback_window)}d"
+            blue_sky_cal = (
+                df_trial.loc[inner_cal_mask, blue_col].values
+                if blue_col in df_trial.columns
+                else None
+            )
+            volume_z_cal = (
+                df_trial.loc[inner_cal_mask, 'volume_zscore'].values
+                if 'volume_zscore' in df_trial.columns
+                else None
+            )
+            vvix_ratio_cal = (
+                df_trial.loc[inner_cal_mask, 'mr_vvix_div_vix'].values
+                if 'mr_vvix_div_vix' in df_trial.columns
+                else None
+            )
+            dates_val = df_trial.loc[val_mask, 'Date'].values
             tickers_val = df_trial.loc[val_mask, 'ticker'].values
             close_val = df_trial.loc[val_mask, 'close'].values
             vol_stress_val = (
@@ -548,7 +862,6 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 if 'vol_stress' in df_trial.columns
                 else None
             )
-            blue_col = f"blue_sky_breakout_{int(breakout_lookback_window)}d"
             blue_sky_val = (
                 df_trial.loc[val_mask, blue_col].values
                 if blue_col in df_trial.columns
@@ -565,21 +878,62 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 else None
             )
             rsi_dyn_col = f"rsi_{int(rsi_w)}d"
+            rsi_dyn_cal = (
+                df_trial.loc[inner_cal_mask, rsi_dyn_col].values
+                if rsi_dyn_col in df_trial.columns
+                else None
+            )
             rsi_dyn_val = (
                 df_trial.loc[val_mask, rsi_dyn_col].values
                 if rsi_dyn_col in df_trial.columns
                 else None
             )
             bb_dyn_col = f"bb_pband_{int(bb_w)}"
+            bb_dyn_cal = (
+                df_trial.loc[inner_cal_mask, bb_dyn_col].values
+                if bb_dyn_col in df_trial.columns
+                else None
+            )
             bb_dyn_val = (
                 df_trial.loc[val_mask, bb_dyn_col].values
                 if bb_dyn_col in df_trial.columns
                 else None
             )
 
-            n_tp, n_sig, max_cfp = _apply_filters_cv(
+            nested_thr, _nested_thr_score = _pick_threshold_nested_base(
+                base_eval_threshold,
+                probs_cal=probs_cal,
+                dates_cal=dates_cal,
+                tickers_cal=tickers_cal,
+                y_cal=y_inner_cal,
+                consecutive_days=consecutive_days,
+                signal_cooldown_days=signal_cooldown_days,
+                close_cal=close_cal,
+                rsi_window=rsi_w,
+                signal_skip_near_peak=signal_skip_near_peak,
+                peak_lookback_days=peak_lookback_days,
+                peak_min_dist_from_high_pct=peak_min_dist_from_high_pct,
+                signal_max_rsi=signal_max_rsi,
+                vol_stress_cal=vol_stress_cal,
+                signal_max_vol_stress_z=signal_max_vol_stress_z,
+                blue_sky_cal=blue_sky_cal,
+                volume_z_cal=volume_z_cal,
+                signal_min_blue_sky_volume_z=signal_min_blue_sky_volume_z,
+                vvix_ratio_cal=vvix_ratio_cal,
+                rsi_cal=rsi_dyn_cal,
+                bb_cal=bb_dyn_cal,
+                dyn_vvix_trigger=dyn_vvix_trigger,
+                dyn_rsi_trigger=dyn_rsi_trigger,
+                dyn_bb_pband_trigger=dyn_bb_pband_trigger,
+                dyn_mult_1=dyn_mult_1,
+                dyn_mult_2=dyn_mult_2,
+                dyn_mult_3=dyn_mult_3,
+            )
+            trial_nested_thresholds.append(float(nested_thr))
+
+            fold_score, n_tp, n_sig, max_cfp = _score_tp_precision_fold(
                 probs_val, dates_val, tickers_val, y_val,
-                threshold, consecutive_days, signal_cooldown_days,
+                nested_thr, consecutive_days, signal_cooldown_days,
                 close_arr=close_val,
                 rsi_window=rsi_w,
                 signal_skip_near_peak=signal_skip_near_peak,
@@ -601,34 +955,18 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 dyn_mult_2=dyn_mult_2,
                 dyn_mult_3=dyn_mult_3,
             )
-
-            # ── Compound objective ─────────────────────────────────────────
-            if max_cfp > _OPT_MAX_CONSEC_FP:
-                # Ticker producing consecutive FPs — hardest penalise
-                fold_scores.append(-2.0 - (max_cfp - _OPT_MAX_CONSEC_FP) * 0.1)
-            elif n_sig == 0:
-                # Kein Signal nach Konsekutiv-/Cooldown-Filter: Proxy aus Roh-p
-                # (mittlere Trennung pos/neg) — sonst konstanter Score, wenig Trial-Signal für den Sampler.
-                p = np.clip(probs_val.astype(np.float64), 1e-7, 1.0 - 1e-7)
-                pos_m = y_val == 1
-                neg_m = y_val == 0
-                if pos_m.any() and neg_m.any():
-                    fold_scores.append(float(np.mean(p[pos_m]) - np.mean(p[neg_m])))
-                elif pos_m.any():
-                    fold_scores.append(float(np.mean(p[pos_m]) - 0.5))
-                elif neg_m.any():
-                    fold_scores.append(float(0.5 - np.mean(p[neg_m])))
-                else:
-                    fold_scores.append(0.0)
-            elif (n_tp / n_sig) >= _OPT_MIN_PRECISION:
-                fold_scores.append(float(n_tp))  # Precision-Gate: mehr Treffer bevorzugen
-            else:
-                fold_scores.append((n_tp / n_sig) - 1.0)  # unter Precision-Floor
+            fold_scores.append(float(fold_score))
 
             trial.report(np.mean(fold_scores), fold_i)
             if trial.should_prune():
                 raise optuna.exceptions.TrialPruned()
 
+        if fold_scores:
+            trial.set_user_attr("n_base_wf_folds_scored", int(len(fold_scores)))
+        if trial_nested_thresholds:
+            trial.set_user_attr("nested_thr_mean", float(np.mean(trial_nested_thresholds)))
+            trial.set_user_attr("nested_thr_min", float(np.min(trial_nested_thresholds)))
+            trial.set_user_attr("nested_thr_max", float(np.max(trial_nested_thresholds)))
         return np.mean(fold_scores) if fold_scores else -1.0
 
     sampler = optuna.samplers.TPESampler(multivariate=True, constant_liar=True, seed=42)
@@ -645,26 +983,34 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         )
     else:
         _seed_enq = dict(seed_params)
+    _seed_enq.setdefault("base_eval_threshold", float(seed_params.get("threshold", 0.5)))
     if not cfg.opt_optimize_y_targets():
         for _k in ('return_window', 'rally_threshold', 'lead_days', 'entry_days', 'min_rally_tail_days'):
             _seed_enq.pop(_k, None)
     _cat_choices = {
-        "rsi_window": list(cfg.RSI_WINDOWS),
-        "bb_window": list(cfg.BB_WINDOWS),
-        "sma_window": list(cfg.SMA_WINDOWS),
-        "btc_momentum_z_window": list(cfg.BTC_MOMENTUM_Z_WINDOWS),
-        "market_breadth_z_window": list(cfg.MARKET_BREADTH_Z_WINDOWS),
-        "rel_momentum_window": list(cfg.REL_MOMENTUM_WINDOWS),
-        "adr_window": list(cfg.ADR_WINDOWS),
-        "breakout_lookback_window": list(cfg.BREAKOUT_LOOKBACK_WINDOWS),
-        "vcp_window": list(cfg.VCP_WINDOWS),
-        "btc_corr_window": list(cfg.BTC_CORR_WINDOWS),
+        "rsi_window": cfg.effective_window_grid('RSI_WINDOWS'),
+        "bb_window": cfg.effective_window_grid('BB_WINDOWS'),
+        "sma_window": cfg.effective_window_grid('SMA_WINDOWS'),
+        "btc_momentum_z_window": cfg.effective_window_grid('BTC_MOMENTUM_Z_WINDOWS'),
+        "market_breadth_z_window": cfg.effective_window_grid('MARKET_BREADTH_Z_WINDOWS'),
+        "rel_momentum_window": cfg.effective_window_grid('REL_MOMENTUM_WINDOWS'),
+        "adr_window": cfg.effective_window_grid('ADR_WINDOWS'),
+        "breakout_lookback_window": cfg.effective_window_grid('BREAKOUT_LOOKBACK_WINDOWS'),
+        "vcp_window": cfg.effective_window_grid('VCP_WINDOWS'),
+        "btc_corr_window": cfg.effective_window_grid('BTC_CORR_WINDOWS'),
+        "yz_vol_window": cfg.effective_window_grid('YANG_ZHANG_WINDOWS'),
+        "downside_vol_window": cfg.effective_window_grid('DOWNSIDE_VOL_WINDOWS'),
+        "ret_moment_window": cfg.effective_window_grid('RET_MOMENT_WINDOWS'),
+        "amihud_window": cfg.effective_window_grid('AMIHUD_WINDOWS'),
+        "vcp_lower_low_window": cfg.effective_window_grid('VCP_LOWER_LOW_WINDOWS'),
+        "breakout_volume_trigger_z": cfg.effective_window_grid('BREAKOUT_VOLUME_TRIGGER_Z_OPTIONS'),
         "news_mom_w": list(cfg.NEWS_MOM_WINDOWS),
         "news_vol_ma": list(cfg.NEWS_VOL_MA_WINDOWS),
         "news_tone_roll": list(cfg.NEWS_TONE_ROLL_WINDOWS),
         "news_extra_zscore_w": list(cfg.NEWS_EXTRA_ZSCORE_WINDOWS),
         "news_extra_tone_accel": list(cfg.NEWS_EXTRA_TONE_ACCEL_OPTIONS),
         "news_extra_macro_sec_diff": list(cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS),
+        "news_add_sign_confirmation": list(cfg.NEWS_ADD_SIGN_CONFIRMATION_OPTIONS),
     }
     for _k, _choices in _cat_choices.items():
         if _k not in _seed_enq or not _choices:

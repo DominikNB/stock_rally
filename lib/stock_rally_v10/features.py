@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import date
+from hashlib import sha1
 
 import numpy as np
 import pandas as pd
@@ -45,9 +47,16 @@ def _apply_news_fill(df: pd.DataFrame, fill_news: list[str], *, log_prefix: str 
     missing = [c for c in want if c not in colset]
     present = [c for c in want if c in colset]
     if missing:
-        z = np.float32(0.0)
-        for c in missing:
-            df[c] = z
+        # Eine einzige Block-Zuweisung statt vieler Einzel-Zuweisungen — vermeidet
+        # pandas-BlockManager-Konsolidierung bei mehreren tausend Spalten und sorgt für
+        # einen sauberen float32-Typ (statt mancher pandas-Versionen die np.float32(0.0)
+        # als 0-d-Array in eine ``object``-Spalte umsetzen).
+        zeros = pd.DataFrame(
+            np.zeros((len(df), len(missing)), dtype=np.float32),
+            columns=missing,
+            index=df.index,
+        )
+        df[missing] = zeros
     if present:
         df[present] = df[present].fillna(0.0)
     if log_prefix:
@@ -369,6 +378,31 @@ def _export_news_shards_for_grid(df_base: pd.DataFrame, s: pd.DataFrame) -> None
     )
     os.makedirs(shard_dir, exist_ok=True)
     export_tags = _news_export_tags_for_mode()
+    _sig = _news_shard_input_signature(df_base, s, export_tags)
+    _reuse = _try_reuse_news_shards(shard_dir, export_tags, _sig)
+    if _reuse is not None:
+        cfg.FEATURE_SHARD_DIR = os.path.abspath(shard_dir)
+        cfg.NEWS_SHARD_MANIFEST = _reuse
+        cfg._FEATURE_NEWS_SHARDS_ACTIVE = True
+        _NEWS_SHARD_FRAME_CACHE.clear()
+        print(
+            "assemble_features [News → Platte]: unveraenderte Inputs erkannt — "
+            "vorhandene News-Shards werden wiederverwendet (kein Rebuild).",
+            flush=True,
+        )
+        return
+    _reuse_day = _try_reuse_news_shards_same_calendar_day(shard_dir, export_tags)
+    if _reuse_day is not None:
+        cfg.FEATURE_SHARD_DIR = os.path.abspath(shard_dir)
+        cfg.NEWS_SHARD_MANIFEST = _reuse_day
+        cfg._FEATURE_NEWS_SHARDS_ACTIVE = True
+        _NEWS_SHARD_FRAME_CACHE.clear()
+        print(
+            "assemble_features [News → Platte]: Kalendertag-Cache (built_on=heute) — "
+            "News-Shards wiederverwendet (cfg.NEWS_SHARDS_REUSE_SAME_CALENDAR_DAY; kein Rebuild).",
+            flush=True,
+        )
+        return
     _n_news = len(export_tags)
     _mode_txt = "SCORING_ONLY: nur Modell-Tag" if bool(getattr(cfg, "SCORING_ONLY", False)) and _n_news == 1 else "volles Grid"
     if bool(getattr(cfg, "SCORING_ONLY", False)) and _n_news == 1:
@@ -405,7 +439,13 @@ def _export_news_shards_for_grid(df_base: pd.DataFrame, s: pd.DataFrame) -> None
     abs_manifest = {tag: os.path.join(shard_dir, fname) for tag, fname in manifest.items()}
     with open(manifest_path, "w", encoding="utf-8") as fp:
         json.dump(
-            {"manifest_version": 1, "shard_dir": os.path.abspath(shard_dir), "tags": manifest},
+            {
+                "manifest_version": 2,
+                "shard_dir": os.path.abspath(shard_dir),
+                "tags": manifest,
+                "input_signature": _sig,
+                "built_on": date.today().isoformat(),
+            },
             fp,
             indent=2,
         )
@@ -418,6 +458,105 @@ def _export_news_shards_for_grid(df_base: pd.DataFrame, s: pd.DataFrame) -> None
         f"df_features bleibt bei {len(df_base.columns)} Spalten (nur Technik + Kontext, keine news_*).",
         flush=True,
     )
+
+
+def _news_shard_input_signature(
+    df_base: pd.DataFrame,
+    s: pd.DataFrame,
+    export_tags: list[tuple[int, int, int, str]],
+) -> str:
+    syms = sorted({_ticker_symbol_str(x) for x in df_base["ticker"].dropna().unique()} - {""})
+    sectors = sorted({str(x) for x in df_base["sector"].dropna().unique()}) if "sector" in df_base.columns else []
+    s_dates = pd.to_datetime(s["Date"]).dt.normalize() if "Date" in s.columns else pd.Series(dtype="datetime64[ns]")
+    payload = {
+        "schema_version": 1,
+        "scoring_only": bool(getattr(cfg, "SCORING_ONLY", False)),
+        "use_news_sentiment": bool(getattr(cfg, "USE_NEWS_SENTIMENT", False)),
+        "news_anchor_org_filter": bool(getattr(cfg, "NEWS_ANCHOR_ORG_FILTER", False)),
+        "news_extra_macro_sec_diff_options": list(getattr(cfg, "NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS", [])),
+        "news_add_regime_tone_interactions": bool(getattr(cfg, "NEWS_ADD_REGIME_TONE_INTERACTIONS", False)),
+        "news_regime_interaction_base_cols": [str(x) for x in getattr(cfg, "NEWS_REGIME_INTERACTION_BASE_COLS", ())],
+        "feature_numeric_nan_sentinel": float(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8)),
+        "tickers_sha1": sha1("|".join(syms).encode("utf-8")).hexdigest(),
+        "n_tickers": len(syms),
+        "sectors_sha1": sha1("|".join(sectors).encode("utf-8")).hexdigest(),
+        "n_rows_base": int(len(df_base)),
+        "date_min": str(pd.to_datetime(df_base["Date"]).min()) if "Date" in df_base.columns and len(df_base) else "",
+        "date_max": str(pd.to_datetime(df_base["Date"]).max()) if "Date" in df_base.columns and len(df_base) else "",
+        "news_channels_sha1": sha1(
+            "|".join(sorted({str(x) for x in s.get("channel", pd.Series(dtype=object)).dropna().unique()})).encode("utf-8")
+        ).hexdigest(),
+        "news_date_min": str(s_dates.min()) if len(s_dates) else "",
+        "news_date_max": str(s_dates.max()) if len(s_dates) else "",
+        "news_rows": int(len(s)),
+        "export_tags": [[int(m), int(v), int(t), str(tag)] for (m, v, t, tag) in export_tags],
+    }
+    return sha1(json.dumps(payload, sort_keys=True, ensure_ascii=True).encode("utf-8")).hexdigest()
+
+
+def _try_reuse_news_shards(
+    shard_dir: str,
+    export_tags: list[tuple[int, int, int, str]],
+    expected_signature: str,
+) -> dict[str, str] | None:
+    manifest_path = os.path.join(shard_dir, "news_shards_manifest.json")
+    if not os.path.isfile(manifest_path):
+        return None
+    try:
+        payload = json.loads(open(manifest_path, "r", encoding="utf-8").read())
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if str(payload.get("input_signature") or "") != str(expected_signature):
+        return None
+    tags = payload.get("tags")
+    if not isinstance(tags, dict):
+        return None
+    manifest: dict[str, str] = {}
+    for _, _, _, tag in export_tags:
+        fname = tags.get(tag)
+        if not fname:
+            return None
+        p = os.path.join(shard_dir, str(fname))
+        if not os.path.isfile(p):
+            return None
+        manifest[str(tag)] = p
+    return manifest
+
+
+def _try_reuse_news_shards_same_calendar_day(
+    shard_dir: str,
+    export_tags: list[tuple[int, int, int, str]],
+) -> dict[str, str] | None:
+    """Wiederverwendung ohne Signatur-Vergleich, wenn Manifest ``built_on`` = heutiges Datum (lokaler Tag)."""
+    if not bool(getattr(cfg, "NEWS_SHARDS_REUSE_SAME_CALENDAR_DAY", False)):
+        return None
+    manifest_path = os.path.join(shard_dir, "news_shards_manifest.json")
+    if not os.path.isfile(manifest_path):
+        return None
+    try:
+        payload = json.loads(open(manifest_path, "r", encoding="utf-8").read())
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    built = str(payload.get("built_on") or "").strip()
+    if built != date.today().isoformat():
+        return None
+    tags = payload.get("tags")
+    if not isinstance(tags, dict):
+        return None
+    manifest: dict[str, str] = {}
+    for _, _, _, tag in export_tags:
+        fname = tags.get(tag)
+        if not fname:
+            return None
+        p = os.path.join(shard_dir, str(fname))
+        if not os.path.isfile(p):
+            return None
+        manifest[str(tag)] = p
+    return manifest
 
 
 def _apply_news_regime_tone_interactions(df: pd.DataFrame, tag: str) -> None:
@@ -449,17 +588,65 @@ def _apply_news_regime_tone_interactions(df: pd.DataFrame, tag: str) -> None:
             df[f"{tcol}_x_{safe}"] = (t * m).astype(np.float32)
 
 
+def _apply_news_sign_confirmation(
+    df: pd.DataFrame, tag: str, *, enabled: bool | None = None
+) -> None:
+    """Tone × sign(Tagesrendite): positives Vorzeichen = Tone bestätigt Kursrichtung,
+    negatives = Widerspruch („Sell-the-news"-Setup vs. „buy-the-rip"-Bestätigung).
+
+    Aktiv bei ``cfg.USE_NEWS_SENTIMENT`` UND (``enabled`` falls gesetzt, sonst
+    ``cfg.NEWS_ADD_SIGN_CONFIRMATION``). ``enabled=False`` lässt die Spalten weg.
+    """
+    if not getattr(cfg, "USE_NEWS_SENTIMENT", False):
+        return
+    if enabled is None:
+        enabled = bool(getattr(cfg, "NEWS_ADD_SIGN_CONFIRMATION", True))
+    if not enabled:
+        return
+    if "ticker" not in df.columns or "close" not in df.columns:
+        return
+    # Berechnung in zeitlich sortierter Reihenfolge, dann zurück auf df.index. Garantiert
+    # korrektes pct_change/shift unabhängig davon, in welcher Ordnung der Aufrufer den DF liefert.
+    sorted_view = df[["ticker", "Date", "close"]].sort_values(["ticker", "Date"])
+    grp = sorted_view.groupby("ticker", sort=False)["close"]
+    ret_sorted = grp.pct_change()
+    ret_lag1_sorted = ret_sorted.groupby(sorted_view["ticker"], sort=False).shift(1)
+    ret = ret_sorted.reindex(df.index)
+    ret_lag1 = ret_lag1_sorted.reindex(df.index)
+    sgn_today = np.sign(ret.fillna(0.0).to_numpy(dtype=np.float64))
+    sgn_lag1 = np.sign(ret_lag1.fillna(0.0).to_numpy(dtype=np.float64))
+    for prefix in ("news_macro", "news_sec", "news_anchor"):
+        tcol = f"{prefix}_{tag}_tone"
+        if tcol not in df.columns:
+            continue
+        t = np.nan_to_num(
+            pd.to_numeric(df[tcol], errors="coerce").to_numpy(dtype=np.float64),
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0,
+        )
+        df[f"{tcol}_x_sign_ret_1d"] = (t * sgn_today).astype(np.float32)
+        df[f"{tcol}_x_sign_ret_lag1"] = (t * sgn_lag1).astype(np.float32)
+
+
 def merge_news_shard_into_df(
     df: pd.DataFrame,
     tag: str,
     wanted_news_cols: list[str] | tuple[str, ...] | None = None,
+    *,
+    add_sign_confirmation: bool | None = None,
 ) -> pd.DataFrame:
-    """Lädt News-Spalten für ``feat_tag`` (Fenster-Tripel-String, vgl. ``cfg.news_feat_tag``) an (Date, ticker)."""
+    """Lädt News-Spalten für ``feat_tag`` (Fenster-Tripel-String, vgl. ``cfg.news_feat_tag``) an (Date, ticker).
+
+    ``add_sign_confirmation``: optionaler Optuna-Override für die globale
+    ``cfg.NEWS_ADD_SIGN_CONFIRMATION``-Einstellung (None = Default verwenden).
+    """
     if not getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
         return df
     # Bereits gemerged (z. B. Phase 12 → 13): nur Regime-Interaktionen nachziehen.
     if f"news_macro_{tag}_tone" in df.columns:
         _apply_news_regime_tone_interactions(df, tag)
+        _apply_news_sign_confirmation(df, tag, enabled=add_sign_confirmation)
         return df
     manifest = getattr(cfg, "NEWS_SHARD_MANIFEST", None) or {}
     path = manifest.get(tag)
@@ -530,6 +717,7 @@ def merge_news_shard_into_df(
         ).astype(np.float32, copy=False)
         df[c] = arr
     _apply_news_regime_tone_interactions(df, tag)
+    _apply_news_sign_confirmation(df, tag, enabled=add_sign_confirmation)
     return df
 
 
@@ -542,7 +730,9 @@ def merge_news_shard_from_best_params(df: pd.DataFrame, best_params: dict) -> pd
         int(best_params["news_vol_ma"]),
         int(best_params["news_tone_roll"]),
     )
-    return merge_news_shard_into_df(df, tag)
+    sc = best_params.get("news_add_sign_confirmation", None)
+    add_sc = bool(sc) if sc is not None else None
+    return merge_news_shard_into_df(df, tag, add_sign_confirmation=add_sc)
 
 
 def assemble_features(df, sentiment_df=None, meta_only=False):
@@ -601,11 +791,13 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             "btc_momentum / btc_momentum_z_w* werden mit 0.0 gefüllt.",
             flush=True,
         )
-        df["btc_momentum"] = np.float32(0.0)
+        # 0.0 als float64 zuweisen — pandas legt eine saubere numerische Spalte an;
+        # ``np.float32(0.0)``-Skalare landen in manchen pandas-Versionen als object-Dtype.
+        df["btc_momentum"] = 0.0
         for _zw in cfg.BTC_MOMENTUM_Z_WINDOWS:
-            df[f"btc_momentum_z_w{int(_zw)}"] = np.float32(0.0)
+            df[f"btc_momentum_z_w{int(_zw)}"] = 0.0
         for _cw in cfg.BTC_CORR_WINDOWS:
-            df[f"corr_stock_btc_{int(_cw)}d"] = np.float32(0.0)
+            df[f"corr_stock_btc_{int(_cw)}d"] = 0.0
     else:
         btc = btc.sort_values("Date").copy()
         _assign_cols = ["Date", "btc_momentum"]
@@ -625,7 +817,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             df[_cn] = df[_cn].fillna(0.0)
         if _btc_close.empty:
             for _cw in cfg.BTC_CORR_WINDOWS:
-                df[f"corr_stock_btc_{int(_cw)}d"] = np.float32(0.0)
+                df[f"corr_stock_btc_{int(_cw)}d"] = 0.0
         else:
             _btc_close["Date"] = pd.to_datetime(_btc_close["Date"]).dt.normalize()
             _btc_close["btc_ret_1d"] = pd.to_numeric(
@@ -633,17 +825,32 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             ).pct_change()
             _btc_ret_map = _btc_close.set_index("Date")["btc_ret_1d"]
             df["_btc_ret_1d"] = pd.to_datetime(df["Date"]).dt.normalize().map(_btc_ret_map)
-            _stock_ret = pd.to_numeric(df["close"], errors="coerce").pct_change()
-            _grp = df.groupby("ticker", sort=False)
+            # Wichtig: pct_change MUSS pro Ticker gerechnet werden, sonst leakt der letzte
+            # Close eines Tickers in die erste Zeile des nächsten Tickers (Cross-Ticker-Leak).
+            # Wir berechnen alles in einer zeitlich sortierten Sicht und mappen via Index zurück
+            # — der ursprüngliche DataFrame bleibt in der Reihenfolge, die der Aufrufer erwartet.
+            _sorted_view = df[["ticker", "Date", "close", "_btc_ret_1d"]].sort_values(
+                ["ticker", "Date"]
+            )
+            _stock_ret = _sorted_view.groupby("ticker", sort=False)["close"].pct_change()
+            _btc_ret_s = pd.to_numeric(_sorted_view["_btc_ret_1d"], errors="coerce")
+            _ticker_ser = _sorted_view["ticker"]
             for _cw in cfg.BTC_CORR_WINDOWS:
                 _cw = int(_cw)
                 _cn = f"corr_stock_btc_{_cw}d"
-                df[_cn] = _grp.apply(
-                    lambda g: _stock_ret.loc[g.index]
-                    .rolling(_cw, min_periods=max(5, _cw // 2))
-                    .corr(df.loc[g.index, "_btc_ret_1d"])
-                ).reset_index(level=0, drop=True)
-                df[_cn] = pd.to_numeric(df[_cn], errors="coerce").fillna(0.0)
+                corr_parts: list[pd.Series] = []
+                # Rolling-Korrelation pro Ticker — keine Daten-Lecks zwischen Symbolen.
+                for _tkr, idx_block in _ticker_ser.groupby(_ticker_ser, sort=False).groups.items():
+                    s_stk = _stock_ret.loc[idx_block]
+                    s_btc = _btc_ret_s.loc[idx_block]
+                    corr_parts.append(
+                        s_stk.rolling(_cw, min_periods=max(5, _cw // 2)).corr(s_btc)
+                    )
+                if corr_parts:
+                    corr_full = pd.concat(corr_parts).reindex(df.index)
+                else:
+                    corr_full = pd.Series(0.0, index=df.index)
+                df[_cn] = pd.to_numeric(corr_full, errors="coerce").fillna(0.0)
             df = df.drop(columns=["_btc_ret_1d"], errors="ignore")
 
     if meta_only:
@@ -774,6 +981,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                     else:
                         df[c] = df[c].fillna(0.0)
                 _apply_news_regime_tone_interactions(df, tag)
+                _apply_news_sign_confirmation(df, tag)
             else:
                 # Immer Shard-Export: keine monolithische Wide-Matrix (tausende news_*-Spalten) im RAM.
                 _export_news_shards_for_grid(df, s)
@@ -818,6 +1026,39 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             ),
             vcp_window=int(_bp.get("vcp_window", _sp.get("vcp_window", 10))),
             btc_corr_window=int(_bp.get("btc_corr_window", _sp.get("btc_corr_window", 20))),
+            yz_vol_window=int(
+                _bp.get("yz_vol_window", _sp.get("yz_vol_window", cfg._default_yang_zhang_window()))
+            ),
+            downside_vol_window=int(
+                _bp.get(
+                    "downside_vol_window",
+                    _sp.get("downside_vol_window", cfg._default_downside_vol_window()),
+                )
+            ),
+            ret_moment_window=int(
+                _bp.get(
+                    "ret_moment_window",
+                    _sp.get("ret_moment_window", cfg._default_ret_moment_window()),
+                )
+            ),
+            amihud_window=int(
+                _bp.get("amihud_window", _sp.get("amihud_window", cfg._default_amihud_window()))
+            ),
+            vcp_lower_low_window=int(
+                _bp.get(
+                    "vcp_lower_low_window",
+                    _sp.get("vcp_lower_low_window", cfg._default_vcp_lower_low_window()),
+                )
+            ),
+            breakout_volume_trigger_z=float(
+                _bp.get(
+                    "breakout_volume_trigger_z",
+                    _sp.get(
+                        "breakout_volume_trigger_z",
+                        cfg._default_breakout_volume_trigger_z(),
+                    ),
+                )
+            ),
         )
     else:
         worst_case_cols = [

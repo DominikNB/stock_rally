@@ -1,0 +1,7 @@
+idx=64
+homogeneity_score=0.4479776121527794
+inner_homogeneity=0.6008955914408013
+uniqueness=0.2950596328647575
+pos_rate=0.05083258073906
+row_label=rt=0.08 w=[4,6] strict=False no_dip=True
+outdir=C:\Python projects\stock_rally\figures\target_debug_best_hcomb

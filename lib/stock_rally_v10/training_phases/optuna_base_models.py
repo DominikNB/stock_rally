@@ -21,6 +21,31 @@ from lib.stock_rally_v10.features import merge_news_shard_from_best_params
 from lib.stock_rally_v10.extended_base_features import append_macro_regime_vol_numeric_cols
 
 
+def _auto_scale_pos_weight(y: np.ndarray) -> float:
+    """XGBoost-Klassengewicht aus Neg/Pos-Verhältnis (>=1.0)."""
+    yy = np.asarray(y, dtype=np.int8)
+    n_pos = int((yy == 1).sum())
+    n_neg = int((yy == 0).sum())
+    if n_pos <= 0 or n_neg <= 0:
+        return 1.0
+    return float(max(1.0, n_neg / n_pos))
+
+
+def _auto_class_weight_dict(y: np.ndarray) -> dict[int, float]:
+    """Explizite Klassengewichte (mean=1.0) für sklearn-Modelle."""
+    yy = np.asarray(y, dtype=np.int8)
+    n = int(len(yy))
+    if n <= 0:
+        return {0: 1.0, 1: 1.0}
+    n_pos = int((yy == 1).sum())
+    n_neg = int((yy == 0).sum())
+    if n_pos <= 0 or n_neg <= 0:
+        return {0: 1.0, 1: 1.0}
+    w0 = float(n) / (2.0 * float(n_neg))
+    w1 = float(n) / (2.0 * float(n_pos))
+    return {0: w0, 1: w1}
+
+
 def _resolve_meta_shap_top_k(c: Any, mean_shap: np.ndarray) -> tuple[int, float]:
     """
     Anzahl Roh-Features für Meta-Stacking: festes K oder kleinstes K mit
@@ -195,6 +220,19 @@ def _run_phase12(c: Any) -> None:
     except Exception:
         pass
 
+    if bool(getattr(c, "FEATURE_PRESCREEN_ENABLED", False)):
+        try:
+            from lib.stock_rally_v10.feature_prescreen import run_feature_prescreen
+
+            artifact = run_feature_prescreen(c.df_train, cfg_mod=c)
+            if artifact is not None:
+                c._FEATURE_PRESCREEN_ARTIFACT = artifact
+        except (ImportError, ValueError, KeyError) as _exc_pre:
+            print(
+                f"[Pre-Screen] übersprungen ({_exc_pre}); fahre mit vollem Feature-Satz fort.",
+                flush=True,
+            )
+
     print("=" * 60)
     print("Phase 1: Optuna base-model HP optimisation")
     print("=" * 60)
@@ -282,6 +320,25 @@ def _run_phase12(c: Any) -> None:
     _brk_w = int(best_params.get("breakout_lookback_window", sp.get("breakout_lookback_window", 252)))
     _vcp_w = int(best_params.get("vcp_window", sp.get("vcp_window", 10)))
     _btc_cw = int(best_params.get("btc_corr_window", sp.get("btc_corr_window", 20)))
+    _yz_w = int(best_params.get("yz_vol_window", sp.get("yz_vol_window", c._default_yang_zhang_window())))
+    _dv_w = int(
+        best_params.get("downside_vol_window", sp.get("downside_vol_window", c._default_downside_vol_window()))
+    )
+    _rm_w = int(best_params.get("ret_moment_window", sp.get("ret_moment_window", c._default_ret_moment_window())))
+    _am_w = int(best_params.get("amihud_window", sp.get("amihud_window", c._default_amihud_window())))
+    _ll_w = int(
+        best_params.get("vcp_lower_low_window", sp.get("vcp_lower_low_window", c._default_vcp_lower_low_window()))
+    )
+    _bvt_z = float(
+        best_params.get(
+            "breakout_volume_trigger_z",
+            sp.get("breakout_volume_trigger_z", c._default_breakout_volume_trigger_z()),
+        )
+    )
+    _news_sc = best_params.get(
+        "news_add_sign_confirmation", sp.get("news_add_sign_confirmation", None)
+    )
+    _news_sc = bool(_news_sc) if _news_sc is not None else None
     if c.USE_NEWS_SENTIMENT:
         FEAT_COLS = c.build_feature_cols(
             rsi_w,
@@ -300,6 +357,13 @@ def _run_phase12(c: Any) -> None:
             breakout_lookback_window=_brk_w,
             vcp_window=_vcp_w,
             btc_corr_window=_btc_cw,
+            yz_vol_window=_yz_w,
+            downside_vol_window=_dv_w,
+            ret_moment_window=_rm_w,
+            amihud_window=_am_w,
+            vcp_lower_low_window=_ll_w,
+            breakout_volume_trigger_z=_bvt_z,
+            news_add_sign_confirmation=_news_sc,
         )
     else:
         FEAT_COLS = c.build_feature_cols(
@@ -313,12 +377,19 @@ def _run_phase12(c: Any) -> None:
             breakout_lookback_window=_brk_w,
             vcp_window=_vcp_w,
             btc_corr_window=_btc_cw,
+            yz_vol_window=_yz_w,
+            downside_vol_window=_dv_w,
+            ret_moment_window=_rm_w,
+            amihud_window=_am_w,
+            vcp_lower_low_window=_ll_w,
+            breakout_volume_trigger_z=_bvt_z,
         )
     FEAT_COLS = append_macro_regime_vol_numeric_cols(FEAT_COLS, df_train)
     print(
         f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, "
         f"BTCz={_btc_z}, BTCcorr={_btc_cw}, BreadthZ={_brd_z}, relMom={_rel_m}d, "
-        f"ADR={_adr_w}, BRK={_brk_w}, VCP={_vcp_w}  ({len(FEAT_COLS)} features)"
+        f"ADR={_adr_w}, BRK={_brk_w}, VCP={_vcp_w}, YZ={_yz_w}, DV={_dv_w}, RM={_rm_w}, "
+        f"AM={_am_w}, LL={_ll_w}, BVTz={_bvt_z:g}  ({len(FEAT_COLS)} features)"
     )
     if c.USE_NEWS_SENTIMENT:
         _log_news_feature_constancy(df_train, FEAT_COLS, label="df_train (BASE, nach News-Shard)")
@@ -407,6 +478,8 @@ def _run_phase12(c: Any) -> None:
 
     rs = c.RANDOM_STATE
     esr = c.EARLY_STOPPING_ROUNDS
+    base_use_spw = bool(getattr(c, "BASE_USE_SCALE_POS_WEIGHT", True))
+    sk_class_weight = _auto_class_weight_dict(y_train_all) if base_use_spw else None
 
     for m_idx, seed_i in enumerate([rs, rs + 1, rs + 2, rs + 3]):
         name = f"XGB-{m_idx+1}"
@@ -415,6 +488,12 @@ def _run_phase12(c: Any) -> None:
         dtrain_m = xgb.DMatrix(X_fit, label=y_fit)
         des_m = xgb.DMatrix(X_es, label=y_es)
         p = {**xgb_base_params, "seed": seed_i, "disable_default_eval_metric": 1}
+        if base_use_spw:
+            p["scale_pos_weight"] = _auto_scale_pos_weight(y_fit)
+        print(
+            f"    {name} weights: scale_pos_weight={float(p.get('scale_pos_weight', 1.0)):.4f}",
+            flush=True,
+        )
         bst = xgb.train(
             p,
             dtrain_m,
@@ -446,6 +525,12 @@ def _run_phase12(c: Any) -> None:
         p_lgb = {**lgb_params, "seed": seed_i, "verbosity": -1}
         p_lgb["objective"] = focal_obj_lgb
         p_lgb["metric"] = "binary_logloss"
+        if base_use_spw:
+            p_lgb["scale_pos_weight"] = _auto_scale_pos_weight(y_fit)
+        print(
+            f"    {name} weights: scale_pos_weight={float(p_lgb.get('scale_pos_weight', 1.0)):.4f}",
+            flush=True,
+        )
         n_est = p_lgb.pop("n_estimators", 300)
         bst_lgb = lgb.train(
             p_lgb,
@@ -458,12 +543,19 @@ def _run_phase12(c: Any) -> None:
         print(f"  {name} done — best iteration: {bst_lgb.best_iteration}")
 
     print("  Training RF...")
+    if sk_class_weight is not None:
+        print(
+            f"    RF weights: class_weight={{0:{sk_class_weight[0]:.4f}, 1:{sk_class_weight[1]:.4f}}}",
+            flush=True,
+        )
+    else:
+        print("    RF weights: class_weight=None", flush=True)
     rf = RandomForestClassifier(
         n_estimators=500,
         max_depth=best_params["max_depth"],
         min_samples_leaf=20,
         max_features="sqrt",
-        class_weight="balanced_subsample",
+        class_weight=sk_class_weight if sk_class_weight is not None else None,
         random_state=rs,
         n_jobs=-1,
     )
@@ -472,12 +564,19 @@ def _run_phase12(c: Any) -> None:
     print("  RF done.")
 
     print("  Training ET...")
+    if sk_class_weight is not None:
+        print(
+            f"    ET weights: class_weight={{0:{sk_class_weight[0]:.4f}, 1:{sk_class_weight[1]:.4f}}}",
+            flush=True,
+        )
+    else:
+        print("    ET weights: class_weight=None", flush=True)
     et = ExtraTreesClassifier(
         n_estimators=500,
         max_depth=best_params["max_depth"],
         min_samples_leaf=20,
         max_features="sqrt",
-        class_weight="balanced_subsample",
+        class_weight=sk_class_weight if sk_class_weight is not None else None,
         random_state=rs + 20,
         n_jobs=-1,
     )
@@ -486,6 +585,13 @@ def _run_phase12(c: Any) -> None:
     print("  ET done.")
 
     print("  Training LR...")
+    if sk_class_weight is not None:
+        print(
+            f"    LR weights: class_weight={{0:{sk_class_weight[0]:.4f}, 1:{sk_class_weight[1]:.4f}}}",
+            flush=True,
+        )
+    else:
+        print("    LR weights: class_weight=None", flush=True)
     # Macro-Regime/mr_* können NaN haben (Yahoo, Rollen); Bäume tolerieren das, LogisticRegression nicht.
     lr_pipe = Pipeline(
         [
@@ -495,7 +601,7 @@ def _run_phase12(c: Any) -> None:
                 "lr",
                 LogisticRegression(
                     C=0.1,
-                    class_weight="balanced",
+                    class_weight=sk_class_weight if sk_class_weight is not None else None,
                     max_iter=1000,
                     random_state=rs,
                     solver="lbfgs",
@@ -536,6 +642,13 @@ def _run_phase12(c: Any) -> None:
         breakout_lookback_window=_brk_w,
         vcp_window=_vcp_w,
         btc_corr_window=_btc_cw,
+        yz_vol_window=_yz_w,
+        downside_vol_window=_dv_w,
+        ret_moment_window=_rm_w,
+        amihud_window=_am_w,
+        vcp_lower_low_window=_ll_w,
+        breakout_volume_trigger_z=_bvt_z,
+        news_add_sign_confirmation=_news_sc,
     )
     feat_display = [rename_map.get(col, col) for col in FEAT_COLS]
 

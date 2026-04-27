@@ -103,6 +103,7 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
     bundle = {
         "base_models": g["base_models"],
         "meta_clf": g["meta_clf"],
+        "meta_proba_calibrator": g.get("meta_proba_calibrator"),
         "best_threshold": float(g["best_threshold"]),
         "FEAT_COLS": list(g["FEAT_COLS"]),
         "topk_idx": np.asarray(g["topk_idx"]),
@@ -170,6 +171,7 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
     g["OPT_OPTIMIZE_Y_TARGETS"] = bool(b.get("OPT_OPTIMIZE_Y_TARGETS", _opt_y_default))
     g["base_models"] = b["base_models"]
     g["meta_clf"] = b["meta_clf"]
+    g["meta_proba_calibrator"] = b.get("meta_proba_calibrator")
     g["best_threshold"] = float(b["best_threshold"])
     g["FEAT_COLS"] = list(b["FEAT_COLS"])
     g["topk_idx"] = np.asarray(b["topk_idx"])

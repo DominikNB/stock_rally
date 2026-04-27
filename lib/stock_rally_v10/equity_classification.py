@@ -9,9 +9,11 @@ Zusätzlich ``gics_sector_key`` / ``gics_industry_key``: normalisiert für Merge
 """
 from __future__ import annotations
 
+import json
 import re
 import time
 import unicodedata
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -27,6 +29,7 @@ CLASSIFICATION_MERGE_KEYS = (
     "gics_industry_key",
 )
 CLASSIFICATION_COLUMN_KEYS = CLASSIFICATION_DISPLAY_KEYS + CLASSIFICATION_MERGE_KEYS
+_DEFAULT_CACHE_PATH = Path("data") / "equity_classification_cache.json"
 
 
 def normalize_taxonomy_label(s: str) -> str:
@@ -97,33 +100,98 @@ def get_equity_classification(ticker: str, info: dict[str, Any] | None = None) -
     return equity_classification_from_info(ts, raw)
 
 
+def _read_classification_cache(path: Path) -> dict[str, dict[str, str]]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    out: dict[str, dict[str, str]] = {}
+    if not isinstance(payload, dict):
+        return out
+    raw_rows = payload.get("rows")
+    if not isinstance(raw_rows, dict):
+        return out
+    for tk, row in raw_rows.items():
+        ts = _ticker_symbol_str(tk)
+        if not ts or not isinstance(row, dict):
+            continue
+        out[ts] = {
+            "classification_standard": str(row.get("classification_standard") or ""),
+            "gics_sector": str(row.get("gics_sector") or ""),
+            "gics_industry": str(row.get("gics_industry") or ""),
+            "gics_sector_key": str(row.get("gics_sector_key") or ""),
+            "gics_industry_key": str(row.get("gics_industry_key") or ""),
+        }
+    return out
+
+
+def _write_classification_cache(path: Path, rows: dict[str, dict[str, str]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "version": 1,
+        "updated_at_epoch_s": int(time.time()),
+        "rows": rows,
+    }
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
 def build_classification_cache(
     tickers: list[str],
     *,
     progress_every: int = 0,
+    cache_path: str | Path | None = None,
 ) -> dict[str, dict[str, str]]:
-    """``ticker`` → Klassifikations-Dict; optional Fortschritt auf stdout."""
+    """``ticker`` → Klassifikations-Dict mit persistentem Cache (nur neue Ticker werden nachgeladen)."""
     import yfinance as yf
 
+    p = Path(cache_path) if cache_path is not None else _DEFAULT_CACHE_PATH
+    persisted = _read_classification_cache(p)
     out: dict[str, dict[str, str]] = {}
-    n = len(tickers)
-    step = progress_every if progress_every > 0 else max(1, n // 10)
-    t0 = time.perf_counter()
-    for i, t in enumerate(tickers, 1):
+    uniq_tickers = []
+    seen: set[str] = set()
+    for t in tickers:
         ts = _ticker_symbol_str(t)
-        if not ts:
+        if not ts or ts in seen:
             continue
+        seen.add(ts)
+        uniq_tickers.append(ts)
+
+    missing = [ts for ts in uniq_tickers if ts not in persisted]
+    n = len(missing)
+    step = progress_every if progress_every > 0 else max(1, n // 10) if n > 0 else 1
+    t0 = time.perf_counter()
+    for i, ts in enumerate(missing, 1):
         try:
             inf = yf.Ticker(ts).info or {}
         except Exception:
             inf = {}
-        out[ts] = equity_classification_from_info(ts, inf)
+        persisted[ts] = equity_classification_from_info(ts, inf)
         if i == 1 or i % step == 0 or i == n:
             print(
-                f"  … Branchenklassifikation (yfinance) {i}/{n} Ticker "
+                f"  … Branchenklassifikation (yfinance, neu) {i}/{n} Ticker "
                 f"({time.perf_counter() - t0:.1f}s)",
                 flush=True,
             )
+    if n > 0:
+        _write_classification_cache(p, persisted)
+        print(
+            f"  Branchenklassifikation-Cache aktualisiert: {n} neue Ticker "
+            f"(gesamt {len(persisted)}) -> {p}",
+            flush=True,
+        )
+    else:
+        print(
+            f"  Branchenklassifikation aus Cache: 0 neue Ticker "
+            f"(gesamt {len(persisted)})",
+            flush=True,
+        )
+
+    for ts in uniq_tickers:
+        row = persisted.get(ts)
+        if row is not None:
+            out[ts] = row
     return out
 
 

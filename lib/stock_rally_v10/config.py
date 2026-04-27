@@ -89,10 +89,10 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
-SCORING_ONLY = True
+SCORING_ONLY = False
 # True → Base-Optuna/Base-Modelle bleiben aus Artefakt bestehen; Training startet direkt bei Meta.
 # Voraussetzung: SCORING_ONLY=False und ein vorhandenes ``SCORING_ARTIFACT_PATH``.
-RETRAIN_META_ONLY = True
+RETRAIN_META_ONLY = False
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
@@ -155,7 +155,7 @@ def log_pipeline_mode_banner() -> None:
 N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
 OPT_MIN_PRECISION_BASE   = 0.625   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.875  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
+OPT_MIN_PRECISION_META   = 0.7  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_META  # Reports/PR-Plots: gleiches Gate wie Meta
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
 PHASE5_MIN_SIGNALS    = 5
@@ -185,17 +185,31 @@ def opt_optimize_y_targets() -> bool:
 #     Optionaler Zusatz-Constraint: FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY=True erzwingt,
 #     dass innerhalb eines qualifizierenden Fensters jeder Tages-Return strikt > 0 ist
 #     (keine Einbrüche/Seitwärts-Tage im Rally-Fenster).
-# (2) Label 1: FIXED_Y_LEAD_DAYS vor Segmentbeginn; bei L < FIXED_Y_SEGMENT_SPLIT zusätzlich die ersten
-#     FIXED_Y_ENTRY_DAYS grüne Tage; bei L ≥ split alle grünen außer den letzten FIXED_Y_TAIL_EXCLUDE_DAYS.
-# Entspricht: w ∈ [3, 10], 6 %, 3 Vorlauf-Tage, Split 5, 2 Einstiegs-Tage auf Grün, 3 Tage Rally-Ende ausgeschlossen.
-FIXED_Y_WINDOW_MIN = 3
+#     Zusatz-Constraint: FIXED_Y_MAX_DIP_BELOW_ENTRY_FRACTION f in [0,1]: auf dem Haltetags-
+#     Pfad (Entry-Open bis Exit) muss jeder Close >= open_entry * (1 - f) sein (f=0: streng wie
+#     zuvor „kein Abverkauf“; f=0.01: max. 1% unter dem Entry-Open; f=1: keine Dipschranke).
+# (2) Label 1:
+#     FIXED_Y_LABEL_MODE = "segment_based" (Legacy): FIXED_Y_LEAD_DAYS vor Segmentbeginn; bei
+#       L < FIXED_Y_SEGMENT_SPLIT zusätzlich die ersten FIXED_Y_ENTRY_DAYS grünen Tage.
+#       Bei L ≥ split steuert FIXED_Y_LONG_SEGMENT_LABEL_MODE:
+#         - "tail_exclude": alle grünen außer den letzten FIXED_Y_TAIL_EXCLUDE_DAYS
+#         - "early_only": nur die ersten FIXED_Y_LONG_ENTRY_DAYS grünen Tage
+#     FIXED_Y_LABEL_MODE = "entry_direct": target[t0]=1 genau dann, wenn ein Einstieg
+#       am nächsten Open (t1) ein Fenster w∈[w_min,w_max] mit Rendite >= FIXED_Y_RALLY_THRESHOLD hat.
+# w∈[2,8], Zielkumulatrendite >= 4 % im Fenster; f siehe unten.
+FIXED_Y_WINDOW_MIN = 2
 FIXED_Y_WINDOW_MAX = 8
-FIXED_Y_RALLY_THRESHOLD = 0.09  # 8.00 %
-FIXED_Y_SEGMENT_SPLIT = 5
-FIXED_Y_LEAD_DAYS = 3
-FIXED_Y_ENTRY_DAYS = 2
-FIXED_Y_TAIL_EXCLUDE_DAYS = 3
+FIXED_Y_RALLY_THRESHOLD = 0.04
+FIXED_Y_LABEL_MODE = "entry_direct"  # "segment_based" | "entry_direct"
+FIXED_Y_SEGMENT_SPLIT = 4
+FIXED_Y_LEAD_DAYS = 2
+FIXED_Y_ENTRY_DAYS = 1
+FIXED_Y_TAIL_EXCLUDE_DAYS = 4
 FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY = False
+# 0.0: streng (kein Close unter Entry-Open); 0.01: max. 1% unter Entry-Open; 1.0: kein Dip-Floor.
+FIXED_Y_MAX_DIP_BELOW_ENTRY_FRACTION = 0.01
+FIXED_Y_LONG_SEGMENT_LABEL_MODE = "early_only"  # "tail_exclude" | "early_only"
+FIXED_Y_LONG_ENTRY_DAYS = 2  # nur relevant bei FIXED_Y_LONG_SEGMENT_LABEL_MODE="early_only"
 
 
 def fixed_y_rule_params() -> tuple[int, int, float, int, int, int, int]:
@@ -220,11 +234,78 @@ def fixed_y_require_strict_daily_up_in_rally() -> bool:
     return bool(getattr(m, "FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY", False))
 
 
+def fixed_y_max_dip_below_entry_fraction() -> float:
+    """Zulässiger Anteil f unter dem Entry-Open-Preis: Close >= open * (1-f) bis Exit. f∈[0,1] nach Clamping."""
+    m = sys.modules[__name__]
+    v = getattr(m, "FIXED_Y_MAX_DIP_BELOW_ENTRY_FRACTION", None)
+    if v is not None:
+        return float(v)
+    # Legacy-Notebooks mit altem bool
+    if bool(getattr(m, "FIXED_Y_REQUIRE_NO_DIP_BELOW_ENTRY_UNTIL_THRESHOLD", False)):
+        return 0.0
+    return 1.0
+
+
+def fixed_y_long_segment_label_params() -> tuple[str, int]:
+    """(mode, long_entry_days) für L >= FIXED_Y_SEGMENT_SPLIT."""
+    m = sys.modules[__name__]
+    mode = str(getattr(m, "FIXED_Y_LONG_SEGMENT_LABEL_MODE", "tail_exclude")).strip().lower()
+    if mode not in {"tail_exclude", "early_only"}:
+        mode = "tail_exclude"
+    long_ed = int(getattr(m, "FIXED_Y_LONG_ENTRY_DAYS", 2))
+    return mode, max(0, long_ed)
+
+
+def fixed_y_label_mode() -> str:
+    """Label-Modus der festen Band-Regel: ``segment_based`` oder ``entry_direct``."""
+    m = sys.modules[__name__]
+    mode = str(getattr(m, "FIXED_Y_LABEL_MODE", "segment_based")).strip().lower()
+    if mode not in {"segment_based", "entry_direct"}:
+        mode = "segment_based"
+    return mode
+
+
 def describe_target_rule_fixed_bands() -> str:
     """Feste Band-Regel (OPT_OPTIMIZE_Y_TARGETS=False); Zahlen = ``fixed_y_rule_params()`` wie in der Pipeline."""
     w_lo, w_hi, rt, split, ld, ed, tail_ex = fixed_y_rule_params()
     strict_up = fixed_y_require_strict_daily_up_in_rally()
+    mdf = max(0.0, min(float(fixed_y_max_dip_below_entry_fraction()), 1.0))
+    label_mode = fixed_y_label_mode()
+    long_mode, long_ed = fixed_y_long_segment_label_params()
     strict_txt = " Ja (jeder Tages-Return im Rally-Fenster muss > 0 sein)." if strict_up else " Nein."
+    if mdf >= 1.0 - 1e-12:
+        no_dip_txt = " f=1.0: kein Mindest-Preis-Floor unter Entry-Open (nur Close ≥ 0 sinnvoll)."
+    elif mdf <= 1e-12:
+        no_dip_txt = " f=0.0: jeder Close auf dem Haltetags-Pfad muss mindestens dem Entry-Open entsprechen."
+    else:
+        no_dip_txt = (
+            f" f={mdf:.4f} ({mdf:.2%}): jeder Close von Entry bis Exit muss mindestens "
+            f"open_entry·(1−f) = open_entry·{1.0 - mdf:.6f} sein."
+        )
+    long_txt = (
+        f"bei L ≥ {split} nur die ersten {long_ed} grünen Tage (early_only)."
+        if long_mode == "early_only"
+        else f"bei L ≥ {split} alle grünen Tage außer den letzten {tail_ex} (tail_exclude)."
+    )
+    if label_mode == "entry_direct":
+        return (
+            "Zieldefinition (feste Band-Regel — dieselben Konstanten wie in der Pipeline):\n\n"
+            "(1) Grüne Rally-Phase: Ein Handelstag ist „grün“, wenn es mindestens ein Fenster "
+            "mit Länge w ∈ [{w_lo}, {w_hi}] Handelstagen gibt, über das die kumulierte Rendite "
+            "(Produkt der Tagesrenditen) mindestens {rt_str} beträgt; alle Tage solcher Fenster werden "
+            "zu grünen Segmenten vereinigt.\n"
+            "Zusatz-Constraint „strict daily up“ aktiv?{strict_txt}\n\n"
+            "Dip-Constraint (max. Anteil unter Entry-Open, Close ≥ open·(1−f)): {no_dip_txt}\n\n"
+            "(2) Positives Klassenlabel (entry_direct): target[t0]=1 genau dann, wenn ein Entry "
+            "am nächsten Open (t1=t0+1) mindestens ein Fenster w ∈ [{w_lo}, {w_hi}] mit "
+            "Trade-Return close[t1+w]/open[t1]-1 >= {rt_str} erreicht."
+        ).format(
+            w_lo=w_lo,
+            w_hi=w_hi,
+            rt_str=f"{rt:.2%}",
+            strict_txt=strict_txt,
+            no_dip_txt=no_dip_txt,
+        )
     return (
         "Zieldefinition (feste Band-Regel — dieselben Konstanten wie in der Pipeline):\n\n"
         "(1) Grüne Rally-Phase: Ein Handelstag ist „grün“, wenn es mindestens ein Fenster "
@@ -232,10 +313,11 @@ def describe_target_rule_fixed_bands() -> str:
         "(Produkt der Tagesrenditen) mindestens {rt_str} beträgt; alle Tage solcher Fenster werden "
         "zu grünen Segmenten vereinigt.\n"
         "Zusatz-Constraint „strict daily up“ aktiv?{strict_txt}\n\n"
+        "Dip-Constraint (max. Anteil unter Entry-Open, Close ≥ open·(1−f)): {no_dip_txt}\n\n"
         "(2) Positives Klassenlabel: Am ersten Tag eines neuen grünen Segments sei L die "
         "Segmentlänge in Handelstagen. Label 1 erhalten die {ld} Handelstage unmittelbar vor "
         "Segmentbeginn; bei L < {split} zusätzlich die ersten {ed} grünen Tage des Segments; "
-        "bei L ≥ {split} alle grünen Tage des Segments außer den letzten {tail_ex}."
+        "{long_txt}"
     ).format(
         w_lo=w_lo,
         w_hi=w_hi,
@@ -244,7 +326,9 @@ def describe_target_rule_fixed_bands() -> str:
         ld=ld,
         ed=ed,
         tail_ex=tail_ex,
+        long_txt=long_txt,
         strict_txt=strict_txt,
+        no_dip_txt=no_dip_txt,
     )
 
 
@@ -329,6 +413,8 @@ def describe_target_rule_narrative_for_website(c=None) -> str:
 def _describe_target_rule_fixed_bands_narrative() -> str:
     w_lo, w_hi, rt, split, ld, ed, tail_ex = fixed_y_rule_params()
     strict_up = fixed_y_require_strict_daily_up_in_rally()
+    mdf = max(0.0, min(float(fixed_y_max_dip_below_entry_fraction()), 1.0))
+    label_mode = fixed_y_label_mode()
     rt_str = f"{rt:.2%}"
     strict_sentence = (
         " Zusätzlich ist ein strikter Tagesanstiegs-Constraint aktiv: Ein Rally-Fenster zählt nur, "
@@ -336,6 +422,35 @@ def _describe_target_rule_fixed_bands_narrative() -> str:
         if strict_up
         else ""
     )
+    if mdf >= 1.0 - 1e-12:
+        no_dip_sentence = ""
+    elif mdf <= 1e-12:
+        no_dip_sentence = (
+            " Zusätzlich darf der Schlusskurs auf dem Haltetags-Pfad bis zum qualifizierenden Exit "
+            "nie unter den Einstiegskurs (Entry-Open) fallen."
+        )
+    else:
+        no_dip_sentence = (
+            f" Zusätzlich muss jeder Schlusskurs auf dem Haltetags-Pfad mindestens "
+            f"open_entry·(1−{mdf:.4f}) betragen (höchstens {mdf:.2%} unter dem Entry-Open)."
+        )
+    if label_mode == "entry_direct":
+        return (
+            "Was das Modell vorhersagen soll: Das positive Label markiert konkrete Einstiegstage. "
+            "Ein Tag t0 erhält target=1 genau dann, wenn ein Einstieg am nächsten Open (t1=t0+1) "
+            "in mindestens einem Fenster aus {w_lo} bis {w_hi} Handelstagen eine Rendite von "
+            "mindestens {rt_str} erreicht.{strict_sentence}{no_dip_sentence}\n\n"
+            "Unabhängig davon wird weiterhin die grüne Rally-Spur als Vereinigungsmenge aller "
+            "qualifizierenden Haltetage geführt (für Diagnose/Visualisierung). Die Klassenzuordnung "
+            "selbst ist im entry_direct-Modus jedoch nicht mehr segmentbasiert, sondern direkt "
+            "an die Entry-Möglichkeit gekoppelt."
+        ).format(
+            w_lo=w_lo,
+            w_hi=w_hi,
+            rt_str=rt_str,
+            strict_sentence=strict_sentence,
+            no_dip_sentence=no_dip_sentence,
+        )
     return (
         "Was das Modell vorhersagen soll: Das Klassenlabel „positiv“ markiert Tage, an denen sich ein "
         "Einstieg vor oder am Anfang einer späteren Kursaufwertsphase lohnt — nicht die gesamte Rally, "
@@ -345,7 +460,7 @@ def _describe_target_rule_fixed_bands_narrative() -> str:
         "wenn es mindestens ein Fenster aus {w_lo} bis {w_hi} aufeinanderfolgenden Handelstagen gibt, "
         "über das die kumulierte Rendite (Produkt der Tagesrenditen) mindestens {rt_str} beträgt. "
         "Alle Tage, die in ein solches Fenster fallen, werden zu zusammenhängenden grünen Segmenten "
-        "vereinigt — so entsteht die Rally-Spur.{strict_sentence}\n\n"
+        "vereinigt — so entsteht die Rally-Spur.{strict_sentence}{no_dip_sentence}\n\n"
         "Daraus werden die Trainings-Labels abgeleitet: Betrachtet wird jeweils der erste Tag "
         "eines neuen grünen Segments (nach einer Rally-Pause). Seine Länge sei L Handelstage. "
         "Dann erhalten die {ld} Handelstage unmittelbar vor Segmentbeginn das positive Label; "
@@ -362,6 +477,7 @@ def _describe_target_rule_fixed_bands_narrative() -> str:
         ed=ed,
         tail_ex=tail_ex,
         strict_sentence=strict_sentence,
+        no_dip_sentence=no_dip_sentence,
     )
 
 
@@ -415,19 +531,19 @@ def html_target_definition_section(c=None) -> str:
 
 
 EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 120  # mehr Coverage im großen Kombinationsraum (TPE warm-up + Exploitation)
+N_OPTUNA_TRIALS       = 50  # mehr Coverage im großen Kombinationsraum (TPE warm-up + Exploitation)
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
 # N_OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
 # tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
 OPTUNA_SHOW_PROGRESS_BAR = None
-N_META_TRIALS         = 1000
+N_META_TRIALS         = 600
 # Meta-Objective in den Fold-Validierungen:
 # - "tp_precision": bisherige Zielfunktion (TP/Precision/FP-Run Constraints).
 # - "signal_mean_return": mittlere Signal-Rendite über Haltehorizonte (z. B. 1..5 Tage).
 # - "signal_win_rate": Anteil der Signale mit positivem mittlerem Horizon-Return.
-META_OBJECTIVE_MODE = "signal_win_rate"
+META_OBJECTIVE_MODE = "tp_precision"
 # Für signal_mean_return: pro Signal Mittelwert dieser Forward-Renditen, dann Mittel über alle Signale.
 META_SIGNAL_RETURN_HORIZONS = (1, 2, 3, 4, 5)
 # Für signal_win_rate: optionaler Tiebreaker auf mean return (0.0 = nur Win-Rate).
@@ -437,6 +553,11 @@ META_OBJECTIVE_MIN_SIGNALS_PER_FOLD = 1
 # Für signal_mean_return: Mindest-Signaldichte je Fold (Signale pro Handelstag, nach allen Filtern).
 # 1.0 bedeutet im Schnitt mindestens 1 Signal pro Handelstag im Validierungs-Fold.
 META_OBJECTIVE_MIN_SIGNALS_PER_DAY_PER_FOLD = 0.25
+# Wahrscheinlichkeitsskalierung für Meta-Classifier-Ausgaben:
+# - "none": rohe predict_proba
+# - "sigmoid": Platt-Skalierung (logistische Kalibrierung)
+# - "isotonic": isotone Kalibrierung
+META_PROBA_CALIBRATION_METHOD = "sigmoid"
 # Meta-Stacking: Roh-Features neben Base-Wahrscheinlichkeiten (s. ``optuna_base_models``).
 # Standard: feste Anzahl META_SHAP_TOP_K. Alternativ: META_SHAP_CUM_FRAC z. B. 0.75 =
 # kleinstes K, sodass Summe der K größten mean|SHAP| ≥ 75 % der Summe über alle Spalten.
@@ -455,7 +576,7 @@ RALLY_THRESHOLD      = FIXED_Y_RALLY_THRESHOLD
 LEAD_DAYS            = FIXED_Y_LEAD_DAYS   # bei festem Y: dieselben wie in fixed_y_rule_params()
 ENTRY_DAYS           = FIXED_Y_ENTRY_DAYS
 MIN_RALLY_TAIL_DAYS  = 5 # nur parametrische Regel; bei festem Y unbenutzt
-CONSECUTIVE_DAYS     = 2     # wie SEED_PARAMS (Post-Filter)
+CONSECUTIVE_DAYS     = 1     # wie SEED_PARAMS (Post-Filter)
 SIGNAL_COOLDOWN_DAYS = 2
 
 # ── Anti-Peak (nur apply_signal_filters / Website — nicht in Optuna-CV) ─────
@@ -508,6 +629,11 @@ RSI_WINDOWS  = [7, 10, 14, 21]
 BB_WINDOWS   = [15, 20, 25]
 SMA_WINDOWS  = [30, 50, 70]
 
+# Base-XGB: Klassenimbalance über scale_pos_weight (neg/pos) je Fold/Bootstrap ausgleichen.
+BASE_USE_SCALE_POS_WEIGHT = True
+# Meta-XGB: Klassenimbalance über scale_pos_weight (neg/pos) je Inner-Train-Split ausgleichen.
+META_USE_SCALE_POS_WEIGHT = True
+
 # ── Seed params für enqueue_trial (Optuna Base-XGB) ─────────────────────────
 # Fest eingetragen aus ``best_params`` des letzten gespeicherten Trainings
 # (``models/scoring_artifacts.joblib``) — kein Laufzeit-Laden des Artefakts.
@@ -537,6 +663,14 @@ SEED_PARAMS = dict(
     breakout_lookback_window=252,
     vcp_window=10,
     btc_corr_window=20,
+    # Optuna-tunbare Risk-/Liquidity-/VCP-/Breakout-Fenster (Default = robuster Mittelweg).
+    yz_vol_window=20,
+    downside_vol_window=60,
+    ret_moment_window=60,
+    amihud_window=20,
+    vcp_lower_low_window=60,
+    breakout_volume_trigger_z=1.0,
+    news_add_sign_confirmation=True,
     grow_policy='lossguide',
     max_leaves=686,
     max_bin=256,
@@ -599,8 +733,48 @@ BREAKOUT_LOOKBACK_WINDOWS = [60, 120, 252]
 VCP_WINDOWS = [5, 10, 20]
 BTC_CORR_WINDOWS = [20, 60, 120]
 
+# Realisierte Vola / Schiefe / Kurtosis: pro Ticker rollende Statistiken auf Tagesrenditen.
+# Kleinere Fenster sind bei kurzen Rallies oft trennschärfer; 60d als robuster Anker.
+# Optuna wählt je Trial **ein** Fenster pro Liste (analog RSI/BB/SMA-Raster).
+DOWNSIDE_VOL_WINDOWS = [20, 60, 120]
+RET_MOMENT_WINDOWS = [20, 60, 120]
+YANG_ZHANG_WINDOWS = [10, 20, 60]
+# Amihud-Illiquidität: Mittelwert |ret| / Dollarvolumen über das Fenster (höher = illiquider).
+AMIHUD_WINDOWS = [10, 20, 60]
+# VCP-Lower-Lows: in wie vielen der letzten N Tage hat ``vcp_tightness_{vw}d`` ein neues
+# Minimum gegenüber dem laufenden Tief markiert. Stärker = engere/anhaltendere Kontraktion.
+VCP_LOWER_LOW_WINDOWS = [20, 60, 120]
+# Breakout-Bestätigung: ``blue_sky_breakout_{w}d`` AND ``volume_zscore`` >= Trigger.
+# Optuna wählt einen Trigger aus dem Raster; die Indikator-Pipeline berechnet je Kombination
+# ``(bwk, trigger)`` eine eigene Spalte ``breakout_volume_confirmed_{bwk}_z{trigger}d``.
+BREAKOUT_VOLUME_TRIGGER_Z_OPTIONS = [0.5, 1.0, 1.5, 2.0]
+
+# ── Feature pre-screening (vor Optuna Phase 1) ───────────────────────────────
+# SHAP-Importance über 5 walk-forward Folds + Boruta-Schatten als Rausch-Floor +
+# familien-bewusste Auswahl (Top-2 pro Familie immer behalten). Schreibt ein
+# Artefakt nach ``FEATURE_PRESCREEN_DIR`` (JSON) und ``cfg._FEATURE_PRESCREEN_ARTIFACT``.
+# Optuna nutzt anschließend ``effective_window_grid(name)`` statt direkt ``cfg.<list>``.
+FEATURE_PRESCREEN_ENABLED = True  # True = Pre-Screen vor Phase 1 ausführen (User-Default).
+FEATURE_PRESCREEN_N_SHADOWS = 20  # Anzahl Schatten-Features pro Fold für Rausch-Floor.
+FEATURE_PRESCREEN_NOISE_QUANTILE = 0.95  # Quantil der Schatten-Importance = Floor.
+FEATURE_PRESCREEN_FAMILY_TOPK = 2  # Top-K pro Familie immer behalten.
+FEATURE_PRESCREEN_GLOBAL_TOPK = 30  # Top-K global immer behalten (über alle Familien).
+FEATURE_PRESCREEN_MACRO_TOPK = 5  # Top-K der mr_*/regime_*-Gruppe immer behalten.
+FEATURE_PRESCREEN_SHAP_SAMPLE_PER_FOLD = 20000  # max. Zeilen für SHAP pro Fold (Speed).
+FEATURE_PRESCREEN_AUC_TOL = 0.005  # Abbruch wenn AUC(kept) < AUC(all) − tol.
+FEATURE_PRESCREEN_PRAUC_TOL = 0.005  # Abbruch wenn PR-AUC(kept) < PR-AUC(all) − tol.
+FEATURE_PRESCREEN_DIR = os.path.join(os.getcwd(), "data")
+FEATURE_PRESCREEN_ARTIFACT_NAME = "feature_prescreen_v1.json"
+FEATURE_PRESCREEN_REUSE_SAME_CALENDAR_DAY = True
+# Wird zur Laufzeit von ``feature_prescreen.run_feature_prescreen`` befüllt.
+_FEATURE_PRESCREEN_ARTIFACT: dict | None = None
+
 # Volles News-Fenster-Grid: News liegt nur in Shard-Dateien (FEATURE_SHARD_DIR), nicht als breite Spalten in df_features.
 FEATURE_SHARD_DIR = os.path.join(os.getcwd(), "data", "feature_shards_news")
+# True: Läuft am selben Kalendertag kein vollständiger Rebuild, wenn news_shards_manifest.json
+# ``built_on``=heute trägt und alle benötigten Shard-Dateien existieren (ungeachtet exakter input_signature).
+# Praktisch „max. einmal pro Tag“ neu bauen; Später-Runs/Tag sparen Zeit (Shards können minimal älter sein).
+NEWS_SHARDS_REUSE_SAME_CALENDAR_DAY = True
 NEWS_SHARD_MANIFEST: dict[str, str] = {}
 _FEATURE_NEWS_SHARDS_ACTIVE = False
 
@@ -1089,6 +1263,12 @@ def _news_sec_variant_cols(mid: str):
 # Nach Shard-Merge: Macro-/Sektor-Tone × Regime-Spalten (Interaktion „Stress × News“).
 NEWS_ADD_REGIME_TONE_INTERACTIONS = True
 NEWS_REGIME_INTERACTION_BASE_COLS: tuple[str, ...] = ("mr_vvix_div_vix", "regime_vix_level")
+# Nach Shard-Merge: Tone × sign(Tagesrendite) als Bestätigungs-/Widerspruchssignal.
+# Liefert ``news_*_{tag}_tone_x_sign_ret_1d`` und ``..._x_sign_ret_lag1`` pro Macro/Sec/Anchor.
+# ``NEWS_ADD_SIGN_CONFIRMATION`` ist der Default (Phase 12 / Scoring); Optuna wählt je Trial aus
+# ``NEWS_ADD_SIGN_CONFIRMATION_OPTIONS`` (gleiche Mechanik wie ``NEWS_EXTRA_TONE_ACCEL_OPTIONS``).
+NEWS_ADD_SIGN_CONFIRMATION = True
+NEWS_ADD_SIGN_CONFIRMATION_OPTIONS = [False, True]
 
 
 def _news_regime_interaction_colnames(tag: str) -> list[str]:
@@ -1099,6 +1279,22 @@ def _news_regime_interaction_colnames(tag: str) -> list[str]:
         safe = str(base).replace(".", "_")
         out.append(f"news_macro_{tag}_tone_x_{safe}")
         out.append(f"news_sec_{tag}_tone_x_{safe}")
+    return out
+
+
+def _news_sign_confirmation_colnames(
+    tag: str, *, enabled: bool | None = None
+) -> list[str]:
+    """Spaltennamen für Tone × sign(Tagesrendite). ``enabled`` überschreibt den globalen Default."""
+    if not USE_NEWS_SENTIMENT:
+        return []
+    flag = bool(NEWS_ADD_SIGN_CONFIRMATION) if enabled is None else bool(enabled)
+    if not flag:
+        return []
+    out: list[str] = []
+    for prefix in ("news_macro", "news_sec", "news_anchor"):
+        out.append(f"{prefix}_{tag}_tone_x_sign_ret_1d")
+        out.append(f"{prefix}_{tag}_tone_x_sign_ret_lag1")
     return out
 
 
@@ -1192,8 +1388,15 @@ def _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel):
         out.append(f"news_sec_{mid}_tone_accel")
 
 
-def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
-    """Spaltenliste für ein gewähltes Tag-Tripel; zscore_w=0 schließt tone_z/vol_z aus."""
+def build_news_model_cols(
+    tag, zscore_w=0, use_accel=False, use_cross=False, *,
+    add_sign_confirmation: bool | None = None,
+):
+    """Spaltenliste für ein gewähltes Tag-Tripel; zscore_w=0 schließt tone_z/vol_z aus.
+
+    ``add_sign_confirmation``: optionaler Optuna-Override für die globale
+    ``NEWS_ADD_SIGN_CONFIRMATION``-Einstellung (None = Default verwenden).
+    """
     out = _news_base_cols(tag)
     zw = int(zscore_w) if zscore_w is not None else 0
     if zw > 0:
@@ -1214,6 +1417,9 @@ def build_news_model_cols(tag, zscore_w=0, use_accel=False, use_cross=False):
         _append_gcam_div_sec_cols(out, tag, zscore_w, use_accel)
         _append_anchor_quality_sec_cols(out, tag, zscore_w, use_accel)
     out.extend(_news_regime_interaction_colnames(tag))
+    out.extend(
+        _news_sign_confirmation_colnames(tag, enabled=add_sign_confirmation)
+    )
     return out
 
 
@@ -1227,6 +1433,7 @@ def optuna_training_news_column_union() -> list[str]:
     if not USE_NEWS_SENTIMENT:
         return []
     names: set[str] = set()
+    sign_options = NEWS_ADD_SIGN_CONFIRMATION_OPTIONS or [bool(NEWS_ADD_SIGN_CONFIRMATION)]
     for mom in NEWS_MOM_WINDOWS:
         for vma in NEWS_VOL_MA_WINDOWS:
             for tr in NEWS_TONE_ROLL_WINDOWS:
@@ -1235,13 +1442,15 @@ def optuna_training_news_column_union() -> list[str]:
                     zw = int(z) if z is not None else 0
                     for acc in NEWS_EXTRA_TONE_ACCEL_OPTIONS:
                         for cr in NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
-                            for c in build_news_model_cols(
-                                tag,
-                                zscore_w=zw,
-                                use_accel=bool(acc),
-                                use_cross=bool(cr),
-                            ):
-                                names.add(c)
+                            for sc in sign_options:
+                                for c in build_news_model_cols(
+                                    tag,
+                                    zscore_w=zw,
+                                    use_accel=bool(acc),
+                                    use_cross=bool(cr),
+                                    add_sign_confirmation=bool(sc),
+                                ):
+                                    names.add(c)
     return sorted(names)
 
 
@@ -1365,6 +1574,41 @@ def _default_btc_corr_window():
     return int(w[len(w) // 2])
 
 
+def _default_yang_zhang_window():
+    w = YANG_ZHANG_WINDOWS or [20]
+    return int(w[len(w) // 2])
+
+
+def _default_downside_vol_window():
+    w = DOWNSIDE_VOL_WINDOWS or [60]
+    return int(w[len(w) // 2])
+
+
+def _default_ret_moment_window():
+    w = RET_MOMENT_WINDOWS or [60]
+    return int(w[len(w) // 2])
+
+
+def _default_amihud_window():
+    w = AMIHUD_WINDOWS or [20]
+    return int(w[len(w) // 2])
+
+
+def _default_vcp_lower_low_window():
+    w = VCP_LOWER_LOW_WINDOWS or [60]
+    return int(w[len(w) // 2])
+
+
+def _default_breakout_volume_trigger_z():
+    opts = BREAKOUT_VOLUME_TRIGGER_Z_OPTIONS or [1.0]
+    return float(opts[len(opts) // 2])
+
+
+def bvt_z_str(z: float) -> str:
+    """Trigger-Z als kurzer, dateinamen-tauglicher String (0.5 → "0p5", 1.0 → "1p0")."""
+    return f"{float(z):.1f}".replace('.', 'p')
+
+
 def build_technical_cols(
     rsi_w,
     bb_w,
@@ -1377,6 +1621,12 @@ def build_technical_cols(
     breakout_lookback_window=None,
     vcp_window=None,
     btc_corr_window=None,
+    yz_vol_window=None,
+    downside_vol_window=None,
+    ret_moment_window=None,
+    amihud_window=None,
+    vcp_lower_low_window=None,
+    breakout_volume_trigger_z=None,
 ):
     bz = int(
         btc_momentum_z_window
@@ -1401,6 +1651,31 @@ def build_technical_cols(
     )
     vw = int(vcp_window if vcp_window is not None else _default_vcp_window())
     bcw = int(btc_corr_window if btc_corr_window is not None else _default_btc_corr_window())
+    yz_w = int(
+        yz_vol_window if yz_vol_window is not None else _default_yang_zhang_window()
+    )
+    dv_w = int(
+        downside_vol_window
+        if downside_vol_window is not None
+        else _default_downside_vol_window()
+    )
+    rm_w = int(
+        ret_moment_window
+        if ret_moment_window is not None
+        else _default_ret_moment_window()
+    )
+    am_w = int(amihud_window if amihud_window is not None else _default_amihud_window())
+    ll_w = int(
+        vcp_lower_low_window
+        if vcp_lower_low_window is not None
+        else _default_vcp_lower_low_window()
+    )
+    bvt_z_val = float(
+        breakout_volume_trigger_z
+        if breakout_volume_trigger_z is not None
+        else _default_breakout_volume_trigger_z()
+    )
+    bvt_str = bvt_z_str(bvt_z_val)
     return [
         f'rsi_{rsi_w}',
         f'bb_pband_{bb_w}',
@@ -1437,6 +1712,16 @@ def build_technical_cols(
         'dollar_volume_zscore',
         'volume_force_1d',
         f'bb_squeeze_factor_{bb_w}',
+        # Erweiterte Risikofeatures (3b1/3b2/3b5) — Optuna-tunbar (eine Spalte je gewähltem Fenster):
+        f'yz_vol_{yz_w}d',
+        f'downside_vol_{dv_w}d',
+        f'downside_vol_ratio_{dv_w}d',
+        f'ret_skew_{rm_w}d',
+        f'ret_kurt_{rm_w}d',
+        f'amihud_illiquidity_{am_w}d',
+        f'vcp_at_period_low_frac_{vw}_{ll_w}d',
+        f'vcp_tightness_slope_{vw}_{ll_w}d',
+        f'breakout_volume_confirmed_{bwk}_z{bvt_str}d',
         'month',
         'sector_id',
         'gics_sector_id',
@@ -1444,9 +1729,32 @@ def build_technical_cols(
     ]
 
 
+def effective_window_grid(name: str) -> list:
+    """Optuna-Grid für ``name`` — vom Pre-Screen-Artefakt ggf. eingeschränkt.
+
+    Liest ``cfg._FEATURE_PRESCREEN_ARTIFACT['allowed_windows'][name]`` falls gesetzt
+    und nicht leer; sonst Fallback auf ``getattr(cfg, name)``. Reihenfolge der
+    Original-Liste wird beibehalten (Optuna-Stabilität).
+    """
+    art = globals().get("_FEATURE_PRESCREEN_ARTIFACT")
+    if isinstance(art, dict):
+        allowed = art.get("allowed_windows") or {}
+        if isinstance(allowed, dict):
+            v = allowed.get(name)
+            if v:
+                return list(v)
+    return list(globals().get(name, []))
+
+
 def all_model_tech_col_names_for_assemble_dropna() -> list[str]:
-    """Alle technischen Modell-Spaltennamen über RSI/BB/SMA- und Kontext-Fenster-Raster (für dropna nach assemble)."""
+    """Alle technischen Modell-Spaltennamen über das volle Optuna-Raster (für dropna nach assemble)."""
     names: set[str] = set()
+    yz_grid = YANG_ZHANG_WINDOWS or [_default_yang_zhang_window()]
+    dv_grid = DOWNSIDE_VOL_WINDOWS or [_default_downside_vol_window()]
+    rm_grid = RET_MOMENT_WINDOWS or [_default_ret_moment_window()]
+    am_grid = AMIHUD_WINDOWS or [_default_amihud_window()]
+    ll_grid = VCP_LOWER_LOW_WINDOWS or [_default_vcp_lower_low_window()]
+    bvt_grid = BREAKOUT_VOLUME_TRIGGER_Z_OPTIONS or [_default_breakout_volume_trigger_z()]
     for rw in RSI_WINDOWS:
         for bw in BB_WINDOWS:
             for sw in SMA_WINDOWS:
@@ -1457,19 +1765,31 @@ def all_model_tech_col_names_for_assemble_dropna() -> list[str]:
                                 for bwk in BREAKOUT_LOOKBACK_WINDOWS:
                                     for vw in VCP_WINDOWS:
                                         for bcw in BTC_CORR_WINDOWS:
-                                            for c in build_technical_cols(
-                                                rw,
-                                                bw,
-                                                sw,
-                                                btc_momentum_z_window=bz,
-                                                market_breadth_z_window=brz,
-                                                rel_momentum_window=relm,
-                                                adr_window=aw,
-                                                breakout_lookback_window=bwk,
-                                                vcp_window=vw,
-                                                btc_corr_window=bcw,
-                                            ):
-                                                names.add(c)
+                                            for yzw in yz_grid:
+                                                for dvw in dv_grid:
+                                                    for rmw in rm_grid:
+                                                        for amw in am_grid:
+                                                            for llw in ll_grid:
+                                                                for bvt in bvt_grid:
+                                                                    for c in build_technical_cols(
+                                                                        rw,
+                                                                        bw,
+                                                                        sw,
+                                                                        btc_momentum_z_window=bz,
+                                                                        market_breadth_z_window=brz,
+                                                                        rel_momentum_window=relm,
+                                                                        adr_window=aw,
+                                                                        breakout_lookback_window=bwk,
+                                                                        vcp_window=vw,
+                                                                        btc_corr_window=bcw,
+                                                                        yz_vol_window=yzw,
+                                                                        downside_vol_window=dvw,
+                                                                        ret_moment_window=rmw,
+                                                                        amihud_window=amw,
+                                                                        vcp_lower_low_window=llw,
+                                                                        breakout_volume_trigger_z=bvt,
+                                                                    ):
+                                                                        names.add(c)
     return sorted(names)
 
 
@@ -1484,6 +1804,13 @@ def build_feature_cols(
     breakout_lookback_window=None,
     vcp_window=None,
     btc_corr_window=None,
+    yz_vol_window=None,
+    downside_vol_window=None,
+    ret_moment_window=None,
+    amihud_window=None,
+    vcp_lower_low_window=None,
+    breakout_volume_trigger_z=None,
+    news_add_sign_confirmation: bool | None = None,
 ):
     out = build_technical_cols(
         rsi_w,
@@ -1496,6 +1823,12 @@ def build_feature_cols(
         breakout_lookback_window=breakout_lookback_window,
         vcp_window=vcp_window,
         btc_corr_window=btc_corr_window,
+        yz_vol_window=yz_vol_window,
+        downside_vol_window=downside_vol_window,
+        ret_moment_window=ret_moment_window,
+        amihud_window=amihud_window,
+        vcp_lower_low_window=vcp_lower_low_window,
+        breakout_volume_trigger_z=breakout_volume_trigger_z,
     )
     if USE_NEWS_SENTIMENT:
         if news_mom_w is None:
@@ -1515,6 +1848,7 @@ def build_feature_cols(
             zscore_w=news_extra_zscore_w,
             use_accel=bool(news_extra_tone_accel),
             use_cross=bool(news_extra_macro_sec_diff),
+            add_sign_confirmation=news_add_sign_confirmation,
         )
     return out
 
@@ -1529,6 +1863,13 @@ def build_rename_map(
     breakout_lookback_window=None,
     vcp_window=None,
     btc_corr_window=None,
+    yz_vol_window=None,
+    downside_vol_window=None,
+    ret_moment_window=None,
+    amihud_window=None,
+    vcp_lower_low_window=None,
+    breakout_volume_trigger_z=None,
+    news_add_sign_confirmation: bool | None = None,
 ):
     bz = int(
         btc_momentum_z_window
@@ -1553,6 +1894,31 @@ def build_rename_map(
     )
     vw = int(vcp_window if vcp_window is not None else _default_vcp_window())
     bcw = int(btc_corr_window if btc_corr_window is not None else _default_btc_corr_window())
+    yz_w = int(
+        yz_vol_window if yz_vol_window is not None else _default_yang_zhang_window()
+    )
+    dv_w = int(
+        downside_vol_window
+        if downside_vol_window is not None
+        else _default_downside_vol_window()
+    )
+    rm_w = int(
+        ret_moment_window
+        if ret_moment_window is not None
+        else _default_ret_moment_window()
+    )
+    am_w = int(amihud_window if amihud_window is not None else _default_amihud_window())
+    ll_w = int(
+        vcp_lower_low_window
+        if vcp_lower_low_window is not None
+        else _default_vcp_lower_low_window()
+    )
+    bvt_z_val = float(
+        breakout_volume_trigger_z
+        if breakout_volume_trigger_z is not None
+        else _default_breakout_volume_trigger_z()
+    )
+    bvt_str = bvt_z_str(bvt_z_val)
     m = {
         f'rsi_{rsi_w}':              f'RSI ({rsi_w}d)',
         f'bb_pband_{bb_w}':          f'Bollinger %B ({bb_w}d)',
@@ -1589,6 +1955,15 @@ def build_rename_map(
         'dollar_volume_zscore': 'Dollar Volume Z-Score',
         'volume_force_1d': 'Volume Force 1d',
         f'bb_squeeze_factor_{bb_w}': f'BB Squeeze Factor ({bb_w}d)',
+        f'yz_vol_{yz_w}d': f'Yang-Zhang Vol {yz_w}d',
+        f'downside_vol_{dv_w}d': f'Downside Vol {dv_w}d',
+        f'downside_vol_ratio_{dv_w}d': f'Downside Vol Ratio {dv_w}d',
+        f'ret_skew_{rm_w}d': f'Return Skew {rm_w}d',
+        f'ret_kurt_{rm_w}d': f'Return Kurt {rm_w}d',
+        f'amihud_illiquidity_{am_w}d': f'Amihud Illiquidity {am_w}d',
+        f'vcp_at_period_low_frac_{vw}_{ll_w}d': f'VCP at Period-Low Frac vw{vw}/{ll_w}d',
+        f'vcp_tightness_slope_{vw}_{ll_w}d': f'VCP Tightness Slope vw{vw}/{ll_w}d',
+        f'breakout_volume_confirmed_{bwk}_z{bvt_str}d': f'Breakout Vol-Confirmed {bwk}d (z≥{bvt_z_val:g})',
         'month':           'Month',
         'sector_id':          'Sector ID (Research-Cluster)',
         'gics_sector_id':     'Yahoo GICS Sector ID',
@@ -1608,6 +1983,7 @@ def build_rename_map(
             zscore_w=news_extra_zscore_w,
             use_accel=bool(news_extra_tone_accel),
             use_cross=bool(news_extra_macro_sec_diff),
+            add_sign_confirmation=news_add_sign_confirmation,
         ):
             m[c] = c.replace('_', ' ')
     return m

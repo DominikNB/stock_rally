@@ -101,6 +101,8 @@ def _log_loaded_config_snapshot() -> None:
         )
     else:
         _rt = getattr(cfg, "FIXED_Y_RALLY_THRESHOLD", None)
+        _long_mode = getattr(cfg, "FIXED_Y_LONG_SEGMENT_LABEL_MODE", None)
+        _long_ed = getattr(cfg, "FIXED_Y_LONG_ENTRY_DAYS", None)
         _y_line = (
             f"Y: fixed band [{getattr(cfg, 'FIXED_Y_WINDOW_MIN', '?')},"
             f"{getattr(cfg, 'FIXED_Y_WINDOW_MAX', '?')}] rt={_rt!r} "
@@ -108,7 +110,8 @@ def _log_loaded_config_snapshot() -> None:
             f"lead={getattr(cfg, 'FIXED_Y_LEAD_DAYS', None)} "
             f"entry={getattr(cfg, 'FIXED_Y_ENTRY_DAYS', None)} "
             f"tail_excl={getattr(cfg, 'FIXED_Y_TAIL_EXCLUDE_DAYS', None)} "
-            f"strict_up={getattr(cfg, 'FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY', None)}"
+            f"strict_up={getattr(cfg, 'FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY', None)} "
+            f"long_mode={_long_mode} long_entry={_long_ed}"
         )
     print(
         f"Pipeline: config = {p}  (mtime {mtime})\n"
