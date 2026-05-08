@@ -1,18 +1,126 @@
 {
-  "generated": "2026-05-07 08:26",
+  "generated": "2026-05-08 10:26",
   "threshold": 0.85,
   "signals": [
     {
-      "ticker": "TER",
-      "company": "Teradyne",
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Parts",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto parts",
+      "date": "2026-05-07",
+      "prob": 0.9311066223981763
+    },
+    {
+      "ticker": "PANW",
+      "company": "Palo Alto Networks",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Infrastructure",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software infrastructure",
+      "date": "2026-05-07",
+      "prob": 0.9262288608917112
+    },
+    {
+      "ticker": "TSLA",
+      "company": "Tesla",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Manufacturers",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto manufacturers",
+      "date": "2026-05-07",
+      "prob": 0.8976232708304852
+    },
+    {
+      "ticker": "MUX.DE",
+      "company": "Mutares",
+      "sector": "Financial Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Financial Services",
+      "gics_industry": "Asset Management",
+      "gics_sector_key": "financial services",
+      "gics_industry_key": "asset management",
+      "date": "2026-05-07",
+      "prob": 0.8786855916064135
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Parts",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto parts",
+      "date": "2026-05-07",
+      "prob": 0.8754475731876558
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-07",
+      "prob": 0.8689272345160225
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
       "sector": "Technology",
       "classification_standard": "GICS_Yahoo",
       "gics_sector": "Technology",
       "gics_industry": "Semiconductor Equipment & Materials",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-05-06",
-      "prob": 0.8944523380733888
+      "date": "2026-05-07",
+      "prob": 0.868262308992768
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-07",
+      "prob": 0.8572796632455654
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Metal Fabrication",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "metal fabrication",
+      "date": "2026-05-07",
+      "prob": 0.8556771229131355
+    },
+    {
+      "ticker": "MC.PA",
+      "company": "LVMH",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Luxury Goods",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "luxury goods",
+      "date": "2026-05-07",
+      "prob": 0.8511345745735446
     },
     {
       "ticker": "AAPL",
@@ -23,8 +131,188 @@
       "gics_industry": "Consumer Electronics",
       "gics_sector_key": "technology",
       "gics_industry_key": "consumer electronics",
+      "date": "2026-05-07",
+      "prob": 0.850850388919489
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-07",
+      "prob": 0.8504358064527908
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-07",
+      "prob": 0.739829355080312
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2026-05-07",
+      "prob": 0.42089976993084377
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Airlines",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "airlines",
       "date": "2026-05-06",
-      "prob": 0.8527652123849198
+      "prob": 0.9432778530207496
+    },
+    {
+      "ticker": "SZG.DE",
+      "company": "Salzgitter",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Steel",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "steel",
+      "date": "2026-05-06",
+      "prob": 0.9261185316098063
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Farm & Heavy Construction Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "farm heavy construction machinery",
+      "date": "2026-05-06",
+      "prob": 0.9238230301171548
+    },
+    {
+      "ticker": "MTX.DE",
+      "company": "MTU Aero",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-06",
+      "prob": 0.9179266595791092
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-06",
+      "prob": 0.9146476902258873
+    },
+    {
+      "ticker": "TER",
+      "company": "Teradyne",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-06",
+      "prob": 0.9092225637890972
+    },
+    {
+      "ticker": "SPG.DE",
+      "company": "Springer Nature",
+      "sector": "Communication Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Communication Services",
+      "gics_industry": "Publishing",
+      "gics_sector_key": "communication services",
+      "gics_industry_key": "publishing",
+      "date": "2026-05-06",
+      "prob": 0.9029055194846831
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-06",
+      "prob": 0.8835640423494302
+    },
+    {
+      "ticker": "KBX.DE",
+      "company": "Knorr-Bremse",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Parts",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto parts",
+      "date": "2026-05-06",
+      "prob": 0.8748247050100918
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Railroads",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "railroads",
+      "date": "2026-05-06",
+      "prob": 0.8736648482071168
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "Healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2026-05-06",
+      "prob": 0.8516856740838226
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-06",
+      "prob": 0.8420392791569705
     },
     {
       "ticker": "WAF.DE",
@@ -648,7 +936,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto parts",
       "date": "2026-04-17",
-      "prob": 0.9049839553915493
+      "prob": 0.904642627372737
     },
     {
       "ticker": "PBB.DE",
@@ -1584,7 +1872,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2026-04-08",
-      "prob": 0.8640871261664658
+      "prob": 0.8666908551665288
     },
     {
       "ticker": "TLX.DE",
@@ -1596,7 +1884,7 @@
       "gics_sector_key": "financial services",
       "gics_industry_key": "insurance diversified",
       "date": "2026-04-08",
-      "prob": 0.8627635203975239
+      "prob": 0.8626566285451911
     },
     {
       "ticker": "MTX.DE",
@@ -1848,7 +2136,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-04-01",
-      "prob": 0.9086740645993171
+      "prob": 0.9081614078958911
     },
     {
       "ticker": "INTC",
@@ -3840,7 +4128,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-01-15",
-      "prob": 0.8626389637113951
+      "prob": 0.8632253022741297
     },
     {
       "ticker": "SZG.DE",
@@ -4620,7 +4908,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2025-12-11",
-      "prob": 0.852439974121463
+      "prob": 0.8537069091794358
     },
     {
       "ticker": "SMHN.DE",
@@ -4692,7 +4980,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-12-09",
-      "prob": 0.9237211620896635
+      "prob": 0.9239623371377225
     },
     {
       "ticker": "BAYN.DE",
@@ -5604,7 +5892,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "telecom services",
       "date": "2025-11-24",
-      "prob": 0.8543738636882465
+      "prob": 0.8508025798198707
     },
     {
       "ticker": "IDXX",
@@ -7044,7 +7332,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-16",
-      "prob": 0.7172423861878973
+      "prob": 0.7230769442824764
     },
     {
       "ticker": "S92.DE",
@@ -7164,7 +7452,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-03",
-      "prob": 0.8545721443215156
+      "prob": 0.8562095925284999
     },
     {
       "ticker": "R3NK.DE",
@@ -8436,7 +8724,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-07-09",
-      "prob": 0.9018913156043241
+      "prob": 0.9067736606610859
     },
     {
       "ticker": "DUE.DE",
@@ -9853,6 +10141,18 @@
       "gics_industry_key": "information technology services",
       "date": "2025-05-29",
       "prob": 0.8543349071948377
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2025-05-29",
+      "prob": 0.8503440484348675
     },
     {
       "ticker": "BFSA.DE",
@@ -11340,7 +11640,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "telecom services",
       "date": "2025-05-02",
-      "prob": 0.903984052262074
+      "prob": 0.90429202155391
     },
     {
       "ticker": "FME.DE",
@@ -15819,6 +16119,18 @@
       "prob": 0.8663528093975753
     },
     {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2025-02-13",
+      "prob": 0.8647937947257897
+    },
+    {
       "ticker": "STLA",
       "company": "Stellantis",
       "sector": "Consumer Cyclical",
@@ -15829,18 +16141,6 @@
       "gics_industry_key": "auto manufacturers",
       "date": "2025-02-13",
       "prob": 0.8612744009359331
-    },
-    {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2025-02-13",
-      "prob": 0.8583911886750953
     },
     {
       "ticker": "BOSS.DE",
@@ -17760,7 +18060,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-12-09",
-      "prob": 0.4719539491776106
+      "prob": 0.4729576655343302
     },
     {
       "ticker": "NDA.DE",
@@ -18000,7 +18300,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-05",
-      "prob": 0.8550883723053482
+      "prob": 0.8541176510083491
     },
     {
       "ticker": "CON.DE",
@@ -18468,7 +18768,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-11-26",
-      "prob": 0.6405552130575924
+      "prob": 0.6437050421913304
     },
     {
       "ticker": "PAT.DE",
@@ -20261,16 +20561,124 @@
   ],
   "signals_holdout_final": [
     {
-      "ticker": "TER",
-      "company": "Teradyne",
+      "ticker": "SFQ.DE",
+      "company": "SAF-Holland",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Parts",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto parts",
+      "date": "2026-05-07",
+      "prob": 0.9311066223981763
+    },
+    {
+      "ticker": "PANW",
+      "company": "Palo Alto Networks",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Infrastructure",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software infrastructure",
+      "date": "2026-05-07",
+      "prob": 0.9262288608917112
+    },
+    {
+      "ticker": "TSLA",
+      "company": "Tesla",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Manufacturers",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto manufacturers",
+      "date": "2026-05-07",
+      "prob": 0.8976232708304852
+    },
+    {
+      "ticker": "MUX.DE",
+      "company": "Mutares",
+      "sector": "Financial Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Financial Services",
+      "gics_industry": "Asset Management",
+      "gics_sector_key": "financial services",
+      "gics_industry_key": "asset management",
+      "date": "2026-05-07",
+      "prob": 0.8786855916064135
+    },
+    {
+      "ticker": "JST.DE",
+      "company": "JOST Werke",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Parts",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto parts",
+      "date": "2026-05-07",
+      "prob": 0.8754475731876558
+    },
+    {
+      "ticker": "SIE.DE",
+      "company": "Siemens",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-07",
+      "prob": 0.8689272345160225
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
       "sector": "Technology",
       "classification_standard": "GICS_Yahoo",
       "gics_sector": "Technology",
       "gics_industry": "Semiconductor Equipment & Materials",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
-      "date": "2026-05-06",
-      "prob": 0.8944523380733888
+      "date": "2026-05-07",
+      "prob": 0.868262308992768
+    },
+    {
+      "ticker": "RAA.DE",
+      "company": "Rational",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-07",
+      "prob": 0.8572796632455654
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Metal Fabrication",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "metal fabrication",
+      "date": "2026-05-07",
+      "prob": 0.8556771229131355
+    },
+    {
+      "ticker": "MC.PA",
+      "company": "LVMH",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Luxury Goods",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "luxury goods",
+      "date": "2026-05-07",
+      "prob": 0.8511345745735446
     },
     {
       "ticker": "AAPL",
@@ -20281,8 +20689,188 @@
       "gics_industry": "Consumer Electronics",
       "gics_sector_key": "technology",
       "gics_industry_key": "consumer electronics",
+      "date": "2026-05-07",
+      "prob": 0.850850388919489
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-07",
+      "prob": 0.8504358064527908
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-07",
+      "prob": 0.739829355080312
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2026-05-07",
+      "prob": 0.42089976993084377
+    },
+    {
+      "ticker": "LHA.DE",
+      "company": "Lufthansa",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Airlines",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "airlines",
       "date": "2026-05-06",
-      "prob": 0.8527652123849198
+      "prob": 0.9432778530207496
+    },
+    {
+      "ticker": "SZG.DE",
+      "company": "Salzgitter",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Steel",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "steel",
+      "date": "2026-05-06",
+      "prob": 0.9261185316098063
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Farm & Heavy Construction Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "farm heavy construction machinery",
+      "date": "2026-05-06",
+      "prob": 0.9238230301171548
+    },
+    {
+      "ticker": "MTX.DE",
+      "company": "MTU Aero",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-06",
+      "prob": 0.9179266595791092
+    },
+    {
+      "ticker": "AIXA.DE",
+      "company": "Aixtron",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-06",
+      "prob": 0.9146476902258873
+    },
+    {
+      "ticker": "TER",
+      "company": "Teradyne",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-06",
+      "prob": 0.9092225637890972
+    },
+    {
+      "ticker": "SPG.DE",
+      "company": "Springer Nature",
+      "sector": "Communication Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Communication Services",
+      "gics_industry": "Publishing",
+      "gics_sector_key": "communication services",
+      "gics_industry_key": "publishing",
+      "date": "2026-05-06",
+      "prob": 0.9029055194846831
+    },
+    {
+      "ticker": "DUE.DE",
+      "company": "D\u00fcrr",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-06",
+      "prob": 0.8835640423494302
+    },
+    {
+      "ticker": "KBX.DE",
+      "company": "Knorr-Bremse",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Parts",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto parts",
+      "date": "2026-05-06",
+      "prob": 0.8748247050100918
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Railroads",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "railroads",
+      "date": "2026-05-06",
+      "prob": 0.8736648482071168
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "Healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2026-05-06",
+      "prob": 0.8516856740838226
+    },
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-06",
+      "prob": 0.8420392791569705
     },
     {
       "ticker": "WAF.DE",
@@ -20906,7 +21494,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto parts",
       "date": "2026-04-17",
-      "prob": 0.9049839553915493
+      "prob": 0.904642627372737
     },
     {
       "ticker": "PBB.DE",
@@ -21842,7 +22430,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2026-04-08",
-      "prob": 0.8640871261664658
+      "prob": 0.8666908551665288
     },
     {
       "ticker": "TLX.DE",
@@ -21854,7 +22442,7 @@
       "gics_sector_key": "financial services",
       "gics_industry_key": "insurance diversified",
       "date": "2026-04-08",
-      "prob": 0.8627635203975239
+      "prob": 0.8626566285451911
     },
     {
       "ticker": "MTX.DE",
@@ -22106,7 +22694,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-04-01",
-      "prob": 0.9086740645993171
+      "prob": 0.9081614078958911
     },
     {
       "ticker": "INTC",
@@ -24098,7 +24686,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-01-15",
-      "prob": 0.8626389637113951
+      "prob": 0.8632253022741297
     },
     {
       "ticker": "SZG.DE",
@@ -24878,7 +25466,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2025-12-11",
-      "prob": 0.852439974121463
+      "prob": 0.8537069091794358
     },
     {
       "ticker": "SMHN.DE",
@@ -24950,7 +25538,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-12-09",
-      "prob": 0.9237211620896635
+      "prob": 0.9239623371377225
     },
     {
       "ticker": "BAYN.DE",
@@ -25862,7 +26450,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "telecom services",
       "date": "2025-11-24",
-      "prob": 0.8543738636882465
+      "prob": 0.8508025798198707
     },
     {
       "ticker": "IDXX",
@@ -27302,7 +27890,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-16",
-      "prob": 0.7172423861878973
+      "prob": 0.7230769442824764
     },
     {
       "ticker": "S92.DE",
@@ -27422,7 +28010,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-03",
-      "prob": 0.8545721443215156
+      "prob": 0.8562095925284999
     },
     {
       "ticker": "R3NK.DE",
@@ -28694,7 +29282,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-07-09",
-      "prob": 0.9018913156043241
+      "prob": 0.9067736606610859
     },
     {
       "ticker": "DUE.DE",
@@ -30111,6 +30699,18 @@
       "gics_industry_key": "information technology services",
       "date": "2025-05-29",
       "prob": 0.8543349071948377
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2025-05-29",
+      "prob": 0.8503440484348675
     },
     {
       "ticker": "BFSA.DE",
@@ -31598,7 +32198,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "telecom services",
       "date": "2025-05-02",
-      "prob": 0.903984052262074
+      "prob": 0.90429202155391
     },
     {
       "ticker": "FME.DE",
@@ -36077,6 +36677,18 @@
       "prob": 0.8663528093975753
     },
     {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2025-02-13",
+      "prob": 0.8647937947257897
+    },
+    {
       "ticker": "STLA",
       "company": "Stellantis",
       "sector": "Consumer Cyclical",
@@ -36087,18 +36699,6 @@
       "gics_industry_key": "auto manufacturers",
       "date": "2025-02-13",
       "prob": 0.8612744009359331
-    },
-    {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2025-02-13",
-      "prob": 0.8583911886750953
     },
     {
       "ticker": "BOSS.DE",
@@ -38018,7 +38618,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-12-09",
-      "prob": 0.4719539491776106
+      "prob": 0.4729576655343302
     },
     {
       "ticker": "NDA.DE",
@@ -38258,7 +38858,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-05",
-      "prob": 0.8550883723053482
+      "prob": 0.8541176510083491
     },
     {
       "ticker": "CON.DE",
@@ -38726,7 +39326,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-11-26",
-      "prob": 0.6405552130575924
+      "prob": 0.6437050421913304
     },
     {
       "ticker": "PAT.DE",
@@ -40517,9 +41117,9 @@
       "prob": 0.8681700636882872
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 10094,
+  "signals_all_timeline_including_in_sample_count": 10116,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 89976893,
+  "index_html_bytes_utf8": 90112290,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
