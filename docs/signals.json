@@ -1,7 +1,43 @@
 {
-  "generated": "2026-05-11 08:42",
+  "generated": "2026-05-12 07:37",
   "threshold": 0.85,
   "signals": [
+    {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Information Technology Services",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "information technology services",
+      "date": "2026-05-11",
+      "prob": 0.8732790152371475
+    },
+    {
+      "ticker": "TSLA",
+      "company": "Tesla",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Manufacturers",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto manufacturers",
+      "date": "2026-05-11",
+      "prob": 0.862902128355368
+    },
+    {
+      "ticker": "PANW",
+      "company": "Palo Alto Networks",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Infrastructure",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software infrastructure",
+      "date": "2026-05-08",
+      "prob": 0.8950681732465656
+    },
     {
       "ticker": "6367.T",
       "company": "Daikin",
@@ -12,7 +48,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "building products equipment",
       "date": "2026-05-08",
-      "prob": 0.8526777081846317
+      "prob": 0.875810339583241
     },
     {
       "ticker": "CON.DE",
@@ -24,7 +60,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto parts",
       "date": "2026-05-07",
-      "prob": 0.897054101360393
+      "prob": 0.9026583913261534
     },
     {
       "ticker": "TMV.DE",
@@ -36,7 +72,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-05-07",
-      "prob": 0.8762365390756445
+      "prob": 0.8843031631134868
     },
     {
       "ticker": "LHA.DE",
@@ -48,7 +84,31 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "airlines",
       "date": "2026-05-07",
-      "prob": 0.8615444263536509
+      "prob": 0.8829315333172381
+    },
+    {
+      "ticker": "AMD",
+      "company": "AMD",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-07",
+      "prob": 0.8523255937521194
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Farm & Heavy Construction Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "farm heavy construction machinery",
+      "date": "2026-05-07",
+      "prob": 0.8519110427378828
     },
     {
       "ticker": "INH.DE",
@@ -60,7 +120,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "conglomerates",
       "date": "2026-05-06",
-      "prob": 0.857372659586275
+      "prob": 0.8607116895080041
     },
     {
       "ticker": "NIBE-B.ST",
@@ -72,7 +132,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "building products equipment",
       "date": "2026-05-05",
-      "prob": 0.904278565930168
+      "prob": 0.9032909349028826
     },
     {
       "ticker": "F3C.DE",
@@ -84,19 +144,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-05",
-      "prob": 0.9002977159276375
-    },
-    {
-      "ticker": "ILMN",
-      "company": "Illumina",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Diagnostics & Research",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "diagnostics research",
-      "date": "2026-05-05",
-      "prob": 0.8911812837408973
+      "prob": 0.8980874417657702
     },
     {
       "ticker": "SMHN.DE",
@@ -108,7 +156,19 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2026-05-05",
-      "prob": 0.890121833952423
+      "prob": 0.8858797437499476
+    },
+    {
+      "ticker": "ILMN",
+      "company": "Illumina",
+      "sector": "Healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2026-05-05",
+      "prob": 0.8858312072687738
     },
     {
       "ticker": "WAF.DE",
@@ -120,7 +180,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-05-04",
-      "prob": 0.8795183231654945
+      "prob": 0.8774336746633934
     },
     {
       "ticker": "CARR",
@@ -768,7 +828,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-04-09",
-      "prob": 0.9069470322551105
+      "prob": 0.9038212322543115
     },
     {
       "ticker": "IFX.DE",
@@ -1428,7 +1488,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-03-16",
-      "prob": 0.884661726559079
+      "prob": 0.8858156313989801
     },
     {
       "ticker": "RWE.DE",
@@ -4356,7 +4416,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-07-11",
-      "prob": 0.8705121663010805
+      "prob": 0.8706914241323032
     },
     {
       "ticker": "HYQ.DE",
@@ -6123,18 +6183,6 @@
       "prob": 0.8643657044519939
     },
     {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2025-02-19",
-      "prob": 0.8578190173195931
-    },
-    {
       "ticker": "WSO",
       "company": "Watsco",
       "sector": "Industrials",
@@ -6145,6 +6193,18 @@
       "gics_industry_key": "industrial distribution",
       "date": "2025-02-19",
       "prob": 0.8558653415358238
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2025-02-19",
+      "prob": 0.855458897308725
     },
     {
       "ticker": "INTC",
@@ -6372,7 +6432,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-02-13",
-      "prob": 0.9054425726944819
+      "prob": 0.9037843555206443
     },
     {
       "ticker": "INTC",
@@ -7824,7 +7884,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9039666894488254
+      "prob": 0.9113675782154542
     },
     {
       "ticker": "AIXA.DE",
@@ -9509,6 +9569,42 @@
   ],
   "signals_holdout_final": [
     {
+      "ticker": "GFT.DE",
+      "company": "GFT Technologies",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Information Technology Services",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "information technology services",
+      "date": "2026-05-11",
+      "prob": 0.8732790152371475
+    },
+    {
+      "ticker": "TSLA",
+      "company": "Tesla",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Manufacturers",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto manufacturers",
+      "date": "2026-05-11",
+      "prob": 0.862902128355368
+    },
+    {
+      "ticker": "PANW",
+      "company": "Palo Alto Networks",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Infrastructure",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software infrastructure",
+      "date": "2026-05-08",
+      "prob": 0.8950681732465656
+    },
+    {
       "ticker": "6367.T",
       "company": "Daikin",
       "sector": "Industrials",
@@ -9518,7 +9614,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "building products equipment",
       "date": "2026-05-08",
-      "prob": 0.8526777081846317
+      "prob": 0.875810339583241
     },
     {
       "ticker": "CON.DE",
@@ -9530,7 +9626,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto parts",
       "date": "2026-05-07",
-      "prob": 0.897054101360393
+      "prob": 0.9026583913261534
     },
     {
       "ticker": "TMV.DE",
@@ -9542,7 +9638,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-05-07",
-      "prob": 0.8762365390756445
+      "prob": 0.8843031631134868
     },
     {
       "ticker": "LHA.DE",
@@ -9554,7 +9650,31 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "airlines",
       "date": "2026-05-07",
-      "prob": 0.8615444263536509
+      "prob": 0.8829315333172381
+    },
+    {
+      "ticker": "AMD",
+      "company": "AMD",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-07",
+      "prob": 0.8523255937521194
+    },
+    {
+      "ticker": "KGX.DE",
+      "company": "KION Group",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Farm & Heavy Construction Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "farm heavy construction machinery",
+      "date": "2026-05-07",
+      "prob": 0.8519110427378828
     },
     {
       "ticker": "INH.DE",
@@ -9566,7 +9686,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "conglomerates",
       "date": "2026-05-06",
-      "prob": 0.857372659586275
+      "prob": 0.8607116895080041
     },
     {
       "ticker": "NIBE-B.ST",
@@ -9578,7 +9698,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "building products equipment",
       "date": "2026-05-05",
-      "prob": 0.904278565930168
+      "prob": 0.9032909349028826
     },
     {
       "ticker": "F3C.DE",
@@ -9590,19 +9710,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-05",
-      "prob": 0.9002977159276375
-    },
-    {
-      "ticker": "ILMN",
-      "company": "Illumina",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Diagnostics & Research",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "diagnostics research",
-      "date": "2026-05-05",
-      "prob": 0.8911812837408973
+      "prob": 0.8980874417657702
     },
     {
       "ticker": "SMHN.DE",
@@ -9614,7 +9722,19 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2026-05-05",
-      "prob": 0.890121833952423
+      "prob": 0.8858797437499476
+    },
+    {
+      "ticker": "ILMN",
+      "company": "Illumina",
+      "sector": "Healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2026-05-05",
+      "prob": 0.8858312072687738
     },
     {
       "ticker": "WAF.DE",
@@ -9626,7 +9746,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-05-04",
-      "prob": 0.8795183231654945
+      "prob": 0.8774336746633934
     },
     {
       "ticker": "CARR",
@@ -10274,7 +10394,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-04-09",
-      "prob": 0.9069470322551105
+      "prob": 0.9038212322543115
     },
     {
       "ticker": "IFX.DE",
@@ -10934,7 +11054,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-03-16",
-      "prob": 0.884661726559079
+      "prob": 0.8858156313989801
     },
     {
       "ticker": "RWE.DE",
@@ -13862,7 +13982,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-07-11",
-      "prob": 0.8705121663010805
+      "prob": 0.8706914241323032
     },
     {
       "ticker": "HYQ.DE",
@@ -15629,18 +15749,6 @@
       "prob": 0.8643657044519939
     },
     {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2025-02-19",
-      "prob": 0.8578190173195931
-    },
-    {
       "ticker": "WSO",
       "company": "Watsco",
       "sector": "Industrials",
@@ -15651,6 +15759,18 @@
       "gics_industry_key": "industrial distribution",
       "date": "2025-02-19",
       "prob": 0.8558653415358238
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2025-02-19",
+      "prob": 0.855458897308725
     },
     {
       "ticker": "INTC",
@@ -15878,7 +15998,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-02-13",
-      "prob": 0.9054425726944819
+      "prob": 0.9037843555206443
     },
     {
       "ticker": "INTC",
@@ -17330,7 +17450,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9039666894488254
+      "prob": 0.9113675782154542
     },
     {
       "ticker": "AIXA.DE",
@@ -19013,9 +19133,9 @@
       "prob": 0.8624896274680172
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 4910,
+  "signals_all_timeline_including_in_sample_count": 4915,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 90932480,
+  "index_html_bytes_utf8": 90916008,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
