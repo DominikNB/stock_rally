@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-13 08:24",
+  "generated": "2026-05-14 08:16",
   "threshold": 0.85,
   "signals": [
     {
@@ -12,7 +12,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "internet retail",
       "date": "2026-05-12",
-      "prob": 0.8697350511061902
+      "prob": 0.8880753333460285
     },
     {
       "ticker": "GFT.DE",
@@ -768,7 +768,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-04-09",
-      "prob": 0.9222608138466907
+      "prob": 0.9206661209945601
     },
     {
       "ticker": "NDA.DE",
@@ -985,6 +985,18 @@
       "gics_industry_key": "semiconductors",
       "date": "2026-04-06",
       "prob": 0.9252818644533849
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-04-06",
+      "prob": 0.9206545415567312
     },
     {
       "ticker": "MU",
@@ -1284,7 +1296,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "solar",
       "date": "2026-03-27",
-      "prob": 0.8524707622604899
+      "prob": 0.8522152959017092
     },
     {
       "ticker": "WCH.DE",
@@ -1632,7 +1644,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2026-02-27",
-      "prob": 0.9046294941999284
+      "prob": 0.9028482948298803
     },
     {
       "ticker": "NDX1.DE",
@@ -1839,6 +1851,18 @@
       "prob": 0.8538221680084378
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-01-29",
+      "prob": 0.8625569977719718
+    },
+    {
       "ticker": "PUM.DE",
       "company": "PUMA",
       "sector": "Consumer Cyclical",
@@ -1861,18 +1885,6 @@
       "gics_industry_key": "software infrastructure",
       "date": "2026-01-27",
       "prob": 0.8895599209984603
-    },
-    {
-      "ticker": "NA9.DE",
-      "company": "Nagarro",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Information Technology Services",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "information technology services",
-      "date": "2026-01-27",
-      "prob": 0.8500782293985771
     },
     {
       "ticker": "ANET",
@@ -1991,8 +2003,8 @@
       "gics_industry": "Semiconductors",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
-      "date": "2026-01-09",
-      "prob": 0.9298696234520304
+      "date": "2026-01-13",
+      "prob": 0.9114854200070109
     },
     {
       "ticker": "EVT.DE",
@@ -2028,7 +2040,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software infrastructure",
       "date": "2026-01-07",
-      "prob": 0.8739817726465795
+      "prob": 0.8683528883225342
     },
     {
       "ticker": "SRT3.DE",
@@ -2052,7 +2064,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-01-06",
-      "prob": 0.9166495740593767
+      "prob": 0.9162669122578305
     },
     {
       "ticker": "RHM.DE",
@@ -2103,6 +2115,18 @@
       "prob": 0.8791899220847192
     },
     {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-01-06",
+      "prob": 0.8543703786265017
+    },
+    {
       "ticker": "WAF.DE",
       "company": "Siltronic",
       "sector": "Technology",
@@ -2148,7 +2172,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.85979607367162
+      "prob": 0.8596040789878292
     },
     {
       "ticker": "MU",
@@ -2400,7 +2424,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.939588966280594
+      "prob": 0.9394985547768323
     },
     {
       "ticker": "DUE.DE",
@@ -2424,7 +2448,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2025-12-08",
-      "prob": 0.905026592600904
+      "prob": 0.9086303120225764
     },
     {
       "ticker": "BMW.DE",
@@ -2772,7 +2796,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-26",
-      "prob": 0.9219619658303879
+      "prob": 0.9235882148527627
     },
     {
       "ticker": "DOW",
@@ -2907,6 +2931,18 @@
       "prob": 0.8805614692134927
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-11-26",
+      "prob": 0.876910556776968
+    },
+    {
       "ticker": "AFX.DE",
       "company": "Carl Zeiss Meditec",
       "sector": "Healthcare",
@@ -2929,18 +2965,6 @@
       "gics_industry_key": "diagnostics research",
       "date": "2025-11-26",
       "prob": 0.8576330657232182
-    },
-    {
-      "ticker": "HEI.DE",
-      "company": "Heidelberg Materials",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Building Materials",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "building materials",
-      "date": "2025-11-26",
-      "prob": 0.8569121902156511
     },
     {
       "ticker": "ALB",
@@ -2977,6 +3001,18 @@
       "gics_industry_key": "auto manufacturers",
       "date": "2025-11-26",
       "prob": 0.8553738016745025
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Building Materials",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "building materials",
+      "date": "2025-11-26",
+      "prob": 0.8551879451474881
     },
     {
       "ticker": "STLA",
@@ -3156,7 +3192,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-11-13",
-      "prob": 0.8973828915389829
+      "prob": 0.8953358517564246
     },
     {
       "ticker": "HEI.DE",
@@ -3291,18 +3327,6 @@
       "prob": 0.899228069714312
     },
     {
-      "ticker": "S92.DE",
-      "company": "SMA Solar",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Solar",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "solar",
-      "date": "2025-11-07",
-      "prob": 0.8978939620873047
-    },
-    {
       "ticker": "DHL.DE",
       "company": "DHL Group",
       "sector": "Industrials",
@@ -3313,6 +3337,18 @@
       "gics_industry_key": "integrated freight logistics",
       "date": "2025-11-07",
       "prob": 0.8964776885819781
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Solar",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "solar",
+      "date": "2025-11-07",
+      "prob": 0.8958557752836857
     },
     {
       "ticker": "AMGN",
@@ -3435,6 +3471,18 @@
       "prob": 0.8942328454867275
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-10-30",
+      "prob": 0.8743938851432154
+    },
+    {
       "ticker": "REGN",
       "company": "Regeneron",
       "sector": "Healthcare",
@@ -3468,7 +3516,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-10-29",
-      "prob": 0.8802793246062732
+      "prob": 0.8860700324517612
     },
     {
       "ticker": "S92.DE",
@@ -4788,7 +4836,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-06-25",
-      "prob": 0.9216696849600734
+      "prob": 0.9213081061702086
     },
     {
       "ticker": "HEI.DE",
@@ -4812,19 +4860,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2025-06-25",
-      "prob": 0.9062015301732543
-    },
-    {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2025-06-25",
-      "prob": 0.889475053642917
+      "prob": 0.9057757162088227
     },
     {
       "ticker": "AIXA.DE",
@@ -4836,7 +4872,19 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2025-06-25",
-      "prob": 0.886370565297475
+      "prob": 0.8901086857611379
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2025-06-25",
+      "prob": 0.8889827929805179
     },
     {
       "ticker": "GLJ.DE",
@@ -4860,7 +4908,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-06-25",
-      "prob": 0.8540547091536066
+      "prob": 0.8534306583665623
     },
     {
       "ticker": "HDD.DE",
@@ -6483,6 +6531,18 @@
       "prob": 0.9255014872575726
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-02-11",
+      "prob": 0.884487041513273
+    },
+    {
       "ticker": "MCD",
       "company": "McDonald's",
       "sector": "Consumer Cyclical",
@@ -6852,7 +6912,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "computer hardware",
       "date": "2025-01-27",
-      "prob": 0.44046530922181265
+      "prob": 0.44730725651301534
     },
     {
       "ticker": "VBK.DE",
@@ -7045,6 +7105,18 @@
       "gics_industry_key": "semiconductors",
       "date": "2025-01-22",
       "prob": 0.9481456380416726
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-01-22",
+      "prob": 0.9379665694930541
     },
     {
       "ticker": "SCHW",
@@ -7692,7 +7764,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-26",
-      "prob": 0.875782586618496
+      "prob": 0.8796983160546211
     },
     {
       "ticker": "FRA.DE",
@@ -7716,7 +7788,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2024-12-16",
-      "prob": 0.904087675554294
+      "prob": 0.9030767678726548
     },
     {
       "ticker": "MU",
@@ -7728,7 +7800,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-16",
-      "prob": 0.8604304991789054
+      "prob": 0.8590313713225507
     },
     {
       "ticker": "NA9.DE",
@@ -8413,6 +8485,18 @@
       "gics_industry_key": "real estate services",
       "date": "2024-11-27",
       "prob": 0.8651834754021558
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2024-11-26",
+      "prob": 0.953800195141385
     },
     {
       "ticker": "AIXA.DE",
@@ -9469,18 +9553,6 @@
       "gics_industry_key": "diagnostics research",
       "date": "2024-10-04",
       "prob": 0.8976799199333706
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2024-10-02",
-      "prob": 0.9299626951883304
     }
   ],
   "signals_holdout_final": [
@@ -9494,7 +9566,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "internet retail",
       "date": "2026-05-12",
-      "prob": 0.8697350511061902
+      "prob": 0.8880753333460285
     },
     {
       "ticker": "GFT.DE",
@@ -10250,7 +10322,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-04-09",
-      "prob": 0.9222608138466907
+      "prob": 0.9206661209945601
     },
     {
       "ticker": "NDA.DE",
@@ -10467,6 +10539,18 @@
       "gics_industry_key": "semiconductors",
       "date": "2026-04-06",
       "prob": 0.9252818644533849
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-04-06",
+      "prob": 0.9206545415567312
     },
     {
       "ticker": "MU",
@@ -10766,7 +10850,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "solar",
       "date": "2026-03-27",
-      "prob": 0.8524707622604899
+      "prob": 0.8522152959017092
     },
     {
       "ticker": "WCH.DE",
@@ -11114,7 +11198,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2026-02-27",
-      "prob": 0.9046294941999284
+      "prob": 0.9028482948298803
     },
     {
       "ticker": "NDX1.DE",
@@ -11321,6 +11405,18 @@
       "prob": 0.8538221680084378
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-01-29",
+      "prob": 0.8625569977719718
+    },
+    {
       "ticker": "PUM.DE",
       "company": "PUMA",
       "sector": "Consumer Cyclical",
@@ -11343,18 +11439,6 @@
       "gics_industry_key": "software infrastructure",
       "date": "2026-01-27",
       "prob": 0.8895599209984603
-    },
-    {
-      "ticker": "NA9.DE",
-      "company": "Nagarro",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Information Technology Services",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "information technology services",
-      "date": "2026-01-27",
-      "prob": 0.8500782293985771
     },
     {
       "ticker": "ANET",
@@ -11473,8 +11557,8 @@
       "gics_industry": "Semiconductors",
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
-      "date": "2026-01-09",
-      "prob": 0.9298696234520304
+      "date": "2026-01-13",
+      "prob": 0.9114854200070109
     },
     {
       "ticker": "EVT.DE",
@@ -11510,7 +11594,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software infrastructure",
       "date": "2026-01-07",
-      "prob": 0.8739817726465795
+      "prob": 0.8683528883225342
     },
     {
       "ticker": "SRT3.DE",
@@ -11534,7 +11618,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-01-06",
-      "prob": 0.9166495740593767
+      "prob": 0.9162669122578305
     },
     {
       "ticker": "RHM.DE",
@@ -11585,6 +11669,18 @@
       "prob": 0.8791899220847192
     },
     {
+      "ticker": "INTC",
+      "company": "Intel",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-01-06",
+      "prob": 0.8543703786265017
+    },
+    {
       "ticker": "WAF.DE",
       "company": "Siltronic",
       "sector": "Technology",
@@ -11630,7 +11726,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.85979607367162
+      "prob": 0.8596040789878292
     },
     {
       "ticker": "MU",
@@ -11882,7 +11978,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.939588966280594
+      "prob": 0.9394985547768323
     },
     {
       "ticker": "DUE.DE",
@@ -11906,7 +12002,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2025-12-08",
-      "prob": 0.905026592600904
+      "prob": 0.9086303120225764
     },
     {
       "ticker": "BMW.DE",
@@ -12254,7 +12350,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-26",
-      "prob": 0.9219619658303879
+      "prob": 0.9235882148527627
     },
     {
       "ticker": "DOW",
@@ -12389,6 +12485,18 @@
       "prob": 0.8805614692134927
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-11-26",
+      "prob": 0.876910556776968
+    },
+    {
       "ticker": "AFX.DE",
       "company": "Carl Zeiss Meditec",
       "sector": "Healthcare",
@@ -12411,18 +12519,6 @@
       "gics_industry_key": "diagnostics research",
       "date": "2025-11-26",
       "prob": 0.8576330657232182
-    },
-    {
-      "ticker": "HEI.DE",
-      "company": "Heidelberg Materials",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Building Materials",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "building materials",
-      "date": "2025-11-26",
-      "prob": 0.8569121902156511
     },
     {
       "ticker": "ALB",
@@ -12459,6 +12555,18 @@
       "gics_industry_key": "auto manufacturers",
       "date": "2025-11-26",
       "prob": 0.8553738016745025
+    },
+    {
+      "ticker": "HEI.DE",
+      "company": "Heidelberg Materials",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Building Materials",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "building materials",
+      "date": "2025-11-26",
+      "prob": 0.8551879451474881
     },
     {
       "ticker": "STLA",
@@ -12638,7 +12746,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-11-13",
-      "prob": 0.8973828915389829
+      "prob": 0.8953358517564246
     },
     {
       "ticker": "HEI.DE",
@@ -12773,18 +12881,6 @@
       "prob": 0.899228069714312
     },
     {
-      "ticker": "S92.DE",
-      "company": "SMA Solar",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Solar",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "solar",
-      "date": "2025-11-07",
-      "prob": 0.8978939620873047
-    },
-    {
       "ticker": "DHL.DE",
       "company": "DHL Group",
       "sector": "Industrials",
@@ -12795,6 +12891,18 @@
       "gics_industry_key": "integrated freight logistics",
       "date": "2025-11-07",
       "prob": 0.8964776885819781
+    },
+    {
+      "ticker": "S92.DE",
+      "company": "SMA Solar",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Solar",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "solar",
+      "date": "2025-11-07",
+      "prob": 0.8958557752836857
     },
     {
       "ticker": "AMGN",
@@ -12917,6 +13025,18 @@
       "prob": 0.8942328454867275
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-10-30",
+      "prob": 0.8743938851432154
+    },
+    {
       "ticker": "REGN",
       "company": "Regeneron",
       "sector": "Healthcare",
@@ -12950,7 +13070,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-10-29",
-      "prob": 0.8802793246062732
+      "prob": 0.8860700324517612
     },
     {
       "ticker": "S92.DE",
@@ -14270,7 +14390,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-06-25",
-      "prob": 0.9216696849600734
+      "prob": 0.9213081061702086
     },
     {
       "ticker": "HEI.DE",
@@ -14294,19 +14414,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2025-06-25",
-      "prob": 0.9062015301732543
-    },
-    {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2025-06-25",
-      "prob": 0.889475053642917
+      "prob": 0.9057757162088227
     },
     {
       "ticker": "AIXA.DE",
@@ -14318,7 +14426,19 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2025-06-25",
-      "prob": 0.886370565297475
+      "prob": 0.8901086857611379
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2025-06-25",
+      "prob": 0.8889827929805179
     },
     {
       "ticker": "GLJ.DE",
@@ -14342,7 +14462,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-06-25",
-      "prob": 0.8540547091536066
+      "prob": 0.8534306583665623
     },
     {
       "ticker": "HDD.DE",
@@ -15965,6 +16085,18 @@
       "prob": 0.9255014872575726
     },
     {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-02-11",
+      "prob": 0.884487041513273
+    },
+    {
       "ticker": "MCD",
       "company": "McDonald's",
       "sector": "Consumer Cyclical",
@@ -16334,7 +16466,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "computer hardware",
       "date": "2025-01-27",
-      "prob": 0.44046530922181265
+      "prob": 0.44730725651301534
     },
     {
       "ticker": "VBK.DE",
@@ -16527,6 +16659,18 @@
       "gics_industry_key": "semiconductors",
       "date": "2025-01-22",
       "prob": 0.9481456380416726
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2025-01-22",
+      "prob": 0.9379665694930541
     },
     {
       "ticker": "SCHW",
@@ -17174,7 +17318,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-26",
-      "prob": 0.875782586618496
+      "prob": 0.8796983160546211
     },
     {
       "ticker": "FRA.DE",
@@ -17198,7 +17342,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2024-12-16",
-      "prob": 0.904087675554294
+      "prob": 0.9030767678726548
     },
     {
       "ticker": "MU",
@@ -17210,7 +17354,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-16",
-      "prob": 0.8604304991789054
+      "prob": 0.8590313713225507
     },
     {
       "ticker": "NA9.DE",
@@ -17895,6 +18039,18 @@
       "gics_industry_key": "real estate services",
       "date": "2024-11-27",
       "prob": 0.8651834754021558
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2024-11-26",
+      "prob": 0.953800195141385
     },
     {
       "ticker": "AIXA.DE",
@@ -18951,23 +19107,11 @@
       "gics_industry_key": "diagnostics research",
       "date": "2024-10-04",
       "prob": 0.8976799199333706
-    },
-    {
-      "ticker": "ACT.DE",
-      "company": "AlzChem",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2024-10-02",
-      "prob": 0.9299626951883304
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 4864,
+  "signals_all_timeline_including_in_sample_count": 4917,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 90932798,
+  "index_html_bytes_utf8": 90947914,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
