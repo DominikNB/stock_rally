@@ -1,7 +1,43 @@
 {
-  "generated": "2026-05-14 08:16",
+  "generated": "2026-05-15 08:49",
   "threshold": 0.85,
   "signals": [
+    {
+      "ticker": "F",
+      "company": "Ford",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Manufacturers",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto manufacturers",
+      "date": "2026-05-14",
+      "prob": 0.8987570183690425
+    },
+    {
+      "ticker": "F3C.DE",
+      "company": "SFC Energy",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Electrical Equipment & Parts",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "electrical equipment parts",
+      "date": "2026-05-14",
+      "prob": 0.8853809091076802
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Metal Fabrication",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "metal fabrication",
+      "date": "2026-05-14",
+      "prob": 0.8747007164083179
+    },
     {
       "ticker": "DHER.DE",
       "company": "Delivery Hero",
@@ -2172,7 +2208,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.8596040789878292
+      "prob": 0.85979607367162
     },
     {
       "ticker": "MU",
@@ -2424,7 +2460,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.9394985547768323
+      "prob": 0.939588966280594
     },
     {
       "ticker": "DUE.DE",
@@ -9557,6 +9593,42 @@
   ],
   "signals_holdout_final": [
     {
+      "ticker": "F",
+      "company": "Ford",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Auto Manufacturers",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "auto manufacturers",
+      "date": "2026-05-14",
+      "prob": 0.8987570183690425
+    },
+    {
+      "ticker": "F3C.DE",
+      "company": "SFC Energy",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Electrical Equipment & Parts",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "electrical equipment parts",
+      "date": "2026-05-14",
+      "prob": 0.8853809091076802
+    },
+    {
+      "ticker": "NDA.DE",
+      "company": "Aurubis",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Metal Fabrication",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "metal fabrication",
+      "date": "2026-05-14",
+      "prob": 0.8747007164083179
+    },
+    {
       "ticker": "DHER.DE",
       "company": "Delivery Hero",
       "sector": "Consumer Cyclical",
@@ -11726,7 +11798,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.8596040789878292
+      "prob": 0.85979607367162
     },
     {
       "ticker": "MU",
@@ -11978,7 +12050,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.9394985547768323
+      "prob": 0.939588966280594
     },
     {
       "ticker": "DUE.DE",
@@ -19109,9 +19181,9 @@
       "prob": 0.8976799199333706
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 4917,
+  "signals_all_timeline_including_in_sample_count": 4921,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 90947914,
+  "index_html_bytes_utf8": 90970960,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
