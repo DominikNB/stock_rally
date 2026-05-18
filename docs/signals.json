@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-15 08:49",
+  "generated": "2026-05-18 08:08",
   "threshold": 0.85,
   "signals": [
     {
@@ -12,7 +12,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-14",
-      "prob": 0.8987570183690425
+      "prob": 0.9100218002142585
     },
     {
       "ticker": "F3C.DE",
@@ -24,7 +24,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-14",
-      "prob": 0.8853809091076802
+      "prob": 0.8947204500391178
     },
     {
       "ticker": "NDA.DE",
@@ -36,7 +36,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "metal fabrication",
       "date": "2026-05-14",
-      "prob": 0.8747007164083179
+      "prob": 0.8786966221525587
     },
     {
       "ticker": "DHER.DE",
@@ -2208,7 +2208,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.85979607367162
+      "prob": 0.8596040789878292
     },
     {
       "ticker": "MU",
@@ -2460,7 +2460,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.939588966280594
+      "prob": 0.9394985547768323
     },
     {
       "ticker": "DUE.DE",
@@ -2832,7 +2832,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-26",
-      "prob": 0.9235882148527627
+      "prob": 0.9219619658303879
     },
     {
       "ticker": "DOW",
@@ -7932,7 +7932,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9039666894488254
+      "prob": 0.9113675782154542
     },
     {
       "ticker": "AIXA.DE",
@@ -9602,7 +9602,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-14",
-      "prob": 0.8987570183690425
+      "prob": 0.9100218002142585
     },
     {
       "ticker": "F3C.DE",
@@ -9614,7 +9614,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-14",
-      "prob": 0.8853809091076802
+      "prob": 0.8947204500391178
     },
     {
       "ticker": "NDA.DE",
@@ -9626,7 +9626,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "metal fabrication",
       "date": "2026-05-14",
-      "prob": 0.8747007164083179
+      "prob": 0.8786966221525587
     },
     {
       "ticker": "DHER.DE",
@@ -11798,7 +11798,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.85979607367162
+      "prob": 0.8596040789878292
     },
     {
       "ticker": "MU",
@@ -12050,7 +12050,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.939588966280594
+      "prob": 0.9394985547768323
     },
     {
       "ticker": "DUE.DE",
@@ -12422,7 +12422,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-26",
-      "prob": 0.9235882148527627
+      "prob": 0.9219619658303879
     },
     {
       "ticker": "DOW",
@@ -17522,7 +17522,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9039666894488254
+      "prob": 0.9113675782154542
     },
     {
       "ticker": "AIXA.DE",
@@ -19181,9 +19181,9 @@
       "prob": 0.8976799199333706
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 4921,
+  "signals_all_timeline_including_in_sample_count": 4919,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 90970960,
+  "index_html_bytes_utf8": 91001686,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
