@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-18 08:08",
+  "generated": "2026-05-19 08:47",
   "threshold": 0.85,
   "signals": [
     {
@@ -12,7 +12,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-14",
-      "prob": 0.9100218002142585
+      "prob": 0.9209989898339962
     },
     {
       "ticker": "F3C.DE",
@@ -24,7 +24,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-14",
-      "prob": 0.8947204500391178
+      "prob": 0.9107334700766776
     },
     {
       "ticker": "NDA.DE",
@@ -36,7 +36,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "metal fabrication",
       "date": "2026-05-14",
-      "prob": 0.8786966221525587
+      "prob": 0.900318540121369
     },
     {
       "ticker": "DHER.DE",
@@ -48,7 +48,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "internet retail",
       "date": "2026-05-12",
-      "prob": 0.8880753333460285
+      "prob": 0.8847654439968102
     },
     {
       "ticker": "GFT.DE",
@@ -1140,7 +1140,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-04-02",
-      "prob": 0.9197487495135327
+      "prob": 0.9142624084515198
     },
     {
       "ticker": "BA",
@@ -2103,18 +2103,6 @@
       "prob": 0.9162669122578305
     },
     {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2026-01-06",
-      "prob": 0.8888601510152577
-    },
-    {
       "ticker": "URI",
       "company": "United Rentals",
       "sector": "Industrials",
@@ -2125,6 +2113,18 @@
       "gics_industry_key": "rental leasing services",
       "date": "2026-01-06",
       "prob": 0.8850006183861882
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-01-06",
+      "prob": 0.8841246158267536
     },
     {
       "ticker": "HAG.DE",
@@ -2208,7 +2208,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.8596040789878292
+      "prob": 0.85979607367162
     },
     {
       "ticker": "MU",
@@ -2460,7 +2460,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.9394985547768323
+      "prob": 0.939588966280594
     },
     {
       "ticker": "DUE.DE",
@@ -4008,7 +4008,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-12",
-      "prob": 0.9043345621604402
+      "prob": 0.903864685385437
     },
     {
       "ticker": "UNH",
@@ -4596,7 +4596,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-07-09",
-      "prob": 0.859201410455731
+      "prob": 0.8602612147682195
     },
     {
       "ticker": "ACT.DE",
@@ -6180,7 +6180,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-02-20",
-      "prob": 0.6747911107852627
+      "prob": 0.6778973737085049
     },
     {
       "ticker": "R3NK.DE",
@@ -6336,7 +6336,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-02-14",
-      "prob": 0.9382384469069868
+      "prob": 0.9346391282421878
     },
     {
       "ticker": "STM.DE",
@@ -7932,7 +7932,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9113675782154542
+      "prob": 0.9039666894488254
     },
     {
       "ticker": "AIXA.DE",
@@ -8787,18 +8787,6 @@
       "prob": 0.8895787746384378
     },
     {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2024-11-14",
-      "prob": 0.7102950302220414
-    },
-    {
       "ticker": "CRM",
       "company": "Salesforce",
       "sector": "Technology",
@@ -8809,6 +8797,18 @@
       "gics_industry_key": "software application",
       "date": "2024-11-14",
       "prob": 0.7025215669018351
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2024-11-14",
+      "prob": 0.7008665403461579
     },
     {
       "ticker": "ADBE",
@@ -8880,7 +8880,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-11-08",
-      "prob": 0.9499262558180275
+      "prob": 0.9479986776698541
     },
     {
       "ticker": "ETN",
@@ -9565,30 +9565,6 @@
       "gics_industry_key": "specialty chemicals",
       "date": "2024-10-08",
       "prob": 0.8905038155052797
-    },
-    {
-      "ticker": "ALB",
-      "company": "Albemarle",
-      "sector": "Basic Materials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2024-10-07",
-      "prob": 0.8676129754836508
-    },
-    {
-      "ticker": "ILMN",
-      "company": "Illumina",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Diagnostics & Research",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "diagnostics research",
-      "date": "2024-10-04",
-      "prob": 0.8976799199333706
     }
   ],
   "signals_holdout_final": [
@@ -9602,7 +9578,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-14",
-      "prob": 0.9100218002142585
+      "prob": 0.9209989898339962
     },
     {
       "ticker": "F3C.DE",
@@ -9614,7 +9590,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-14",
-      "prob": 0.8947204500391178
+      "prob": 0.9107334700766776
     },
     {
       "ticker": "NDA.DE",
@@ -9626,7 +9602,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "metal fabrication",
       "date": "2026-05-14",
-      "prob": 0.8786966221525587
+      "prob": 0.900318540121369
     },
     {
       "ticker": "DHER.DE",
@@ -9638,7 +9614,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "internet retail",
       "date": "2026-05-12",
-      "prob": 0.8880753333460285
+      "prob": 0.8847654439968102
     },
     {
       "ticker": "GFT.DE",
@@ -10730,7 +10706,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-04-02",
-      "prob": 0.9197487495135327
+      "prob": 0.9142624084515198
     },
     {
       "ticker": "BA",
@@ -11693,18 +11669,6 @@
       "prob": 0.9162669122578305
     },
     {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2026-01-06",
-      "prob": 0.8888601510152577
-    },
-    {
       "ticker": "URI",
       "company": "United Rentals",
       "sector": "Industrials",
@@ -11715,6 +11679,18 @@
       "gics_industry_key": "rental leasing services",
       "date": "2026-01-06",
       "prob": 0.8850006183861882
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-01-06",
+      "prob": 0.8841246158267536
     },
     {
       "ticker": "HAG.DE",
@@ -11798,7 +11774,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-01-02",
-      "prob": 0.8596040789878292
+      "prob": 0.85979607367162
     },
     {
       "ticker": "MU",
@@ -12050,7 +12026,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-12-08",
-      "prob": 0.9394985547768323
+      "prob": 0.939588966280594
     },
     {
       "ticker": "DUE.DE",
@@ -13598,7 +13574,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-12",
-      "prob": 0.9043345621604402
+      "prob": 0.903864685385437
     },
     {
       "ticker": "UNH",
@@ -14186,7 +14162,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-07-09",
-      "prob": 0.859201410455731
+      "prob": 0.8602612147682195
     },
     {
       "ticker": "ACT.DE",
@@ -15770,7 +15746,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-02-20",
-      "prob": 0.6747911107852627
+      "prob": 0.6778973737085049
     },
     {
       "ticker": "R3NK.DE",
@@ -15926,7 +15902,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-02-14",
-      "prob": 0.9382384469069868
+      "prob": 0.9346391282421878
     },
     {
       "ticker": "STM.DE",
@@ -17522,7 +17498,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9113675782154542
+      "prob": 0.9039666894488254
     },
     {
       "ticker": "AIXA.DE",
@@ -18377,18 +18353,6 @@
       "prob": 0.8895787746384378
     },
     {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2024-11-14",
-      "prob": 0.7102950302220414
-    },
-    {
       "ticker": "CRM",
       "company": "Salesforce",
       "sector": "Technology",
@@ -18399,6 +18363,18 @@
       "gics_industry_key": "software application",
       "date": "2024-11-14",
       "prob": 0.7025215669018351
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2024-11-14",
+      "prob": 0.7008665403461579
     },
     {
       "ticker": "ADBE",
@@ -18470,7 +18446,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-11-08",
-      "prob": 0.9499262558180275
+      "prob": 0.9479986776698541
     },
     {
       "ticker": "ETN",
@@ -19155,35 +19131,11 @@
       "gics_industry_key": "specialty chemicals",
       "date": "2024-10-08",
       "prob": 0.8905038155052797
-    },
-    {
-      "ticker": "ALB",
-      "company": "Albemarle",
-      "sector": "Basic Materials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2024-10-07",
-      "prob": 0.8676129754836508
-    },
-    {
-      "ticker": "ILMN",
-      "company": "Illumina",
-      "sector": "Healthcare",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Diagnostics & Research",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "diagnostics research",
-      "date": "2024-10-04",
-      "prob": 0.8976799199333706
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 4919,
+  "signals_all_timeline_including_in_sample_count": 4920,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 91001686,
+  "index_html_bytes_utf8": 90997266,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
