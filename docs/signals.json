@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-20 09:01",
+  "generated": "2026-05-20 20:04",
   "threshold": 0.85,
   "signals": [
     {
@@ -6387,18 +6387,6 @@
       "prob": 0.900578421146279
     },
     {
-      "ticker": "WCH.DE",
-      "company": "Wacker Chemie",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2025-02-14",
-      "prob": 0.8917776780881967
-    },
-    {
       "ticker": "FPE3.DE",
       "company": "Fuchs SE",
       "sector": "Basic Materials",
@@ -6421,6 +6409,18 @@
       "gics_industry_key": "chemicals",
       "date": "2025-02-14",
       "prob": 0.8881497016628329
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2025-02-14",
+      "prob": 0.8880553398296434
     },
     {
       "ticker": "HFG.DE",
@@ -7932,7 +7932,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9113675782154542
+      "prob": 0.9039666894488254
     },
     {
       "ticker": "AIXA.DE",
@@ -15953,18 +15953,6 @@
       "prob": 0.900578421146279
     },
     {
-      "ticker": "WCH.DE",
-      "company": "Wacker Chemie",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2025-02-14",
-      "prob": 0.8917776780881967
-    },
-    {
       "ticker": "FPE3.DE",
       "company": "Fuchs SE",
       "sector": "Basic Materials",
@@ -15987,6 +15975,18 @@
       "gics_industry_key": "chemicals",
       "date": "2025-02-14",
       "prob": 0.8881497016628329
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2025-02-14",
+      "prob": 0.8880553398296434
     },
     {
       "ticker": "HFG.DE",
@@ -17498,7 +17498,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9113675782154542
+      "prob": 0.9039666894488254
     },
     {
       "ticker": "AIXA.DE",
@@ -19135,7 +19135,7 @@
   ],
   "signals_all_timeline_including_in_sample_count": 4919,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 91078414,
+  "index_html_bytes_utf8": 91121926,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
