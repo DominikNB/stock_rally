@@ -1,7 +1,31 @@
 {
-  "generated": "2026-05-21 08:14",
+  "generated": "2026-05-22 08:09",
   "threshold": 0.85,
   "signals": [
+    {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-21",
+      "prob": 0.8803660731309154
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-20",
+      "prob": 0.8586830365380353
+    },
     {
       "ticker": "F",
       "company": "Ford",
@@ -3015,18 +3039,6 @@
       "prob": 0.8565466584362005
     },
     {
-      "ticker": "NEM.DE",
-      "company": "Nemetschek",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Software - Application",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "software application",
-      "date": "2025-11-26",
-      "prob": 0.8565070813469299
-    },
-    {
       "ticker": "GM",
       "company": "General Motors",
       "sector": "Consumer Cyclical",
@@ -3049,6 +3061,18 @@
       "gics_industry_key": "building materials",
       "date": "2025-11-26",
       "prob": 0.8551879451474881
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2025-11-26",
+      "prob": 0.8543176608923667
     },
     {
       "ticker": "STLA",
@@ -6387,18 +6411,6 @@
       "prob": 0.900578421146279
     },
     {
-      "ticker": "WCH.DE",
-      "company": "Wacker Chemie",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2025-02-14",
-      "prob": 0.8917776780881967
-    },
-    {
       "ticker": "FPE3.DE",
       "company": "Fuchs SE",
       "sector": "Basic Materials",
@@ -6421,6 +6433,18 @@
       "gics_industry_key": "chemicals",
       "date": "2025-02-14",
       "prob": 0.8881497016628329
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2025-02-14",
+      "prob": 0.8880553398296434
     },
     {
       "ticker": "HFG.DE",
@@ -9545,6 +9569,30 @@
   ],
   "signals_holdout_final": [
     {
+      "ticker": "HAG.DE",
+      "company": "Hensoldt",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-21",
+      "prob": 0.8803660731309154
+    },
+    {
+      "ticker": "SAP.DE",
+      "company": "SAP",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-20",
+      "prob": 0.8586830365380353
+    },
+    {
       "ticker": "F",
       "company": "Ford",
       "sector": "Consumer Cyclical",
@@ -12557,18 +12605,6 @@
       "prob": 0.8565466584362005
     },
     {
-      "ticker": "NEM.DE",
-      "company": "Nemetschek",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Software - Application",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "software application",
-      "date": "2025-11-26",
-      "prob": 0.8565070813469299
-    },
-    {
       "ticker": "GM",
       "company": "General Motors",
       "sector": "Consumer Cyclical",
@@ -12591,6 +12627,18 @@
       "gics_industry_key": "building materials",
       "date": "2025-11-26",
       "prob": 0.8551879451474881
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2025-11-26",
+      "prob": 0.8543176608923667
     },
     {
       "ticker": "STLA",
@@ -15929,18 +15977,6 @@
       "prob": 0.900578421146279
     },
     {
-      "ticker": "WCH.DE",
-      "company": "Wacker Chemie",
-      "sector": "Basic Materials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Specialty Chemicals",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "specialty chemicals",
-      "date": "2025-02-14",
-      "prob": 0.8917776780881967
-    },
-    {
       "ticker": "FPE3.DE",
       "company": "Fuchs SE",
       "sector": "Basic Materials",
@@ -15963,6 +15999,18 @@
       "gics_industry_key": "chemicals",
       "date": "2025-02-14",
       "prob": 0.8881497016628329
+    },
+    {
+      "ticker": "WCH.DE",
+      "company": "Wacker Chemie",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2025-02-14",
+      "prob": 0.8880553398296434
     },
     {
       "ticker": "HFG.DE",
@@ -19087,7 +19135,7 @@
   ],
   "signals_all_timeline_including_in_sample_count": 4921,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 91031906,
+  "index_html_bytes_utf8": 91036053,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
