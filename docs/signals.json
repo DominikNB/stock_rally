@@ -1,7 +1,19 @@
 {
-  "generated": "2026-05-23 08:32",
+  "generated": "2026-05-26 07:33",
   "threshold": 0.85,
   "signals": [
+    {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-25",
+      "prob": 0.8628814761395504
+    },
     {
       "ticker": "IBM",
       "company": "IBM",
@@ -24,7 +36,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-21",
-      "prob": 0.9018733219830386
+      "prob": 0.8985379859778982
     },
     {
       "ticker": "SAP.DE",
@@ -2868,7 +2880,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-26",
-      "prob": 0.9219619658303879
+      "prob": 0.9235882148527627
     },
     {
       "ticker": "DOW",
@@ -5532,7 +5544,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2025-03-19",
-      "prob": 0.8841925162509775
+      "prob": 0.8818518307961758
     },
     {
       "ticker": "TKA.DE",
@@ -7968,7 +7980,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9113675782154542
+      "prob": 0.9039666894488254
     },
     {
       "ticker": "AIXA.DE",
@@ -8823,18 +8835,6 @@
       "prob": 0.8895787746384378
     },
     {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2024-11-14",
-      "prob": 0.7102950302220414
-    },
-    {
       "ticker": "CRM",
       "company": "Salesforce",
       "sector": "Technology",
@@ -8845,6 +8845,18 @@
       "gics_industry_key": "software application",
       "date": "2024-11-14",
       "prob": 0.7025215669018351
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2024-11-14",
+      "prob": 0.6846025559983308
     },
     {
       "ticker": "ADBE",
@@ -8916,7 +8928,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-11-08",
-      "prob": 0.9499262558180275
+      "prob": 0.9495901522916276
     },
     {
       "ticker": "ETN",
@@ -9565,22 +9577,22 @@
       "gics_industry_key": "aerospace defense",
       "date": "2024-10-16",
       "prob": 0.9090599607543736
-    },
-    {
-      "ticker": "FAST",
-      "company": "Fastenal",
-      "sector": "Industrials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Industrial Distribution",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "industrial distribution",
-      "date": "2024-10-14",
-      "prob": 0.8842613293029563
     }
   ],
   "signals_holdout_final": [
     {
+      "ticker": "IFX.DE",
+      "company": "Infineon",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-05-25",
+      "prob": 0.8628814761395504
+    },
+    {
       "ticker": "IBM",
       "company": "IBM",
       "sector": "Technology",
@@ -9602,7 +9614,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-21",
-      "prob": 0.9018733219830386
+      "prob": 0.8985379859778982
     },
     {
       "ticker": "SAP.DE",
@@ -12446,7 +12458,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-11-26",
-      "prob": 0.9219619658303879
+      "prob": 0.9235882148527627
     },
     {
       "ticker": "DOW",
@@ -15110,7 +15122,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2025-03-19",
-      "prob": 0.8841925162509775
+      "prob": 0.8818518307961758
     },
     {
       "ticker": "TKA.DE",
@@ -17546,7 +17558,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2024-12-11",
-      "prob": 0.9113675782154542
+      "prob": 0.9039666894488254
     },
     {
       "ticker": "AIXA.DE",
@@ -18401,18 +18413,6 @@
       "prob": 0.8895787746384378
     },
     {
-      "ticker": "RHM.DE",
-      "company": "Rheinmetall",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2024-11-14",
-      "prob": 0.7102950302220414
-    },
-    {
       "ticker": "CRM",
       "company": "Salesforce",
       "sector": "Technology",
@@ -18423,6 +18423,18 @@
       "gics_industry_key": "software application",
       "date": "2024-11-14",
       "prob": 0.7025215669018351
+    },
+    {
+      "ticker": "RHM.DE",
+      "company": "Rheinmetall",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2024-11-14",
+      "prob": 0.6846025559983308
     },
     {
       "ticker": "ADBE",
@@ -18494,7 +18506,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2024-11-08",
-      "prob": 0.9499262558180275
+      "prob": 0.9495901522916276
     },
     {
       "ticker": "ETN",
@@ -19143,23 +19155,11 @@
       "gics_industry_key": "aerospace defense",
       "date": "2024-10-16",
       "prob": 0.9090599607543736
-    },
-    {
-      "ticker": "FAST",
-      "company": "Fastenal",
-      "sector": "Industrials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Industrial Distribution",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "industrial distribution",
-      "date": "2024-10-14",
-      "prob": 0.8842613293029563
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 4921,
+  "signals_all_timeline_including_in_sample_count": 4923,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 91017180,
+  "index_html_bytes_utf8": 91006953,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
