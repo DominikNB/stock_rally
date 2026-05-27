@@ -32,6 +32,32 @@ from lib.stock_rally_v10.features import merge_news_shard_from_best_params
 
 warnings.filterwarnings("ignore")
 
+# Defaults wenn weder Laufzeit-``c`` noch Modul-``cfg`` das Attribut haben.
+# Hinweis: ``getattr(obj, name, default)`` wertet ``default`` in Python **immer** aus —
+# ``getattr(c, "X", cfg.X)`` scheitert also, sobald ``cfg.X`` fehlt, selbst wenn ``c.X`` existiert.
+_DOCS_INDEX_HTML_MAX_BYTES_DEFAULT = 98 * 1024 * 1024
+_DOCS_WEBSITE_MAX_CHART_SIGNALS_CAP_DEFAULT = 600
+_DOCS_WEBSITE_HTML_SHRINK_STEP_DEFAULT = 35
+
+
+def _cfg_param_int(c_mod: Any, name: str, default: int) -> int:
+    if hasattr(c_mod, name):
+        return int(getattr(c_mod, name))
+    if hasattr(cfg, name):
+        return int(getattr(cfg, name))
+    return int(default)
+
+
+def _sort_website_signals_newest_first(sigs: list[dict[str, Any]]) -> None:
+    """Nach Signaldatum absteigend; bei gleichem Kalendertag höhere prob zuerst."""
+
+    def _key(s: dict[str, Any]) -> tuple[int, float]:
+        ts = int(pd.Timestamp(s["date"]).value)
+        prob = float(s.get("prob", 0.0) or 0.0)
+        return (ts, prob)
+
+    sigs.sort(key=_key, reverse=True)
+
 
 def _phase17_apply_signals_one(
     ticker: str,
@@ -117,6 +143,18 @@ def _run_phase17(c: Any) -> None:
             flush=True,
         )
         return
+    _sent_pad = float(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    _miss_fc = [x for x in c.FEAT_COLS if x not in df_s.columns]
+    if _miss_fc:
+        _head = ", ".join(_miss_fc[:5])
+        _more = f" (+{len(_miss_fc) - 5} weitere)" if len(_miss_fc) > 5 else ""
+        print(
+            f"[Phase17] {len(_miss_fc)} FEAT_COLS-Spalte(n) fehlen nach News-Merge — "
+            f"mit Sentinel {_sent_pad:g} auffüllen (z. B. {_head}{_more}).",
+            flush=True,
+        )
+        for _c in _miss_fc:
+            df_s[_c] = np.float32(_sent_pad)
     feat_arr = df_s[c.FEAT_COLS].values.astype(np.float32)
     _arr_nan = np.isnan(feat_arr)
     _arr_inf = np.isinf(feat_arr)
@@ -299,8 +337,8 @@ def _run_phase17(c: Any) -> None:
         zip(df_final["ticker"], pd.to_datetime(df_final["Date"]).dt.strftime("%Y-%m-%d"))
     )
     signals_holdout_final = [s for s in all_hist_signals if (s["ticker"], s["date"]) in holdout_keys]
-    signals_holdout_final.sort(key=lambda x: x["date"], reverse=True)
-    all_hist_signals.sort(key=lambda x: x["date"], reverse=True)
+    _sort_website_signals_newest_first(signals_holdout_final)
+    _sort_website_signals_newest_first(all_hist_signals)
     print(f"\n{len(all_hist_signals)} historical signals across all tickers.")
     print(f"{len(signals_holdout_final)} signals in FINAL holdout (unbiased / OOS analysis).")
 
@@ -337,7 +375,7 @@ def _run_phase17(c: Any) -> None:
                         "prob": float(_r["prob"]),
                     }
                 )
-            signals_holdout_final.sort(key=lambda x: x["date"], reverse=True)
+            _sort_website_signals_newest_first(signals_holdout_final)
             print(
                 f"wrote data/master_complete.csv & master_daily_update.csv (LLM-Spalten) "
                 f"({len(_exported_ho)} holdout rows)"
@@ -357,7 +395,7 @@ def _run_phase17(c: Any) -> None:
 
     # Website + öffentliches signals.json: nur echte OOS — keine Signale aus TRAIN/THRESHOLD-Kalender.
     website_signals = list(signals_holdout_final)
-    website_signals.sort(key=lambda x: x["date"], reverse=True)
+    _sort_website_signals_newest_first(website_signals)
     print(
         f"Website/OOS-Export: {len(website_signals)} Signale "
         f"(intern für Diagnose: {len(all_hist_signals)} über alle Zeiten mit Schwelle+Filter).",
@@ -446,6 +484,91 @@ def _run_phase17(c: Any) -> None:
         ranking_rows.sort(key=lambda x: x["rank_score"], reverse=True)
         for i, r in enumerate(ranking_rows, start=1):
             r["rank"] = i
+
+    if ranking_rows:
+        _rows_html = []
+        for r in ranking_rows:
+            _rows_html.append(
+                "<tr>"
+                f"<td>{int(r['rank'])}</td>"
+                f"<td>{_html_std.escape(str(r['ticker']))}</td>"
+                f"<td>{_html_std.escape(str(r['company']))}</td>"
+                f"<td>{float(r['prob']):.3f}</td>"
+                f"<td>{float(r['rank_score']):.3f}</td>"
+                f"<td>{float(r['stability_std']):.4f}</td>"
+                f"<td>{float(r['safety_buffer']):.2f}</td>"
+                f"<td>{float(r['volume_z']):.2f}</td>"
+                "</tr>"
+            )
+        ranking_html = (
+            f'<div class="section"><h2>Ranking aktuellster Signale '
+            f'<span class="badge">{len(ranking_rows)}</span></h2>'
+            f'<p class="prompt-lead">Datum: <strong>{_html_std.escape(str(latest_signal_date))}</strong> '
+            f'| Score = 0.50·Stabilität + 0.30·RSI-Puffer + 0.20·Volumen-Z.</p>'
+            '<div style="overflow-x:auto">'
+            '<table style="width:100%;border-collapse:collapse;font-size:.82em">'
+            '<thead><tr>'
+            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">#</th>'
+            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">Ticker</th>'
+            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">Unternehmen</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Prob</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Score</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Std(5d)</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">RSI-Puffer</th>'
+            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Vol-Z</th>'
+            '</tr></thead><tbody>'
+            + "".join(_rows_html)
+            + "</tbody></table></div></div>"
+        )
+    else:
+        ranking_html = (
+            '<div class="section"><h2>Ranking aktuellster Signale</h2>'
+            '<p class="empty">Kein Ranking verfügbar (keine oder nur unvollständige aktuelle OOS-Signale).</p></div>'
+        )
+
+    pr_b64 = ""
+    if not getattr(c, "SCORING_ONLY", False):
+        try:
+            y_threshold = c.df_threshold["target"].values.astype(np.int8)
+            y_prob_threshold = c.df_threshold["prob"].values
+            y_final = c.df_final["target"].values.astype(np.int8)
+            y_prob_final = c.df_final["prob"].values
+            fig, axes = plt.subplots(1, 2, figsize=(11, 3.8))
+            fig.patch.set_facecolor("#1a1a2e")
+            for ax, y_t, y_p, lbl, col in [
+                (axes[0], y_threshold, y_prob_threshold, "THRESHOLD", "#42a5f5"),
+                (axes[1], y_final, y_prob_final, "FINAL", "#66bb6a"),
+            ]:
+                pc, rc, _ = precision_recall_curve(y_t, y_p)
+                ap = average_precision_score(y_t, y_p)
+                ax.plot(rc, pc, color=col, lw=2, label=f"AP={ap:.3f}")
+                ax.axhline(y=0.60, color="#ef5350", lw=1, ls="--", label="60 %")
+                ax.set_title(f"PR — {lbl}", color="#81d4fa", fontsize=9)
+                ax.set_xlabel("Recall", color="#90a4ae", fontsize=8)
+                ax.set_ylabel("Precision", color="#90a4ae", fontsize=8)
+                ax.legend(fontsize=8)
+                ax.grid(True, alpha=0.2)
+                ax.set_facecolor("#0d1117")
+                ax.tick_params(colors="#90a4ae", labelsize=7)
+                for sp in ax.spines.values():
+                    sp.set_edgecolor("#2d2d4e")
+            plt.tight_layout(pad=1.2)
+            buf = io.BytesIO()
+            plt.savefig(buf, format="png", dpi=95, bbox_inches="tight", facecolor=fig.get_facecolor())
+            plt.close()
+            buf.seek(0)
+            pr_b64 = base64.b64encode(buf.read()).decode()
+        except Exception as exc:
+            print(f"PR plot failed: {exc}")
+    else:
+        print("[SCORING_ONLY] PR-Kurven übersprungen (keine Trainings-Labels in dieser Session).")
+
+    pr_section = (
+        f'<div class="section"><h2>Model Quality &#8212; Precision-Recall</h2>'
+        f'<img src="data:image/png;base64,{pr_b64}" alt="PR" style="max-width:100%;border-radius:6px"></div>'
+        if pr_b64
+        else ""
+    )
 
     _chart_yf_failures: list[tuple[Any, ...]] = []
 
@@ -754,187 +877,6 @@ def _run_phase17(c: Any) -> None:
             plt.close("all")
             return None
 
-    print("Generating charts (yfinance + matplotlib, bis zu 600 OOS-Signale) …", flush=True)
-    _chart_yf_failures.clear()
-    chart_cache = {}
-    for s in website_signals[:600]:
-        key = (s["ticker"], s["date"])
-        if key not in chart_cache:
-            b64 = _make_chart(s["ticker"], s["date"])
-            if b64:
-                chart_cache[key] = b64
-    print(f"  {len(chart_cache)} charts generated.")
-    if _chart_yf_failures:
-        _bad = sorted({t for t, _d0, _d1, _e in _chart_yf_failures})
-        print(
-            f"  Warnung: Kursnachzug (yfinance): {len(_chart_yf_failures)} fehlgeschlagene Abrufe "
-            f"({len(_bad)} eindeutige Ticker) — Charts enden am letzten df_features-Tag. "
-            f"Ticker: {_bad[:25]}"
-            f'{" …" if len(_bad) > 25 else ""}',
-            flush=True,
-        )
-
-    _yf_failed_tickers = {t for t, _d0, _d1, _e in _chart_yf_failures}
-
-    pr_b64 = ""
-    if not getattr(c, "SCORING_ONLY", False):
-        try:
-            y_threshold = c.df_threshold["target"].values.astype(np.int8)
-            y_prob_threshold = c.df_threshold["prob"].values
-            y_final = c.df_final["target"].values.astype(np.int8)
-            y_prob_final = c.df_final["prob"].values
-            fig, axes = plt.subplots(1, 2, figsize=(11, 3.8))
-            fig.patch.set_facecolor("#1a1a2e")
-            for ax, y_t, y_p, lbl, col in [
-                (axes[0], y_threshold, y_prob_threshold, "THRESHOLD", "#42a5f5"),
-                (axes[1], y_final, y_prob_final, "FINAL", "#66bb6a"),
-            ]:
-                pc, rc, _ = precision_recall_curve(y_t, y_p)
-                ap = average_precision_score(y_t, y_p)
-                ax.plot(rc, pc, color=col, lw=2, label=f"AP={ap:.3f}")
-                ax.axhline(y=0.60, color="#ef5350", lw=1, ls="--", label="60 %")
-                ax.set_title(f"PR — {lbl}", color="#81d4fa", fontsize=9)
-                ax.set_xlabel("Recall", color="#90a4ae", fontsize=8)
-                ax.set_ylabel("Precision", color="#90a4ae", fontsize=8)
-                ax.legend(fontsize=8)
-                ax.grid(True, alpha=0.2)
-                ax.set_facecolor("#0d1117")
-                ax.tick_params(colors="#90a4ae", labelsize=7)
-                for sp in ax.spines.values():
-                    sp.set_edgecolor("#2d2d4e")
-            plt.tight_layout(pad=1.2)
-            buf = io.BytesIO()
-            plt.savefig(buf, format="png", dpi=95, bbox_inches="tight", facecolor=fig.get_facecolor())
-            plt.close()
-            buf.seek(0)
-            pr_b64 = base64.b64encode(buf.read()).decode()
-        except Exception as exc:
-            print(f"PR plot failed: {exc}")
-    else:
-        print("[SCORING_ONLY] PR-Kurven übersprungen (keine Trainings-Labels in dieser Session).")
-
-    def _signal_card(s):
-        key = (s["ticker"], s["date"])
-        b64 = chart_cache.get(key, "")
-        bar = int(s["prob"] * 100)
-        _yf_note = (
-            '<p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der '
-            "Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>"
-            if b64 and s["ticker"] in _yf_failed_tickers
-            else ""
-        )
-        chart_html = (
-            f'<img src="data:image/png;base64,{b64}" alt="{s["ticker"]}" loading="lazy">' if b64 else ""
-        )
-        chart_note = (
-            f'<p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">'
-            f'Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>{s["date"]}</strong> '
-            f"(nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs "
-            f"(Anzeige) — kein Look-ahead fürs Modell.</p>"
-            if b64
-            else ""
-        )
-        _gics_bits = [x for x in (s.get("gics_sector"), s.get("gics_industry")) if x]
-        _gics_line = " · ".join(str(x) for x in _gics_bits) if _gics_bits else ""
-        _gics_std = (s.get("classification_standard") or "").strip()
-        _gics_html = ""
-        if _gics_line or _gics_std:
-            if _gics_line and _gics_std:
-                _body = f"{_html_std.escape(_gics_std)} — {_html_std.escape(_gics_line)}"
-            elif _gics_line:
-                _body = _html_std.escape(_gics_line)
-            else:
-                _body = _html_std.escape(_gics_std)
-            _gics_html = (
-                f'<p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">'
-                f"{_body}</p>"
-            )
-        _gics_sec = (s.get("gics_sector") or "").strip()
-        _internal_cluster = str(s.get("sector") or "").strip()
-        if _gics_sec:
-            _badge_label = _gics_sec
-            _badge_title = (
-                f"Modell-Cluster (News/Features): {_internal_cluster}"
-                if _internal_cluster
-                else ""
-            )
-        else:
-            _badge_label = _internal_cluster.replace("_", " ").title() if _internal_cluster else "—"
-            _badge_title = "Kein Yahoo-GICS — nur internes Modell-Label"
-        _badge_title_esc = _html_std.escape(_badge_title) if _badge_title else ""
-        _badge_title_attr = f' title="{_badge_title_esc}"' if _badge_title_esc else ""
-        return f"""
-      <div class="sig-card">
-        <div class="sig-head">
-          <span class="sig-ticker">{s['ticker']}</span>
-          <span class="sig-company">{s['company']}</span>
-          <span class="sig-sector"{_badge_title_attr}>{_html_std.escape(_badge_label)}</span>
-          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> {s['date']}</span>
-          <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
-        </div>
-        {_gics_html}
-        {_yf_note}
-        {chart_html}
-        {chart_note}
-      </div>"""
-
-    recent_html = (
-        "".join(_signal_card(s) for s in recent_signals)
-        or '<p class="empty">Keine Signale in den letzten 30 Tagen.</p>'
-    )
-    hist_html = (
-        "".join(_signal_card(s) for s in website_signals[:600])
-        or '<p class="empty">Keine OOS-Signale.</p>'
-    )
-    if ranking_rows:
-        _rows_html = []
-        for r in ranking_rows:
-            _rows_html.append(
-                "<tr>"
-                f"<td>{int(r['rank'])}</td>"
-                f"<td>{_html_std.escape(str(r['ticker']))}</td>"
-                f"<td>{_html_std.escape(str(r['company']))}</td>"
-                f"<td>{float(r['prob']):.3f}</td>"
-                f"<td>{float(r['rank_score']):.3f}</td>"
-                f"<td>{float(r['stability_std']):.4f}</td>"
-                f"<td>{float(r['safety_buffer']):.2f}</td>"
-                f"<td>{float(r['volume_z']):.2f}</td>"
-                "</tr>"
-            )
-        ranking_html = (
-            f'<div class="section"><h2>Ranking aktuellster Signale '
-            f'<span class="badge">{len(ranking_rows)}</span></h2>'
-            f'<p class="prompt-lead">Datum: <strong>{_html_std.escape(str(latest_signal_date))}</strong> '
-            f'| Score = 0.50·Stabilität + 0.30·RSI-Puffer + 0.20·Volumen-Z.</p>'
-            '<div style="overflow-x:auto">'
-            '<table style="width:100%;border-collapse:collapse;font-size:.82em">'
-            '<thead><tr>'
-            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">#</th>'
-            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">Ticker</th>'
-            '<th style="text-align:left;padding:6px;border-bottom:1px solid #2d2d4e">Unternehmen</th>'
-            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Prob</th>'
-            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Score</th>'
-            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Std(5d)</th>'
-            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">RSI-Puffer</th>'
-            '<th style="text-align:right;padding:6px;border-bottom:1px solid #2d2d4e">Vol-Z</th>'
-            '</tr></thead><tbody>'
-            + "".join(_rows_html)
-            + "</tbody></table></div></div>"
-        )
-    else:
-        ranking_html = (
-            '<div class="section"><h2>Ranking aktuellster Signale</h2>'
-            '<p class="empty">Kein Ranking verfügbar (keine oder nur unvollständige aktuelle OOS-Signale).</p></div>'
-        )
-
-    pr_section = (
-        f'<div class="section"><h2>Model Quality &#8212; Precision-Recall</h2>'
-        f'<img src="data:image/png;base64,{pr_b64}" alt="PR" style="max-width:100%;border-radius:6px"></div>'
-        if pr_b64
-        else ""
-    )
-    recent_badge_cls = " zero" if not recent_signals else ""
-
     _prompt_path = Path("docs") / "website_analysis_prompt.txt"
     if _prompt_path.is_file():
         _ANALYSIS_PROMPT_DE = _prompt_path.read_text(encoding="utf-8")
@@ -1010,136 +952,6 @@ def _run_phase17(c: Any) -> None:
     )
     _target_section = cfg.html_target_definition_section(c)
 
-    html = f"""<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <meta name="theme-color" content="#16213e">
-  <link rel="manifest" href="manifest.json">
-  <title>Stock Signals</title>
-  <style>
-    *{{box-sizing:border-box;margin:0;padding:0}}
-    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-height:100vh}}
-    header{{background:#16213e;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.6)}}
-    header h1{{font-size:1.1em;color:#81d4fa}}
-    header .ts{{font-size:.72em;color:#546e7a}}
-    .page-wrap{{display:flex;align-items:flex-start;gap:18px;max-width:1320px;margin:0 auto;padding:12px 16px}}
-    .main-col{{flex:1;min-width:0;max-width:900px}}
-    .llm-sidebar{{width:min(340px,100%);flex-shrink:0;position:sticky;top:52px;align-self:flex-start;max-height:calc(100vh - 64px);overflow-y:auto;background:#141428;border:1px solid #2d2d4e;border-radius:10px;padding:10px 12px}}
-    .llm-details summary{{cursor:pointer;color:#81d4fa;font-size:.92em;font-weight:600;padding:6px 4px;user-select:none;list-style:none}}
-    .llm-details summary::-webkit-details-marker{{display:none}}
-    .llm-details summary::before{{content:'▸ ';color:#64b5f6}}
-    .llm-details[open] summary::before{{content:'▾ '}}
-    .llm-sum-hint{{font-weight:400;font-size:.78em;color:#78909c;margin-left:6px}}
-    .llm-slot{{margin-top:8px;padding-top:8px;border-top:1px solid #2a2a44}}
-    .llm-sidebar .analysis-llm h2{{display:none}}
-    .llm-sidebar .section.analysis-llm{{background:transparent;padding:0;margin:0;border:none}}
-    .llm-sidebar .analysis-llm-body{{max-width:none;font-size:.88em}}
-    .yf-hint{{font-size:.68em;color:#78909c;margin:0 0 6px;line-height:1.35}}
-    .section{{background:#1a1a2e;border-radius:10px;padding:16px;margin-bottom:14px}}
-    .section h2{{font-size:.95em;color:#81d4fa;margin-bottom:12px;border-bottom:1px solid #2d2d4e;padding-bottom:7px;display:flex;align-items:center;gap:8px}}
-    .badge{{background:#4caf50;color:#fff;border-radius:10px;padding:1px 8px;font-size:.72em}}
-    .badge.zero{{background:#607d8b}}
-    .sig-card{{background:#0d1117;border-radius:8px;padding:12px;margin-bottom:10px}}
-    .sig-head{{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}}
-    .sig-ticker{{font-weight:700;color:#81d4fa;font-size:.95em;min-width:70px}}
-    .sig-company{{color:#90a4ae;font-size:.82em;flex:1;min-width:100px}}
-    .sig-sector{{background:#1e2a3a;color:#64b5f6;font-size:.72em;padding:2px 7px;border-radius:10px;white-space:nowrap;align-self:center}}
-    .sig-gics{{font-size:.74em;color:#90a4ae;line-height:1.45;margin:6px 0 0;padding:0 2px;max-width:100%}}
-    .sig-date{{color:#546e7a;font-size:.78em;white-space:nowrap}}
-    .sig-date-pre{{font-size:.68em;color:#78909c;margin-right:5px}}
-    .score-bar-bg{{background:#1a1a2e;border-radius:4px;overflow:hidden;min-width:70px;max-width:110px}}
-    .score-bar{{background:#4caf50;padding:2px 6px;color:#fff;font-size:.75em;white-space:nowrap;border-radius:4px}}
-    img{{max-width:100%;border-radius:5px;display:block}}
-    .model-chips{{display:flex;flex-wrap:wrap;gap:8px}}
-    .chip{{background:#0d1117;border-radius:6px;padding:5px 10px;font-size:.8em;color:#90a4ae}}
-    .chip strong{{color:#e0e0e0}}
-    .target-def-body p{{font-size:.84em;color:#b0bec5;line-height:1.58;margin-bottom:10px}}
-    .target-def-body p:last-child{{margin-bottom:0}}
-    .empty{{color:#546e7a;font-size:.85em;padding:10px 0}}
-    details summary{{cursor:pointer;color:#81d4fa;font-size:.9em;padding:4px 0;user-select:none;list-style:none}}
-    details summary::before{{content:'&#9654; '}}
-    details[open] summary::before{{content:'&#9660; '}}
-    details[open] summary{{margin-bottom:10px}}
-    .prompt-lead{{font-size:.85em;color:#90a4ae;margin-bottom:10px;line-height:1.4}}
-    .prompt-pre{{font-size:.78em;line-height:1.45;color:#b0bec5;white-space:pre-wrap;word-break:break-word;background:#0d1117;border-radius:8px;padding:12px;margin-top:8px;border:1px solid #2d2d4e}}
-    .analysis-llm-body{{font-size:.92em;line-height:1.62;color:#eceff1;max-width:52em}}
-    .analysis-llm-body.prose-analysis p{{margin:0 0 12px}}
-    .analysis-llm-body h3{{font-size:1.05em;font-weight:600;color:#81d4fa;margin:18px 0 8px;border-bottom:1px solid #2d3f50;padding-bottom:4px}}
-    .analysis-llm-body h4{{font-size:.98em;font-weight:600;color:#b3e5fc;margin:14px 0 6px}}
-    .analysis-llm-body strong{{color:#fff;font-weight:600}}
-    .analysis-llm-body .analysis-ul,.analysis-llm-body .analysis-ol{{margin:6px 0 14px 1.1em;padding:0}}
-    .analysis-llm-body li{{margin:5px 0;padding-left:2px}}
-    .analysis-llm-body .analysis-code{{font-family:ui-monospace,Consolas,monospace;font-size:.88em;background:#1a1a2e;color:#b0bec5;padding:2px 7px;border-radius:4px;border:1px solid #2d2d4e}}
-    .analysis-llm-body .analysis-bq{{margin:10px 0;padding:10px 14px;border-left:3px solid #4fc3f7;background:#12121f;border-radius:0 6px 6px 0;color:#b0bec5}}
-    .analysis-llm-body .analysis-hr{{border:none;border-top:1px solid #37474f;margin:16px 0}}
-    .analysis-llm-missing h2{{font-size:.95em;color:#ffb74d;margin-bottom:8px}}
-    @media(max-width:960px){{.page-wrap{{flex-direction:column}}.llm-sidebar{{position:relative;top:0;max-height:none;width:100%;order:-1}}}}
-    @media(max-width:600px){{header h1{{font-size:.95em}}}}
-  </style>
-</head>
-<body>
-<header>
-  <h1>&#128200; Stock Signals</h1>
-  <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: {today_str}</span>
-</header>
-<div class="page-wrap">
-<main class="main-col">
-
-  {ranking_html}
-
-  <div class="section">
-    <h2>Letzte 30 Tage <span class="badge{recent_badge_cls}">{len(recent_signals)}</span></h2>
-    {recent_html}
-  </div>
-
-  <div class="section">
-    <h2>Model Info</h2>
-    <div class="model-chips">
-      <div class="chip">Threshold <strong>{best_threshold:.3f}</strong></div>
-      <div class="chip">Tickers <strong>{df_s['ticker'].nunique()}</strong></div>
-      <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>{len(website_signals)}</strong></div>
-      {_thr_chip}
-      <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>{_matrix_last_date}</strong></div>
-      <div class="chip">Run <strong>{today_str}</strong></div>
-    </div>
-  </div>
-
-  {_target_section}
-
-  <div class="section">
-    <details>
-      <summary>KI-Analyse-Prompt</summary>
-      <p class="prompt-lead">Vorgabe für ergänzende Einordnung der Meta-Hits (aktuellster Signaltag in den Daten; Schluss: welche Aktie — falls eine — am ehesten infrage kommt). Keine Anlageberatung.</p>
-      <pre class="prompt-pre">{_ANALYSIS_PROMPT_ESC}</pre>
-    </details>
-  </div>
-
-  {pr_section}
-
-  <div class="section">
-    <details>
-      <summary>OOS-Signale (nicht in Classifier-Training) &mdash; {len(website_signals)} gesamt (max. 600 angezeigt)</summary>
-      {hist_html}
-    </details>
-  </div>
-
-</main>
-
-<aside class="llm-sidebar" aria-label="KI-Analyse">
-  <details class="llm-details" open>
-    <summary>KI-Analyse <span class="llm-sum-hint">(ein-/ausklappen)</span></summary>
-    <div class="llm-slot">
-      __ANALYSIS_LLM_SECTION__
-    </div>
-  </details>
-</aside>
-
-</div>
-</body>
-</html>"""
-
     _anal_fallback = (
         '<div class="section analysis-llm-missing"><h2>KI-Antwort</h2>'
         '<p class="empty"><strong>Lokal:</strong> <code>.env</code> mit <code>GEMINI_API_KEY</code> (Projektroot). '
@@ -1150,12 +962,270 @@ def _run_phase17(c: Any) -> None:
         "<code>docs/index.html</code> bleibt die Analyse auf der Website leer — API-Keys liegen nicht im Repo.</p>"
         "</div>"
     )
-    html = html.replace(
-        "__ANALYSIS_LLM_SECTION__",
-        _analysis_llm_section.strip() if _analysis_llm_section.strip() else _anal_fallback,
-    )
 
+    _html_cap = _cfg_param_int(c, "DOCS_INDEX_HTML_MAX_BYTES", _DOCS_INDEX_HTML_MAX_BYTES_DEFAULT)
+    _k_start = min(
+        len(website_signals),
+        _cfg_param_int(c, "DOCS_WEBSITE_MAX_CHART_SIGNALS_CAP", _DOCS_WEBSITE_MAX_CHART_SIGNALS_CAP_DEFAULT),
+    )
+    _k_step = max(1, _cfg_param_int(c, "DOCS_WEBSITE_HTML_SHRINK_STEP", _DOCS_WEBSITE_HTML_SHRINK_STEP_DEFAULT))
+
+    def _signal_card_site(s: dict, _cch: dict) -> str:
+        key = (s["ticker"], s["date"])
+        b64 = _cch.get(key, "")
+        bar = int(s["prob"] * 100)
+        _yf_note = (
+            '<p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der '
+            "Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>"
+            if b64 and s["ticker"] in _yf_failed_tickers
+            else ""
+        )
+        chart_html = (
+            f'<img src="data:image/png;base64,{b64}" alt="{s["ticker"]}" loading="lazy">' if b64 else ""
+        )
+        chart_note = (
+            f'<p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">'
+            f'Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>{s["date"]}</strong> '
+            f"(nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs "
+            f"(Anzeige) — kein Look-ahead fürs Modell.</p>"
+            if b64
+            else ""
+        )
+        _gics_bits = [x for x in (s.get("gics_sector"), s.get("gics_industry")) if x]
+        _gics_line = " · ".join(str(x) for x in _gics_bits) if _gics_bits else ""
+        _gics_std = (s.get("classification_standard") or "").strip()
+        _gics_html = ""
+        if _gics_line or _gics_std:
+            if _gics_line and _gics_std:
+                _body = f"{_html_std.escape(_gics_std)} — {_html_std.escape(_gics_line)}"
+            elif _gics_line:
+                _body = _html_std.escape(_gics_line)
+            else:
+                _body = _html_std.escape(_gics_std)
+            _gics_html = (
+                f'<p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">'
+                f"{_body}</p>"
+            )
+        _gics_sec = (s.get("gics_sector") or "").strip()
+        _internal_cluster = str(s.get("sector") or "").strip()
+        if _gics_sec:
+            _badge_label = _gics_sec
+            _badge_title = (
+                f"Modell-Cluster (News/Features): {_internal_cluster}"
+                if _internal_cluster
+                else ""
+            )
+        else:
+            _badge_label = _internal_cluster.replace("_", " ").title() if _internal_cluster else "—"
+            _badge_title = "Kein Yahoo-GICS — nur internes Modell-Label"
+        _badge_title_esc = _html_std.escape(_badge_title) if _badge_title else ""
+        _badge_title_attr = f' title="{_badge_title_esc}"' if _badge_title_esc else ""
+        return f"""
+      <div class="sig-card">
+        <div class="sig-head">
+          <span class="sig-ticker">{s['ticker']}</span>
+          <span class="sig-company">{s['company']}</span>
+          <span class="sig-sector"{_badge_title_attr}>{_html_std.escape(_badge_label)}</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> {s['date']}</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
+        </div>
+        {_gics_html}
+        {_yf_note}
+        {chart_html}
+        {chart_note}
+      </div>"""
+
+    html_chart_cap_k = 0
+    html = ""
+    _chart_k = _k_start
+    while _chart_k >= 0:
+        print(
+            f"Generating charts (yfinance + matplotlib, bis zu {_chart_k} neueste OOS-Signale; "
+            f"HTML-Ziel ≤ {_html_cap // 1024 // 1024} MiB) …",
+            flush=True,
+        )
+        _chart_yf_failures.clear()
+        chart_cache: dict = {}
+        for s in website_signals[:_chart_k]:
+            key = (s["ticker"], s["date"])
+            if key not in chart_cache:
+                b64 = _make_chart(s["ticker"], s["date"])
+                if b64:
+                    chart_cache[key] = b64
+        print(f"  {len(chart_cache)} charts generated.", flush=True)
+        if _chart_yf_failures:
+            _bad = sorted({t for t, _d0, _d1, _e in _chart_yf_failures})
+            print(
+                f"  Warnung: Kursnachzug (yfinance): {len(_chart_yf_failures)} fehlgeschlagene Abrufe "
+                f"({len(_bad)} eindeutige Ticker) — Charts enden am letzten df_features-Tag. "
+                f"Ticker: {_bad[:25]}"
+                f'{" …" if len(_bad) > 25 else ""}',
+                flush=True,
+            )
+        _yf_failed_tickers = {t for t, _d0, _d1, _e in _chart_yf_failures}
+        recent_slice = [s for s in website_signals[:_chart_k] if s["date"] >= recent_cutoff]
+        _rk = {(s["ticker"], s["date"]) for s in recent_slice}
+        hist_only = [s for s in website_signals[:_chart_k] if (s["ticker"], s["date"]) not in _rk]
+        recent_html = (
+            "".join(_signal_card_site(s, chart_cache) for s in recent_slice)
+            or '<p class="empty">Keine Signale in den letzten 30 Tagen.</p>'
+        )
+        hist_html = (
+            "".join(_signal_card_site(s, chart_cache) for s in hist_only)
+            or '<p class="empty">Keine OOS-Signale.</p>'
+        )
+        recent_badge_cls = " zero" if not recent_slice else ""
+        n_recent_site = len(recent_slice)
+        html = f"""<!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <meta name="theme-color" content="#16213e">
+      <link rel="manifest" href="manifest.json">
+      <title>Stock Signals</title>
+      <style>
+        *{{box-sizing:border-box;margin:0;padding:0}}
+        body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-height:100vh}}
+        header{{background:#16213e;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.6)}}
+        header h1{{font-size:1.1em;color:#81d4fa}}
+        header .ts{{font-size:.72em;color:#546e7a}}
+        .page-wrap{{display:flex;align-items:flex-start;gap:18px;max-width:1320px;margin:0 auto;padding:12px 16px}}
+        .main-col{{flex:1;min-width:0;max-width:900px}}
+        .llm-sidebar{{width:min(340px,100%);flex-shrink:0;position:sticky;top:52px;align-self:flex-start;max-height:calc(100vh - 64px);overflow-y:auto;background:#141428;border:1px solid #2d2d4e;border-radius:10px;padding:10px 12px}}
+        .llm-details summary{{cursor:pointer;color:#81d4fa;font-size:.92em;font-weight:600;padding:6px 4px;user-select:none;list-style:none}}
+        .llm-details summary::-webkit-details-marker{{display:none}}
+        .llm-details summary::before{{content:'▸ ';color:#64b5f6}}
+        .llm-details[open] summary::before{{content:'▾ '}}
+        .llm-sum-hint{{font-weight:400;font-size:.78em;color:#78909c;margin-left:6px}}
+        .llm-slot{{margin-top:8px;padding-top:8px;border-top:1px solid #2a2a44}}
+        .llm-sidebar .analysis-llm h2{{display:none}}
+        .llm-sidebar .section.analysis-llm{{background:transparent;padding:0;margin:0;border:none}}
+        .llm-sidebar .analysis-llm-body{{max-width:none;font-size:.88em}}
+        .yf-hint{{font-size:.68em;color:#78909c;margin:0 0 6px;line-height:1.35}}
+        .section{{background:#1a1a2e;border-radius:10px;padding:16px;margin-bottom:14px}}
+        .section h2{{font-size:.95em;color:#81d4fa;margin-bottom:12px;border-bottom:1px solid #2d2d4e;padding-bottom:7px;display:flex;align-items:center;gap:8px}}
+        .badge{{background:#4caf50;color:#fff;border-radius:10px;padding:1px 8px;font-size:.72em}}
+        .badge.zero{{background:#607d8b}}
+        .sig-card{{background:#0d1117;border-radius:8px;padding:12px;margin-bottom:10px}}
+        .sig-head{{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}}
+        .sig-ticker{{font-weight:700;color:#81d4fa;font-size:.95em;min-width:70px}}
+        .sig-company{{color:#90a4ae;font-size:.82em;flex:1;min-width:100px}}
+        .sig-sector{{background:#1e2a3a;color:#64b5f6;font-size:.72em;padding:2px 7px;border-radius:10px;white-space:nowrap;align-self:center}}
+        .sig-gics{{font-size:.74em;color:#90a4ae;line-height:1.45;margin:6px 0 0;padding:0 2px;max-width:100%}}
+        .sig-date{{color:#546e7a;font-size:.78em;white-space:nowrap}}
+        .sig-date-pre{{font-size:.68em;color:#78909c;margin-right:5px}}
+        .score-bar-bg{{background:#1a1a2e;border-radius:4px;overflow:hidden;min-width:70px;max-width:110px}}
+        .score-bar{{background:#4caf50;padding:2px 6px;color:#fff;font-size:.75em;white-space:nowrap;border-radius:4px}}
+        img{{max-width:100%;border-radius:5px;display:block}}
+        .model-chips{{display:flex;flex-wrap:wrap;gap:8px}}
+        .chip{{background:#0d1117;border-radius:6px;padding:5px 10px;font-size:.8em;color:#90a4ae}}
+        .chip strong{{color:#e0e0e0}}
+        .target-def-body p{{font-size:.84em;color:#b0bec5;line-height:1.58;margin-bottom:10px}}
+        .target-def-body p:last-child{{margin-bottom:0}}
+        .empty{{color:#546e7a;font-size:.85em;padding:10px 0}}
+        details summary{{cursor:pointer;color:#81d4fa;font-size:.9em;padding:4px 0;user-select:none;list-style:none}}
+        details summary::before{{content:'&#9654; '}}
+        details[open] summary::before{{content:'&#9660; '}}
+        details[open] summary{{margin-bottom:10px}}
+        .prompt-lead{{font-size:.85em;color:#90a4ae;margin-bottom:10px;line-height:1.4}}
+        .prompt-pre{{font-size:.78em;line-height:1.45;color:#b0bec5;white-space:pre-wrap;word-break:break-word;background:#0d1117;border-radius:8px;padding:12px;margin-top:8px;border:1px solid #2d2d4e}}
+        .analysis-llm-body{{font-size:.92em;line-height:1.62;color:#eceff1;max-width:52em}}
+        .analysis-llm-body.prose-analysis p{{margin:0 0 12px}}
+        .analysis-llm-body h3{{font-size:1.05em;font-weight:600;color:#81d4fa;margin:18px 0 8px;border-bottom:1px solid #2d3f50;padding-bottom:4px}}
+        .analysis-llm-body h4{{font-size:.98em;font-weight:600;color:#b3e5fc;margin:14px 0 6px}}
+        .analysis-llm-body strong{{color:#fff;font-weight:600}}
+        .analysis-llm-body .analysis-ul,.analysis-llm-body .analysis-ol{{margin:6px 0 14px 1.1em;padding:0}}
+        .analysis-llm-body li{{margin:5px 0;padding-left:2px}}
+        .analysis-llm-body .analysis-code{{font-family:ui-monospace,Consolas,monospace;font-size:.88em;background:#1a1a2e;color:#b0bec5;padding:2px 7px;border-radius:4px;border:1px solid #2d2d4e}}
+        .analysis-llm-body .analysis-bq{{margin:10px 0;padding:10px 14px;border-left:3px solid #4fc3f7;background:#12121f;border-radius:0 6px 6px 0;color:#b0bec5}}
+        .analysis-llm-body .analysis-hr{{border:none;border-top:1px solid #37474f;margin:16px 0}}
+        .analysis-llm-missing h2{{font-size:.95em;color:#ffb74d;margin-bottom:8px}}
+        @media(max-width:960px){{.page-wrap{{flex-direction:column}}.llm-sidebar{{position:relative;top:0;max-height:none;width:100%;order:-1}}}}
+        @media(max-width:600px){{header h1{{font-size:.95em}}}}
+      </style>
+    </head>
+    <body>
+    <header>
+      <h1>&#128200; Stock Signals</h1>
+      <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: {today_str}</span>
+    </header>
+    <div class="page-wrap">
+    <main class="main-col">
+
+      {ranking_html}
+
+      <div class="section">
+        <h2 title="OOS in den letzten 30 Tagen gesamt: {len(recent_signals)}; angezeigt: neueste mit Chart (ohne doppelte PNGs)">Letzte 30 Tage <span class="badge{recent_badge_cls}">{n_recent_site}</span></h2>
+        {recent_html}
+      </div>
+
+      <div class="section">
+        <h2>Model Info</h2>
+        <div class="model-chips">
+          <div class="chip">Threshold <strong>{best_threshold:.3f}</strong></div>
+          <div class="chip">Tickers <strong>{df_s['ticker'].nunique()}</strong></div>
+          <div class="chip" title="Eingebettete Charts: neueste OOS zuerst; K wird bei Bedarf reduziert (GitHub 100-MiB-Limit)">Charts im HTML <strong>{_chart_k}</strong> / {len(website_signals)} OOS</div>
+          <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>{len(website_signals)}</strong></div>
+          {_thr_chip}
+          <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>{_matrix_last_date}</strong></div>
+          <div class="chip">Run <strong>{today_str}</strong></div>
+        </div>
+      </div>
+
+      {_target_section}
+
+      <div class="section">
+        <details>
+          <summary>KI-Analyse-Prompt</summary>
+          <p class="prompt-lead">Vorgabe für ergänzende Einordnung der Meta-Hits (aktuellster Signaltag in den Daten; Schluss: welche Aktie — falls eine — am ehesten infrage kommt). Keine Anlageberatung.</p>
+          <pre class="prompt-pre">{_ANALYSIS_PROMPT_ESC}</pre>
+        </details>
+      </div>
+
+      {pr_section}
+
+      <div class="section">
+        <details>
+          <summary>OOS-Signale (nicht in Classifier-Training) &mdash; {len(website_signals)} gesamt (max. {_chart_k} neueste mit Chart; Ziel &lt; {_html_cap // 1024 // 1024} MiB)</summary>
+          {hist_html}
+        </details>
+      </div>
+
+    </main>
+
+    <aside class="llm-sidebar" aria-label="KI-Analyse">
+      <details class="llm-details" open>
+        <summary>KI-Analyse <span class="llm-sum-hint">(ein-/ausklappen)</span></summary>
+        <div class="llm-slot">
+          __ANALYSIS_LLM_SECTION__
+        </div>
+      </details>
+    </aside>
+
+    </div>
+    </body>
+    </html>"""
+
+
+        html = html.replace(
+            "__ANALYSIS_LLM_SECTION__",
+            _analysis_llm_section.strip() if _analysis_llm_section.strip() else _anal_fallback,
+        )
+        _nb = len(html.encode("utf-8"))
+        if _nb <= _html_cap or _chart_k == 0:
+            html_chart_cap_k = _chart_k
+            if _chart_k < _k_start:
+                print(
+                    f"Website: index.html = {_nb:,} B (~{_nb / (1024 * 1024):.1f} MiB) mit {_chart_k} Chart-Signalen "
+                    f"(Start {_k_start}; Ziel ≤ {_html_cap // 1024 // 1024} MiB).",
+                    flush=True,
+                )
+            break
+        _chart_k -= _k_step
     (docs_dir / "index.html").write_text(html, encoding="utf-8")
+    _html_bytes = len(html.encode("utf-8"))
+    _html_cap_i = _cfg_param_int(c, "DOCS_INDEX_HTML_MAX_BYTES", _DOCS_INDEX_HTML_MAX_BYTES_DEFAULT)
     (docs_dir / "signals.json").write_text(
         _json.dumps(
             {
@@ -1164,7 +1234,10 @@ def _run_phase17(c: Any) -> None:
                 "signals": website_signals,
                 "signals_holdout_final": signals_holdout_final,
                 "signals_all_timeline_including_in_sample_count": len(all_hist_signals),
-                "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS für Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale für die Website.",
+                "signals_html_chart_slots": int(html_chart_cap_k),
+                "index_html_bytes_utf8": int(_html_bytes),
+                "index_html_max_bytes_config": int(_html_cap_i),
+                "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS für Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale für die Website. index.html enthält nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Größenlimit).",
             },
             indent=2,
             default=str,
@@ -1172,7 +1245,7 @@ def _run_phase17(c: Any) -> None:
         encoding="utf-8",
     )
 
-    print(f"\ndocs/index.html   {len(html):,} bytes")
+    print(f"\ndocs/index.html   {_html_bytes:,} bytes")
     print(
         f"docs/signals.json {len(website_signals)} OOS signals public "
         f"({len(all_hist_signals)} mit Schwelle über alle Zeiten nur intern gezählt)"
@@ -1219,7 +1292,8 @@ def _run_phase17(c: Any) -> None:
     _msg = (
         f"Daily signal update {today_str} "
         f"({len(website_signals)} OOS signals, "
-        f"{len(recent_signals)} in last 30 days)"
+        f"{len(recent_signals)} in last 30 days, "
+        f"{html_chart_cap_k} chart slots in HTML, {_html_bytes // 1024} KiB index)"
     )
     _git_docs = [
         "docs/index.html",

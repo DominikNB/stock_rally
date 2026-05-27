@@ -632,6 +632,126 @@ def _sanity_probe(
     }
 
 
+def _stage1_5_correlation_cluster_filter(
+    df: pd.DataFrame,
+    feat_cols: list[str],
+    importance: dict[str, float],
+    *,
+    cfg_mod: Any,
+    sentinel: float,
+) -> tuple[list[str], list[str], list[dict[str, Any]]]:
+    """Stage 1.5 — hochkorrelierte Spalten zu Clustern zusammenfassen, pro Cluster
+    nur den Vertreter mit höchster mean(|SHAP|) behalten.
+
+    Returns:
+        (kept_after_cluster, dropped_by_cluster, cluster_log)
+    """
+    threshold = float(getattr(cfg_mod, "FEATURE_PRESCREEN_CORRELATION_THRESHOLD", 0.95))
+    sample_rows = int(getattr(cfg_mod, "FEATURE_PRESCREEN_CORRELATION_SAMPLE_ROWS", 30000))
+    min_periods = int(getattr(cfg_mod, "FEATURE_PRESCREEN_CORRELATION_MIN_PERIODS", 200))
+
+    # Sample (random — bei techn. Features keine Pseudo-Replikation, da pro Ticker × Date
+    # eigene Werte; News-Pre-Screen nutzt stratifiziertes Sampling, hier nicht nötig).
+    rng = np.random.default_rng(int(getattr(cfg_mod, "RANDOM_STATE", 42)))
+    n_total = len(df)
+    if n_total > sample_rows:
+        idx = rng.choice(n_total, size=sample_rows, replace=False)
+        sample = df.iloc[idx][feat_cols].astype(np.float32, errors="ignore")
+    else:
+        sample = df[feat_cols].astype(np.float32, errors="ignore")
+    # Sentinel → NaN, damit corr() die Lücken ignoriert.
+    sample = sample.where(sample > (sentinel + 1.0), np.nan)
+
+    print(
+        f"  Sample: rows={len(sample):,} × cols={sample.shape[1]} "
+        f"— berechne Pearson-Korrelation (min_periods={min_periods}) …",
+        flush=True,
+    )
+    t0 = time.perf_counter()
+    corr = sample.corr(method="pearson", min_periods=min_periods)
+    print(
+        f"  Korrelationsmatrix fertig ({time.perf_counter() - t0:.1f}s).",
+        flush=True,
+    )
+
+    from scipy.cluster import hierarchy
+    from scipy.spatial.distance import squareform
+
+    cols = list(corr.columns)
+    n = len(cols)
+    if n <= 1:
+        return list(cols), [], [
+            {"cluster": 0, "size": n, "winner": cols[0] if cols else "",
+             "criterion": "trivial", "members": list(cols), "imp_winner": 0.0}
+        ]
+    abs_rho = corr.abs().to_numpy(dtype=np.float64, copy=True)
+    np.fill_diagonal(abs_rho, 1.0)
+    abs_rho = np.nan_to_num(abs_rho, nan=0.0, posinf=1.0, neginf=0.0)
+    abs_rho = np.clip(abs_rho, 0.0, 1.0)
+    distance = 1.0 - abs_rho
+    np.fill_diagonal(distance, 0.0)
+    distance = (distance + distance.T) / 2.0
+    np.fill_diagonal(distance, 0.0)
+    try:
+        cond = squareform(distance, checks=False)
+        Z = hierarchy.linkage(cond, method="single")
+        labels = hierarchy.fcluster(Z, t=1.0 - float(threshold), criterion="distance")
+    except (ValueError, TypeError) as exc:
+        print(
+            f"  Cluster-Fehler ({exc}); jede Spalte bleibt Singleton.",
+            flush=True,
+        )
+        return list(cols), [], [
+            {"cluster": i, "size": 1, "winner": c, "criterion": "error_fallback",
+             "members": [c], "imp_winner": float(importance.get(c, 0.0))}
+            for i, c in enumerate(cols)
+        ]
+
+    clusters: dict[int, list[str]] = {}
+    for col, lab in zip(cols, labels):
+        clusters.setdefault(int(lab), []).append(col)
+
+    kept: list[str] = []
+    dropped: list[str] = []
+    cluster_log: list[dict[str, Any]] = []
+    for lab, members in clusters.items():
+        if len(members) == 1:
+            kept.append(members[0])
+            cluster_log.append({
+                "cluster": int(lab), "size": 1,
+                "winner": members[0], "criterion": "singleton",
+                "members": members,
+                "imp_winner": float(importance.get(members[0], 0.0)),
+            })
+            continue
+        scored = sorted(members, key=lambda c: float(importance.get(c, 0.0)), reverse=True)
+        winner = scored[0]
+        losers = scored[1:]
+        kept.append(winner)
+        dropped.extend(losers)
+        cluster_log.append({
+            "cluster": int(lab), "size": len(members),
+            "winner": winner, "criterion": "shap",
+            "members": members,
+            "imp_winner": float(importance.get(winner, 0.0)),
+            "imp_losers_max": float(
+                max(float(importance.get(c, 0.0)) for c in losers)
+            ) if losers else 0.0,
+        })
+    sizes = sorted((len(v) for v in clusters.values()), reverse=True)
+    print(
+        f"  Cluster: total={len(clusters)}, größtes={sizes[0] if sizes else 0}, "
+        f"singletons={sum(1 for s in sizes if s == 1)}.",
+        flush=True,
+    )
+    print(
+        f"  Survivor-Auswahl (höchste SHAP pro Cluster): "
+        f"kept={len(kept)} / dropped={len(dropped)} (von {len(feat_cols)}).",
+        flush=True,
+    )
+    return kept, dropped, cluster_log
+
+
 def _input_signature(
     df: pd.DataFrame, feat_cols: list[str], cfg_mod: Any
 ) -> dict[str, Any]:
@@ -671,6 +791,18 @@ def _input_signature(
         "family_topk": int(getattr(cfg_mod, "FEATURE_PRESCREEN_FAMILY_TOPK", 2)),
         "global_topk": int(getattr(cfg_mod, "FEATURE_PRESCREEN_GLOBAL_TOPK", 30)),
         "macro_topk": int(getattr(cfg_mod, "FEATURE_PRESCREEN_MACRO_TOPK", 5)),
+        "use_correlation_clusters": bool(
+            getattr(cfg_mod, "FEATURE_PRESCREEN_USE_CORRELATION_CLUSTERS", False)
+        ),
+        "correlation_threshold": float(
+            getattr(cfg_mod, "FEATURE_PRESCREEN_CORRELATION_THRESHOLD", 0.95)
+        ),
+        "correlation_sample_rows": int(
+            getattr(cfg_mod, "FEATURE_PRESCREEN_CORRELATION_SAMPLE_ROWS", 30000)
+        ),
+        "correlation_min_periods": int(
+            getattr(cfg_mod, "FEATURE_PRESCREEN_CORRELATION_MIN_PERIODS", 200)
+        ),
     }
     if "Date" in df.columns and len(df) > 0:
         d = pd.to_datetime(df["Date"], errors="coerce")
@@ -709,7 +841,7 @@ def _save_artifact(path: Path, artifact: dict) -> None:
     path.write_text(json.dumps(artifact, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def _print_stage(num: int, title: str) -> None:
+def _print_stage(num: int | str, title: str) -> None:
     print(f"\n--- Stage {num} — {title} ---", flush=True)
 
 
@@ -948,6 +1080,31 @@ def run_feature_prescreen(df: pd.DataFrame, *, cfg_mod: Any) -> dict | None:
     )
     _log_importance_leaderboard(importance, shadow_arr, top_n=15)
 
+    cluster_dropped: list[str] = []
+    cluster_log: list[dict[str, Any]] = []
+    if bool(getattr(cfg_mod, "FEATURE_PRESCREEN_USE_CORRELATION_CLUSTERS", False)):
+        _corr_thr = float(
+            getattr(cfg_mod, "FEATURE_PRESCREEN_CORRELATION_THRESHOLD", 0.95)
+        )
+        _print_stage(
+            "1.5", f"Korrelations-Cluster-Filter (|ρ| ≥ {_corr_thr:.2f})"
+        )
+        kept_corr, cluster_dropped, cluster_log = _stage1_5_correlation_cluster_filter(
+            df,
+            list(importance.keys()),
+            importance,
+            cfg_mod=cfg_mod,
+            sentinel=sentinel,
+        )
+        _kept_set = set(kept_corr)
+        importance = {k: v for k, v in importance.items() if k in _kept_set}
+    else:
+        print(
+            "  (Stage 1.5 Korrelations-Cluster-Filter inaktiv — "
+            "FEATURE_PRESCREEN_USE_CORRELATION_CLUSTERS=False)",
+            flush=True,
+        )
+
     _print_stage(2, "Boruta-Schatten Rauschfloor")
     floor = float(np.quantile(shadow_arr, noise_q)) if shadow_arr.size > 0 else 0.0
     n_above_floor = int(sum(1 for v in importance.values() if v >= floor))
@@ -1020,15 +1177,23 @@ def run_feature_prescreen(df: pd.DataFrame, *, cfg_mod: Any) -> dict | None:
         "importance_top_50": [{"feature": k, "mean_abs_shap": v} for k, v in importance_sorted[:50]],
         "drop_reasons": {k: reasons.get(k, "?") for k in sorted(dropped)},
         "stage0_constancy_dropped": drop_const,
+        "stage_1_5_correlation_clusters": cluster_log,
+        "stage_1_5_correlation_dropped": sorted(cluster_dropped),
         "diagnostics": {
             "n_features_in": len(feat_cols_full),
             "n_features_after_constancy": len(feat_cols),
+            "n_features_after_correlation": len(importance),
             "n_features_kept": len(kept),
             "n_features_dropped": len(dropped),
+            "n_correlation_clusters": len(cluster_log),
+            "n_correlation_dropped": len(cluster_dropped),
             "elapsed_importance_s": round(elapsed_imp, 2),
             "fold_diagnostics": diag,
             "sanity_passed": bool(sanity_ok),
             "n_above_floor": n_above_floor,
+            "use_correlation_clusters": bool(
+                getattr(cfg_mod, "FEATURE_PRESCREEN_USE_CORRELATION_CLUSTERS", False)
+            ),
         },
     }
     try:

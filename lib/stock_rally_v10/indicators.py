@@ -6,6 +6,8 @@ Optuna-Modus als auch im ``meta_only``-Modus mit den jeweils passenden Fenstern 
 """
 from __future__ import annotations
 
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Iterable
 
@@ -385,8 +387,32 @@ def add_technical_indicators(df: pd.DataFrame, meta_only: bool = False) -> pd.Da
     groups = list(df.groupby("ticker"))
     kwargs = _meta_only_window_args() if meta_only else _full_window_args()
 
+    n_total = len(groups)
+    log_every = max(1, n_total // 10)  # ~10 Fortschrittsmeldungen über den Lauf
+    counter = {"n": 0}
+    counter_lock = threading.Lock()
+    t0 = time.perf_counter()
+    print(
+        f"Indicators: starte parallele Berechnung für {n_total} Ticker "
+        f"(workers={cfg.N_WORKERS}, meta_only={meta_only})",
+        flush=True,
+    )
+
     def _fn(group_item: tuple[object, pd.DataFrame]) -> pd.DataFrame:
-        return _compute_indicators_for_ticker(group_item[1], **kwargs)
+        res = _compute_indicators_for_ticker(group_item[1], **kwargs)
+        with counter_lock:
+            counter["n"] += 1
+            done = counter["n"]
+        if done % log_every == 0 or done == n_total:
+            dt = time.perf_counter() - t0
+            rate = done / max(dt, 1e-6)
+            eta = (n_total - done) / max(rate, 1e-6)
+            print(
+                f"  Indicators: {done}/{n_total} Ticker fertig "
+                f"({100.0*done/n_total:.0f}%, {dt:.0f}s, ~{eta:.0f}s ETA)",
+                flush=True,
+            )
+        return res
 
     with ThreadPoolExecutor(max_workers=cfg.N_WORKERS) as ex:
         results = list(ex.map(_fn, groups))

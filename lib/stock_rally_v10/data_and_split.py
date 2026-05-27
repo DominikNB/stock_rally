@@ -23,6 +23,10 @@ from lib.stock_rally_v10 import config as cfg
 from lib.stock_rally_v10.config import load_scoring_artifacts
 from lib.stock_rally_v10.data import load_stock_data
 from lib.stock_rally_v10.features import assemble_features
+from lib.stock_rally_v10.indicator_cache import (
+    save_indicator_cache,
+    try_load_indicator_cache,
+)
 from lib.stock_rally_v10.indicators import add_technical_indicators
 from lib.stock_rally_v10.news import fetch_news_sentiment
 from lib.stock_rally_v10.target import create_target
@@ -220,7 +224,17 @@ def run_data_download_and_split() -> None:
 
     df_raw = load_stock_data(tickers=_tickers_for_run)
     df_with_target = create_target(df_raw)
-    df_with_indicators = add_technical_indicators(df_with_target)
+    _cached_ind = try_load_indicator_cache(df_with_target, meta_only=False, cfg_mod=cfg)
+    if _cached_ind is not None:
+        df_with_indicators = _cached_ind
+    else:
+        df_with_indicators = add_technical_indicators(df_with_target)
+        save_indicator_cache(
+            df_with_indicators,
+            df_with_target,
+            meta_only=False,
+            cfg_mod=cfg,
+        )
     sentiment_df = fetch_news_sentiment(df_with_indicators)
     df_features = assemble_features(
         df_with_indicators,

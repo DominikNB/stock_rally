@@ -100,19 +100,39 @@ def _log_loaded_config_snapshot() -> None:
             f"rw={_rw} rt={_rt!r} lead={_ld} entry={_ed} min_rally_tail={_mt}"
         )
     else:
-        _rt = getattr(cfg, "FIXED_Y_RALLY_THRESHOLD", None)
-        _long_mode = getattr(cfg, "FIXED_Y_LONG_SEGMENT_LABEL_MODE", None)
-        _long_ed = getattr(cfg, "FIXED_Y_LONG_ENTRY_DAYS", None)
-        _y_line = (
-            f"Y: fixed band [{getattr(cfg, 'FIXED_Y_WINDOW_MIN', '?')},"
-            f"{getattr(cfg, 'FIXED_Y_WINDOW_MAX', '?')}] rt={_rt!r} "
-            f"split={getattr(cfg, 'FIXED_Y_SEGMENT_SPLIT', None)} "
-            f"lead={getattr(cfg, 'FIXED_Y_LEAD_DAYS', None)} "
-            f"entry={getattr(cfg, 'FIXED_Y_ENTRY_DAYS', None)} "
-            f"tail_excl={getattr(cfg, 'FIXED_Y_TAIL_EXCLUDE_DAYS', None)} "
-            f"strict_up={getattr(cfg, 'FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY', None)} "
-            f"long_mode={_long_mode} long_entry={_long_ed}"
-        )
+        _ylr = str(getattr(cfg, "Y_LABEL_RULE", "fixed_bands")).strip().lower()
+        if _ylr == "cross_sectional_top_q":
+            _y_line = (
+                "Y: cross_sectional_top_q "
+                f"H={getattr(cfg, 'CS_TARGET_FORWARD_HORIZON', None)} "
+                f"q={getattr(cfg, 'CS_TARGET_TOP_Q', None)} "
+                f"groupby={getattr(cfg, 'CS_TARGET_GROUPBY', None)} "
+                f"min_per_group={getattr(cfg, 'CS_TARGET_MIN_TICKERS_PER_GROUP', None)}"
+            )
+        else:
+            _rt = getattr(cfg, "FIXED_Y_RALLY_THRESHOLD", None)
+            _long_mode = getattr(cfg, "FIXED_Y_LONG_SEGMENT_LABEL_MODE", None)
+            _long_ed = getattr(cfg, "FIXED_Y_LONG_ENTRY_DAYS", None)
+            _lab = str(getattr(cfg, "FIXED_Y_LABEL_MODE", "")).strip().lower()
+            _sigd = getattr(cfg, "FIXED_Y_RALLY_SIGNAL_ENTRY_DAYS", None)
+            _rphf = getattr(cfg, "FIXED_Y_RALLY_PLUS_TARGET_SEGMENT_HEAD_FRACTION", None)
+            _rpov = getattr(cfg, "FIXED_Y_RALLY_PLUS_TARGET_OVERLAP_MODE", None)
+            _y_line = (
+                f"Y: fixed band [{getattr(cfg, 'FIXED_Y_WINDOW_MIN', '?')},"
+                f"{getattr(cfg, 'FIXED_Y_WINDOW_MAX', '?')}] rt={_rt!r} "
+                f"split={getattr(cfg, 'FIXED_Y_SEGMENT_SPLIT', None)} "
+                f"lead={getattr(cfg, 'FIXED_Y_LEAD_DAYS', None)} "
+                f"entry={getattr(cfg, 'FIXED_Y_ENTRY_DAYS', None)} "
+                f"tail_excl={getattr(cfg, 'FIXED_Y_TAIL_EXCLUDE_DAYS', None)} "
+                f"strict_up={getattr(cfg, 'FIXED_Y_REQUIRE_STRICT_DAILY_UP_IN_RALLY', None)} "
+                f"long_mode={_long_mode} long_entry={_long_ed} "
+                f"label_mode={_lab}"
+                + (
+                    f" rally_signal_pre_days={_sigd} rally_plus_head_frac={_rphf} rally_plus_overlap={_rpov}"
+                    if _lab == "rally_plus_entry"
+                    else ""
+                )
+            )
     print(
         f"Pipeline: config = {p}  (mtime {mtime})\n"
         f"  OPT_OPTIMIZE_Y_TARGETS={_opt_y}  SCORING_ONLY={getattr(cfg, 'SCORING_ONLY', None)}  "

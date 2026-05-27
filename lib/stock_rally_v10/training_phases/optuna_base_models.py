@@ -17,7 +17,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+from lib.stock_rally_v10.features import merge_news_shard_from_best_params, merge_news_survivors_into_df
+from lib.stock_rally_v10.optuna_train import intersect_feat_cols_with_prescreen_kept
 from lib.stock_rally_v10.extended_base_features import append_macro_regime_vol_numeric_cols
 
 
@@ -233,6 +234,21 @@ def _run_phase12(c: Any) -> None:
                 flush=True,
             )
 
+    if bool(getattr(c, "NEWS_CORRELATION_PRESCREEN_ENABLED", False)):
+        try:
+            from lib.stock_rally_v10.news_correlation_prescreen import (
+                run_news_correlation_prescreen,
+            )
+
+            ncp_artifact = run_news_correlation_prescreen(c.df_train, cfg_mod=c)
+            if ncp_artifact is not None:
+                c._NEWS_CORRELATION_PRESCREEN_ARTIFACT = ncp_artifact
+        except (ImportError, ValueError, KeyError, FileNotFoundError) as _exc_ncp:
+            print(
+                f"[News-CorrPrescreen] übersprungen ({_exc_ncp}); fahre mit Tripel-Wahl fort.",
+                flush=True,
+            )
+
     print("=" * 60)
     print("Phase 1: Optuna base-model HP optimisation")
     print("=" * 60)
@@ -298,10 +314,28 @@ def _run_phase12(c: Any) -> None:
     df_threshold = c.rebuild_target_for_train(c.df_threshold, LEAD_DAYS, ENTRY_DAYS, **_rebuild_kw)
     df_final = c.rebuild_target_for_train(c.df_final, LEAD_DAYS, ENTRY_DAYS, **_rebuild_kw)
     if c.USE_NEWS_SENTIMENT:
-        df_train = merge_news_shard_from_best_params(df_train, best_params)
-        df_test = merge_news_shard_from_best_params(df_test, best_params)
-        df_threshold = merge_news_shard_from_best_params(df_threshold, best_params)
-        df_final = merge_news_shard_from_best_params(df_final, best_params)
+        _fsc_news = best_params.get("feature_subset_columns")
+        if (
+            isinstance(_fsc_news, (list, tuple))
+            and len(_fsc_news) > 0
+            and getattr(c, "_FEATURE_NEWS_SHARDS_ACTIVE", False)
+        ):
+            _need_n = [x for x in _fsc_news if str(x).startswith("news_")]
+            if _need_n:
+                df_train = merge_news_survivors_into_df(df_train, _need_n)
+                df_test = merge_news_survivors_into_df(df_test, _need_n)
+                df_threshold = merge_news_survivors_into_df(df_threshold, _need_n)
+                df_final = merge_news_survivors_into_df(df_final, _need_n)
+            else:
+                df_train = merge_news_shard_from_best_params(df_train, best_params)
+                df_test = merge_news_shard_from_best_params(df_test, best_params)
+                df_threshold = merge_news_shard_from_best_params(df_threshold, best_params)
+                df_final = merge_news_shard_from_best_params(df_final, best_params)
+        else:
+            df_train = merge_news_shard_from_best_params(df_train, best_params)
+            df_test = merge_news_shard_from_best_params(df_test, best_params)
+            df_threshold = merge_news_shard_from_best_params(df_threshold, best_params)
+            df_final = merge_news_shard_from_best_params(df_final, best_params)
     for _name, _df in [
         ("df_train", df_train),
         ("df_test", df_test),
@@ -339,7 +373,10 @@ def _run_phase12(c: Any) -> None:
         "news_add_sign_confirmation", sp.get("news_add_sign_confirmation", None)
     )
     _news_sc = bool(_news_sc) if _news_sc is not None else None
-    if c.USE_NEWS_SENTIMENT:
+    _fsc_bp = best_params.get("feature_subset_columns")
+    if isinstance(_fsc_bp, (list, tuple)) and len(_fsc_bp) > 0:
+        FEAT_COLS = [str(x) for x in _fsc_bp]
+    elif c.USE_NEWS_SENTIMENT:
         FEAT_COLS = c.build_feature_cols(
             rsi_w,
             bb_w,
@@ -384,13 +421,50 @@ def _run_phase12(c: Any) -> None:
             vcp_lower_low_window=_ll_w,
             breakout_volume_trigger_z=_bvt_z,
         )
+    if not (isinstance(_fsc_bp, (list, tuple)) and len(_fsc_bp) > 0):
+        FEAT_COLS = intersect_feat_cols_with_prescreen_kept(
+            FEAT_COLS,
+            rsi_window=rsi_w,
+            bb_window=bb_w,
+            breakout_lookback_window=_brk_w,
+            cfg_mod=c,
+        )
     FEAT_COLS = append_macro_regime_vol_numeric_cols(FEAT_COLS, df_train)
-    print(
-        f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, "
-        f"BTCz={_btc_z}, BTCcorr={_btc_cw}, BreadthZ={_brd_z}, relMom={_rel_m}d, "
-        f"ADR={_adr_w}, BRK={_brk_w}, VCP={_vcp_w}, YZ={_yz_w}, DV={_dv_w}, RM={_rm_w}, "
-        f"AM={_am_w}, LL={_ll_w}, BVTz={_bvt_z:g}  ({len(FEAT_COLS)} features)"
-    )
+    # build_news_model_cols kann mehr news_* nennen als der Shard/merge (Col-Screen, früher Return)
+    # tatsächlich liefert — wie im Optuna-Trial-Pfad mit Sentinel auffüllen, sonst KeyError.
+    _sent_pad = float(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    _pad_parts: list[str] = []
+    for _lbl, _df_pad in (
+        ("df_train", df_train),
+        ("df_test", df_test),
+        ("df_threshold", df_threshold),
+        ("df_final", df_final),
+    ):
+        _miss = [x for x in FEAT_COLS if x not in _df_pad.columns]
+        if not _miss:
+            continue
+        for _c in _miss:
+            _df_pad[_c] = np.float32(_sent_pad)
+        _pad_parts.append(f"{_lbl}:+{len(_miss)}")
+    if _pad_parts:
+        print(
+            "[Phase12] feat_cols-Spalten fehlten im DataFrame — mit Sentinel aufgefüllt: "
+            + ", ".join(_pad_parts),
+            flush=True,
+        )
+    if isinstance(_fsc_bp, (list, tuple)) and len(_fsc_bp) > 0:
+        print(
+            f"\nUsing features: Phase-1-Subset-Liste ({len(FEAT_COLS)} Spalten; "
+            f"Fenster-Params nur für Filter/Reports: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, …)",
+            flush=True,
+        )
+    else:
+        print(
+            f"\nUsing features: RSI={rsi_w}, BB={bb_w}, SMA={sma_w}, "
+            f"BTCz={_btc_z}, BTCcorr={_btc_cw}, BreadthZ={_brd_z}, relMom={_rel_m}d, "
+            f"ADR={_adr_w}, BRK={_brk_w}, VCP={_vcp_w}, YZ={_yz_w}, DV={_dv_w}, RM={_rm_w}, "
+            f"AM={_am_w}, LL={_ll_w}, BVTz={_bvt_z:g}  ({len(FEAT_COLS)} features)"
+        )
     if c.USE_NEWS_SENTIMENT:
         _log_news_feature_constancy(df_train, FEAT_COLS, label="df_train (BASE, nach News-Shard)")
 
@@ -433,6 +507,8 @@ def _run_phase12(c: Any) -> None:
             "peak_lookback_days",
             "peak_min_dist_from_high_pct",
             "signal_max_rsi",
+            "feature_subset_id",
+            "feature_subset_columns",
         )
     }
     xgb_base_params["tree_method"] = "hist"

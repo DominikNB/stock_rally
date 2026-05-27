@@ -1,8 +1,11 @@
 """stock_rally_v10 — Feature-Matrix (Pipeline-Modul)."""
 from __future__ import annotations
 
+import gc
 import json
 import os
+import time
+from collections import Counter
 from datetime import date
 from hashlib import sha1
 
@@ -343,6 +346,75 @@ def _write_news_shard_table(shard: pd.DataFrame, fpath_parquet: str) -> str:
         return fpath_pkl
 
 
+def _filter_news_cols_for_shard_export(
+    df: pd.DataFrame,
+    news_cols: list[str],
+    *,
+    shard_tag: str,
+) -> tuple[list[str], dict[str, str]]:
+    """Vor dem News-Shard-Write: NaN-/Sentinel-only, Konstanz, zu geringe Dichte — wie Prescreen Stage 0.
+
+    Kein Target-Korrelations-Fishing. Deaktivierbar via ``cfg.NEWS_SHARD_COLSCREEN_ENABLED``.
+    """
+    if not bool(getattr(cfg, "NEWS_SHARD_COLSCREEN_ENABLED", True)):
+        return list(news_cols), {}
+    sentinel = float(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    min_frac = float(getattr(cfg, "NEWS_SHARD_COLSCREEN_MIN_NONSENT_FINITE_FRAC", 0.005))
+    min_frac = float(np.clip(min_frac, 0.0, 1.0))
+    n_rows = int(len(df))
+    min_count = max(1, int(np.ceil(min_frac * n_rows))) if n_rows else 1
+
+    kept: list[str] = []
+    drop_reason: dict[str, str] = {}
+    for c in news_cols:
+        if c not in df.columns:
+            drop_reason[c] = "missing_col"
+            continue
+        s = pd.to_numeric(df[c], errors="coerce").to_numpy(dtype=np.float64, copy=False)
+        ok = np.isfinite(s)
+        if int(ok.sum()) == 0:
+            drop_reason[c] = "all_nan"
+            continue
+        v = s[ok]
+        non_sent = v[v != sentinel]
+        if non_sent.size == 0:
+            drop_reason[c] = "all_sentinel"
+            continue
+        if int(non_sent.size) < min_count:
+            drop_reason[c] = "sparse"
+            continue
+        spread = float(non_sent.max() - non_sent.min())
+        std = float(np.std(non_sent, ddof=0))
+        if spread <= 1e-12 and std <= 1e-12:
+            drop_reason[c] = "constant"
+            continue
+        kept.append(c)
+
+    if not kept:
+        print(
+            f"  assemble_features [News-Shard {shard_tag!r}]: WARNUNG Col-Screen würde alle "
+            f"{len(news_cols)} news_* entfernen — Screen deaktiviert (alle Spalten behalten).",
+            flush=True,
+        )
+        return list(news_cols), {}
+
+    if drop_reason:
+        ctr = Counter(drop_reason.values())
+        parts = ", ".join(f"{k}={v}" for k, v in sorted(ctr.items(), key=lambda kv: (-kv[1], kv[0])))
+        print(
+            f"  assemble_features [News-Shard feat_tag={shard_tag!r}]: Col-Screen "
+            f"{len(news_cols)} → {len(kept)} news_* ({parts}).",
+            flush=True,
+        )
+    else:
+        print(
+            f"  assemble_features [News-Shard feat_tag={shard_tag!r}]: Col-Screen aktiv — "
+            f"alle {len(kept)} news_* behalten (nichts verworfen).",
+            flush=True,
+        )
+    return kept, drop_reason
+
+
 def _news_export_tags_for_mode() -> list[tuple[int, int, int, str]]:
     """Bestimmt zu exportierende News-Shards je Modus.
 
@@ -425,16 +497,23 @@ def _export_news_shards_for_grid(df_base: pd.DataFrame, s: pd.DataFrame) -> None
             f"(Fenster-Tripel, kein GKG-Theme) — news_*-Merges → Datei …",
             flush=True,
         )
-        df_w = df_base.copy()
+        _shard_keys = ["Date", "ticker", "sector"]
+        _missing_k = [k for k in _shard_keys if k not in df_base.columns]
+        if _missing_k:
+            raise KeyError(f"_export_news_shards_for_grid: df_base fehlt {_missing_k}")
+        # Nur Schlüssel-Spalten — kein df_base.copy() (sonst ~670k × hunderte Spalten RAM).
+        df_w = df_base[_shard_keys].copy()
         _apply_news_merges_for_one_tag(df_w, s, mom_w, vol_ma, tone_roll, tag)
         if True in cfg.NEWS_EXTRA_MACRO_SEC_DIFF_OPTIONS:
             _add_cross_macro_minus_sec_for_tag(df_w, tag)
         news_cols = [c for c in df_w.columns if str(c).startswith("news_")]
-        shard = df_w[["Date", "ticker", "sector"] + news_cols].copy()
+        news_cols, _ = _filter_news_cols_for_shard_export(df_w, news_cols, shard_tag=tag)
+        shard = df_w[_shard_keys + news_cols]
         fpath = os.path.join(shard_dir, f"news_tag_{tag}.parquet")
         written = _write_news_shard_table(shard, fpath)
         manifest[tag] = os.path.basename(written)
-        del df_w
+        del df_w, shard
+        gc.collect()
     manifest_path = os.path.join(shard_dir, "news_shards_manifest.json")
     abs_manifest = {tag: os.path.join(shard_dir, fname) for tag, fname in manifest.items()}
     with open(manifest_path, "w", encoding="utf-8") as fp:
@@ -490,6 +569,10 @@ def _news_shard_input_signature(
         "news_date_max": str(s_dates.max()) if len(s_dates) else "",
         "news_rows": int(len(s)),
         "export_tags": [[int(m), int(v), int(t), str(tag)] for (m, v, t, tag) in export_tags],
+        "news_shard_colscreen_enabled": bool(getattr(cfg, "NEWS_SHARD_COLSCREEN_ENABLED", True)),
+        "news_shard_colscreen_min_nonsent_finite_frac": float(
+            getattr(cfg, "NEWS_SHARD_COLSCREEN_MIN_NONSENT_FINITE_FRAC", 0.005)
+        ),
     }
     return sha1(json.dumps(payload, sort_keys=True, ensure_ascii=True).encode("utf-8")).hexdigest()
 
@@ -615,7 +698,10 @@ def _apply_news_sign_confirmation(
     ret_lag1 = ret_lag1_sorted.reindex(df.index)
     sgn_today = np.sign(ret.fillna(0.0).to_numpy(dtype=np.float64))
     sgn_lag1 = np.sign(ret_lag1.fillna(0.0).to_numpy(dtype=np.float64))
-    for prefix in ("news_macro", "news_sec", "news_anchor"):
+    # Nur Macro- und Sector-Tone existieren — Anchor-Inhalte liegen als Suffix unter
+    # ``news_sec_<tag>_anchor_*`` und werden nicht eigenständig sign-bestätigt. Konsistent
+    # zu ``cfg._news_sign_confirmation_colnames``.
+    for prefix in ("news_macro", "news_sec"):
         tcol = f"{prefix}_{tag}_tone"
         if tcol not in df.columns:
             continue
@@ -699,25 +785,117 @@ def merge_news_shard_into_df(
     _shard_skip = {"sector", "ticker", "Date"}
     news_cols = [c for c in s_ix.columns if c not in _shard_skip]
     idx = pd.MultiIndex.from_frame(kdf)
-    aligned = s_ix.reindex(idx)
+    # Kein ``s_ix.reindex(idx)`` auf alle Spalten — bei ~500 news_* × 260k Zeilen ein
+    # dichtes Block-``~1 GiB``-Allok (Windows: MemoryError). Spaltenweise wie Prescreen.
+    # ``Series.reindex(idx)`` pro Spalte wiederholt intern teure MultiIndex-``get_indexer``-Alloks
+    # (nach vielen Optuna-Trials: kleine Allokationen schlagen fehl / Heap-Fragmentierung).
+    _nan_sentinel = float(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    ix_pos = s_ix.index.get_indexer(idx)
     for c in news_cols:
-        ser = aligned[c]
-        if pd.api.types.is_float_dtype(ser.dtype):
-            arr = ser.to_numpy(dtype=np.float32, copy=False)
-        else:
-            arr = pd.to_numeric(ser, errors="coerce").to_numpy(dtype=np.float32, copy=False)
-        # NumPy-Pfad vermeidet pandas-internes fillna/where (BlockManager), das hier RAM-Spitzen auslösen kann.
-        _nan_sentinel = float(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+        raw = pd.to_numeric(s_ix[c], errors="coerce").to_numpy(dtype=np.float64, copy=False)
+        out = np.full(len(ix_pos), np.nan, dtype=np.float64)
+        m = ix_pos >= 0
+        out[m] = raw[ix_pos[m]]
         arr = np.nan_to_num(
-            arr,
+            out,
             nan=_nan_sentinel,
             posinf=_nan_sentinel,
             neginf=_nan_sentinel,
             copy=False,
         ).astype(np.float32, copy=False)
         df[c] = arr
+    # ``wanted`` kann Namen enthalten, die beim Shard-Export (Col-Screen) wegfielen —
+    # sonst ``feat_cols`` vs. ``df_trial`` → Trial-Prune.
+    if wanted:
+        n_df = len(df)
+        for c in wanted:
+            if c in df.columns:
+                continue
+            df[c] = np.full(n_df, _nan_sentinel, dtype=np.float32)
     _apply_news_regime_tone_interactions(df, tag)
     _apply_news_sign_confirmation(df, tag, enabled=add_sign_confirmation)
+    return df
+
+
+def merge_news_survivors_into_df(
+    df: pd.DataFrame,
+    survivors: list[str] | tuple[str, ...],
+) -> pd.DataFrame:
+    """Lädt nur die in ``survivors`` genannten ``news_*``-Spalten — über alle
+    Tripel-Shards hinweg — und merged sie an (Date, ticker).
+
+    Wird vom News-Korrelations-Pre-Screen-Pfad (``cfg.NEWS_CORRELATION_PRESCREEN_ENABLED``)
+    in ``optuna_train`` genutzt. Bricht **nicht** ab, wenn einzelne Spalten in keinem
+    Shard liegen — sie werden mit Sentinel belegt, damit ``feat_cols`` konsistent bleibt.
+    """
+    if not getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
+        return df
+    wanted = sorted({str(c) for c in (survivors or []) if str(c).startswith("news_")})
+    if not wanted:
+        return df
+
+    manifest = getattr(cfg, "NEWS_SHARD_MANIFEST", None) or {}
+    shard_dir = getattr(cfg, "FEATURE_SHARD_DIR", None) or ""
+
+    # Index-Tabelle für reindex.
+    kdf = df[["Date", "ticker"]].copy()
+    kdf["Date"] = pd.to_datetime(kdf["Date"]).dt.normalize()
+    target_idx = pd.MultiIndex.from_frame(kdf)
+
+    sentinel = float(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    missing = set(wanted)
+    # Iteriere über Shards: extrahiere pro Shard nur die wanted-Spalten, die er enthält.
+    paths: list[str] = []
+    for tag, p in (manifest or {}).items():
+        _ = tag
+        if p and os.path.isfile(str(p)):
+            paths.append(str(p))
+    if not paths and shard_dir and os.path.isdir(shard_dir):
+        for fn in sorted(os.listdir(shard_dir)):
+            if fn.startswith("news_tag_") and (fn.endswith(".parquet") or fn.endswith(".pkl")):
+                paths.append(os.path.join(shard_dir, fn))
+
+    for p in paths:
+        if not missing:
+            break
+        try:
+            if p.endswith(".parquet"):
+                import pyarrow.parquet as pq
+
+                pcols = set(pq.ParquetFile(p).schema.names)
+                usecols = ["Date", "ticker"] + [c for c in missing if c in pcols]
+                if len(usecols) <= 2:
+                    continue
+                shard = pd.read_parquet(p, columns=usecols)
+            else:
+                shard = pd.read_pickle(p)
+                cols_present = [c for c in missing if c in shard.columns]
+                if not cols_present:
+                    continue
+                shard = shard[["Date", "ticker"] + cols_present]
+        except (OSError, ValueError, KeyError) as exc:
+            print(f"[NewsSurvivors] Shard {p} nicht lesbar ({exc}) — überspringe.", flush=True)
+            continue
+        shard["Date"] = pd.to_datetime(shard["Date"]).dt.normalize()
+        s_idx = shard.set_index(["Date", "ticker"])
+        if s_idx.index.has_duplicates:
+            s_idx = s_idx[~s_idx.index.duplicated(keep="last")]
+        ix_pos = s_idx.index.get_indexer(target_idx)
+        for c in [col for col in s_idx.columns if col in missing]:
+            raw = pd.to_numeric(s_idx[c], errors="coerce").to_numpy(dtype=np.float64, copy=False)
+            out = np.full(len(ix_pos), np.nan, dtype=np.float64)
+            m = ix_pos >= 0
+            out[m] = raw[ix_pos[m]]
+            arr = np.nan_to_num(
+                out, nan=sentinel, posinf=sentinel, neginf=sentinel, copy=False,
+            ).astype(np.float32, copy=False)
+            df[c] = arr
+            missing.discard(c)
+    if missing:
+        # Spalten, die in keinem Shard auftauchten — mit Sentinel belegen, damit feat_cols
+        # nicht reißt. Logging nur einmal pro Lauf, sonst Lärm.
+        for c in missing:
+            df[c] = np.float32(sentinel)
     return df
 
 
@@ -998,10 +1176,47 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
         )
     if _need_macro_regime:
         from lib.stock_rally_v10.extended_base_features import augment_df_macro_regime_and_vol
+        from lib.stock_rally_v10.macro_augment_cache import (
+            save_macro_augment_cache,
+            try_load_macro_augment_cache,
+        )
 
-        df = augment_df_macro_regime_and_vol(df)
+        _df_macro_cached = try_load_macro_augment_cache(df, cfg_mod=cfg)
+        if _df_macro_cached is not None:
+            df = _df_macro_cached
+            print(
+                f"assemble_features: Macro-Regime/Vol aus Cache (kein Neuaufbau), Shape {df.shape}.",
+                flush=True,
+            )
+        else:
+            print(
+                "assemble_features: Macro-Regime/Vol-Augmentation startet "
+                "(extended_base_features.augment_df_macro_regime_and_vol) — "
+                "kann je nach Cache 10–60 s dauern.",
+                flush=True,
+            )
+            _t_aug = time.perf_counter()
+            _cols_before_macro = set(df.columns)
+            df = augment_df_macro_regime_and_vol(df)
+            print(
+                f"assemble_features: Macro-Regime/Vol-Augmentation fertig "
+                f"({time.perf_counter() - _t_aug:.1f}s, Shape {df.shape}).",
+                flush=True,
+            )
+            save_macro_augment_cache(df, _cols_before_macro, cfg_mod=cfg)
+
+    if _need_macro_regime:
+        print(
+            f"assemble_features: nach Macro — weiter mit dropna-Vorbereitung "
+            f"(meta_only={meta_only}, {len(df):,} Zeilen, {len(df.columns)} Spalten) …",
+            flush=True,
+        )
 
     if meta_only:
+        print(
+            "assemble_features: meta_only — worst_case-Indikatorliste via build_technical_cols …",
+            flush=True,
+        )
         _rw = cfg.__dict__["rsi_w"]
         _bw = cfg.__dict__["bb_w"]
         _sw = cfg.__dict__["sma_w"]
@@ -1061,11 +1276,34 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             ),
         )
     else:
+        print(
+            "assemble_features: worst_case-Indikatorliste aus cfg.all_model_tech_col_names "
+            "(Schnitt mit df-Spalten) …",
+            flush=True,
+        )
         worst_case_cols = [
             c for c in cfg.all_model_tech_col_names_for_assemble_dropna() if c in df.columns
         ]
     all_indicator_cols = [c for c in worst_case_cols if c in df.columns]
+    print(
+        f"assemble_features: dropna — {len(all_indicator_cols)} Indikator-Spalten "
+        f"in df vorhanden (worst_case_liste {len(worst_case_cols)} Namen) …",
+        flush=True,
+    )
+    _rows_pre = len(df)
+    print(
+        f"assemble_features: dropna über {len(all_indicator_cols)} Indikator-Spalten "
+        f"(rows pre={_rows_pre:,}) — kann bei großem df 30–120 s dauern.",
+        flush=True,
+    )
+    _t_dn = time.perf_counter()
     df = df.dropna(subset=all_indicator_cols)
+    print(
+        f"assemble_features: dropna fertig "
+        f"({time.perf_counter() - _t_dn:.1f}s, rows post={len(df):,}, "
+        f"Δ={_rows_pre - len(df):,}).",
+        flush=True,
+    )
 
     _suffix = " [meta_only]" if meta_only else ""
     _has_news_cols = any(str(c).startswith("news_") for c in df.columns)
@@ -1085,6 +1323,7 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
     )
     # reset_index(copy) konsolidiert alle Spaltenblöcke — bei ~7k Features × ~400k Zeilen
     # oft >10 GiB RAM (MemoryError). RangeIndex reicht für Downstream.
+    print(f"assemble_features: setze RangeIndex({len(df):,}) …", flush=True)
     df.index = pd.RangeIndex(len(df))
     return df
 

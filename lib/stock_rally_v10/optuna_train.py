@@ -1,9 +1,13 @@
 """stock_rally_v10 — Optuna / Base-XGB (Pipeline-Modul)."""
 from __future__ import annotations
 
+import re
 import time
 import warnings
+from pathlib import Path
+from typing import Any
 
+import joblib
 import numpy as np
 import optuna
 import pandas as pd
@@ -12,7 +16,7 @@ import xgboost as xgb
 from sklearn.metrics import average_precision_score
 
 from lib.stock_rally_v10 import config as cfg
-from lib.stock_rally_v10.features import merge_news_shard_into_df
+from lib.stock_rally_v10.features import merge_news_shard_into_df, merge_news_survivors_into_df
 from lib.stock_rally_v10.helpers import make_focal_objective
 from lib.stock_rally_v10.target import rebuild_target_for_train
 
@@ -21,6 +25,76 @@ from lib.stock_rally_v10.target import rebuild_target_for_train
 _OPT_MIN_PRECISION = cfg.OPT_MIN_PRECISION_BASE
 # Maximum consecutive FP signals per ticker before a trial is penalised
 _OPT_MAX_CONSEC_FP = 4
+
+
+def _base_optuna_checkpoint_path(cfg_mod: Any) -> Path:
+    p = getattr(cfg_mod, "BASE_OPTUNA_CHECKPOINT_PATH", None)
+    if p is None:
+        return Path("models") / "base_optuna_checkpoint.joblib"
+    return Path(p)
+
+
+def try_load_base_optuna_checkpoint(cfg_mod: Any) -> bool:
+    """Lädt ``base_optuna_best_params`` von Platte, wenn im Namespace noch keiner steht.
+
+    Ermöglicht Resume/Seed für den nächsten Base-Optuna-Lauf ohne vollständiges
+    ``scoring_artifacts.joblib`` (Meta läuft erst später).
+    """
+    if getattr(cfg_mod, "base_optuna_best_params", None):
+        return False
+    if not bool(getattr(cfg_mod, "BASE_OPTUNA_CHECKPOINT_LOAD", True)):
+        return False
+    path = _base_optuna_checkpoint_path(cfg_mod)
+    if not path.is_file():
+        return False
+    try:
+        blob = joblib.load(path)
+    except Exception as exc:
+        print(f"[Optuna] Base-Checkpoint lesen fehlgeschlagen ({path}): {exc}", flush=True)
+        return False
+    if not isinstance(blob, dict):
+        return False
+    bp = blob.get("base_optuna_best_params")
+    if not isinstance(bp, dict) or not bp:
+        return False
+    cfg_mod.base_optuna_best_params = dict(bp)
+    bv = blob.get("base_optuna_best_value")
+    if bv is not None:
+        try:
+            cfg_mod.base_optuna_best_value = float(bv)
+        except (TypeError, ValueError):
+            cfg_mod.base_optuna_best_value = None
+    print(
+        f"[Optuna] Base-Checkpoint geladen: {path.resolve()} "
+        f"(best_value={getattr(cfg_mod, 'base_optuna_best_value', None)!r}, |params|={len(bp)}).",
+        flush=True,
+    )
+    return True
+
+
+def save_base_optuna_checkpoint(cfg_mod: Any) -> None:
+    """Schreibt Base-Optuna-Bestwerte direkt nach Phase 1 (atomar)."""
+    if not bool(getattr(cfg_mod, "BASE_OPTUNA_CHECKPOINT_SAVE", True)):
+        return
+    bp = getattr(cfg_mod, "base_optuna_best_params", None)
+    if not isinstance(bp, dict) or not bp:
+        return
+    path = _base_optuna_checkpoint_path(cfg_mod)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    payload = {
+        "base_optuna_best_params": dict(bp),
+        "base_optuna_best_value": getattr(cfg_mod, "base_optuna_best_value", None),
+    }
+    try:
+        joblib.dump(payload, tmp)
+        tmp.replace(path)
+    except Exception as exc:
+        print(f"[Optuna] Base-Checkpoint schreiben fehlgeschlagen ({path}): {exc}", flush=True)
+        if tmp.is_file():
+            tmp.unlink(missing_ok=True)
+        return
+    print(f"[Optuna] Base-Checkpoint gespeichert: {path.resolve()}", flush=True)
 # Walk-Forward-Fold: zu wenig Zeilen/Positive zum sinnvollen nested Threshold + Val-Test
 # (schlägt sichtbar vs. 0,03-0,2 Kalibrier-Lücke; Optuna-Pruner sieht niedrigen report-Schritt)
 _FOLD_PENALTY_INSUFFICIENT_LABELED_DATA = -2.0
@@ -34,6 +108,268 @@ def _auto_scale_pos_weight(y: np.ndarray) -> float:
     if n_pos <= 0 or n_neg <= 0:
         return 1.0
     return float(max(1.0, n_neg / n_pos))
+
+
+_NEWS_SUBSET_TAG_RE = re.compile(
+    r"^news_(?:macro|sec|cross)_(\d+)_(\d+)_(\d+)(?:_|$)",
+    re.IGNORECASE,
+)
+
+
+def _feature_subset_smoothness_primary(col: str) -> int:
+    """Skalar: größer ≈ längere / schwerere Glättung — für Katalog-Reihenfolge (kurz → lang)."""
+    s = str(col)
+    m = _NEWS_SUBSET_TAG_RE.match(s)
+    if m:
+        mom_w, vol_ma, tone_roll = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        # Tripel-Fenster: Vol-MA und Tone-Roll dominieren die „Länge“; Mom ist zweites Gewicht.
+        return vol_ma * 100 + tone_roll * 10 + mom_w
+    toks = [int(x) for x in re.findall(r"\d+", s)]
+    if not toks:
+        return 0
+    # Mehrfenster-Spalten (z. B. vcp_…_10_60d): typisch max. Fenster = relevanteste Glättungslänge.
+    return int(max(toks))
+
+
+def _feature_subset_family_order(col: str) -> int:
+    """Fein-Sortierung: ähnliche Familien blockweise, News/Makro eher ans Ende (bei gleichem Score)."""
+    s = str(col)
+    if s.startswith("news_"):
+        return 5
+    if s.startswith("mr_") or s.startswith("regime_"):
+        return 4
+    if s.startswith("rsi") or s.startswith("bb_") or s.startswith("sma") or "sma_" in s:
+        return 0
+    if s.startswith("corr_") or "momentum" in s or "breadth" in s:
+        return 1
+    if "vol" in s or "yz_" in s or "amihud" in s or "drawdown" in s:
+        return 2
+    if "vcp" in s or "breakout" in s or "dist_to_prior" in s or "blue_sky" in s:
+        return 3
+    return 2
+
+
+def _feature_subset_catalog_columns(df: pd.DataFrame) -> list[str]:
+    """Numerische/bool-Spalten; Reihenfolge: steigend nach Glättungs-/Fenster-Heuristik (kurz → lang).
+
+    So haben Indizes weit hinten im Katalog im Mittel längere Rollfenster (und News-Tripel mit
+    größeren Parametern liegen tendenziell später), was für den Subset-Pool semantische Nähe
+    benachbarter Listplätze verbessert.
+    """
+    ex = getattr(cfg, "OPTUNA_FEATURE_SUBSET_EXCLUDE_COLS", frozenset())
+    raw: list[str] = []
+    for c in df.columns:
+        if c in ex:
+            continue
+        if str(c).startswith("_"):
+            continue
+        col = df[c]
+        if isinstance(col, pd.DataFrame):
+            continue
+        if pd.api.types.is_bool_dtype(col) or pd.api.types.is_numeric_dtype(col):
+            raw.append(str(c))
+    raw = sorted(set(raw))
+    raw.sort(
+        key=lambda name: (
+            _feature_subset_smoothness_primary(name),
+            _feature_subset_family_order(name),
+            name,
+        )
+    )
+    return raw
+
+
+def _allocate_k_across_b_bins(k: int, b: int) -> list[int]:
+    """Verteilt k auf b nicht-negative Ganzzahlen mit Summe k."""
+    if b <= 0:
+        return [max(0, k)]
+    b = int(b)
+    k = int(k)
+    base = [k // b] * b
+    for i in range(k % b):
+        base[i] += 1
+    return base
+
+
+def _rotate_int_list(lst: list[int], r: int) -> list[int]:
+    if not lst:
+        return lst
+    r %= len(lst)
+    return lst[r:] + lst[:r]
+
+
+def _catalog_index_bins(n_cat: int, num_bins: int) -> list[list[int]]:
+    """Katalog-Indizes 0..n-1 in Eimer nach Position (≈ Glättungsstufe, Katalog ist kurz→lang sortiert)."""
+    if n_cat <= 0 or num_bins <= 0:
+        return []
+    b_eff = min(int(num_bins), n_cat)
+    bins: list[list[int]] = [[] for _ in range(b_eff)]
+    for i in range(n_cat):
+        b = min(b_eff - 1, (i * b_eff) // n_cat) if n_cat > 1 else 0
+        bins[b].append(i)
+    return bins
+
+
+def _one_stratified_subset_indices(
+    bins: list[list[int]],
+    quotas: list[int],
+    k: int,
+    rng: np.random.Generator,
+) -> list[int]:
+    """Zieht aus jedem Bin bis zur Quote; füllt auf k mit zufälligem Rest aus dem Gesamtrest auf."""
+    work = [list(x) for x in bins]
+    chosen: list[int] = []
+    seen_ch: set[int] = set()
+    for b, q in enumerate(quotas):
+        if b >= len(work) or q <= 0:
+            continue
+        need = min(int(q), len(work[b]))
+        if need <= 0:
+            continue
+        pick = rng.choice(work[b], size=need, replace=False).tolist()
+        for x in pick:
+            if x not in seen_ch:
+                chosen.append(x)
+                seen_ch.add(x)
+    rem = int(k) - len(chosen)
+    if rem > 0:
+        pool_ix = [i for bi, lst in enumerate(work) for i in lst if i not in seen_ch]
+        rng.shuffle(pool_ix)
+        for i in pool_ix:
+            if rem <= 0:
+                break
+            chosen.append(i)
+            seen_ch.add(i)
+            rem -= 1
+    return chosen[: int(k)]
+
+
+def _build_feature_subset_pool(
+    n_cat: int,
+    k: int,
+    pool_size: int,
+    *,
+    rng: np.random.Generator,
+    max_attempts: int,
+) -> list[tuple[int, ...]]:
+    """K-Teilmengen (sortierte Index-Tupel), paarweise verschieden.
+
+    Mischung aus:
+    * **Stratifiziert:** K über ``OPTUNA_FEATURE_SUBSET_POOL_NUM_BINS`` Katalog-Eimer verteilen,
+      Quoten-Rotation pro Listplatz → unterschiedliche Gewichte kurz vs. lang (Optuna kann Profile unterscheiden).
+    * **Zufällig:** Anteil ``OPTUNA_FEATURE_SUBSET_POOL_RANDOM_FRACTION`` rein zufällige K-Sets (Exploration).
+    """
+    if n_cat <= 0 or k <= 0 or pool_size <= 0:
+        return []
+    kk = min(int(k), n_cat)
+    num_bins_cfg = int(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_NUM_BINS", 5))
+    b_eff = max(2, min(num_bins_cfg, kk, n_cat))
+    frac_rand = float(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_RANDOM_FRACTION", 0.25))
+    frac_rand = float(np.clip(frac_rand, 0.0, 1.0))
+    bins = _catalog_index_bins(n_cat, b_eff)
+    base_quotas = _allocate_k_across_b_bins(kk, b_eff)
+
+    seen: set[tuple[int, ...]] = set()
+    out: list[tuple[int, ...]] = []
+    attempts = 0
+    slot = 0
+    while len(out) < int(pool_size) and attempts < int(max_attempts):
+        attempts += 1
+        if rng.random() < frac_rand:
+            ix = rng.choice(n_cat, size=kk, replace=False)
+            chosen = ix.tolist()
+        else:
+            quotas = _rotate_int_list(list(base_quotas), slot)
+            slot += 1
+            chosen = _one_stratified_subset_indices(bins, quotas, kk, rng)
+        t = tuple(sorted(int(x) for x in chosen))
+        if len(t) < kk or len(set(t)) < kk:
+            continue
+        if t in seen:
+            continue
+        seen.add(t)
+        out.append(t)
+    return out
+
+
+def _expand_df_for_feature_subset_catalog(df_train: pd.DataFrame, seed_params: dict) -> pd.DataFrame:
+    """Einmal News an df hängen (Survivors bevorzugt, sonst SEED_PARAMS-Tripel), damit der Katalog News enthält."""
+    out = df_train.copy()
+    if not (bool(getattr(cfg, "USE_NEWS_SENTIMENT", False)) and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False)):
+        return out
+    art = getattr(cfg, "_NEWS_CORRELATION_PRESCREEN_ARTIFACT", None) or {}
+    surv = art.get("survivors") if isinstance(art, dict) else None
+    if surv:
+        return merge_news_survivors_into_df(out, list(surv))
+    tag = cfg.news_feat_tag(
+        int(seed_params["news_mom_w"]),
+        int(seed_params["news_vol_ma"]),
+        int(seed_params["news_tone_roll"]),
+    )
+    return merge_news_shard_into_df(out, tag, wanted_news_cols=None)
+
+
+def intersect_feat_cols_with_prescreen_kept(
+    feat_cols: list[str],
+    *,
+    rsi_window: int | float,
+    bb_window: int | float,
+    breakout_lookback_window: int | float,
+    cfg_mod: Any,
+) -> list[str]:
+    """Reduziert ``feat_cols`` auf Pre-Screen-``kept_features`` (ohne extra Optuna-Dimension).
+
+    - Immer: RSI-/BB-/Blue-Sky-Pflichtspalten (wie im Subset-Pfad).
+    - Alle ``news_*``: unverändert (Tripel/Survivor hängen nicht 1:1 an SHAP-Liste).
+    - Sonst: nur Spalten aus ``_FEATURE_PRESCREEN_ARTIFACT['kept_features']``.
+    """
+    if bool(getattr(cfg_mod, "OPTUNA_FEATURE_SUBSET_POOL_ENABLED", False)):
+        return feat_cols
+    if not bool(getattr(cfg_mod, "OPTUNA_INTERSECT_FEAT_COLS_WITH_PRESCREEN_KEPT", False)):
+        return feat_cols
+    art = getattr(cfg_mod, "_FEATURE_PRESCREEN_ARTIFACT", None)
+    if not isinstance(art, dict):
+        return feat_cols
+    kept_raw = art.get("kept_features")
+    if not kept_raw:
+        return feat_cols
+    kept = set(str(x) for x in kept_raw)
+    mandatory = {
+        f"rsi_{int(rsi_window)}d",
+        f"bb_pband_{int(bb_window)}",
+        f"blue_sky_breakout_{int(breakout_lookback_window)}d",
+    }
+    out: list[str] = []
+    seen: set[str] = set()
+    n_in = len(feat_cols)
+    for c in feat_cols:
+        sc = str(c)
+        if sc in seen:
+            continue
+        if sc in mandatory:
+            out.append(c)
+            seen.add(sc)
+        elif sc.startswith("news_"):
+            out.append(c)
+            seen.add(sc)
+        elif sc in kept:
+            out.append(c)
+            seen.add(sc)
+    min_keep = int(getattr(cfg_mod, "OPTUNA_PRESCREEN_FEAT_INTERSECT_MIN_COLS", 12))
+    if len(out) < min_keep:
+        print(
+            f"[Optuna] intersect prescreen kept: nur {len(out)} Spalten (<{min_keep}) — "
+            f"ungefilterte feat_cols ({n_in}) behalten.",
+            flush=True,
+        )
+        return feat_cols
+    if len(out) < n_in:
+        print(
+            f"[Optuna] feat_cols ∩ Pre-Screen kept: {n_in} → {len(out)} Spalten "
+            f"(|kept_features|={len(kept)}).",
+            flush=True,
+        )
+    return out
 
 
 def _rsi_from_close_1d(close_arr, window):
@@ -325,6 +661,15 @@ def _score_tp_precision_fold(
     dyn_mult_2=1.0,
     dyn_mult_3=1.0,
 ):
+    """Einen Walk-Forward-Fold bewerten (Base-Optuna).
+
+    Rückgabe ``(score, n_tp, n_signals, max_consec_fp)``. Zuerst wie bisher: max-FP-Strafe,
+    ohne Signale weicher Kalibrierungs-Score. Mit Signalen: **Precision-Gate**
+    ``n_tp / n_signals >= OPT_MIN_PRECISION_BASE``; bei erfülltem Gate ist die Belohnung
+    **Recall in Prozentpunkten**: ``score = 100 · n_tp / n_pos`` mit ``n_pos`` = Anzahl Zeilen
+    mit ``target == 1`` im Fold (wie viele positive Targets im Bewertungsausschnitt, wie viele
+    davon an einem Signaltag mit Treffer abgedeckt). Sonst Penalty ``precision - 1``.
+    """
     n_tp, n_sig, max_cfp = _apply_filters_cv(
         probs_arr,
         dates_arr,
@@ -354,6 +699,8 @@ def _score_tp_precision_fold(
         dyn_mult_2=dyn_mult_2,
         dyn_mult_3=dyn_mult_3,
     )
+    yy = np.asarray(targets_arr, dtype=np.int8)
+    n_pos = int(np.sum(yy == 1))
     if max_cfp > _OPT_MAX_CONSEC_FP:
         return float(-2.0 - (max_cfp - _OPT_MAX_CONSEC_FP) * 0.1), int(n_tp), int(n_sig), int(max_cfp)
     if n_sig == 0:
@@ -372,7 +719,10 @@ def _score_tp_precision_fold(
         return score, int(n_tp), int(n_sig), int(max_cfp)
     precision = float(n_tp) / float(n_sig)
     if precision >= _OPT_MIN_PRECISION:
-        return float(n_tp), int(n_tp), int(n_sig), int(max_cfp)
+        if n_pos <= 0:
+            return 0.0, int(n_tp), int(n_sig), int(max_cfp)
+        recall_pct = 100.0 * float(n_tp) / float(n_pos)
+        return float(recall_pct), int(n_tp), int(n_sig), int(max_cfp)
     return float(precision - 1.0), int(n_tp), int(n_sig), int(max_cfp)
 
 
@@ -466,6 +816,11 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     Jointly optimises (depending on cfg.OPT_MODEL_HYPERPARAMS):
       wenn cfg.opt_optimize_y_targets(): Rally-/Label-Parameter (return_window, …); sonst feste Band-Regel
       immer (je nach cfg): consecutive/cooldown, ggf. Feature-Fenster inkl. News
+      optional: cfg.OPTUNA_FEATURE_SUBSET_POOL_ENABLED — feat_cols aus vorgefertigtem Pool
+      von K-Teilmengen (``feature_subset_id``) statt ``build_feature_cols``
+      optional: cfg.OPTUNA_INTERSECT_FEAT_COLS_WITH_PRESCREEN_KEPT — ohne Subset-Pool:
+      ``feat_cols`` nach jedem ``build_feature_cols`` auf Pre-Screen ``kept_features`` schneiden
+      (kein zusätzlicher Optuna-Dimension; Voraussetzung: Pre-Screen-Artefakt).
       cfg.OPT_MODEL_HYPERPARAMS=True:  auch XGBoost-Hyperparameter (Option A)
       cfg.OPT_MODEL_HYPERPARAMS=False: Modell-HPs aus cfg.SEED_PARAMS (Option B)
 
@@ -475,11 +830,17 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
       - Folds mit zu wenig Val-/Cal-Positiven (u. a. <2) u. a.: Straf-Score
         ``_FOLD_PENALTY_INSUFFICIENT_LABELED_DATA``, ``trial.report`` + user_attrs, kein stilles Weglassen.
       - Anti-Peak/RSI: fest aus ``seed_params`` (Phase 4 Meta-Optuna optimiert diese Werte).
+      - Nach dem Study: ``cfg.base_optuna_best_*`` und sofort ``save_base_optuna_checkpoint`` (Datei
+        ``cfg.BASE_OPTUNA_CHECKPOINT_PATH``); vor dem Study: ``try_load_base_optuna_checkpoint`` wenn
+        noch kein ``base_optuna_best_params`` im Namespace liegt.
 
-    Objective (compound, precision-first):
+    Objective (compound, precision-first, recall-reward):
       - Hard gate: per-ticker max consecutive FP run <= _OPT_MAX_CONSEC_FP
       - Soft gate: filter-Precision TP/Signals >= cfg.OPT_MIN_PRECISION_BASE (pro Fold)
-      - Reward:    n_TP wenn Gate erfüllt; sonst weicher Penalty (TP/Signals) - 1
+      - Reward:    100·(n_TP / n_Pos) = Recall in Prozentpunkten, sobald Gate erfüllt
+        (n_Pos = Zeilen mit target==1 im Fold); sonst Penalty (precision−1)
+      - Pro abgeschlossenem Trial: u. a. ``trial.user_attrs["tp_n"]`` = Summe ``n_TP`` über alle
+        bewerteten WF-Val-Folds (gleich ``base_wf_n_tp_sum``).
 
     Returns best_params dict.
     """
@@ -491,8 +852,71 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     wf = int(wf) if wf is not None else cfg.N_WF_SPLITS
     if wf < 1:
         wf = cfg.N_WF_SPLITS
-    all_dates = np.sort(df_train['Date'].unique())
-    n_dates   = len(all_dates)
+    _subset = bool(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_ENABLED", False))
+    catalog: list[str] = []
+    pool: list[tuple[int, ...]] = []
+    df_source = df_train
+    if _subset:
+        print(
+            "Optuna Phase 1: OPTUNA_FEATURE_SUBSET_POOL_ENABLED=True — "
+            "feat_cols = K Spalten aus vorgefertigtem Pool (+ Pflicht-Spalten für Filter).",
+            flush=True,
+        )
+        print(
+            "  → Subset-Katalog: merge News in df_train (einmalig; bei vielen Zeilen oft 2–15+ min, "
+            "ohne Zwischen-Logs aus features.py) …",
+            flush=True,
+        )
+        _df_cat = _expand_df_for_feature_subset_catalog(df_train, seed_params)
+        print(
+            f"  → Subset-Katalog-DataFrame fertig: {len(_df_cat):,} Zeilen × {len(_df_cat.columns)} Spalten.",
+            flush=True,
+        )
+        catalog = _feature_subset_catalog_columns(_df_cat)
+        _k_sub = int(getattr(cfg, "OPTUNA_FEATURE_SUBSET_K", 50))
+        _ps_sub = int(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_SIZE", 10000))
+        _mx_sub = int(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_MAX_ATTEMPTS", 500000))
+        _sd_sub = int(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_SEED", 42))
+        _nb_sub = int(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_NUM_BINS", 5))
+        _fr_sub = float(np.clip(getattr(cfg, "OPTUNA_FEATURE_SUBSET_POOL_RANDOM_FRACTION", 0.25), 0.0, 1.0))
+        _rng_sub = np.random.default_rng(_sd_sub + int(getattr(cfg, "RANDOM_STATE", 42)))
+        pool = _build_feature_subset_pool(
+            len(catalog), _k_sub, _ps_sub, rng=_rng_sub, max_attempts=_mx_sub
+        )
+        _min_pool = min(100, _ps_sub)
+        if len(pool) < _min_pool:
+            raise ValueError(
+                f"[Optuna] Feature-Subset-Pool zu klein: |pool|={len(pool)} < {_min_pool}. "
+                f"|Katalog|={len(catalog)}, K={_k_sub}. K oder Pool-Größe anpassen, "
+                f"oder OPTUNA_FEATURE_SUBSET_POOL_MAX_ATTEMPTS erhöhen."
+            )
+        print(
+            f"  → Subset-Pool: K={_k_sub}, |Katalog|={len(catalog):,}, |Pool|={len(pool):,} "
+            f"(Katalog: kurz→lang nach Glättungs-/Fenster-Heuristik; Pool: "
+            f"{100.0 * (1.0 - _fr_sub):.0f}% stratifiziert über {_nb_sub} Katalog-Eimer mit rotierenden Quoten, "
+            f"{100.0 * _fr_sub:.0f}% rein zufällig — je Eintrag K verschiedene Indizes).",
+            flush=True,
+        )
+        df_source = _df_cat
+
+    _ps_ix = bool(getattr(cfg, "OPTUNA_INTERSECT_FEAT_COLS_WITH_PRESCREEN_KEPT", False))
+    _art_pf = getattr(cfg, "_FEATURE_PRESCREEN_ARTIFACT", None)
+    if _ps_ix and not _subset:
+        if isinstance(_art_pf, dict) and _art_pf.get("kept_features"):
+            print(
+                "Optuna Phase 1: OPTUNA_INTERSECT_FEAT_COLS_WITH_PRESCREEN_KEPT=True — "
+                "feat_cols = build_feature_cols ∩ Pre-Screen kept_features (+ Pflicht + news_*).",
+                flush=True,
+            )
+        else:
+            print(
+                "[Optuna] OPTUNA_INTERSECT_FEAT_COLS_WITH_PRESCREEN_KEPT=True, aber kein "
+                "kept_features im Artefakt — Schnitt pro Trial deaktiviert.",
+                flush=True,
+            )
+
+    all_dates = np.sort(df_source["Date"].unique())
+    n_dates = len(all_dates)
     min_train = int(n_dates * 0.40)
     fold_size = max(1, (n_dates - min_train) // wf)
     _opt_y = cfg.opt_optimize_y_targets()
@@ -507,9 +931,9 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         )
     _ntr = getattr(cfg, "_tickers_for_run", None)
     _ntr_n = len(_ntr) if _ntr is not None else None
-    _nu_df = int(df_train["ticker"].nunique())
+    _nu_df = int(df_source["ticker"].nunique())
     print(
-        f'Optuna Phase 1: TRAIN {len(df_train):,} Zeilen, {_nu_df} Ticker, '
+        f'Optuna Phase 1: TRAIN {len(df_source):,} Zeilen, {_nu_df} Ticker, '
         f'{n_dates} Kalendertage → {n_trials} Trials × {wf} WF-Folds '
         f"({_trial_hint}; oft dominiert das die Laufzeit).",
         flush=True,
@@ -530,8 +954,8 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         )
 
     date_to_idx = {d: i for i, d in enumerate(all_dates)}
-    df_base = df_train.copy()
-    df_base['_date_idx'] = df_base['Date'].map(date_to_idx)
+    df_base = df_source.copy()
+    df_base["_date_idx"] = df_base["Date"].map(date_to_idx)
 
     def objective(trial):
         # ── Rally-/Label-Params (nur wenn opt_optimize_y_targets() True) ──────────
@@ -578,15 +1002,18 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             seed_params.get('dyn_bb_pband_trigger', getattr(cfg, 'DYN_BB_PBAND_TRIGGER', 1.02))
         )
 
-        # Rebuild targets for this trial's label params
-        df_trial = rebuild_target_for_train(
-            df_base, lead_days, entry_days,
-            return_window=return_window, rally_threshold=rally_threshold,
-            min_rally_tail_days=min_rally_tail_days,
-        )
-        # Kritisch für RAM: Trial darf df_base/andere Trials nie in-place aufblähen.
-        # Sonst akkumulieren news_*-Spalten über Trials und X_tr wird riesig.
-        df_trial = df_trial.copy()
+        # Labels: nur bei variabler Y-Regel jedes Mal neu. Feste Band-Regel
+        # (OPT_OPTIMIZE_Y_TARGETS=False): Targets sind identisch zu df_train —
+        # rebuild wäre nur ein teures groupby('ticker') × N_trials ohne Nutzen.
+        if _opt_y:
+            df_trial = rebuild_target_for_train(
+                df_base, lead_days, entry_days,
+                return_window=return_window, rally_threshold=rally_threshold,
+                min_rally_tail_days=min_rally_tail_days,
+            )
+        else:
+            # Eigene Kopie: merge_news_* schreibt news_*-Spalten in-place an df_trial.
+            df_trial = df_base.copy()
 
         # ── Model params ───────────────────────────────────────────────────
         # ── Feature-window params: always optimised (affect all base models equally) ──
@@ -688,45 +1115,97 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             focal_gamma = seed_params['focal_gamma']
             focal_alpha = seed_params['focal_alpha']
 
-        feat_cols = cfg.build_feature_cols(
-            rsi_w, bb_w, sma_w,
-            news_mom_w, news_vol_ma, news_tone_roll,
-            news_extra_zscore_w, news_extra_tone_accel, news_extra_macro_sec_diff,
-            btc_momentum_z_window=int(btc_momentum_z_window),
-            market_breadth_z_window=int(market_breadth_z_window),
-            rel_momentum_window=int(rel_momentum_window),
-            adr_window=int(adr_window),
-            breakout_lookback_window=int(breakout_lookback_window),
-            vcp_window=int(vcp_window),
-            btc_corr_window=int(btc_corr_window),
-            yz_vol_window=int(yz_vol_window),
-            downside_vol_window=int(downside_vol_window),
-            ret_moment_window=int(ret_moment_window),
-            amihud_window=int(amihud_window),
-            vcp_lower_low_window=int(vcp_lower_low_window),
-            breakout_volume_trigger_z=float(breakout_volume_trigger_z),
-            news_add_sign_confirmation=(
-                bool(news_add_sign_confirmation)
-                if news_add_sign_confirmation is not None
-                else None
-            ),
-        )
-        if cfg.USE_NEWS_SENTIMENT and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
-            _tag = cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)
-            _need_news = [c for c in feat_cols if str(c).startswith("news_")]
-            df_trial = merge_news_shard_into_df(
-                df_trial,
-                _tag,
-                wanted_news_cols=_need_news,
-                add_sign_confirmation=(
+        if _subset and pool and catalog:
+            _sid = trial.suggest_categorical("feature_subset_id", list(range(len(pool))))
+            _sid = int(_sid)
+            _ix_tuple = pool[_sid]
+            feat_cols = [catalog[i] for i in _ix_tuple]
+            for _mc in (
+                f"rsi_{int(rsi_w)}d",
+                f"bb_pband_{int(bb_w)}",
+                f"blue_sky_breakout_{int(breakout_lookback_window)}d",
+            ):
+                if _mc in df_trial.columns and _mc not in feat_cols:
+                    feat_cols.append(_mc)
+        else:
+            feat_cols = cfg.build_feature_cols(
+                rsi_w, bb_w, sma_w,
+                news_mom_w, news_vol_ma, news_tone_roll,
+                news_extra_zscore_w, news_extra_tone_accel, news_extra_macro_sec_diff,
+                btc_momentum_z_window=int(btc_momentum_z_window),
+                market_breadth_z_window=int(market_breadth_z_window),
+                rel_momentum_window=int(rel_momentum_window),
+                adr_window=int(adr_window),
+                breakout_lookback_window=int(breakout_lookback_window),
+                vcp_window=int(vcp_window),
+                btc_corr_window=int(btc_corr_window),
+                yz_vol_window=int(yz_vol_window),
+                downside_vol_window=int(downside_vol_window),
+                ret_moment_window=int(ret_moment_window),
+                amihud_window=int(amihud_window),
+                vcp_lower_low_window=int(vcp_lower_low_window),
+                breakout_volume_trigger_z=float(breakout_volume_trigger_z),
+                news_add_sign_confirmation=(
                     bool(news_add_sign_confirmation)
                     if news_add_sign_confirmation is not None
                     else None
                 ),
             )
+            if cfg.USE_NEWS_SENTIMENT and getattr(cfg, "_FEATURE_NEWS_SHARDS_ACTIVE", False):
+                # News-Korrelations-Pre-Screen: ersetzt News-Spalten in feat_cols durch
+                # die Tripel-übergreifenden Survivors (Mischung statt eines Tripels).
+                _ncp_art = getattr(cfg, "_NEWS_CORRELATION_PRESCREEN_ARTIFACT", None)
+                if (
+                    bool(getattr(cfg, "NEWS_CORRELATION_PRESCREEN_ENABLED", False))
+                    and _ncp_art is not None
+                    and _ncp_art.get("survivors")
+                ):
+                    _survivors = list(_ncp_art["survivors"])
+                    # feat_cols um News-Survivors erweitern und Tripel-spezifische News-Spalten ersetzen.
+                    _non_news_feats = [c for c in feat_cols if not str(c).startswith("news_")]
+                    feat_cols = _non_news_feats + _survivors
+                    df_trial = merge_news_survivors_into_df(df_trial, _survivors)
+                else:
+                    _tag = cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)
+                    _need_news = [c for c in feat_cols if str(c).startswith("news_")]
+                    df_trial = merge_news_shard_into_df(
+                        df_trial,
+                        _tag,
+                        wanted_news_cols=_need_news,
+                        add_sign_confirmation=(
+                            bool(news_add_sign_confirmation)
+                            if news_add_sign_confirmation is not None
+                            else None
+                        ),
+                    )
+        feat_cols = intersect_feat_cols_with_prescreen_kept(
+            feat_cols,
+            rsi_window=rsi_w,
+            bb_window=bb_w,
+            breakout_lookback_window=breakout_lookback_window,
+            cfg_mod=cfg,
+        )
+        # Defensive Sicherung: ``build_feature_cols`` kann Spalten emittieren, deren Erzeugung
+        # an dynamischen Bedingungen hängt (z. B. News-Anchor-Sign-Bestätigung, neue Indikatoren
+        # ohne aktiviertes Flag). Wenn so etwas durchschlägt, lieber den einzelnen Trial sauber
+        # prunen als den ganzen Lauf abzuschießen — Bug wird im Log sichtbar protokolliert.
+        _missing_feats = [c for c in feat_cols if c not in df_trial.columns]
+        if _missing_feats:
+            print(
+                f"[Trial {trial.number}] WARN feat_cols enthält {len(_missing_feats)} "
+                f"in df fehlende Spalte(n): {_missing_feats[:6]}"
+                + (" …" if len(_missing_feats) > 6 else "")
+                + " — Trial wird übersprungen (Pruned).",
+                flush=True,
+            )
+            trial.set_user_attr("missing_feat_cols", ";".join(_missing_feats[:30])[:1000])
+            raise optuna.exceptions.TrialPruned()
         focal_obj = make_focal_objective(focal_gamma, focal_alpha)
 
         fold_scores: list[float] = []
+        wf_fold_n_tp: list[int] = []
+        wf_fold_n_sig: list[int] = []
+        wf_fold_n_pos: list[int] = []
         trial_nested_thresholds: list[float] = []
         insufficient_fold_tags: list[str] = []
         date_norm = pd.to_datetime(df_trial['Date'], errors='coerce').dt.normalize().values
@@ -956,6 +1435,9 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 dyn_mult_3=dyn_mult_3,
             )
             fold_scores.append(float(fold_score))
+            wf_fold_n_tp.append(int(n_tp))
+            wf_fold_n_sig.append(int(n_sig))
+            wf_fold_n_pos.append(int(y_val.sum()))
 
             trial.report(np.mean(fold_scores), fold_i)
             if trial.should_prune():
@@ -963,14 +1445,68 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
 
         if fold_scores:
             trial.set_user_attr("n_base_wf_folds_scored", int(len(fold_scores)))
+        if wf_fold_n_tp:
+            _ntp = int(sum(wf_fold_n_tp))
+            _nsg = int(sum(wf_fold_n_sig))
+            _nps = int(sum(wf_fold_n_pos))
+            trial.set_user_attr("base_wf_n_tp_sum", _ntp)
+            trial.set_user_attr("tp_n", int(_ntp))
+            trial.set_user_attr("base_wf_n_signals_sum", _nsg)
+            trial.set_user_attr("base_wf_n_pos_sum", _nps)
+            trial.set_user_attr("base_wf_tp_slash_sig", f"{_ntp}/{_nsg}")
+            trial.set_user_attr("base_wf_tp_slash_pos", f"{_ntp}/{_nps}")
+            if _nsg > 0:
+                trial.set_user_attr("base_wf_precision_pooled", float(_ntp) / float(_nsg))
+            if _nps > 0:
+                trial.set_user_attr("base_wf_recall_pooled", float(_ntp) / float(_nps))
         if trial_nested_thresholds:
             trial.set_user_attr("nested_thr_mean", float(np.mean(trial_nested_thresholds)))
             trial.set_user_attr("nested_thr_min", float(np.min(trial_nested_thresholds)))
             trial.set_user_attr("nested_thr_max", float(np.max(trial_nested_thresholds)))
+        if _subset and pool:
+            trial.set_user_attr("feature_subset_columns", list(feat_cols))
         return np.mean(fold_scores) if fold_scores else -1.0
 
+    _chk_path = _base_optuna_checkpoint_path(cfg)
+    _chk_exists = _chk_path.is_file()
+    _chk_load = bool(getattr(cfg, "BASE_OPTUNA_CHECKPOINT_LOAD", True))
+    _bp_before_load = getattr(cfg, "base_optuna_best_params", None)
+    _had_params_before_load = isinstance(_bp_before_load, dict) and bool(_bp_before_load)
+    _loaded_ckpt = try_load_base_optuna_checkpoint(cfg)
+    _bp_after = getattr(cfg, "base_optuna_best_params", None)
+    _has_opt_params = isinstance(_bp_after, dict) and bool(_bp_after)
+    print(
+        "[Optuna] Phase 1 — vor Optimierung: Base-Checkpoint "
+        f"Pfad={_chk_path.resolve()!s}, Datei vorhanden={_chk_exists}, "
+        f"BASE_OPTUNA_CHECKPOINT_LOAD={_chk_load}.",
+        flush=True,
+    )
+    if _has_opt_params:
+        if _had_params_before_load:
+            _seed_quelle = "bereits im Namespace (z.B. scoring_artifacts oder gleiche Session)"
+        elif _loaded_ckpt:
+            _seed_quelle = "aus Base-Checkpoint-Datei geladen"
+        else:
+            _seed_quelle = "im Namespace (Quelle unklar)"
+        print(
+            "[Optuna] Phase 1 — alte optimierte Params: vorhanden; "
+            f"Quelle: {_seed_quelle}. Erster Trial (enqueue_trial): diese Params als Seed.",
+            flush=True,
+        )
+    else:
+        _hint = ""
+        if _chk_exists and _chk_load and not _loaded_ckpt and not _had_params_before_load:
+            _hint = " Checkpoint-Datei existiert, enthielt aber keine nutzbaren Params (oder Lesen fehlgeschlagen — siehe Meldungen oben)."
+        elif _chk_exists and not _chk_load:
+            _hint = " Checkpoint-Datei existiert, Laden ist deaktiviert (BASE_OPTUNA_CHECKPOINT_LOAD=False)."
+        print(
+            "[Optuna] Phase 1 — alte optimierte Params: keine. "
+            f"Erster Trial (enqueue_trial): nutzt cfg.SEED_PARAMS als Seed.{_hint}",
+            flush=True,
+        )
+
     sampler = optuna.samplers.TPESampler(multivariate=True, constant_liar=True, seed=42)
-    pruner  = optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=1)
+    pruner  = optuna.pruners.MedianPruner(n_startup_trials=20, n_warmup_steps=3)
     study   = optuna.create_study(direction='maximize', sampler=sampler, pruner=pruner)
 
     _base_seed_src = getattr(cfg, "base_optuna_best_params", None)
@@ -987,6 +1523,10 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     if not cfg.opt_optimize_y_targets():
         for _k in ('return_window', 'rally_threshold', 'lead_days', 'entry_days', 'min_rally_tail_days'):
             _seed_enq.pop(_k, None)
+    if _subset and pool:
+        _seed_enq["feature_subset_id"] = 0
+    else:
+        _seed_enq.pop("feature_subset_id", None)
     _cat_choices = {
         "rsi_window": cfg.effective_window_grid('RSI_WINDOWS'),
         "bb_window": cfg.effective_window_grid('BB_WINDOWS'),
@@ -1023,6 +1563,16 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
                 f"-> nutze {_seed_enq[_k]!r}.",
                 flush=True,
             )
+    _hist_bv = getattr(cfg, "base_optuna_best_value", None)
+    if _hist_bv is not None and _has_opt_params:
+        print(
+            "[Optuna] Phase 1 — Referenz: gespeicherter base_optuna_best_value="
+            f"{float(_hist_bv):.4f} (Checkpoint/Artefakt). Optuna startet eine neue Study; "
+            "der Seed-Trial wird neu bewertet — die Zielfunktion in tqdm kann davon abweichen "
+            "(Walk-Forward, Pruner, andere Features/News, Grid-Snap oben; Skala: mean Recall/Fold "
+            "100·TP/Pos nach Precision-Gate, nicht mehr n_TP oder 100·Precision).",
+            flush=True,
+        )
     study.enqueue_trial(_seed_enq)
     # Nur tqdm-Fortschritt (eine Zeile); Optuna-INFO würde jeden Trial doppelt loggen
     optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -1031,7 +1581,11 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         _spb = True
     study.optimize(objective, n_trials=n_trials, show_progress_bar=bool(_spb))
 
-    best = study.best_params
+    best = dict(study.best_params)
+    if _subset and pool and study.best_trial is not None:
+        _fsc_bt = study.best_trial.user_attrs.get("feature_subset_columns")
+        if _fsc_bt:
+            best["feature_subset_columns"] = list(_fsc_bt)
     # Ensure all model hyperparameters are present — if cfg.OPT_MODEL_HYPERPARAMS=False
     # they were never suggested by Optuna, so fill them from seed_params.
     for k, v in seed_params.items():
@@ -1049,11 +1603,17 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     mode = 'Option A (model HPs optimised)' if cfg.OPT_MODEL_HYPERPARAMS \
            else 'Option B (model HPs fixed from cfg.SEED_PARAMS)'
     print(f'\nBest trial score={study.best_value:.4f}  '
-          f'(= mean TP/fold bei Filter-Prec>={_OPT_MIN_PRECISION:.0%}, '
+          f'(= mean Recall-Score/Fold: 100·TP/Pos bei Filter-Prec>={_OPT_MIN_PRECISION:.0%}, '
           f'max consec FP <= {_OPT_MAX_CONSEC_FP})  [{mode}]')
+    if study.best_trial is not None and study.best_trial.user_attrs.get("tp_n") is not None:
+        print(
+            f"  Best trial tp_n (Summe TP über WF-Val-Folds) = {study.best_trial.user_attrs['tp_n']}",
+            flush=True,
+        )
     print("Optuna Phase 1 — finale Bestwerte (alle Parameter):", flush=True)
     for _k in sorted(best.keys()):
         print(f"  {_k} = {best[_k]!r}", flush=True)
     cfg.base_optuna_best_params = dict(best)
     cfg.base_optuna_best_value = float(study.best_value)
+    save_base_optuna_checkpoint(cfg)
     return best
