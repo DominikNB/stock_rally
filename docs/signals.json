@@ -1,7 +1,55 @@
 {
-  "generated": "2026-05-26 17:09",
+  "generated": "2026-05-27 08:01",
   "threshold": 0.85,
   "signals": [
+    {
+      "ticker": "TER",
+      "company": "Teradyne",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-26",
+      "prob": 0.8911924169467229
+    },
+    {
+      "ticker": "6503.T",
+      "company": "Mitsubishi",
+      "sector": "Industrials",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Electrical Equipment & Parts",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "electrical equipment parts",
+      "date": "2026-05-26",
+      "prob": 0.8861582018475033
+    },
+    {
+      "ticker": "ANET",
+      "company": "Arista Networks",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-05-26",
+      "prob": 0.8732231030738166
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Conglomerates",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "conglomerates",
+      "date": "2026-05-26",
+      "prob": 0.8599301370170924
+    },
     {
       "ticker": "MTX.DE",
       "company": "MTU Aero",
@@ -12,7 +60,19 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-25",
-      "prob": 0.9043000438297011
+      "prob": 0.89742894060989
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Internet Retail",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "internet retail",
+      "date": "2026-05-25",
+      "prob": 0.8872283238150409
     },
     {
       "ticker": "PUM.DE",
@@ -24,7 +84,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2026-05-25",
-      "prob": 0.6685024032755791
+      "prob": 0.6414487369560435
     },
     {
       "ticker": "F",
@@ -36,7 +96,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-22",
-      "prob": 0.9043000438297011
+      "prob": 0.9077425904485524
     },
     {
       "ticker": "MRK",
@@ -48,19 +108,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers general",
       "date": "2026-05-22",
-      "prob": 0.9010863856309633
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2026-05-22",
-      "prob": 0.8842684197992503
+      "prob": 0.9029223213026436
     },
     {
       "ticker": "GXI.DE",
@@ -72,19 +120,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2026-05-22",
-      "prob": 0.8709376055136479
-    },
-    {
-      "ticker": "ZAL.DE",
-      "company": "Zalando",
-      "sector": "Consumer Cyclical",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Internet Retail",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "internet retail",
-      "date": "2026-05-22",
-      "prob": 0.8568278428646656
+      "prob": 0.8585013066081659
     },
     {
       "ticker": "MRK.DE",
@@ -96,7 +132,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers specialty generic",
       "date": "2026-05-21",
-      "prob": 0.8800973829731419
+      "prob": 0.8834750426924532
     },
     {
       "ticker": "F3C.DE",
@@ -108,7 +144,19 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-21",
-      "prob": 0.8675122494533976
+      "prob": 0.8749974845886185
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "Healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2026-05-21",
+      "prob": 0.8596034720232153
     },
     {
       "ticker": "DRW3.DE",
@@ -120,7 +168,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2026-05-20",
-      "prob": 0.9010893730495292
+      "prob": 0.9017695008213168
     },
     {
       "ticker": "RHM.DE",
@@ -132,7 +180,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-20",
-      "prob": 0.8866255605709074
+      "prob": 0.8873926593118777
     },
     {
       "ticker": "SRT3.DE",
@@ -144,7 +192,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2026-05-20",
-      "prob": 0.8788125535149565
+      "prob": 0.8784825839682511
     },
     {
       "ticker": "R3NK.DE",
@@ -156,7 +204,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-20",
-      "prob": 0.8693453784393835
+      "prob": 0.8702123349431434
     },
     {
       "ticker": "AMT",
@@ -168,7 +216,7 @@
       "gics_sector_key": "real estate",
       "gics_industry_key": "reit specialty",
       "date": "2026-05-20",
-      "prob": 0.8593261340670959
+      "prob": 0.8602489247041124
     },
     {
       "ticker": "SAP.DE",
@@ -204,7 +252,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-05-19",
-      "prob": 0.8857408710951705
+      "prob": 0.8836140948150416
     },
     {
       "ticker": "DHER.DE",
@@ -288,7 +336,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-05-18",
-      "prob": 0.8519854453939946
+      "prob": 0.8538648954500883
     },
     {
       "ticker": "CWC.DE",
@@ -12821,6 +12869,54 @@
   ],
   "signals_holdout_final": [
     {
+      "ticker": "TER",
+      "company": "Teradyne",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-26",
+      "prob": 0.8911924169467229
+    },
+    {
+      "ticker": "6503.T",
+      "company": "Mitsubishi",
+      "sector": "Industrials",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Electrical Equipment & Parts",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "electrical equipment parts",
+      "date": "2026-05-26",
+      "prob": 0.8861582018475033
+    },
+    {
+      "ticker": "ANET",
+      "company": "Arista Networks",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-05-26",
+      "prob": 0.8732231030738166
+    },
+    {
+      "ticker": "TKA.DE",
+      "company": "Thyssenkrupp",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Conglomerates",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "conglomerates",
+      "date": "2026-05-26",
+      "prob": 0.8599301370170924
+    },
+    {
       "ticker": "MTX.DE",
       "company": "MTU Aero",
       "sector": "Industrials",
@@ -12830,7 +12926,19 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-25",
-      "prob": 0.9043000438297011
+      "prob": 0.89742894060989
+    },
+    {
+      "ticker": "ZAL.DE",
+      "company": "Zalando",
+      "sector": "Consumer Cyclical",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Consumer Cyclical",
+      "gics_industry": "Internet Retail",
+      "gics_sector_key": "consumer cyclical",
+      "gics_industry_key": "internet retail",
+      "date": "2026-05-25",
+      "prob": 0.8872283238150409
     },
     {
       "ticker": "PUM.DE",
@@ -12842,7 +12950,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2026-05-25",
-      "prob": 0.6685024032755791
+      "prob": 0.6414487369560435
     },
     {
       "ticker": "F",
@@ -12854,7 +12962,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-22",
-      "prob": 0.9043000438297011
+      "prob": 0.9077425904485524
     },
     {
       "ticker": "MRK",
@@ -12866,19 +12974,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers general",
       "date": "2026-05-22",
-      "prob": 0.9010863856309633
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "Healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2026-05-22",
-      "prob": 0.8842684197992503
+      "prob": 0.9029223213026436
     },
     {
       "ticker": "GXI.DE",
@@ -12890,19 +12986,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2026-05-22",
-      "prob": 0.8709376055136479
-    },
-    {
-      "ticker": "ZAL.DE",
-      "company": "Zalando",
-      "sector": "Consumer Cyclical",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Internet Retail",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "internet retail",
-      "date": "2026-05-22",
-      "prob": 0.8568278428646656
+      "prob": 0.8585013066081659
     },
     {
       "ticker": "MRK.DE",
@@ -12914,7 +12998,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "drug manufacturers specialty generic",
       "date": "2026-05-21",
-      "prob": 0.8800973829731419
+      "prob": 0.8834750426924532
     },
     {
       "ticker": "F3C.DE",
@@ -12926,7 +13010,19 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "electrical equipment parts",
       "date": "2026-05-21",
-      "prob": 0.8675122494533976
+      "prob": 0.8749974845886185
+    },
+    {
+      "ticker": "EVT.DE",
+      "company": "Evotec",
+      "sector": "Healthcare",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Drug Manufacturers - Specialty & Generic",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "drug manufacturers specialty generic",
+      "date": "2026-05-21",
+      "prob": 0.8596034720232153
     },
     {
       "ticker": "DRW3.DE",
@@ -12938,7 +13034,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical devices",
       "date": "2026-05-20",
-      "prob": 0.9010893730495292
+      "prob": 0.9017695008213168
     },
     {
       "ticker": "RHM.DE",
@@ -12950,7 +13046,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-20",
-      "prob": 0.8866255605709074
+      "prob": 0.8873926593118777
     },
     {
       "ticker": "SRT3.DE",
@@ -12962,7 +13058,7 @@
       "gics_sector_key": "healthcare",
       "gics_industry_key": "medical instruments supplies",
       "date": "2026-05-20",
-      "prob": 0.8788125535149565
+      "prob": 0.8784825839682511
     },
     {
       "ticker": "R3NK.DE",
@@ -12974,7 +13070,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2026-05-20",
-      "prob": 0.8693453784393835
+      "prob": 0.8702123349431434
     },
     {
       "ticker": "AMT",
@@ -12986,7 +13082,7 @@
       "gics_sector_key": "real estate",
       "gics_industry_key": "reit specialty",
       "date": "2026-05-20",
-      "prob": 0.8593261340670959
+      "prob": 0.8602489247041124
     },
     {
       "ticker": "SAP.DE",
@@ -13022,7 +13118,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-05-19",
-      "prob": 0.8857408710951705
+      "prob": 0.8836140948150416
     },
     {
       "ticker": "DHER.DE",
@@ -13106,7 +13202,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software application",
       "date": "2026-05-18",
-      "prob": 0.8519854453939946
+      "prob": 0.8538648954500883
     },
     {
       "ticker": "CWC.DE",
@@ -25637,9 +25733,9 @@
       "prob": 0.8908156986179411
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 6579,
+  "signals_all_timeline_including_in_sample_count": 6583,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 90443097,
+  "index_html_bytes_utf8": 90103211,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
