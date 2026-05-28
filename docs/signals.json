@@ -1,7 +1,115 @@
 {
-  "generated": "2026-05-28 00:05",
+  "generated": "2026-05-28 11:16",
   "threshold": 0.49999999999999994,
   "signals": [
+    {
+      "ticker": "KSB.DE",
+      "company": "KSB",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-27",
+      "prob": 0.7975610613753024
+    },
+    {
+      "ticker": "R3NK.DE",
+      "company": "RENK Group",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-27",
+      "prob": 0.7943966234159223
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2026-05-27",
+      "prob": 0.6181052904543684
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-27",
+      "prob": 0.549823888110704
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "sector": "Industrials",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-27",
+      "prob": 0.5001686050539744
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "sector": "Communication Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Communication Services",
+      "gics_industry": "Entertainment",
+      "gics_sector_key": "communication services",
+      "gics_industry_key": "entertainment",
+      "date": "2026-05-27",
+      "prob": 0.47508774288757494
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-27",
+      "prob": 0.4150314680513183
+    },
+    {
+      "ticker": "SPG.DE",
+      "company": "Springer Nature",
+      "sector": "Communication Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Communication Services",
+      "gics_industry": "Publishing",
+      "gics_sector_key": "communication services",
+      "gics_industry_key": "publishing",
+      "date": "2026-05-27",
+      "prob": 0.41275913442875856
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-27",
+      "prob": 0.3559469540105659
+    },
     {
       "ticker": "ODFL",
       "company": "Old Dominion Freight Line",
@@ -2811,18 +2919,6 @@
       "prob": 0.6446919942934719
     },
     {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-04-27",
-      "prob": 0.5306931973168889
-    },
-    {
       "ticker": "MUX.DE",
       "company": "Mutares",
       "sector": "Financial Services",
@@ -2833,6 +2929,18 @@
       "gics_industry_key": "asset management",
       "date": "2026-04-27",
       "prob": 0.5255366592952703
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-04-27",
+      "prob": 0.5160260146589841
     },
     {
       "ticker": "R3NK.DE",
@@ -9204,7 +9312,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "entertainment",
       "date": "2026-03-09",
-      "prob": 0.5420133820258897
+      "prob": 0.545784515764475
     },
     {
       "ticker": "CAT",
@@ -13632,7 +13740,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2025-12-24",
-      "prob": 0.5887090905410306
+      "prob": 0.5913502467397669
     },
     {
       "ticker": "SPG.DE",
@@ -18912,7 +19020,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2025-11-07",
-      "prob": 0.5031469134712375
+      "prob": 0.5057420664657785
     },
     {
       "ticker": "DOW",
@@ -24780,7 +24888,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2025-08-12",
-      "prob": 0.465981656633806
+      "prob": 0.46237738654858895
     },
     {
       "ticker": "TKA.DE",
@@ -41088,7 +41196,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-03-07",
-      "prob": 0.5230700470355215
+      "prob": 0.5201933394904471
     },
     {
       "ticker": "BOSS.DE",
@@ -42516,7 +42624,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-02-20",
-      "prob": 0.6781339308830976
+      "prob": 0.678372383558201
     },
     {
       "ticker": "MU",
@@ -45564,7 +45672,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-01-16",
-      "prob": 0.5843929595900973
+      "prob": 0.582348719158933
     },
     {
       "ticker": "ILMN",
@@ -45936,7 +46044,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-01-15",
-      "prob": 0.5819336825442235
+      "prob": 0.5847782876613624
     },
     {
       "ticker": "BKNG",
@@ -46059,18 +46167,6 @@
       "prob": 0.5456309794848012
     },
     {
-      "ticker": "VOS.DE",
-      "company": "Vossloh",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Railroads",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "railroads",
-      "date": "2025-01-15",
-      "prob": 0.5414925913822969
-    },
-    {
       "ticker": "GYC.DE",
       "company": "Grand City Prop.",
       "sector": "Real Estate",
@@ -46105,6 +46201,18 @@
       "gics_industry_key": "electrical equipment parts",
       "date": "2025-01-15",
       "prob": 0.5361332247516072
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Railroads",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "railroads",
+      "date": "2025-01-15",
+      "prob": 0.5341395290051851
     },
     {
       "ticker": "YSN.DE",
@@ -48060,7 +48168,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-27",
-      "prob": 0.5958397589226345
+      "prob": 0.6006148146459428
     },
     {
       "ticker": "KGX.DE",
@@ -50136,7 +50244,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2024-12-10",
-      "prob": 0.5828379849460679
+      "prob": 0.5840965799065859
     },
     {
       "ticker": "ODFL",
@@ -51132,7 +51240,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2024-12-03",
-      "prob": 0.4951951371465487
+      "prob": 0.49291969211819325
     },
     {
       "ticker": "DUE.DE",
@@ -51324,7 +51432,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-02",
-      "prob": 0.6089533152560775
+      "prob": 0.6072037458376393
     },
     {
       "ticker": "SFQ.DE",
@@ -52047,6 +52155,18 @@
       "prob": 0.5602936089121421
     },
     {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Railroads",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "railroads",
+      "date": "2024-11-26",
+      "prob": 0.5419730599259247
+    },
+    {
       "ticker": "STLA",
       "company": "Stellantis",
       "sector": "Consumer Cyclical",
@@ -52069,18 +52189,6 @@
       "gics_industry_key": "information technology services",
       "date": "2024-11-26",
       "prob": 0.5332063936183393
-    },
-    {
-      "ticker": "VOS.DE",
-      "company": "Vossloh",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Railroads",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "railroads",
-      "date": "2024-11-26",
-      "prob": 0.5314079422350063
     },
     {
       "ticker": "BMW.DE",
@@ -52908,7 +53016,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "agricultural inputs",
       "date": "2024-11-20",
-      "prob": 0.5549557423992167
+      "prob": 0.554006990018706
     },
     {
       "ticker": "ANET",
@@ -53172,7 +53280,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-11-19",
-      "prob": 0.47844516658556835
+      "prob": 0.4787178480144101
     },
     {
       "ticker": "NIBE-B.ST",
@@ -53751,6 +53859,18 @@
       "prob": 0.6570580904360426
     },
     {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2024-11-12",
+      "prob": 0.5225272650566676
+    },
+    {
       "ticker": "NKE",
       "company": "Nike",
       "sector": "Consumer Cyclical",
@@ -53844,7 +53964,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-11-11",
-      "prob": 0.6816715857908789
+      "prob": 0.6653106801727606
     },
     {
       "ticker": "YSN.DE",
@@ -54217,18 +54337,6 @@
       "gics_industry_key": "information technology services",
       "date": "2024-11-07",
       "prob": 0.5898028769740724
-    },
-    {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-11-07",
-      "prob": 0.5881282496365362
     },
     {
       "ticker": "KBX.DE",
@@ -54889,6 +54997,18 @@
       "gics_industry_key": "oil gas integrated",
       "date": "2024-11-04",
       "prob": 0.5148109850143273
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2024-11-04",
+      "prob": 0.5117552169931999
     },
     {
       "ticker": "FME.DE",
@@ -56149,142 +56269,118 @@
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2024-10-16",
       "prob": 0.4942762993332893
-    },
-    {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "Consumer Cyclical",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Footwear & Accessories",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "footwear accessories",
-      "date": "2024-10-15",
-      "prob": 0.6578729428368523
-    },
-    {
-      "ticker": "BA",
-      "company": "Boeing",
-      "sector": "Industrials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2024-10-15",
-      "prob": 0.5907304619402062
-    },
-    {
-      "ticker": "NVDA",
-      "company": "NVIDIA",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.5562061201975605
-    },
-    {
-      "ticker": "VNA.DE",
-      "company": "Vonovia",
-      "sector": "Real Estate",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Real Estate",
-      "gics_industry": "Real Estate Services",
-      "gics_sector_key": "real estate",
-      "gics_industry_key": "real estate services",
-      "date": "2024-10-15",
-      "prob": 0.514885906350791
-    },
-    {
-      "ticker": "ENR.DE",
-      "company": "Siemens Energy",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Specialty Industrial Machinery",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "specialty industrial machinery",
-      "date": "2024-10-15",
-      "prob": 0.4810139402152163
-    },
-    {
-      "ticker": "MU",
-      "company": "Micron",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.4782720343223908
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.4768224048745713
-    },
-    {
-      "ticker": "ASML",
-      "company": "ASML",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2024-10-15",
-      "prob": 0.46615873263311874
-    },
-    {
-      "ticker": "LRCX",
-      "company": "Lam Research",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2024-10-15",
-      "prob": 0.4625225492907278
-    },
-    {
-      "ticker": "NXPI",
-      "company": "NXP Semiconductors",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.42660504601167915
-    },
-    {
-      "ticker": "FCX",
-      "company": "Freeport-McMoRan",
-      "sector": "Basic Materials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Copper",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "copper",
-      "date": "2024-10-15",
-      "prob": 0.4050815646779343
     }
   ],
   "signals_holdout_final": [
     {
+      "ticker": "KSB.DE",
+      "company": "KSB",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-05-27",
+      "prob": 0.7975610613753024
+    },
+    {
+      "ticker": "R3NK.DE",
+      "company": "RENK Group",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-27",
+      "prob": 0.7943966234159223
+    },
+    {
+      "ticker": "VBK.DE",
+      "company": "Verbio",
+      "sector": "Basic Materials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Basic Materials",
+      "gics_industry": "Specialty Chemicals",
+      "gics_sector_key": "basic materials",
+      "gics_industry_key": "specialty chemicals",
+      "date": "2026-05-27",
+      "prob": 0.6181052904543684
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "sector": "Technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductor Equipment & Materials",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductor equipment materials",
+      "date": "2026-05-27",
+      "prob": 0.549823888110704
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "sector": "Industrials",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Aerospace & Defense",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "aerospace defense",
+      "date": "2026-05-27",
+      "prob": 0.5001686050539744
+    },
+    {
+      "ticker": "EVD.DE",
+      "company": "CTS Eventim",
+      "sector": "Communication Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Communication Services",
+      "gics_industry": "Entertainment",
+      "gics_sector_key": "communication services",
+      "gics_industry_key": "entertainment",
+      "date": "2026-05-27",
+      "prob": 0.47508774288757494
+    },
+    {
+      "ticker": "NEM.DE",
+      "company": "Nemetschek",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-27",
+      "prob": 0.4150314680513183
+    },
+    {
+      "ticker": "SPG.DE",
+      "company": "Springer Nature",
+      "sector": "Communication Services",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Communication Services",
+      "gics_industry": "Publishing",
+      "gics_sector_key": "communication services",
+      "gics_industry_key": "publishing",
+      "date": "2026-05-27",
+      "prob": 0.41275913442875856
+    },
+    {
+      "ticker": "AOF.DE",
+      "company": "ATOSS Software",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Software - Application",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "software application",
+      "date": "2026-05-27",
+      "prob": 0.3559469540105659
+    },
+    {
       "ticker": "ODFL",
       "company": "Old Dominion Freight Line",
       "sector": "Industrials",
@@ -59093,18 +59189,6 @@
       "prob": 0.6446919942934719
     },
     {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2026-04-27",
-      "prob": 0.5306931973168889
-    },
-    {
       "ticker": "MUX.DE",
       "company": "Mutares",
       "sector": "Financial Services",
@@ -59115,6 +59199,18 @@
       "gics_industry_key": "asset management",
       "date": "2026-04-27",
       "prob": 0.5255366592952703
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2026-04-27",
+      "prob": 0.5160260146589841
     },
     {
       "ticker": "R3NK.DE",
@@ -65486,7 +65582,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "entertainment",
       "date": "2026-03-09",
-      "prob": 0.5420133820258897
+      "prob": 0.545784515764475
     },
     {
       "ticker": "CAT",
@@ -69914,7 +70010,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2025-12-24",
-      "prob": 0.5887090905410306
+      "prob": 0.5913502467397669
     },
     {
       "ticker": "SPG.DE",
@@ -75194,7 +75290,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "footwear accessories",
       "date": "2025-11-07",
-      "prob": 0.5031469134712375
+      "prob": 0.5057420664657785
     },
     {
       "ticker": "DOW",
@@ -81062,7 +81158,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2025-08-12",
-      "prob": 0.465981656633806
+      "prob": 0.46237738654858895
     },
     {
       "ticker": "TKA.DE",
@@ -97370,7 +97466,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-03-07",
-      "prob": 0.5230700470355215
+      "prob": 0.5201933394904471
     },
     {
       "ticker": "BOSS.DE",
@@ -98798,7 +98894,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2025-02-20",
-      "prob": 0.6781339308830976
+      "prob": 0.678372383558201
     },
     {
       "ticker": "MU",
@@ -101846,7 +101942,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-01-16",
-      "prob": 0.5843929595900973
+      "prob": 0.582348719158933
     },
     {
       "ticker": "ILMN",
@@ -102218,7 +102314,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-01-15",
-      "prob": 0.5819336825442235
+      "prob": 0.5847782876613624
     },
     {
       "ticker": "BKNG",
@@ -102341,18 +102437,6 @@
       "prob": 0.5456309794848012
     },
     {
-      "ticker": "VOS.DE",
-      "company": "Vossloh",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Railroads",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "railroads",
-      "date": "2025-01-15",
-      "prob": 0.5414925913822969
-    },
-    {
       "ticker": "GYC.DE",
       "company": "Grand City Prop.",
       "sector": "Real Estate",
@@ -102387,6 +102471,18 @@
       "gics_industry_key": "electrical equipment parts",
       "date": "2025-01-15",
       "prob": 0.5361332247516072
+    },
+    {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Railroads",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "railroads",
+      "date": "2025-01-15",
+      "prob": 0.5341395290051851
     },
     {
       "ticker": "YSN.DE",
@@ -104342,7 +104438,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-27",
-      "prob": 0.5958397589226345
+      "prob": 0.6006148146459428
     },
     {
       "ticker": "KGX.DE",
@@ -106418,7 +106514,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2024-12-10",
-      "prob": 0.5828379849460679
+      "prob": 0.5840965799065859
     },
     {
       "ticker": "ODFL",
@@ -107414,7 +107510,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2024-12-03",
-      "prob": 0.4951951371465487
+      "prob": 0.49291969211819325
     },
     {
       "ticker": "DUE.DE",
@@ -107606,7 +107702,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-12-02",
-      "prob": 0.6089533152560775
+      "prob": 0.6072037458376393
     },
     {
       "ticker": "SFQ.DE",
@@ -108329,6 +108425,18 @@
       "prob": 0.5602936089121421
     },
     {
+      "ticker": "VOS.DE",
+      "company": "Vossloh",
+      "sector": "Industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Railroads",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "railroads",
+      "date": "2024-11-26",
+      "prob": 0.5419730599259247
+    },
+    {
       "ticker": "STLA",
       "company": "Stellantis",
       "sector": "Consumer Cyclical",
@@ -108351,18 +108459,6 @@
       "gics_industry_key": "information technology services",
       "date": "2024-11-26",
       "prob": 0.5332063936183393
-    },
-    {
-      "ticker": "VOS.DE",
-      "company": "Vossloh",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Railroads",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "railroads",
-      "date": "2024-11-26",
-      "prob": 0.5314079422350063
     },
     {
       "ticker": "BMW.DE",
@@ -109190,7 +109286,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "agricultural inputs",
       "date": "2024-11-20",
-      "prob": 0.5549557423992167
+      "prob": 0.554006990018706
     },
     {
       "ticker": "ANET",
@@ -109454,7 +109550,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-11-19",
-      "prob": 0.47844516658556835
+      "prob": 0.4787178480144101
     },
     {
       "ticker": "NIBE-B.ST",
@@ -110033,6 +110129,18 @@
       "prob": 0.6570580904360426
     },
     {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2024-11-12",
+      "prob": 0.5225272650566676
+    },
+    {
       "ticker": "NKE",
       "company": "Nike",
       "sector": "Consumer Cyclical",
@@ -110126,7 +110234,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2024-11-11",
-      "prob": 0.6816715857908789
+      "prob": 0.6653106801727606
     },
     {
       "ticker": "YSN.DE",
@@ -110499,18 +110607,6 @@
       "gics_industry_key": "information technology services",
       "date": "2024-11-07",
       "prob": 0.5898028769740724
-    },
-    {
-      "ticker": "WAF.DE",
-      "company": "Siltronic",
-      "sector": "Technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-11-07",
-      "prob": 0.5881282496365362
     },
     {
       "ticker": "KBX.DE",
@@ -111171,6 +111267,18 @@
       "gics_industry_key": "oil gas integrated",
       "date": "2024-11-04",
       "prob": 0.5148109850143273
+    },
+    {
+      "ticker": "WAF.DE",
+      "company": "Siltronic",
+      "sector": "Technology",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Semiconductors",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "semiconductors",
+      "date": "2024-11-04",
+      "prob": 0.5117552169931999
     },
     {
       "ticker": "FME.DE",
@@ -112431,143 +112539,11 @@
       "gics_industry_key": "semiconductor equipment materials",
       "date": "2024-10-16",
       "prob": 0.4942762993332893
-    },
-    {
-      "ticker": "PUM.DE",
-      "company": "PUMA",
-      "sector": "Consumer Cyclical",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Consumer Cyclical",
-      "gics_industry": "Footwear & Accessories",
-      "gics_sector_key": "consumer cyclical",
-      "gics_industry_key": "footwear accessories",
-      "date": "2024-10-15",
-      "prob": 0.6578729428368523
-    },
-    {
-      "ticker": "BA",
-      "company": "Boeing",
-      "sector": "Industrials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Aerospace & Defense",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "aerospace defense",
-      "date": "2024-10-15",
-      "prob": 0.5907304619402062
-    },
-    {
-      "ticker": "NVDA",
-      "company": "NVIDIA",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.5562061201975605
-    },
-    {
-      "ticker": "VNA.DE",
-      "company": "Vonovia",
-      "sector": "Real Estate",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Real Estate",
-      "gics_industry": "Real Estate Services",
-      "gics_sector_key": "real estate",
-      "gics_industry_key": "real estate services",
-      "date": "2024-10-15",
-      "prob": 0.514885906350791
-    },
-    {
-      "ticker": "ENR.DE",
-      "company": "Siemens Energy",
-      "sector": "Industrials",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Industrials",
-      "gics_industry": "Specialty Industrial Machinery",
-      "gics_sector_key": "industrials",
-      "gics_industry_key": "specialty industrial machinery",
-      "date": "2024-10-15",
-      "prob": 0.4810139402152163
-    },
-    {
-      "ticker": "MU",
-      "company": "Micron",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.4782720343223908
-    },
-    {
-      "ticker": "INTC",
-      "company": "Intel",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.4768224048745713
-    },
-    {
-      "ticker": "ASML",
-      "company": "ASML",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2024-10-15",
-      "prob": 0.46615873263311874
-    },
-    {
-      "ticker": "LRCX",
-      "company": "Lam Research",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductor Equipment & Materials",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductor equipment materials",
-      "date": "2024-10-15",
-      "prob": 0.4625225492907278
-    },
-    {
-      "ticker": "NXPI",
-      "company": "NXP Semiconductors",
-      "sector": "Technology",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Semiconductors",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "semiconductors",
-      "date": "2024-10-15",
-      "prob": 0.42660504601167915
-    },
-    {
-      "ticker": "FCX",
-      "company": "Freeport-McMoRan",
-      "sector": "Basic Materials",
-      "classification_standard": "GICS_Yahoo",
-      "gics_sector": "Basic Materials",
-      "gics_industry": "Copper",
-      "gics_sector_key": "basic materials",
-      "gics_industry_key": "copper",
-      "date": "2024-10-15",
-      "prob": 0.4050815646779343
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 27363,
+  "signals_all_timeline_including_in_sample_count": 27380,
   "signals_html_chart_slots": 600,
-  "index_html_bytes_utf8": 89334758,
+  "index_html_bytes_utf8": 89688851,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS f\u00fcr Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale f\u00fcr die Website. index.html enth\u00e4lt nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Gr\u00f6\u00dfenlimit)."
 }
