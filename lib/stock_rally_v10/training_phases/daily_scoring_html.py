@@ -363,8 +363,16 @@ def _run_phase17(c: Any) -> None:
         _exported_ho = _build_holdout_master(holdout_df=pd.DataFrame(_ho_rows))
         if _exported_ho is not None and len(_exported_ho) > 0:
             _cls_keys = list(CLASSIFICATION_COLUMN_KEYS)
+            from lib.vix_regime_ampel import ampel_fields_from_vix
+
             signals_holdout_final = []
             for _, _r in _exported_ho.iterrows():
+                _vix_raw = _r.get("regime_vix_level")
+                _amp = ampel_fields_from_vix(
+                    None
+                    if _vix_raw is None or (isinstance(_vix_raw, float) and _vix_raw != _vix_raw)
+                    else float(_vix_raw)
+                )
                 signals_holdout_final.append(
                     {
                         "ticker": str(_r["ticker"]),
@@ -373,6 +381,7 @@ def _run_phase17(c: Any) -> None:
                         **{k: str(_r.get(k, "")) for k in _cls_keys},
                         "date": str(_r["Date"])[:10],
                         "prob": float(_r["prob"]),
+                        **_amp,
                     }
                 )
             _sort_website_signals_newest_first(signals_holdout_final)
@@ -970,10 +979,16 @@ def _run_phase17(c: Any) -> None:
     )
     _k_step = max(1, _cfg_param_int(c, "DOCS_WEBSITE_HTML_SHRINK_STEP", _DOCS_WEBSITE_HTML_SHRINK_STEP_DEFAULT))
 
+    from lib.vix_regime_ampel import vix_ampel_css_block, vix_ampel_html_span, vix_ampel_legend_html
+
+    _ampel_css_esc = vix_ampel_css_block().replace("{", "{{").replace("}", "}}")
+    _vix_ampel_legend = vix_ampel_legend_html()
+
     def _signal_card_site(s: dict, _cch: dict) -> str:
         key = (s["ticker"], s["date"])
         b64 = _cch.get(key, "")
         bar = int(s["prob"] * 100)
+        _ampel_html = vix_ampel_html_span(s)
         _yf_note = (
             '<p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der '
             "Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>"
@@ -1027,6 +1042,7 @@ def _run_phase17(c: Any) -> None:
           <span class="sig-company">{s['company']}</span>
           <span class="sig-sector"{_badge_title_attr}>{_html_std.escape(_badge_label)}</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> {s['date']}</span>
+          {_ampel_html}
           <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
         </div>
         {_gics_html}
@@ -1115,6 +1131,7 @@ def _run_phase17(c: Any) -> None:
         .sig-gics{{font-size:.74em;color:#90a4ae;line-height:1.45;margin:6px 0 0;padding:0 2px;max-width:100%}}
         .sig-date{{color:#546e7a;font-size:.78em;white-space:nowrap}}
         .sig-date-pre{{font-size:.68em;color:#78909c;margin-right:5px}}
+        {_ampel_css_esc}
         .score-bar-bg{{background:#1a1a2e;border-radius:4px;overflow:hidden;min-width:70px;max-width:110px}}
         .score-bar{{background:#4caf50;padding:2px 6px;color:#fff;font-size:.75em;white-space:nowrap;border-radius:4px}}
         img{{max-width:100%;border-radius:5px;display:block}}
@@ -1157,6 +1174,7 @@ def _run_phase17(c: Any) -> None:
 
       <div class="section">
         <h2 title="OOS in den letzten 30 Tagen gesamt: {len(recent_signals)}; angezeigt: neueste mit Chart (ohne doppelte PNGs)">Letzte 30 Tage <span class="badge{recent_badge_cls}">{n_recent_site}</span></h2>
+        {_vix_ampel_legend}
         {recent_html}
       </div>
 
