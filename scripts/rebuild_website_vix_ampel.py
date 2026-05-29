@@ -1,5 +1,5 @@
 """
-VIX-Ampel v2 in docs/signals.json und docs/index.html nachziehen (visuelle Skala + Karten-Meter).
+VIX-Ampel (3 Stufen) in docs/signals.json und docs/index.html nachziehen.
 
   python scripts/rebuild_website_vix_ampel.py
 """
@@ -61,21 +61,15 @@ def _enrich_signals(signals: list[dict], lookup: dict[tuple[str, str], dict]) ->
 
 def _ensure_css(html: str) -> str:
     css = vix_ampel_css_block().strip()
-    if ".vix-scale-track" in html:
-        return html
     html = re.sub(
-        r"        \.vix-ampel\{[^}]*\}.*?        \.sig-card--recent\{[^}]*\}\n",
+        r"        \.vix-panel\{[^}]*\}.*?        \.sig-recent-tag\{[^}]*\}\n",
         "",
         html,
         flags=re.DOTALL,
     )
-    html = re.sub(
-        r"        \.vix-ampel\{[^}]*\}.*?        \.vix-ampel-legend\{[^}]*\}\n",
-        "",
-        html,
-        flags=re.DOTALL,
-    )
-    return html.replace("        .sig-date-pre{", css + "\n        .sig-date-pre{", 1)
+    if ".vix-seg--red{" not in html or ".vix-seg--orange" in html:
+        return html.replace("        .sig-date-pre{", css + "\n        .sig-date-pre{", 1)
+    return html
 
 
 def _strip_old_ampel_blocks(html: str) -> str:
@@ -106,6 +100,13 @@ def _inject_vix_panel(html: str) -> str:
         f'<div class="section vix-regime-section"><h2>VIX-Regime (Ampel)</h2>{panel}</div>\n\n      '
     )
     if "vix-regime-section" in html:
+        html = re.sub(
+            r'<div class="section vix-regime-section">.*?</div>\s*\n\s*',
+            block,
+            html,
+            count=1,
+            flags=re.DOTALL,
+        )
         return html
     html = re.sub(r'<p class="vix-ampel-legend">.*?</p>\s*', "", html, count=1, flags=re.DOTALL)
     html = re.sub(
@@ -182,7 +183,8 @@ def main() -> None:
             if key in payload and isinstance(payload[key], list):
                 n = _enrich_signals(payload[key], lookup)
                 print(f"  signals.json [{key}]: {n} Signale (Ampel v2)")
-        payload["vix_ampel_version"] = 2
+        payload["vix_ampel_version"] = 3
+        payload["vix_ampel_stages"] = 3
         SIGNALS_JSON.write_text(
             json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",

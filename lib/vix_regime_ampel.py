@@ -1,9 +1,8 @@
-"""VIX-Regime-Ampel v2 (Anzeige only — filtert keine Signale).
+"""VIX-Regime-Ampel (3 Stufen, nur Anzeige — filtert keine Signale).
 
-Kalibriert auf META+THRESHOLD, auf FINAL geprüft (scripts/_scratch_validate_ampel_v2.py):
+Kalibriert META+THRESHOLD / FINAL (scripts/_scratch_validate_ampel_v2.py):
   - grün / gelb: stabiler Regime-Vorteil
-  - orange (14–17) / red_oben (17–20): schwächeres Regime, kein Einzel-Signal-Filter
-  - VIX-Z-Zweig bewusst nicht enthalten (OOS nicht haltbar)
+  - rot: VIX < 20 (gesamtes schwächeres Regime, ohne Unterteilung 14–17 vs. 17–20)
 """
 from __future__ import annotations
 
@@ -12,22 +11,30 @@ from typing import Any
 
 _VIX_SCALE_MIN = 10.0
 _VIX_SCALE_MAX = 32.0
-_AMPEL_LEVELS = ("red_tief", "orange", "red_oben", "yellow", "green")
+_AMPEL_LEVELS = ("red", "yellow", "green")
+_LEGACY_RED_LEVELS = frozenset({"red", "red_tief", "red_oben", "orange"})
 
 
-def vix_ampel_thresholds() -> tuple[float, float, float, float]:
-    """(yellow_min, green_min, orange_min, red_oben_min)."""
+def vix_ampel_thresholds() -> tuple[float, float]:
+    """(yellow_min, green_min) — rot ist alles darunter."""
     try:
         from lib.stock_rally_v10 import config_settings as cs
 
         return (
             float(getattr(cs, "VIX_AMPEL_YELLOW_MIN", 20.0)),
             float(getattr(cs, "VIX_AMPEL_GREEN_MIN", 25.0)),
-            float(getattr(cs, "VIX_AMPEL_ORANGE_MIN", 14.0)),
-            float(getattr(cs, "VIX_AMPEL_RED_OBEN_MIN", 17.0)),
         )
     except Exception:
-        return 20.0, 25.0, 14.0, 17.0
+        return 20.0, 25.0
+
+
+def _normalize_ampel_level(level: str) -> str:
+    lv = str(level or "").strip().lower()
+    if lv in _LEGACY_RED_LEVELS:
+        return "red"
+    if lv in _AMPEL_LEVELS:
+        return lv
+    return "unknown"
 
 
 def classify_vix_regime(
@@ -39,18 +46,15 @@ def classify_vix_regime(
     red_oben_min: float | None = None,
 ) -> dict[str, Any]:
     """
-    Ampel v2. Keys: level, label_de, regime_vix_level, hint_de.
-    level ∈ green | yellow | orange | red_oben | red_tief | unknown
+    Ampel 3-stufig. Keys: level, label_de, regime_vix_level, hint_de.
+    level ∈ green | yellow | red | unknown
     """
-    y_min, g_min, o_min, r_min = vix_ampel_thresholds()
+    y_min, g_min = vix_ampel_thresholds()
     if yellow_min is not None:
         y_min = float(yellow_min)
     if green_min is not None:
         g_min = float(green_min)
-    if orange_min is not None:
-        o_min = float(orange_min)
-    if red_oben_min is not None:
-        r_min = float(red_oben_min)
+    _ = orange_min, red_oben_min  # Legacy-Kwargs, ignoriert
 
     if vix_level is None:
         return {
@@ -82,15 +86,12 @@ def classify_vix_regime(
     elif v >= y_min:
         level, label = "yellow", "Regime mittel"
         hint = "Mittleres VIX-Regime."
-    elif v >= r_min:
-        level, label = "red_oben", "VIX knapp <20"
-        hint = "Schwächstes rotes Band — kein Signal-Filter."
-    elif v >= o_min:
-        level, label = "orange", "Regime schwach"
-        hint = "Schwaches Regime; viele Einzelsignale trotzdem ok."
     else:
-        level, label = "red_tief", "VIX sehr niedrig"
-        hint = "Sehr ruhiger Markt-VIX."
+        level, label = "red", "VIX unter 20"
+        hint = (
+            "Schwächeres Gesamtregime (VIX < 20) — kein Signal-Filter; "
+            "viele Einzeltreffer trotzdem möglich."
+        )
 
     return {
         "level": level,
@@ -119,30 +120,25 @@ def _vix_marker_pct(vix_level: float | None) -> float:
 
 
 def _vix_scale_segments_inner(*, compact: bool = False) -> str:
-    y_min, g_min, o_min, r_min = vix_ampel_thresholds()
+    y_min, g_min = vix_ampel_thresholds()
     segs = [
-        ("red_tief", max(0.5, o_min - _VIX_SCALE_MIN)),
-        ("orange", max(0.5, r_min - o_min)),
-        ("red_oben", max(0.5, y_min - r_min)),
+        ("red", max(0.5, y_min - _VIX_SCALE_MIN)),
         ("yellow", max(0.5, g_min - y_min)),
         ("green", max(0.5, _VIX_SCALE_MAX - g_min)),
     ]
     cls_extra = " vix-scale-track--compact" if compact else ""
-    parts = [
-        f'<div class="vix-scale-track{cls_extra}" aria-hidden="true">',
-    ]
+    parts = [f'<div class="vix-scale-track{cls_extra}" aria-hidden="true">']
     for level, flex in segs:
-        parts.append(
-            f'<span class="vix-seg vix-seg--{level}" style="flex:{flex:.2f}"></span>'
-        )
+        parts.append(f'<span class="vix-seg vix-seg--{level}" style="flex:{flex:.2f}"></span>')
     parts.append("</div>")
     return "".join(parts)
 
 
 def _vix_lights_html(active_level: str) -> str:
+    active = _normalize_ampel_level(active_level)
     parts = ['<span class="vix-lights" aria-hidden="true">']
     for lv in _AMPEL_LEVELS:
-        on = " is-active" if lv == active_level else ""
+        on = " is-active" if lv == active else ""
         parts.append(f'<span class="vix-light vix-light--{lv}{on}"></span>')
     parts.append("</span>")
     return "".join(parts)
@@ -157,9 +153,7 @@ def vix_ampel_css_block() -> str:
         .vix-scale-track{display:flex;height:14px;border-radius:7px;overflow:hidden;border:1px solid #37474f}
         .vix-scale-track--compact{height:10px;border-radius:5px}
         .vix-seg{min-width:2px}
-        .vix-seg--red_tief{background:linear-gradient(180deg,#9575cd,#7e57c2)}
-        .vix-seg--orange{background:linear-gradient(180deg,#ffb74d,#ef6c00)}
-        .vix-seg--red_oben{background:linear-gradient(180deg,#ef5350,#c62828)}
+        .vix-seg--red{background:linear-gradient(180deg,#ef5350,#b71c1c)}
         .vix-seg--yellow{background:linear-gradient(180deg,#ffeb3b,#f9a825)}
         .vix-seg--green{background:linear-gradient(180deg,#81c784,#43a047)}
         .vix-scale-marker{position:absolute;top:-3px;width:4px;height:20px;margin-left:-2px;background:#fff;border:2px solid #1a1a2e;border-radius:3px;box-shadow:0 0 6px rgba(129,212,250,.85);pointer-events:none}
@@ -172,26 +166,20 @@ def vix_ampel_css_block() -> str:
         .vix-meter-text{font-size:.78em;color:#b0bec5;line-height:1.3}
         .vix-meter-text strong{color:#eceff1;font-weight:600}
         .vix-meter-vix{color:#81d4fa;font-weight:600;margin-left:4px}
-        .vix-lights{display:inline-flex;gap:5px;align-items:center}
-        .vix-light{width:11px;height:11px;border-radius:50%;opacity:.28;border:1px solid rgba(255,255,255,.15);flex-shrink:0}
-        .vix-light--red_tief{background:#9575cd}
-        .vix-light--orange{background:#ffa726}
-        .vix-light--red_oben{background:#ef5350}
+        .vix-lights{display:inline-flex;gap:6px;align-items:center}
+        .vix-light{width:12px;height:12px;border-radius:50%;opacity:.28;border:1px solid rgba(255,255,255,.15);flex-shrink:0}
+        .vix-light--red{background:#ef5350}
         .vix-light--yellow{background:#ffca28}
         .vix-light--green{background:#66bb6a}
-        .vix-light.is-active{opacity:1;transform:scale(1.2);box-shadow:0 0 8px currentColor;border-color:#fff}
+        .vix-light.is-active{opacity:1;transform:scale(1.15);box-shadow:0 0 8px currentColor;border-color:#fff}
         .vix-ampel{display:inline-flex;align-items:center;gap:5px;font-size:.72em;padding:2px 8px;border-radius:10px;white-space:nowrap;font-weight:500}
         .vix-ampel-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
         .vix-ampel--green{background:#1b3d24;color:#a5d6a7;border:1px solid #43a047}
         .vix-ampel--green .vix-ampel-dot{background:#66bb6a}
         .vix-ampel--yellow{background:#3d3520;color:#fff59d;border:1px solid #f9a825}
         .vix-ampel--yellow .vix-ampel-dot{background:#ffca28}
-        .vix-ampel--orange{background:#3d2a14;color:#ffcc80;border:1px solid #ef6c00}
-        .vix-ampel--orange .vix-ampel-dot{background:#ffa726}
-        .vix-ampel--red_oben{background:#3d1f1f;color:#ef9a9a;border:1px solid #c62828}
-        .vix-ampel--red_oben .vix-ampel-dot{background:#ef5350}
-        .vix-ampel--red_tief{background:#2a2438;color:#b39ddb;border:1px solid #7e57c2}
-        .vix-ampel--red_tief .vix-ampel-dot{background:#9575cd}
+        .vix-ampel--red{background:#3d1f1f;color:#ef9a9a;border:1px solid #c62828}
+        .vix-ampel--red .vix-ampel-dot{background:#ef5350}
         .vix-ampel--unknown{background:#263238;color:#90a4ae;border:1px solid #546e7a}
         .vix-ampel--unknown .vix-ampel-dot{background:#78909c}
         .section-lead{font-size:.8em;color:#90a4ae;line-height:1.45;margin:0 0 12px}
@@ -201,7 +189,7 @@ def vix_ampel_css_block() -> str:
 
 
 def vix_ampel_tooltip(c: dict[str, Any]) -> str:
-    y_min, g_min, o_min, r_min = vix_ampel_thresholds()
+    y_min, g_min = vix_ampel_thresholds()
     vix_txt = (
         f"{float(c['regime_vix_level']):.1f}"
         if c.get("regime_vix_level") is not None
@@ -210,25 +198,20 @@ def vix_ampel_tooltip(c: dict[str, Any]) -> str:
     hint = c.get("hint_de") or ""
     return (
         f"VIX {vix_txt} am Signaltag. Nur Regime-Einordnung (filtert keine Signale). "
-        f"Bänder: <{o_min:.0f} sehr niedrig, {o_min:.0f}–{r_min:.0f} schwach, "
-        f"{r_min:.0f}–{y_min:.0f} knapp <20, {y_min:.0f}–{g_min:.0f} mittel, ≥{g_min:.0f} stark. "
+        f"Drei Stufen: rot <{y_min:.0f}, gelb {y_min:.0f}–{g_min:.0f}, grün ≥{g_min:.0f}. "
         f"{hint}"
     )
 
 
 def vix_ampel_scale_legend_labels_html() -> str:
-    y_min, g_min, o_min, r_min = vix_ampel_thresholds()
+    y_min, g_min = vix_ampel_thresholds()
     labels = [
-        ("red_tief", f"<{o_min:.0f}", "sehr niedrig"),
-        ("orange", f"{o_min:.0f}–{r_min:.0f}", "schwach"),
-        ("red_oben", f"{r_min:.0f}–{y_min:.0f}", "knapp <20"),
+        ("red", f"<{y_min:.0f}", "VIX unter 20"),
         ("yellow", f"{y_min:.0f}–{g_min:.0f}", "mittel"),
         ("green", f"≥{g_min:.0f}", "stark"),
     ]
     flexes = [
-        max(0.5, o_min - _VIX_SCALE_MIN),
-        max(0.5, r_min - o_min),
-        max(0.5, y_min - r_min),
+        max(0.5, y_min - _VIX_SCALE_MIN),
         max(0.5, g_min - y_min),
         max(0.5, _VIX_SCALE_MAX - g_min),
     ]
@@ -244,35 +227,27 @@ def vix_ampel_scale_legend_labels_html() -> str:
 
 def vix_ampel_panel_html() -> str:
     """Große VIX-Skala + Legende für den Seitenkopf."""
-    y_min, g_min, o_min, r_min = vix_ampel_thresholds()
+    y_min, g_min = vix_ampel_thresholds()
     return (
         '<div class="vix-panel">'
         '<p class="vix-panel-lead">Einordnung des <strong>VIX am Signaltag</strong> — '
-        "nur Regime-Kontext, <strong>kein Filter</strong> für einzelne Signale. "
-        "Viele starke Treffer kommen auch in „schwächeren“ Bändern vor.</p>"
+        "<strong>drei Stufen</strong> (grün / gelb / rot). Nur Regime-Kontext, "
+        "<strong>kein Filter</strong> für einzelne Signale.</p>"
         '<div class="vix-scale">'
         + _vix_scale_segments_inner()
         + vix_ampel_scale_legend_labels_html()
         + "</div>"
         f'<p class="vix-panel-lead" style="margin:10px 0 0">Skala ca. '
-        f"{_VIX_SCALE_MIN:.0f}–{_VIX_SCALE_MAX:.0f} · Schwellen: "
-        f"orange ab {o_min:.0f}, rot knapp &lt;20 ab {r_min:.0f}, "
-        f"gelb ab {y_min:.0f}, grün ab {g_min:.0f}.</p>"
+        f"{_VIX_SCALE_MIN:.0f}–{_VIX_SCALE_MAX:.0f} · "
+        f"rot &lt;{y_min:.0f} · gelb {y_min:.0f}–{g_min:.0f} · grün ≥{g_min:.0f}.</p>"
         "</div>"
     )
 
 
 def vix_ampel_html_span(signal: dict[str, Any]) -> str:
-    """Visuelles Regime-Badge pro Signal-Karte (Skala + 5 Lichter)."""
+    """Visuelles Regime-Badge pro Signal-Karte (Skala + 3 Lichter)."""
     if signal.get("regime_vix_level") is not None:
         c = classify_vix_regime(signal.get("regime_vix_level"))
-    elif signal.get("vix_regime_ampel"):
-        c = {
-            "level": signal.get("vix_regime_ampel", "unknown"),
-            "label_de": signal.get("vix_regime_label", "VIX"),
-            "regime_vix_level": signal.get("regime_vix_level"),
-            "hint_de": signal.get("vix_regime_hint", ""),
-        }
     else:
         c = classify_vix_regime(None)
     amp = str(c["level"])

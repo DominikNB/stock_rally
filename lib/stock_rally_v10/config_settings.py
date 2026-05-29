@@ -32,22 +32,37 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
-SCORING_ONLY = True
+SCORING_ONLY = False
 # True → Base-Optuna/Base-Modelle bleiben aus Artefakt bestehen; Training startet direkt bei Meta.
 # Voraussetzung: SCORING_ONLY=False und ein vorhandenes ``SCORING_ARTIFACT_PATH``.
-RETRAIN_META_ONLY = True
+RETRAIN_META_ONLY = False
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
 # Fortschrittslog alle N Ticker; 0 = ca. 10 Stufen (nt//10).
 PHASE17_SIGNAL_FILTER_PROGRESS_BATCH = 0
-# docs/index.html: GitHub lehnt Dateien >100 MiB ab — eingebettete Base64-Charts dynamisch kürzen.
+# docs/index.html: GitHub lehnt Dateien >100 MiB ab (nur diese Datei — nicht docs/charts/).
 DOCS_INDEX_HTML_MAX_BYTES = 98 * 1024 * 1024
-DOCS_WEBSITE_MAX_CHART_SIGNALS_CAP = 600
+DOCS_WEBSITE_MAX_CHART_SIGNALS_CAP = 1200
 DOCS_WEBSITE_HTML_SHRINK_STEP = 35
+# Website-Charts: "external" = PNG unter docs/charts/{thumb,full}/ (viele Plots, kleines HTML).
+# "inline" = Base64 in index.html (Shrink-Loop bis unter DOCS_INDEX_HTML_MAX_BYTES).
+WEBSITE_CHART_STORAGE = "external"
+WEBSITE_CHART_THUMB_WIDTH_PX = 520
+WEBSITE_CHART_FULL_DPI = 96
+# Website-Charts: "compact" = Preis+RSI, kleinere PNG, 2-Spalten-Layout (mehr Signale sichtbar).
+# "full" = 4 Panels (Preis, BB-Breite, RSI, Volumen) wie bisher.
+WEBSITE_CHART_LAYOUT = "compact"
+WEBSITE_CHART_DPI = 72
+WEBSITE_CHART_DAYS_EACH_SIDE = 21
 # Website + signals.json „signals“: nur FINAL-OOS (Classifier) — nie TRAIN/THRESHOLD-Kalender.
 # Wird von save_scoring_artifacts / load_scoring_artifacts gesetzt, wenn in dieser Session gespeichert wurde.
 _SCORING_ARTIFACT_SAVED_THIS_SESSION = False
+
+# VIX-Regime-Ampel (3 Stufen, nur Website — filtert keine Signale).
+# rot: VIX < VIX_AMPEL_YELLOW_MIN | gelb: bis GREEN | grün: ab GREEN
+VIX_AMPEL_YELLOW_MIN = 20.0
+VIX_AMPEL_GREEN_MIN = 25.0
 # =============================================================================
 # 3. Pipeline: CV, Optuna, Zielvariablen, Split, Indikatoren, SEED_PARAMS
 # =============================================================================
@@ -136,8 +151,27 @@ N_META_TRIALS         = 150
 # - "signal_mean_return": mittlere Signal-Rendite über Haltehorizonte (z. B. 1..5 Tage).
 # - "signal_win_rate": Anteil der Signale mit positivem mittlerem Horizon-Return.
 META_OBJECTIVE_MODE = "signal_mean_return"
-# Für signal_mean_return: pro Signal Mittelwert dieser Forward-Renditen, dann Mittel über alle Signale.
+# Für signal_mean_return: pro Signal Mittelwert dieser Forward-Renditen, dann ZENTRAL-Aggregat
+# (Mean oder Median, gesteuert via META_OBJECTIVE_SIGNAL_AGGREGATION) über alle Signale.
 META_SIGNAL_RETURN_HORIZONS = (1, 2, 3, 4, 5)
+# Zentral-Aggregat über die Signal-Returns innerhalb eines Folds (und auf dem THRESHOLD-Set in
+# Phase 5). Default "median": robust gegen einzelne Mega-Gewinner/-Verlierer, die einen einzelnen
+# Optuna-Trial sonst künstlich nach oben (oder unten) ziehen können — insbesondere bei den
+# typischerweise ~5–30 Signalen je Fold dominiert ein Outlier sonst den Mean. "mean" reproduziert
+# das alte Verhalten (literarisches signal_mean_return).
+META_OBJECTIVE_SIGNAL_AGGREGATION = "median"
+
+# Aggregation der Forward-Returns ÜBER DIE HORIZONTE pro einzelnem Signal
+# (rlist = [close(t+h)/open(t+1)−1 für h ∈ META_SIGNAL_RETURN_HORIZONS]).
+# Ein einzelner h kann durch Earnings-Reaktion oder Lücken extrem ausschlagen und dominiert
+# sonst den per-Signal-Score, der wiederum in die Optuna-Zielfunktion einfließt.
+#  - "mean": Mittelwert (Legacy, Outlier-empfindlich).
+#  - "median": mittlerer Wert; bei 5 Horizonten = Tag-3-Return (sehr konservativ).
+#  - "trimmed_mean": Mean nach Verwerfen je TRIM_FRAC am oberen+unteren Ende.
+#    Bei 5 Horizonten und TRIM_FRAC=0.20 → je 1 oben/unten weg, Mean der mittleren 3.
+#    Empfohlener Default für 5–8 Horizonte: robust ohne ganz so aggressiv wie Median.
+META_OBJECTIVE_HORIZON_AGGREGATION = "trimmed_mean"
+META_OBJECTIVE_HORIZON_TRIM_FRAC = 0.20
 # Für signal_win_rate: optionaler Tiebreaker auf mean return (0.0 = nur Win-Rate).
 META_OBJECTIVE_WINRATE_RETURN_TIEBREAKER = 0.1
 # Optionaler Mindest-Count gefilterter Signale je Fold (darunter leichter Penalty).
@@ -145,6 +179,21 @@ META_OBJECTIVE_MIN_SIGNALS_PER_FOLD = 1
 # Für signal_mean_return: Mindest-Signaldichte je Fold (Signale pro Handelstag, nach allen Filtern).
 # 1.0 bedeutet im Schnitt mindestens 1 Signal pro Handelstag im Validierungs-Fold.
 META_OBJECTIVE_MIN_SIGNALS_PER_DAY_PER_FOLD = 0.25
+# Phase-5 Threshold-Wahl auf THRESHOLD-Set: optionale weiche Coverage-Behandlung.
+# Default = False (hartes Gate wie in der Meta-CV bleibt aktiv → Repräsentativitätsschutz:
+# zu wenige Signale = unzuverlässige Mean-Return-Schätzung). Falls True, ersetzt die
+# nachstehende dreistufige Logik den harten Cut-off:
+#   * coverage >= MIN_SIGNALS_PER_DAY                             → fs = 1 + return.
+#   * FLOOR_FRACTION * MIN_SIGNALS_PER_DAY <= coverage < target   → fs = 1 + return − SOFT_PENALTY_WEIGHT * (target − coverage).
+#   * coverage < FLOOR_FRACTION * MIN_SIGNALS_PER_DAY             → hart abgestraft.
+META_PHASE5_SOFT_COVERAGE_ENABLED = False
+META_PHASE5_DENSITY_FLOOR_FRACTION = 0.5
+META_PHASE5_DENSITY_SOFT_PENALTY_WEIGHT = 1.0
+# Phase-5 Seed: bei True nutzt die Threshold-Wahl als Seed den Median der nested
+# Thresholds aus dem besten Meta-CV-Trial (mehr Datenbasis als der reine Trial-Parameter).
+# Der Seed wird – wenn die Meta-Probabilities kalibriert werden – durch dieselbe
+# Kalibrierung geschickt, damit Seed und Threshold-Grid auf derselben Skala leben.
+META_PHASE5_SEED_USE_NESTED_THR_MEAN = True
 # Wahrscheinlichkeitsskalierung für Meta-Classifier-Ausgaben:
 # - "none": rohe predict_proba
 # - "sigmoid": Platt-Skalierung (logistische Kalibrierung)
