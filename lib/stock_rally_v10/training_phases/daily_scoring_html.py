@@ -6,6 +6,8 @@ import html as _html_std
 import io
 import json as _json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import time
@@ -36,7 +38,7 @@ warnings.filterwarnings("ignore")
 # Hinweis: ``getattr(obj, name, default)`` wertet ``default`` in Python **immer** aus —
 # ``getattr(c, "X", cfg.X)`` scheitert also, sobald ``cfg.X`` fehlt, selbst wenn ``c.X`` existiert.
 _DOCS_INDEX_HTML_MAX_BYTES_DEFAULT = 98 * 1024 * 1024
-_DOCS_WEBSITE_MAX_CHART_SIGNALS_CAP_DEFAULT = 600
+_DOCS_WEBSITE_MAX_CHART_SIGNALS_CAP_DEFAULT = 1200
 _DOCS_WEBSITE_HTML_SHRINK_STEP_DEFAULT = 35
 
 
@@ -46,6 +48,67 @@ def _cfg_param_int(c_mod: Any, name: str, default: int) -> int:
     if hasattr(cfg, name):
         return int(getattr(cfg, name))
     return int(default)
+
+
+def _website_chart_storage_external(c_mod: Any) -> bool:
+    mode = str(getattr(c_mod, "WEBSITE_CHART_STORAGE", "external")).strip().lower()
+    return mode in ("external", "files", "file")
+
+
+def _chart_file_slug(ticker: str, sig_date_str: str) -> str:
+    safe_t = re.sub(r"[^\w.\-]+", "_", str(ticker).strip())[:80]
+    safe_d = str(sig_date_str).strip()[:10]
+    return f"{safe_t}_{safe_d}"
+
+
+def _persist_chart_files(
+    fig: Any,
+    *,
+    docs_dir: Path,
+    slug: str,
+    dpi: int,
+    thumb_width_px: int,
+    facecolor: str,
+) -> tuple[str, str] | None:
+    """Speichert Vollbild-PNG und Thumbnail; gibt relative Pfade ab docs/ zurück."""
+    full_dir = docs_dir / "charts" / "full"
+    thumb_dir = docs_dir / "charts" / "thumb"
+    full_dir.mkdir(parents=True, exist_ok=True)
+    thumb_dir.mkdir(parents=True, exist_ok=True)
+    full_path = full_dir / f"{slug}.png"
+    try:
+        fig.savefig(full_path, format="png", dpi=dpi, bbox_inches="tight", facecolor=facecolor)
+    except Exception:
+        return None
+    thumb_rel = f"charts/thumb/{slug}.png"
+    full_rel = f"charts/full/{slug}.png"
+    thumb_path = thumb_dir / f"{slug}.png"
+    try:
+        from PIL import Image
+
+        with Image.open(full_path) as im:
+            w, h = im.size
+            tw = min(int(thumb_width_px), w)
+            th = max(1, int(round(h * tw / max(w, 1))))
+            im.resize((tw, th), Image.Resampling.LANCZOS).save(
+                thumb_path, format="PNG", optimize=True
+            )
+    except Exception:
+        shutil.copy2(full_path, thumb_path)
+    return thumb_rel, full_rel
+
+
+def _prune_stale_chart_files(docs_dir: Path, keep_slugs: set[str]) -> int:
+    removed = 0
+    for sub in ("full", "thumb"):
+        d = docs_dir / "charts" / sub
+        if not d.is_dir():
+            continue
+        for p in d.glob("*.png"):
+            if p.stem not in keep_slugs:
+                p.unlink(missing_ok=True)
+                removed += 1
+    return removed
 
 
 def _sort_website_signals_newest_first(sigs: list[dict[str, Any]]) -> None:
@@ -117,6 +180,11 @@ def _run_phase17(c: Any) -> None:
                 print("[Gemini] Smoke-Test: keine Text-Antwort — Phase 17 abgebrochen.", flush=True)
                 raise SystemExit(1)
             print(f"[Gemini] Smoke-Test OK ({_model_smoke}): {_txt_smoke!r}", flush=True)
+        except ImportError as _e_imp:
+            print(
+                f"[Gemini] google-genai nicht verfügbar ({_e_imp}) — Smoke-Test übersprungen, Website-Export läuft weiter.",
+                flush=True,
+            )
         except SystemExit:
             raise
         except Exception as _e_smoke:
@@ -690,8 +758,11 @@ def _run_phase17(c: Any) -> None:
         if "close" not in sub.columns or len(sub) < 5:
             return None
         sig_ts = pd.Timestamp(sig_date_str).normalize()
-        win_lo = sig_ts - pd.DateOffset(months=1)
-        win_hi = sig_ts + pd.DateOffset(months=1)
+        _chart_layout = str(getattr(c, "WEBSITE_CHART_LAYOUT", "compact")).strip().lower()
+        _chart_days = int(getattr(c, "WEBSITE_CHART_DAYS_EACH_SIDE", 21 if _chart_layout == "compact" else 30))
+        _chart_dpi = _cfg_param_int(c, "WEBSITE_CHART_DPI", 72 if _chart_layout == "compact" else 95)
+        win_lo = sig_ts - pd.Timedelta(days=_chart_days)
+        win_hi = sig_ts + pd.Timedelta(days=_chart_days)
         # Warmup-Historie für stabilere Indikatoren (RSI/BB/EMA) im sichtbaren Fenster.
         calc_lo = win_lo - pd.Timedelta(days=90)
         win = sub[(sub["Date"] >= calc_lo) & (sub["Date"] <= win_hi)].copy()
@@ -765,13 +836,25 @@ def _run_phase17(c: Any) -> None:
 
             bb_width = (bb_up - bb_lo) / (bb_mid.abs() + 1e-10)
 
-            fig, (ax_price, ax_bw, ax_rsi, ax_vol) = plt.subplots(
-                4,
-                1,
-                figsize=(9.4, 7.3),
-                sharex=True,
-                gridspec_kw={"height_ratios": [3.3, 1.0, 1.4, 1.6]},
-            )
+            ax_bw = None
+            ax_vol = None
+            ax_vol_z = None
+            if _chart_layout == "full":
+                fig, (ax_price, ax_bw, ax_rsi, ax_vol) = plt.subplots(
+                    4,
+                    1,
+                    figsize=(9.4, 7.3),
+                    sharex=True,
+                    gridspec_kw={"height_ratios": [3.3, 1.0, 1.4, 1.6]},
+                )
+            else:
+                fig, (ax_price, ax_rsi) = plt.subplots(
+                    2,
+                    1,
+                    figsize=(6.6, 3.35),
+                    sharex=True,
+                    gridspec_kw={"height_ratios": [2.6, 1.0]},
+                )
 
             candle_w = 0.6
             up_color = "#66bb6a"
@@ -802,33 +885,39 @@ def _run_phase17(c: Any) -> None:
             ax_price.plot(dt, bb_lo, color="#ab47bc", lw=1.0, ls="--", label="BB Lower (20,2)", zorder=3)
             ax_price.fill_between(dt, bb_lo.to_numpy(), bb_up.to_numpy(), color="#ab47bc", alpha=0.08, zorder=1)
 
-            ax_bw.plot(dt, bb_width, color="#ba68c8", lw=1.2, label="BB Width (20,2)")
-            ax_bw.axhline(float(np.nanmedian(bb_width)), color="#8e24aa", lw=0.9, ls="--", alpha=0.7)
+            if ax_bw is not None:
+                ax_bw.plot(dt, bb_width, color="#ba68c8", lw=1.2, label="BB Width (20,2)")
+                ax_bw.axhline(float(np.nanmedian(bb_width)), color="#8e24aa", lw=0.9, ls="--", alpha=0.7)
 
             ax_rsi.plot(dt, rsi14, color="#ffb74d", lw=1.2, label="RSI 14")
             for _lvl, _col, _ls in ((70, "#ef5350", "--"), (30, "#66bb6a", "--"), (75, "#ff7043", ":"), (25, "#26a69a", ":")):
                 ax_rsi.axhline(_lvl, color=_col, lw=0.9, ls=_ls, alpha=0.95)
             ax_rsi.set_ylim(0, 100)
 
-            bar_colors = np.where(close.to_numpy() >= open_.to_numpy(), up_color, dn_color)
-            ax_vol.bar(dt, volume.to_numpy(), width=0.8, color=bar_colors, alpha=0.72, label="Volume")
-            ax_vol_z = ax_vol.twinx()
-            ax_vol_z.plot(dt, vol_z.to_numpy(), color="#80cbc4", lw=1.2, label="Volume Z-Score")
-            ax_vol_z.axhline(0.0, color="#607d8b", lw=0.9, ls="--", alpha=0.8)
+            if ax_vol is not None:
+                bar_colors = np.where(close.to_numpy() >= open_.to_numpy(), up_color, dn_color)
+                ax_vol.bar(dt, volume.to_numpy(), width=0.8, color=bar_colors, alpha=0.72, label="Volume")
+                ax_vol_z = ax_vol.twinx()
+                ax_vol_z.plot(dt, vol_z.to_numpy(), color="#80cbc4", lw=1.2, label="Volume Z-Score")
+                ax_vol_z.axhline(0.0, color="#607d8b", lw=0.9, ls="--", alpha=0.8)
 
             ax_price.axvline(sig_ts, color="#66bb6a", lw=1.8, ls="--", zorder=5, label="Datenstand")
-            ax_bw.axvline(sig_ts, color="#66bb6a", lw=1.3, ls="--", zorder=5)
+            if ax_bw is not None:
+                ax_bw.axvline(sig_ts, color="#66bb6a", lw=1.3, ls="--", zorder=5)
             ax_rsi.axvline(sig_ts, color="#66bb6a", lw=1.4, ls="--", zorder=5)
-            ax_vol.axvline(sig_ts, color="#66bb6a", lw=1.4, ls="--", zorder=5)
+            if ax_vol is not None:
+                ax_vol.axvline(sig_ts, color="#66bb6a", lw=1.4, ls="--", zorder=5)
             today_ts = _norm_ts(datetime.today().date())
             _last_dt = _norm_ts(dt.max())
             _view_hi = min(_norm_ts(win_hi), _last_dt)
             _view_hi = max(_view_hi, sig_ts + pd.Timedelta(days=2))
             if win_lo <= today_ts <= _view_hi:
                 ax_price.axvline(today_ts, color="#ffa726", lw=1.4, ls=":", zorder=5, label="Heute")
-                ax_bw.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
+                if ax_bw is not None:
+                    ax_bw.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
                 ax_rsi.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
-                ax_vol.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
+                if ax_vol is not None:
+                    ax_vol.axvline(today_ts, color="#ffa726", lw=1.1, ls=":", zorder=5)
 
             # Nach dem Signal nur so viel Platz wie echte verfügbare Kurstage.
             ax_price.set_xlim(win_lo, _view_hi)
@@ -843,38 +932,71 @@ def _run_phase17(c: Any) -> None:
                 labelcolor="#e0e0e0",
             )
             _ds = pd.Timestamp(sig_date_str).strftime("%d.%m.%Y")
-            ax_price.set_title(
-                f"{ticker} — {COMPANY_NAMES.get(ticker, ticker)}\n"
-                f"Datenstand Modell: bis einschl. {_ds} (grüner Strich); rechts nur Kurs (Anzeige)",
-                fontsize=8,
-                color="#81d4fa",
-            )
-            ax_price.set_ylabel("Preis", color="#90a4ae", fontsize=8)
-            ax_bw.set_ylabel("BB Width", color="#ba68c8", fontsize=8)
-            ax_rsi.set_ylabel("RSI 14", color="#90a4ae", fontsize=8)
-            ax_vol.set_ylabel("Volume", color="#90a4ae", fontsize=8)
-            ax_vol_z.set_ylabel("Vol Z", color="#80cbc4", fontsize=8)
-            ax_bw.legend(fontsize=7, loc="upper left", frameon=False, labelcolor="#ce93d8")
-            ax_rsi.legend(fontsize=7, loc="upper left", frameon=False, labelcolor="#ffcc80")
-            h3, l3 = ax_vol.get_legend_handles_labels()
-            h4, l4 = ax_vol_z.get_legend_handles_labels()
-            ax_vol.legend(h3 + h4, l3 + l4, fontsize=7, loc="upper left", frameon=False, labelcolor="#e0e0e0")
+            _co = COMPANY_NAMES.get(ticker, ticker)
+            if _chart_layout == "compact":
+                ax_price.set_title(
+                    f"{ticker} — {_co}  ·  Daten bis {_ds}",
+                    fontsize=7,
+                    color="#81d4fa",
+                )
+            else:
+                ax_price.set_title(
+                    f"{ticker} — {_co}\n"
+                    f"Datenstand Modell: bis einschl. {_ds} (grüner Strich); rechts nur Kurs (Anzeige)",
+                    fontsize=8,
+                    color="#81d4fa",
+                )
+            ax_price.set_ylabel("Preis", color="#90a4ae", fontsize=7 if _chart_layout == "compact" else 8)
+            if ax_bw is not None:
+                ax_bw.set_ylabel("BB Width", color="#ba68c8", fontsize=8)
+            ax_rsi.set_ylabel("RSI", color="#90a4ae", fontsize=7 if _chart_layout == "compact" else 8)
+            if ax_vol is not None:
+                ax_vol.set_ylabel("Volume", color="#90a4ae", fontsize=8)
+                ax_vol_z.set_ylabel("Vol Z", color="#80cbc4", fontsize=8)
+            if ax_bw is not None:
+                ax_bw.legend(fontsize=7, loc="upper left", frameon=False, labelcolor="#ce93d8")
+            ax_rsi.legend(fontsize=6 if _chart_layout == "compact" else 7, loc="upper left", frameon=False, labelcolor="#ffcc80")
+            if ax_vol is not None and ax_vol_z is not None:
+                h3, l3 = ax_vol.get_legend_handles_labels()
+                h4, l4 = ax_vol_z.get_legend_handles_labels()
+                ax_vol.legend(h3 + h4, l3 + l4, fontsize=7, loc="upper left", frameon=False, labelcolor="#e0e0e0")
 
-            ax_vol.xaxis.set_major_locator(mdates.AutoDateLocator())
-            ax_vol.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m.%y"))
-            plt.setp(ax_vol.xaxis.get_majorticklabels(), rotation=20, ha="right", fontsize=7)
-            for _ax in (ax_price, ax_bw, ax_rsi, ax_vol):
-                _ax.tick_params(colors="#90a4ae", labelsize=7)
+            _xaxis_ax = ax_vol if ax_vol is not None else ax_rsi
+            _xaxis_ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+            _xaxis_ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m.%y"))
+            plt.setp(_xaxis_ax.xaxis.get_majorticklabels(), rotation=20, ha="right", fontsize=6 if _chart_layout == "compact" else 7)
+            _chart_axes = [ax_price, ax_rsi]
+            if ax_bw is not None:
+                _chart_axes.insert(1, ax_bw)
+            if ax_vol is not None:
+                _chart_axes.append(ax_vol)
+            for _ax in _chart_axes:
+                _ax.tick_params(colors="#90a4ae", labelsize=6 if _chart_layout == "compact" else 7)
                 _ax.grid(True, alpha=0.18)
                 _ax.set_facecolor("#0d1117")
                 for sp in _ax.spines.values():
                     sp.set_edgecolor("#2d2d4e")
-            ax_vol_z.tick_params(colors="#80cbc4", labelsize=7)
-            ax_vol_z.spines["right"].set_edgecolor("#2d2d4e")
+            if ax_vol_z is not None:
+                ax_vol_z.tick_params(colors="#80cbc4", labelsize=7)
+                ax_vol_z.spines["right"].set_edgecolor("#2d2d4e")
             fig.patch.set_facecolor("#1a1a2e")
             plt.tight_layout(pad=0.8)
+            _fc = fig.get_facecolor()
+            if _website_chart_storage_external(c):
+                _full_dpi = _cfg_param_int(c, "WEBSITE_CHART_FULL_DPI", max(_chart_dpi, 96))
+                _thumb_w = _cfg_param_int(c, "WEBSITE_CHART_THUMB_WIDTH_PX", 520)
+                paths = _persist_chart_files(
+                    fig,
+                    docs_dir=docs_dir,
+                    slug=_chart_file_slug(ticker, sig_date_str),
+                    dpi=_full_dpi,
+                    thumb_width_px=_thumb_w,
+                    facecolor=_fc,
+                )
+                plt.close()
+                return paths
             buf = io.BytesIO()
-            plt.savefig(buf, format="png", dpi=95, bbox_inches="tight", facecolor=fig.get_facecolor())
+            plt.savefig(buf, format="png", dpi=_chart_dpi, bbox_inches="tight", facecolor=_fc)
             plt.close()
             buf.seek(0)
             return base64.b64encode(buf.read()).decode()
@@ -979,31 +1101,51 @@ def _run_phase17(c: Any) -> None:
     )
     _k_step = max(1, _cfg_param_int(c, "DOCS_WEBSITE_HTML_SHRINK_STEP", _DOCS_WEBSITE_HTML_SHRINK_STEP_DEFAULT))
 
-    from lib.vix_regime_ampel import vix_ampel_css_block, vix_ampel_html_span, vix_ampel_legend_html
+    from lib.vix_regime_ampel import (
+        vix_ampel_css_block,
+        vix_ampel_html_span,
+        vix_ampel_panel_html,
+    )
 
     _ampel_css_esc = vix_ampel_css_block().replace("{", "{{").replace("}", "}}")
-    _vix_ampel_legend = vix_ampel_legend_html()
+    _vix_ampel_panel = vix_ampel_panel_html()
 
-    def _signal_card_site(s: dict, _cch: dict) -> str:
+    _charts_external = _website_chart_storage_external(c)
+
+    def _signal_card_site(s: dict, _cch: dict, *, _recent_cutoff: str) -> str:
         key = (s["ticker"], s["date"])
-        b64 = _cch.get(key, "")
+        ch = _cch.get(key)
+        has_chart = bool(ch)
         bar = int(s["prob"] * 100)
         _ampel_html = vix_ampel_html_span(s)
         _yf_note = (
             '<p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der '
             "Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>"
-            if b64 and s["ticker"] in _yf_failed_tickers
+            if has_chart and s["ticker"] in _yf_failed_tickers
             else ""
         )
-        chart_html = (
-            f'<img src="data:image/png;base64,{b64}" alt="{s["ticker"]}" loading="lazy">' if b64 else ""
-        )
+        if isinstance(ch, tuple) and len(ch) == 2:
+            thumb_rel, full_rel = ch
+            _alt = _html_std.escape(f'{s["ticker"]} {s["date"]}')
+            chart_html = (
+                f'<a class="sig-chart-link" href="{_html_std.escape(full_rel)}" target="_blank" '
+                f'rel="noopener noreferrer">'
+                f'<img class="sig-chart-thumb" src="{_html_std.escape(thumb_rel)}" alt="{_alt}" loading="lazy">'
+                f"</a>"
+                '<p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>'
+            )
+        elif isinstance(ch, str) and ch:
+            chart_html = (
+                f'<img src="data:image/png;base64,{ch}" alt="{_html_std.escape(s["ticker"])}" loading="lazy">'
+            )
+        else:
+            chart_html = ""
         chart_note = (
             f'<p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">'
             f'Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>{s["date"]}</strong> '
             f"(nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs "
             f"(Anzeige) — kein Look-ahead fürs Modell.</p>"
-            if b64
+            if has_chart
             else ""
         )
         _gics_bits = [x for x in (s.get("gics_sector"), s.get("gics_industry")) if x]
@@ -1035,10 +1177,15 @@ def _run_phase17(c: Any) -> None:
             _badge_title = "Kein Yahoo-GICS — nur internes Modell-Label"
         _badge_title_esc = _html_std.escape(_badge_title) if _badge_title else ""
         _badge_title_attr = f' title="{_badge_title_esc}"' if _badge_title_esc else ""
+        _is_recent = s["date"] >= _recent_cutoff
+        _recent_cls = " sig-card--recent" if _is_recent else ""
+        _recent_tag = (
+            '<span class="sig-recent-tag">≤30 Tage</span>' if _is_recent else ""
+        )
         return f"""
-      <div class="sig-card">
+      <div class="sig-card{_recent_cls}">
         <div class="sig-head">
-          <span class="sig-ticker">{s['ticker']}</span>
+          <span class="sig-ticker">{s['ticker']}{_recent_tag}</span>
           <span class="sig-company">{s['company']}</span>
           <span class="sig-sector"{_badge_title_attr}>{_html_std.escape(_badge_label)}</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> {s['date']}</span>
@@ -1055,9 +1202,17 @@ def _run_phase17(c: Any) -> None:
     html = ""
     _chart_k = _k_start
     while _chart_k >= 0:
+        _site_chart_layout = str(getattr(c, "WEBSITE_CHART_LAYOUT", "compact")).strip().lower()
+        _storage_label = "external" if _charts_external else "inline"
         print(
-            f"Generating charts (yfinance + matplotlib, bis zu {_chart_k} neueste OOS-Signale; "
-            f"HTML-Ziel ≤ {_html_cap // 1024 // 1024} MiB) …",
+            f"Generating charts (storage={_storage_label}, layout={_site_chart_layout}, "
+            f"dpi={_cfg_param_int(c, 'WEBSITE_CHART_DPI', 72)}, "
+            f"bis zu {_chart_k} neueste OOS-Signale"
+            + (
+                ") …"
+                if _charts_external
+                else f"; HTML-Ziel ≤ {_html_cap // 1024 // 1024} MiB) …"
+            ),
             flush=True,
         )
         _chart_yf_failures.clear()
@@ -1065,10 +1220,18 @@ def _run_phase17(c: Any) -> None:
         for s in website_signals[:_chart_k]:
             key = (s["ticker"], s["date"])
             if key not in chart_cache:
-                b64 = _make_chart(s["ticker"], s["date"])
-                if b64:
-                    chart_cache[key] = b64
-        print(f"  {len(chart_cache)} charts generated.", flush=True)
+                ch_out = _make_chart(s["ticker"], s["date"])
+                if ch_out:
+                    chart_cache[key] = ch_out
+        if _charts_external and chart_cache:
+            _keep_slugs = {_chart_file_slug(t, d) for (t, d) in chart_cache}
+            _rm = _prune_stale_chart_files(docs_dir, _keep_slugs)
+            if _rm:
+                print(f"  {len(chart_cache)} charts; {_rm} veraltete PNG(s) entfernt.", flush=True)
+            else:
+                print(f"  {len(chart_cache)} charts in docs/charts/.", flush=True)
+        else:
+            print(f"  {len(chart_cache)} charts generated.", flush=True)
         if _chart_yf_failures:
             _bad = sorted({t for t, _d0, _d1, _e in _chart_yf_failures})
             print(
@@ -1079,19 +1242,27 @@ def _run_phase17(c: Any) -> None:
                 flush=True,
             )
         _yf_failed_tickers = {t for t, _d0, _d1, _e in _chart_yf_failures}
-        recent_slice = [s for s in website_signals[:_chart_k] if s["date"] >= recent_cutoff]
-        _rk = {(s["ticker"], s["date"]) for s in recent_slice}
-        hist_only = [s for s in website_signals[:_chart_k] if (s["ticker"], s["date"]) not in _rk]
-        recent_html = (
-            "".join(_signal_card_site(s, chart_cache) for s in recent_slice)
-            or '<p class="empty">Keine Signale in den letzten 30 Tagen.</p>'
-        )
-        hist_html = (
-            "".join(_signal_card_site(s, chart_cache) for s in hist_only)
-            or '<p class="empty">Keine OOS-Signale.</p>'
+        chart_signals = website_signals[:_chart_k]
+        recent_slice = [s for s in chart_signals if s["date"] >= recent_cutoff]
+        n_recent_site = len(recent_slice)
+
+        def _cards_grid(signals: list) -> str:
+            if not signals:
+                return ""
+            return '<div class="signals-grid">' + "".join(
+                _signal_card_site(s, chart_cache, _recent_cutoff=recent_cutoff) for s in signals
+            ) + "</div>"
+
+        all_signals_html = (
+            _cards_grid(chart_signals)
+            or '<p class="empty">Keine OOS-Signale mit Chart.</p>'
         )
         recent_badge_cls = " zero" if not recent_slice else ""
-        n_recent_site = len(recent_slice)
+        _chart_chip_title = (
+            "Externe PNG unter docs/charts/ — index.html bleibt unter 100 MiB"
+            if _charts_external
+            else "Eingebettete Base64-Charts; K wird bei Bedarf reduziert (GitHub 100-MiB-Limit)"
+        )
         html = f"""<!DOCTYPE html>
     <html lang="de">
     <head>
@@ -1106,8 +1277,8 @@ def _run_phase17(c: Any) -> None:
         header{{background:#16213e;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.6)}}
         header h1{{font-size:1.1em;color:#81d4fa}}
         header .ts{{font-size:.72em;color:#546e7a}}
-        .page-wrap{{display:flex;align-items:flex-start;gap:18px;max-width:1320px;margin:0 auto;padding:12px 16px}}
-        .main-col{{flex:1;min-width:0;max-width:900px}}
+        .page-wrap{{display:flex;align-items:flex-start;gap:18px;max-width:1480px;margin:0 auto;padding:12px 16px}}
+        .main-col{{flex:1;min-width:0;max-width:1100px}}
         .llm-sidebar{{width:min(340px,100%);flex-shrink:0;position:sticky;top:52px;align-self:flex-start;max-height:calc(100vh - 64px);overflow-y:auto;background:#141428;border:1px solid #2d2d4e;border-radius:10px;padding:10px 12px}}
         .llm-details summary{{cursor:pointer;color:#81d4fa;font-size:.92em;font-weight:600;padding:6px 4px;user-select:none;list-style:none}}
         .llm-details summary::-webkit-details-marker{{display:none}}
@@ -1123,7 +1294,8 @@ def _run_phase17(c: Any) -> None:
         .section h2{{font-size:.95em;color:#81d4fa;margin-bottom:12px;border-bottom:1px solid #2d2d4e;padding-bottom:7px;display:flex;align-items:center;gap:8px}}
         .badge{{background:#4caf50;color:#fff;border-radius:10px;padding:1px 8px;font-size:.72em}}
         .badge.zero{{background:#607d8b}}
-        .sig-card{{background:#0d1117;border-radius:8px;padding:12px;margin-bottom:10px}}
+        .signals-grid{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}}
+        .sig-card{{background:#0d1117;border-radius:8px;padding:10px;margin-bottom:0}}
         .sig-head{{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}}
         .sig-ticker{{font-weight:700;color:#81d4fa;font-size:.95em;min-width:70px}}
         .sig-company{{color:#90a4ae;font-size:.82em;flex:1;min-width:100px}}
@@ -1134,7 +1306,10 @@ def _run_phase17(c: Any) -> None:
         {_ampel_css_esc}
         .score-bar-bg{{background:#1a1a2e;border-radius:4px;overflow:hidden;min-width:70px;max-width:110px}}
         .score-bar{{background:#4caf50;padding:2px 6px;color:#fff;font-size:.75em;white-space:nowrap;border-radius:4px}}
-        img{{max-width:100%;border-radius:5px;display:block}}
+        img{{max-width:100%;max-height:300px;width:100%;height:auto;object-fit:contain;border-radius:5px;display:block}}
+        a.sig-chart-link{{display:block;text-decoration:none}}
+        img.sig-chart-thumb{{cursor:pointer}}
+        .sig-chart-tap{{font-size:.68em;color:#78909c;margin:4px 0 0;line-height:1.3}}
         .model-chips{{display:flex;flex-wrap:wrap;gap:8px}}
         .chip{{background:#0d1117;border-radius:6px;padding:5px 10px;font-size:.8em;color:#90a4ae}}
         .chip strong{{color:#e0e0e0}}
@@ -1158,7 +1333,7 @@ def _run_phase17(c: Any) -> None:
         .analysis-llm-body .analysis-bq{{margin:10px 0;padding:10px 14px;border-left:3px solid #4fc3f7;background:#12121f;border-radius:0 6px 6px 0;color:#b0bec5}}
         .analysis-llm-body .analysis-hr{{border:none;border-top:1px solid #37474f;margin:16px 0}}
         .analysis-llm-missing h2{{font-size:.95em;color:#ffb74d;margin-bottom:8px}}
-        @media(max-width:960px){{.page-wrap{{flex-direction:column}}.llm-sidebar{{position:relative;top:0;max-height:none;width:100%;order:-1}}}}
+        @media(max-width:960px){{.page-wrap{{flex-direction:column}}.llm-sidebar{{position:relative;top:0;max-height:none;width:100%;order:-1}}.signals-grid{{grid-template-columns:1fr}}}}
         @media(max-width:600px){{header h1{{font-size:.95em}}}}
       </style>
     </head>
@@ -1172,10 +1347,19 @@ def _run_phase17(c: Any) -> None:
 
       {ranking_html}
 
-      <div class="section">
-        <h2 title="OOS in den letzten 30 Tagen gesamt: {len(recent_signals)}; angezeigt: neueste mit Chart (ohne doppelte PNGs)">Letzte 30 Tage <span class="badge{recent_badge_cls}">{n_recent_site}</span></h2>
-        {_vix_ampel_legend}
-        {recent_html}
+      <div class="section vix-regime-section">
+        <h2>VIX-Regime (Ampel)</h2>
+        {_vix_ampel_panel}
+      </div>
+
+      <div class="section signals-all-section">
+        <h2>Alle OOS-Signale mit Chart <span class="badge">{len(chart_cache)}</span></h2>
+        <p class="section-lead">
+          {len(chart_cache)} von {len(website_signals)} FINAL-OOS-Signalen (neueste zuerst).
+          <span class="sig-recent-tag">≤30 Tage</span> = {n_recent_site} Signale in den letzten 30 Kalendertagen
+          (grüner Kartenrand). Tippen auf Chart = Vollbild.
+        </p>
+        {all_signals_html}
       </div>
 
       <div class="section">
@@ -1183,7 +1367,7 @@ def _run_phase17(c: Any) -> None:
         <div class="model-chips">
           <div class="chip">Threshold <strong>{best_threshold:.3f}</strong></div>
           <div class="chip">Tickers <strong>{df_s['ticker'].nunique()}</strong></div>
-          <div class="chip" title="Eingebettete Charts: neueste OOS zuerst; K wird bei Bedarf reduziert (GitHub 100-MiB-Limit)">Charts im HTML <strong>{_chart_k}</strong> / {len(website_signals)} OOS</div>
+          <div class="chip" title="{_html_std.escape(_chart_chip_title)}">Charts <strong>{len(chart_cache)}</strong> / {len(website_signals)} OOS</div>
           <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>{len(website_signals)}</strong></div>
           {_thr_chip}
           <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>{_matrix_last_date}</strong></div>
@@ -1202,13 +1386,6 @@ def _run_phase17(c: Any) -> None:
       </div>
 
       {pr_section}
-
-      <div class="section">
-        <details>
-          <summary>OOS-Signale (nicht in Classifier-Training) &mdash; {len(website_signals)} gesamt (max. {_chart_k} neueste mit Chart; Ziel &lt; {_html_cap // 1024 // 1024} MiB)</summary>
-          {hist_html}
-        </details>
-      </div>
 
     </main>
 
@@ -1233,12 +1410,20 @@ def _run_phase17(c: Any) -> None:
         _nb = len(html.encode("utf-8"))
         if _nb <= _html_cap or _chart_k == 0:
             html_chart_cap_k = _chart_k
-            if _chart_k < _k_start:
+            if _chart_k < _k_start and not _charts_external:
                 print(
                     f"Website: index.html = {_nb:,} B (~{_nb / (1024 * 1024):.1f} MiB) mit {_chart_k} Chart-Signalen "
                     f"(Start {_k_start}; Ziel ≤ {_html_cap // 1024 // 1024} MiB).",
                     flush=True,
                 )
+            break
+        if _charts_external:
+            print(
+                f"Website: index.html = {_nb:,} B (~{_nb / (1024 * 1024):.1f} MiB) überschreitet "
+                f"{_html_cap // 1024 // 1024} MiB trotz externer Charts — PR-Plot/KI-Block prüfen.",
+                flush=True,
+            )
+            html_chart_cap_k = _chart_k
             break
         _chart_k -= _k_step
     (docs_dir / "index.html").write_text(html, encoding="utf-8")
@@ -1253,9 +1438,19 @@ def _run_phase17(c: Any) -> None:
                 "signals_holdout_final": signals_holdout_final,
                 "signals_all_timeline_including_in_sample_count": len(all_hist_signals),
                 "signals_html_chart_slots": int(html_chart_cap_k),
+                "signals_with_chart_files": int(len(chart_cache)),
+                "chart_storage": "external" if _charts_external else "inline",
                 "index_html_bytes_utf8": int(_html_bytes),
                 "index_html_max_bytes_config": int(_html_cap_i),
-                "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS für Classifier (TRAIN/THRESHOLD ausgeschlossen). Keine In-Sample-Signale für die Website. index.html enthält nur die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Chart (Größenlimit).",
+                "note": (
+                    "signals = signals_holdout_final: nur FINAL-Kalender-OOS. "
+                    + (
+                        "Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); "
+                        "index.html unter DOCS_INDEX_HTML_MAX_BYTES."
+                        if _charts_external
+                        else "index.html enthält die neuesten signals_html_chart_slots OOS-Signale mit eingebettetem Base64-Chart (Größenlimit)."
+                    )
+                ),
             },
             indent=2,
             default=str,
@@ -1263,7 +1458,18 @@ def _run_phase17(c: Any) -> None:
         encoding="utf-8",
     )
 
-    print(f"\ndocs/index.html   {_html_bytes:,} bytes")
+    print(f"\ndocs/index.html   {_html_bytes:,} bytes (~{_html_bytes / (1024 * 1024):.2f} MiB)")
+    if _charts_external:
+        _charts_root = docs_dir / "charts"
+        _chart_bytes = sum(
+            p.stat().st_size for sub in ("full", "thumb") for p in (_charts_root / sub).glob("*.png")
+            if (_charts_root / sub).is_dir()
+        )
+        print(
+            f"docs/charts/      {_chart_bytes:,} bytes (~{_chart_bytes / (1024 * 1024):.1f} MiB), "
+            f"{len(chart_cache)} Signale mit Chart",
+            flush=True,
+        )
     print(
         f"docs/signals.json {len(website_signals)} OOS signals public "
         f"({len(all_hist_signals)} mit Schwelle über alle Zeiten nur intern gezählt)"
@@ -1320,6 +1526,8 @@ def _run_phase17(c: Any) -> None:
         "docs/analysis_llm_last.html",
         "docs/analysis_llm_last.txt",
     ]
+    if _charts_external and (docs_dir / "charts").is_dir():
+        _git_docs.append("docs/charts")
     _git_to_add = [p for p in _git_docs if Path(p).is_file()]
     try:
         if not _git_to_add:

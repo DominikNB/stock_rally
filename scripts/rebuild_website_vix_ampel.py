@@ -1,5 +1,5 @@
 """
-VIX-Ampel v2 in docs/signals.json und docs/index.html nachziehen.
+VIX-Ampel v2 in docs/signals.json und docs/index.html nachziehen (visuelle Skala + Karten-Meter).
 
   python scripts/rebuild_website_vix_ampel.py
 """
@@ -20,7 +20,7 @@ from lib.vix_regime_ampel import (
     ampel_fields_from_vix,
     vix_ampel_css_block,
     vix_ampel_html_span,
-    vix_ampel_legend_html,
+    vix_ampel_panel_html,
 )
 
 MASTER = ROOT / "data" / "master_complete.csv"
@@ -61,18 +61,33 @@ def _enrich_signals(signals: list[dict], lookup: dict[tuple[str, str], dict]) ->
 
 def _ensure_css(html: str) -> str:
     css = vix_ampel_css_block().strip()
-    if ".vix-ampel--orange" in html:
+    if ".vix-scale-track" in html:
         return html
+    html = re.sub(
+        r"        \.vix-ampel\{[^}]*\}.*?        \.sig-card--recent\{[^}]*\}\n",
+        "",
+        html,
+        flags=re.DOTALL,
+    )
+    html = re.sub(
+        r"        \.vix-ampel\{[^}]*\}.*?        \.vix-ampel-legend\{[^}]*\}\n",
+        "",
+        html,
+        flags=re.DOTALL,
+    )
     return html.replace("        .sig-date-pre{", css + "\n        .sig-date-pre{", 1)
 
 
-def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
-    html = _ensure_css(html)
-
-    # Kaputte Reste früherer Läufe
+def _strip_old_ampel_blocks(html: str) -> str:
     html = re.sub(
         r'(<span class="sig-date"[^>]*>.*?</span>)\s*[^<]*(?:VIX|Regime|Ruhig|Erhöht|Stress)[^<]*</span>\s*',
         r"\1\n          ",
+        html,
+        flags=re.DOTALL,
+    )
+    html = re.sub(
+        r'\s*<div class="vix-meter"[^>]*>.*?</div>\s*</div>\s*',
+        "\n          ",
         html,
         flags=re.DOTALL,
     )
@@ -82,6 +97,55 @@ def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
         html,
         flags=re.DOTALL,
     )
+    return html
+
+
+def _inject_vix_panel(html: str) -> str:
+    panel = vix_ampel_panel_html()
+    block = (
+        f'<div class="section vix-regime-section"><h2>VIX-Regime (Ampel)</h2>{panel}</div>\n\n      '
+    )
+    if "vix-regime-section" in html:
+        return html
+    html = re.sub(r'<p class="vix-ampel-legend">.*?</p>\s*', "", html, count=1, flags=re.DOTALL)
+    html = re.sub(
+        r"(<div class=\"section\">\s*<h2[^>]*>Letzte 30 Tage)",
+        block + r"\1",
+        html,
+        count=1,
+    )
+    if "vix-regime-section" not in html:
+        html = re.sub(
+            r"(<div class=\"section signals-all-section\">)",
+            block + r"\1",
+            html,
+            count=1,
+        )
+    return html
+
+
+def _uncollapse_oos_section(html: str) -> str:
+    """OOS-Archiv nicht mehr in zugeklapptem details."""
+    html = re.sub(
+        r"<div class=\"section\">\s*<details>\s*"
+        r"<summary>OOS-Signale \(nicht in Classifier-Training\)[^<]*</summary>\s*",
+        '<div class="section oos-archive-section"><h2>Frühere OOS-Signale</h2>'
+        '<p class="section-lead">Älter als 30 Tage — alle mit Chart (nach unten scrollen).</p>\n        ',
+        html,
+        count=1,
+    )
+    html = re.sub(
+        r"</div>\s*</details>\s*</div>\s*\n\s*<aside class=\"llm-sidebar\"",
+        "</div>\n      </div>\n\n    <aside class=\"llm-sidebar\"",
+        html,
+        count=1,
+    )
+    return html
+
+
+def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
+    html = _ensure_css(html)
+    html = _strip_old_ampel_blocks(html)
 
     pat = re.compile(
         r'(<span class="sig-ticker">([^<]+)</span>.*?'
@@ -91,22 +155,17 @@ def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
     )
 
     def _card_repl(m: re.Match) -> str:
-        extra = lookup.get((m.group(2).strip(), m.group(3).strip()))
+        ticker = re.sub(r"<[^>]+>", "", m.group(2)).strip()
+        extra = lookup.get((ticker, m.group(3).strip()))
         if not extra:
             return m.group(0)
         return f"{m.group(1)}\n          {vix_ampel_html_span(extra)}\n          {m.group(4)}"
 
     html, n = pat.subn(_card_repl, html)
-    print(f"  index.html: {n} Karten mit Ampel v2")
+    print(f"  index.html: {n} Karten mit VIX-Meter")
 
-    leg = vix_ampel_legend_html()
-    if "vix-ampel-legend" not in html:
-        html = re.sub(
-            r"(<h2[^>]*>Letzte 30 Tage[^<]*</h2>)",
-            r"\1\n        " + leg,
-            html,
-            count=1,
-        )
+    html = _inject_vix_panel(html)
+    html = _uncollapse_oos_section(html)
     return html
 
 
@@ -135,7 +194,7 @@ def main() -> None:
         INDEX_HTML.write_text(html, encoding="utf-8")
         print(f"  geschrieben: {INDEX_HTML}")
 
-    print("\nFertig.")
+    print("\nFertig. Für ein einziges Scroll-Grid aller Charts: Phase-17-Lauf (neues HTML-Layout).")
 
 
 if __name__ == "__main__":
