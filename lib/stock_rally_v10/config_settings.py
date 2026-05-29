@@ -63,6 +63,9 @@ _SCORING_ARTIFACT_SAVED_THIS_SESSION = False
 # rot: VIX < VIX_AMPEL_YELLOW_MIN | gelb: bis GREEN | grün: ab GREEN
 VIX_AMPEL_YELLOW_MIN = 20.0
 VIX_AMPEL_GREEN_MIN = 25.0
+# Rot-Kontext-Chips (OOS META+THR + FINAL, scripts/_scratch_validate_all_context.py)
+VIX_RED_CHIP_VIX3M_RATIO_MAX = 1.16
+VIX_RED_CHIP_SECTOR_HHI_MAX = 0.35
 # =============================================================================
 # 3. Pipeline: CV, Optuna, Zielvariablen, Split, Indikatoren, SEED_PARAMS
 # =============================================================================

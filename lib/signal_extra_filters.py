@@ -117,6 +117,7 @@ _LLM_EXTRA_COLS = (
     "regime_vix_ret_1d",
     "regime_vix_ret_5d",
     "regime_vix_z_20d",
+    "vix3m_vix_ratio",
     "regime_spy_realvol_5d_ann",
     "regime_tnx_ret_5d",
     "news_sentiment",
@@ -791,17 +792,26 @@ def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
     end_s = d_max.strftime("%Y-%m-%d")
 
     vix = _yf_close_series_single(_MACRO_VIX, start_s, end_s)
+    vix3m = _yf_close_series_single("^VIX3M", start_s, end_s)
     spy = _yf_close_series_single(_BENCH_SPY, start_s, end_s)
     tnx = _yf_close_series_single(_MACRO_TNX, start_s, end_s)
 
     rows: list[dict] = []
     for d in sorted(o["Date"].unique()):
         d = pd.Timestamp(d).normalize()
+        v_lvl = _close_last_leq(vix, d)
+        v3 = _close_last_leq(vix3m, d)
+        ratio = (
+            float(v3 / v_lvl)
+            if v_lvl is not None and v3 is not None and np.isfinite(v_lvl) and v_lvl > 0
+            else np.nan
+        )
         rows.append(
             {
                 "Date": d,
-                "regime_vix_level": _close_last_leq(vix, d),
+                "regime_vix_level": v_lvl,
                 "regime_vix_z_20d": _vix_z_vs_20d(vix, d),
+                "vix3m_vix_ratio": ratio,
                 "regime_spy_realvol_5d_ann": _spy_realized_vol_n_ann(spy, d, 5),
                 "regime_tnx_ret_5d": _pct_ret_last_n_trading_days(tnx, d, 5),
             }
@@ -813,6 +823,7 @@ def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
     for col in (
         "regime_vix_level",
         "regime_vix_z_20d",
+        "vix3m_vix_ratio",
         "regime_spy_realvol_5d_ann",
         "regime_tnx_ret_5d",
     ):

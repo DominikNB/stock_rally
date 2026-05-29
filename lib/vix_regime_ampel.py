@@ -187,6 +187,12 @@ def vix_ampel_css_block() -> str:
         .sig-recent-tag{font-size:.65em;background:#1b3d24;color:#a5d6a7;border:1px solid #43a047;border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:middle}
 """
 
+def vix_regime_full_css_block() -> str:
+    """Ampel + Rot-Kontext-Chips."""
+    from lib.vix_red_context_chips import red_context_chips_css_block
+
+    return vix_ampel_css_block() + red_context_chips_css_block()
+
 
 def vix_ampel_tooltip(c: dict[str, Any]) -> str:
     y_min, g_min = vix_ampel_thresholds()
