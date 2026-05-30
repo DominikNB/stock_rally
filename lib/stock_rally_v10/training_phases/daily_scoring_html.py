@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import gc
 import html as _html_std
 import io
 import json as _json
@@ -48,6 +49,119 @@ def _cfg_param_int(c_mod: Any, name: str, default: int) -> int:
     if hasattr(cfg, name):
         return int(getattr(cfg, name))
     return int(default)
+
+
+def _feat_matrix_float32(df: pd.DataFrame, feat_cols: list[str]) -> np.ndarray:
+    """Feature-Matrix als float32 — vermeidet pandas ``.values`` (float64-Zwischenarray, ~2× RAM)."""
+    return df[feat_cols].to_numpy(dtype=np.float32, copy=True)
+
+
+def _log_bad_feat_cells_from_array(
+    feat_arr: np.ndarray,
+    feat_cols: list[str],
+    n_rows: int,
+    *,
+    top_n: int = 15,
+) -> tuple[int, int, int]:
+    """Diagnose NaN/Inf in ``feat_arr``; gibt (n_nan, n_inf, n_bad_rows) zurück."""
+    _arr_nan = np.isnan(feat_arr)
+    _arr_inf = np.isinf(feat_arr)
+    _nan_cells = int(_arr_nan.sum())
+    _inf_cells = int(_arr_inf.sum())
+    _bad_rows = int((_arr_nan | _arr_inf).any(axis=1).sum())
+    if not (_nan_cells or _inf_cells):
+        return _nan_cells, _inf_cells, _bad_rows
+    bad_cols: list[tuple[str, int, int, int]] = []
+    for j, col in enumerate(feat_cols):
+        col_arr = feat_arr[:, j]
+        n_nan = int(np.isnan(col_arr).sum())
+        n_inf = int(np.isinf(col_arr).sum())
+        n_bad = n_nan + n_inf
+        if n_bad > 0:
+            bad_cols.append((col, n_bad, n_nan, n_inf))
+    bad_cols.sort(key=lambda x: x[1], reverse=True)
+    _top = bad_cols[:top_n]
+    print(
+        "  Phase17: Problematische FEAT_COLS erkannt "
+        f"(NaN={_nan_cells}, Inf={_inf_cells}, Zeilen mit ≥1 Problemwert: {_bad_rows}/{n_rows}).",
+        flush=True,
+    )
+    print("  Top-Spalten nach Problemwerten (count = NaN+Inf):", flush=True)
+    for col, n_bad, n_nan, n_inf in _top:
+        pct_bad = 100.0 * float(n_bad) / float(max(1, n_rows))
+        print(
+            f"    - {col}: {n_bad} ({pct_bad:.1f}%) (NaN={n_nan}, Inf={n_inf})",
+            flush=True,
+        )
+    if len(bad_cols) > len(_top):
+        print(f"    ... +{len(bad_cols) - len(_top)} weitere Spalten", flush=True)
+    return _nan_cells, _inf_cells, _bad_rows
+
+
+def _phase17_filter_frame_columns(c_mod: Any, df: pd.DataFrame) -> list[str]:
+    """Minimale Spalten für Signal-Filter + Chart-Fallback (ohne FEAT_COLS)."""
+    _rw = getattr(c_mod, "rsi_w", None)
+    if _rw is None:
+        _rw = int(c_mod.SEED_PARAMS.get("rsi_window", 14))
+    else:
+        _rw = int(_rw)
+    _bbw = getattr(c_mod, "bb_w", None)
+    if _bbw is None:
+        _bbw = int(c_mod.SEED_PARAMS.get("bb_window", 20))
+    else:
+        _bbw = int(_bbw)
+    names = [
+        "ticker",
+        "Date",
+        "close",
+        "open",
+        "high",
+        "low",
+        "volume",
+        "volume_zscore",
+        "mr_vvix_div_vix",
+        "vol_stress",
+        f"rsi_{_rw}d",
+        f"bb_pband_{_bbw}",
+        "blue_sky_breakout",
+    ]
+    return [c for c in names if c in df.columns]
+
+
+def _phase17_drop_heavy_columns(df: pd.DataFrame, feat_cols: list[str], keep: list[str]) -> pd.DataFrame:
+    """Entfernt FEAT_COLS aus dem DataFrame (Speicher nach Feature-Matrix-Extrakt)."""
+    keep_set = set(keep)
+    drop = [c for c in feat_cols if c in df.columns and c not in keep_set]
+    if not drop:
+        return df
+    return df.drop(columns=drop, errors="ignore")
+
+
+def _phase17_meta_predict_proba_batched(
+    c_mod: Any,
+    feat_arr: np.ndarray,
+    *,
+    batch_rows: int | None = None,
+) -> np.ndarray:
+    """Meta-Scoring in Zeilen-Batches — begrenzt Peak-RAM bei Full-History."""
+    n = int(len(feat_arr))
+    if n == 0:
+        return np.array([], dtype=np.float64)
+    if batch_rows is None:
+        batch_rows = int(getattr(c_mod, "PHASE17_META_SCORING_BATCH_ROWS", 40_000))
+    batch_rows = max(5_000, int(batch_rows))
+    out = np.empty(n, dtype=np.float64)
+    label_printed = False
+    for i0 in range(0, n, batch_rows):
+        i1 = min(i0 + batch_rows, n)
+        label = "FULL HISTORY" if not label_printed else ""
+        label_printed = True
+        X_meta = c_mod.build_meta_features(feat_arr[i0:i1], dataset_label=label)
+        out[i0:i1] = c_mod.meta_clf.predict_proba(X_meta)[:, 1]
+        del X_meta
+    if label_printed and n > batch_rows:
+        print(f"  Meta-Scoring: {n:,} Zeilen in Batches à {batch_rows:,}.", flush=True)
+    return out
 
 
 def _website_chart_storage_external(c_mod: Any) -> bool:
@@ -203,8 +317,7 @@ def _run_phase17(c: Any) -> None:
             flush=True,
         )
         return
-    df_s = c.df_features.copy()
-    df_s = merge_news_shard_from_best_params(df_s, c.best_params)
+    df_s = merge_news_shard_from_best_params(c.df_features, c.best_params)
     if len(df_s) == 0:
         print(
             "  FEHLER Phase17: df_features nach News-Merge leer — Abbruch Phase17.",
@@ -223,39 +336,12 @@ def _run_phase17(c: Any) -> None:
         )
         for _c in _miss_fc:
             df_s[_c] = np.float32(_sent_pad)
-    feat_arr = df_s[c.FEAT_COLS].values.astype(np.float32)
-    _arr_nan = np.isnan(feat_arr)
-    _arr_inf = np.isinf(feat_arr)
-    _nan_cells = int(_arr_nan.sum())
-    _inf_cells = int(_arr_inf.sum())
-    _bad_rows = int((_arr_nan | _arr_inf).any(axis=1).sum())
+    n_rows = len(df_s)
+    feat_arr = _feat_matrix_float32(df_s, c.FEAT_COLS)
+    _nan_cells, _inf_cells, _bad_rows = _log_bad_feat_cells_from_array(
+        feat_arr, c.FEAT_COLS, n_rows
+    )
     if _nan_cells or _inf_cells:
-        feat_df = df_s[c.FEAT_COLS]
-        bad_cols = []
-        for col in c.FEAT_COLS:
-            s = pd.to_numeric(feat_df[col], errors="coerce")
-            n_nan = int(s.isna().sum())
-            n_inf = int(np.isinf(s.to_numpy(dtype=np.float64, copy=False)).sum())
-            n_bad = n_nan + n_inf
-            if n_bad > 0:
-                bad_cols.append((col, n_bad, n_nan, n_inf))
-        bad_cols.sort(key=lambda x: x[1], reverse=True)
-        _top = bad_cols[:15]
-        print(
-            "  Phase17: Problematische FEAT_COLS erkannt "
-            f"(NaN={_nan_cells}, Inf={_inf_cells}, Zeilen mit ≥1 Problemwert: {_bad_rows}/{len(df_s)}).",
-            flush=True,
-        )
-        n_rows = max(1, len(df_s))
-        print("  Top-Spalten nach Problemwerten (count = NaN+Inf):", flush=True)
-        for col, n_bad, n_nan, n_inf in _top:
-            pct_bad = 100.0 * float(n_bad) / float(n_rows)
-            print(
-                f"    - {col}: {n_bad} ({pct_bad:.1f}%) (NaN={n_nan}, Inf={n_inf})",
-                flush=True,
-            )
-        if len(bad_cols) > len(_top):
-            print(f"    ... +{len(bad_cols) - len(_top)} weitere Spalten", flush=True)
         _nan_s = getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8)
         print(f"  Für Phase17-Scoring werden diese Werte auf Sentinel {_nan_s} gesetzt.", flush=True)
     _nan_sentinel = np.float32(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
@@ -266,13 +352,20 @@ def _run_phase17(c: Any) -> None:
         neginf=_nan_sentinel,
         copy=False,
     ).astype(np.float32, copy=False)
-    df_s = df_s.reset_index(drop=True)
+    _keep_cols = _phase17_filter_frame_columns(c, df_s)
+    df_s = _phase17_drop_heavy_columns(df_s, c.FEAT_COLS, _keep_cols)
+    if hasattr(c, "df_features"):
+        c.df_features = None
+    gc.collect()
     print(
-        f'  {len(df_s):,} Zeilen, {df_s["ticker"].nunique()} Ticker — building meta features …'
+        f'  {len(df_s):,} Zeilen, {df_s["ticker"].nunique()} Ticker, '
+        f'{len(df_s.columns)} Spalten (nach FEAT_COLS-Drop) — building meta features …',
+        flush=True,
     )
 
-    X_meta_all = c.build_meta_features(feat_arr, dataset_label="FULL HISTORY")
-    probs_all = c.meta_clf.predict_proba(X_meta_all)[:, 1]
+    probs_all = _phase17_meta_predict_proba_batched(c, feat_arr)
+    del feat_arr
+    gc.collect()
     _cal = getattr(c, "meta_proba_calibrator", None)
     if isinstance(_cal, dict):
         _m = str(_cal.get("method", "")).strip().lower()
@@ -288,6 +381,7 @@ def _run_phase17(c: Any) -> None:
             print(f"Warnung: Meta-Proba-Kalibrierung im Scoring fehlgeschlagen ({_e_cal!r}).", flush=True)
     df_s["prob"] = probs_all
     print("  Scoring done.", flush=True)
+    _score_cols = [c for c in (*_keep_cols, "prob") if c in df_s.columns]
 
     _rows_for_signal_calendar_day = c._rows_for_signal_calendar_day
     best_threshold = c.best_threshold
@@ -345,7 +439,7 @@ def _run_phase17(c: Any) -> None:
     }
     _ts_norm = df_s["ticker"].astype(str).str.strip()
     _tasks = [
-        (t, df_s.loc[_ts_norm == str(t)].sort_values("Date").reset_index(drop=True))
+        (t, df_s.loc[_ts_norm == str(t), _score_cols].sort_values("Date"))
         for t in _tickers_sorted
     ]
     _n_jobs = int(getattr(c, "PHASE17_SIGNAL_FILTER_JOBS", -1))
@@ -383,7 +477,7 @@ def _run_phase17(c: Any) -> None:
 
     all_hist_signals = []
     for ticker, sig_dates in _pairs:
-        sub = df_s.loc[_ts_norm == str(ticker)].sort_values("Date").reset_index(drop=True)
+        sub = df_s.loc[_ts_norm == str(ticker), _score_cols].sort_values("Date")
         for d in sig_dates:
             match = _rows_for_signal_calendar_day(sub, d)
             if match.empty:
@@ -997,12 +1091,13 @@ def _run_phase17(c: Any) -> None:
     _k_step = max(1, _cfg_param_int(c, "DOCS_WEBSITE_HTML_SHRINK_STEP", _DOCS_WEBSITE_HTML_SHRINK_STEP_DEFAULT))
 
     from lib.vix_regime_ampel import (
-        vix_ampel_css_block,
         vix_ampel_html_span,
         vix_ampel_panel_html,
+        vix_regime_full_css_block,
     )
 
-    _ampel_css_esc = vix_ampel_css_block().replace("{", "{{").replace("}", "}}")
+    # Roh-CSS in f-String-Variable — NICHT {{ escapen (sonst invalides CSS im Browser).
+    _site_regime_css = vix_regime_full_css_block()
     _vix_ampel_panel = vix_ampel_panel_html()
 
     _charts_external = _website_chart_storage_external(c)
@@ -1200,7 +1295,7 @@ def _run_phase17(c: Any) -> None:
         .sig-gics{{font-size:.74em;color:#90a4ae;line-height:1.45;margin:6px 0 0;padding:0 2px;max-width:100%}}
         .sig-date{{color:#546e7a;font-size:.78em;white-space:nowrap}}
         .sig-date-pre{{font-size:.68em;color:#78909c;margin-right:5px}}
-        {_ampel_css_esc}
+        {_site_regime_css}
         .score-bar-bg{{background:#1a1a2e;border-radius:4px;overflow:hidden;min-width:70px;max-width:110px}}
         .score-bar{{background:#4caf50;padding:2px 6px;color:#fff;font-size:.75em;white-space:nowrap;border-radius:4px}}
         img{{max-width:100%;max-height:300px;width:100%;height:auto;object-fit:contain;border-radius:5px;display:block}}
@@ -1423,7 +1518,11 @@ def _run_phase17(c: Any) -> None:
     ]
     if _charts_external and (docs_dir / "charts").is_dir():
         _git_docs.append("docs/charts")
-    _git_to_add = [p for p in _git_docs if Path(p).is_file()]
+    _git_to_add = [
+        p
+        for p in _git_docs
+        if Path(p).is_file() or (Path(p).is_dir() and p.replace("\\", "/").rstrip("/") == "docs/charts")
+    ]
     try:
         if not _git_to_add:
             print("\nGit: keine der erwarteten docs-Dateien gefunden — Commit/Push übersprungen.")

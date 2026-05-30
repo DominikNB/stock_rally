@@ -132,10 +132,29 @@ def _enrich_signals(signals: list[dict], lookup: dict[tuple[str, str], dict]) ->
     return n
 
 
+def _fix_doubled_css_braces(html: str) -> str:
+    """Repariert f-String-{{…}} in <style> (Browser ignoriert sonst Ampel/Chips/Layout)."""
+
+    def _norm_style(m: re.Match) -> str:
+        block = m.group(0)
+        if "{{" not in block:
+            return block
+        return block.replace("{{", "{").replace("}}", "}")
+
+    return re.sub(r"<style>.*?</style>", _norm_style, html, count=1, flags=re.DOTALL)
+
+
 def _ensure_css(html: str) -> str:
+    html = _fix_doubled_css_braces(html)
     css = vix_regime_full_css_block().strip()
     html = re.sub(
         r"        \.vix-panel\{[^}]*\}.*?        \.vix-guide-list li\{[^}]*\}\n",
+        "",
+        html,
+        flags=re.DOTALL,
+    )
+    html = re.sub(
+        r"        \.vix-panel\{\{[^}]*\}\}.*?        \.vix-guide-list li\{\{[^}]*\}\}\n",
         "",
         html,
         flags=re.DOTALL,
