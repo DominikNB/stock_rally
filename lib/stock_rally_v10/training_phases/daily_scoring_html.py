@@ -1235,8 +1235,9 @@ def _run_phase17(c: Any) -> None:
             )
         _yf_failed_tickers = {t for t, _d0, _d1, _e in _chart_yf_failures}
         chart_signals = website_signals[:_chart_k]
-        recent_slice = [s for s in chart_signals if s["date"] >= recent_cutoff]
-        n_recent_site = len(recent_slice)
+        recent_chart_signals = [s for s in chart_signals if s["date"] >= recent_cutoff]
+        archive_chart_signals = [s for s in chart_signals if s["date"] < recent_cutoff]
+        n_recent_site = len(recent_chart_signals)
 
         def _cards_grid(signals: list) -> str:
             if not signals:
@@ -1245,9 +1246,13 @@ def _run_phase17(c: Any) -> None:
                 _signal_card_site(s, chart_cache, _recent_cutoff=recent_cutoff) for s in signals
             ) + "</div>"
 
-        all_signals_html = (
-            _cards_grid(chart_signals)
-            or '<p class="empty">Keine OOS-Signale mit Chart.</p>'
+        recent_signals_html = (
+            _cards_grid(recent_chart_signals)
+            or '<p class="empty">Keine OOS-Signale der letzten 30 Tage mit Chart.</p>'
+        )
+        archive_signals_html = (
+            _cards_grid(archive_chart_signals)
+            or '<p class="empty">Keine älteren Signale mit Chart in diesem Export.</p>'
         )
         recent_badge_cls = " zero" if not recent_slice else ""
         _chart_chip_title = (
@@ -1269,18 +1274,10 @@ def _run_phase17(c: Any) -> None:
         header{{background:#16213e;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.6)}}
         header h1{{font-size:1.1em;color:#81d4fa}}
         header .ts{{font-size:.72em;color:#546e7a}}
-        .page-wrap{{display:flex;align-items:flex-start;gap:18px;max-width:1480px;margin:0 auto;padding:12px 16px}}
-        .main-col{{flex:1;min-width:0;max-width:1100px}}
-        .llm-sidebar{{width:min(340px,100%);flex-shrink:0;position:sticky;top:52px;align-self:flex-start;max-height:calc(100vh - 64px);overflow-y:auto;background:#141428;border:1px solid #2d2d4e;border-radius:10px;padding:10px 12px}}
-        .llm-details summary{{cursor:pointer;color:#81d4fa;font-size:.92em;font-weight:600;padding:6px 4px;user-select:none;list-style:none}}
-        .llm-details summary::-webkit-details-marker{{display:none}}
-        .llm-details summary::before{{content:'▸ ';color:#64b5f6}}
-        .llm-details[open] summary::before{{content:'▾ '}}
-        .llm-sum-hint{{font-weight:400;font-size:.78em;color:#78909c;margin-left:6px}}
-        .llm-slot{{margin-top:8px;padding-top:8px;border-top:1px solid #2a2a44}}
-        .llm-sidebar .analysis-llm h2{{display:none}}
-        .llm-sidebar .section.analysis-llm{{background:transparent;padding:0;margin:0;border:none}}
-        .llm-sidebar .analysis-llm-body{{max-width:none;font-size:.88em}}
+        .page-wrap{{max-width:1480px;margin:0 auto;padding:12px 16px}}
+        .main-col{{min-width:0}}
+        .analysis-llm-section .analysis-llm-body{{max-width:72em}}
+        .prob-hint{{font-size:.78em;color:#78909c;margin:6px 0 0;line-height:1.4}}
         .yf-hint{{font-size:.68em;color:#78909c;margin:0 0 6px;line-height:1.35}}
         .section{{background:#1a1a2e;border-radius:10px;padding:16px;margin-bottom:14px}}
         .section h2{{font-size:.95em;color:#81d4fa;margin-bottom:12px;border-bottom:1px solid #2d2d4e;padding-bottom:7px;display:flex;align-items:center;gap:8px}}
@@ -1325,7 +1322,7 @@ def _run_phase17(c: Any) -> None:
         .analysis-llm-body .analysis-bq{{margin:10px 0;padding:10px 14px;border-left:3px solid #4fc3f7;background:#12121f;border-radius:0 6px 6px 0;color:#b0bec5}}
         .analysis-llm-body .analysis-hr{{border:none;border-top:1px solid #37474f;margin:16px 0}}
         .analysis-llm-missing h2{{font-size:.95em;color:#ffb74d;margin-bottom:8px}}
-        @media(max-width:960px){{.page-wrap{{flex-direction:column}}.llm-sidebar{{position:relative;top:0;max-height:none;width:100%;order:-1}}.signals-grid{{grid-template-columns:1fr}}}}
+        @media(max-width:960px){{.signals-grid{{grid-template-columns:1fr}}}}
         @media(max-width:600px){{header h1{{font-size:.95em}}}}
       </style>
     </head>
@@ -1337,25 +1334,42 @@ def _run_phase17(c: Any) -> None:
     <div class="page-wrap">
     <main class="main-col">
 
+      <div class="section analysis-llm-section">
+        <h2>KI-Analyse — aktuelle Signale</h2>
+        <p class="section-lead">
+          Gemini-Einordnung der <strong>neuesten Meta-Hits</strong> (Datenstand letzter Signaltag in der Matrix:
+          <strong>{_matrix_last_date}</strong>). Keine Anlageberatung.
+        </p>
+        __ANALYSIS_LLM_SECTION__
+      </div>
+
+      <div class="section signals-recent-section">
+        <h2>Letzte 30 Tage <span class="badge{recent_badge_cls}">{n_recent_site}</span></h2>
+        <p class="section-lead">
+          {len(recent_chart_signals)} von {len(chart_cache)} Chart-Slots mit Signaldatum in den letzten 30 Kalendertagen
+          (grüner Kartenrand). Tippen auf Chart = Vollbild.
+        </p>
+        {recent_signals_html}
+      </div>
+
       <div class="section vix-regime-section">
         <h2>VIX-Regime (Ampel)</h2>
         {_vix_ampel_panel}
       </div>
 
-      <div class="section signals-all-section">
-        <h2>Alle OOS-Signale mit Chart <span class="badge">{len(chart_cache)}</span></h2>
+      <div class="section signals-archive-section">
+        <h2>Ältere OOS-Signale mit Chart <span class="badge">{len(archive_chart_signals)}</span></h2>
         <p class="section-lead">
-          {len(chart_cache)} von {len(website_signals)} FINAL-OOS-Signalen (neueste zuerst).
-          <span class="sig-recent-tag">≤30 Tage</span> = {n_recent_site} Signale in den letzten 30 Kalendertagen
-          (grüner Kartenrand). Tippen auf Chart = Vollbild.
+          Archiv: {len(archive_chart_signals)} ältere Signale mit Chart (von {len(website_signals)} FINAL-OOS gesamt).
         </p>
-        {all_signals_html}
+        {archive_signals_html}
       </div>
 
       <div class="section">
         <h2>Model Info</h2>
         <div class="model-chips">
           <div class="chip">Threshold <strong>{best_threshold:.3f}</strong></div>
+          <div class="chip" title="Meta-Wahrscheinlichkeit pro Signal — unabhängig vom produktiven Threshold">prob typisch 0.20–0.50</div>
           <div class="chip">Tickers <strong>{df_s['ticker'].nunique()}</strong></div>
           <div class="chip" title="{_html_std.escape(_chart_chip_title)}">Charts <strong>{len(chart_cache)}</strong> / {len(website_signals)} OOS</div>
           <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>{len(website_signals)}</strong></div>
@@ -1379,24 +1393,27 @@ def _run_phase17(c: Any) -> None:
 
     </main>
 
-    <aside class="llm-sidebar" aria-label="KI-Analyse">
-      <details class="llm-details" open>
-        <summary>KI-Analyse <span class="llm-sum-hint">(ein-/ausklappen)</span></summary>
-        <div class="llm-slot">
-          __ANALYSIS_LLM_SECTION__
-        </div>
-      </details>
-    </aside>
-
     </div>
     </body>
     </html>"""
 
 
-        html = html.replace(
-            "__ANALYSIS_LLM_SECTION__",
-            _analysis_llm_section.strip() if _analysis_llm_section.strip() else _anal_fallback,
-        )
+        _llm_html = (_analysis_llm_section.strip() if _analysis_llm_section.strip() else _anal_fallback)
+        if _llm_html:
+            _llm_html = re.sub(
+                r'^\s*<div class="section analysis-llm">\s*<h2>[^<]+</h2>\s*',
+                "",
+                _llm_html,
+                count=1,
+            )
+            _llm_html = re.sub(
+                r'<p class="prompt-lead">[^<]*</p>\s*',
+                "",
+                _llm_html,
+                count=1,
+            )
+            _llm_html = re.sub(r"\s*</div>\s*$", "", _llm_html.strip())
+        html = html.replace("__ANALYSIS_LLM_SECTION__", _llm_html)
         _nb = len(html.encode("utf-8"))
         if _nb <= _html_cap or _chart_k == 0:
             html_chart_cap_k = _chart_k

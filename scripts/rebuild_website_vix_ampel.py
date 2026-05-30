@@ -253,9 +253,11 @@ def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
 
     def _head_repl(m: re.Match) -> str:
         head = m.group(1)
-        # extract ticker/date from head
         tm = re.search(r'<span class="sig-ticker">([^<]+)', head)
-        dm = re.search(r"Daten bis</span>\s*(\d{4}-\d{2}-\d{2})", head)
+        dm = re.search(
+            r'<span class="sig-date-pre">Daten bis</span>\s*(\d{4}-\d{2}-\d{2})',
+            head,
+        )
         if not tm or not dm:
             return m.group(0)
         ticker = re.sub(r"<[^>]+>", "", tm.group(1)).strip()
@@ -263,21 +265,30 @@ def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
         if not extra:
             return m.group(0)
         amp = vix_ampel_html_span(extra)
+        # Kaputtes Markup reparieren: vix-meter darf nicht innerhalb von sig-date stehen.
         head2 = re.sub(
-            r'(<span class="sig-date"[^>]*>.*?</span>)\s*(?:<div class="vix-meter">.*?</div>\s*</div>\s*)?',
-            rf"\1\n          {amp}\n          ",
+            r'<div class="vix-meter">.*?</div>\s*</div>\s*',
+            "",
             head,
             count=1,
             flags=re.DOTALL,
         )
-        head2 = re.sub(r'<div class="vix-meter">.*?</div>\s*</div>\s*', f"{amp}\n          ", head2, flags=re.DOTALL)
-        if "vix-meter" not in head2 and amp not in head2:
-            head2 = re.sub(
-                r"(<div class=\"score-bar-bg\">)",
-                f"\n          {amp}\n          \\1",
+        if amp not in head2:
+            # Ampel nach geschlossenem sig-date (nie innerhalb von sig-date).
+            head2, _n_amp = re.subn(
+                r'(<span class="sig-date-pre">Daten bis</span>\s*\d{4}-\d{2}-\d{2}\s*</span>)',
+                rf"\1\n          {amp}",
                 head2,
                 count=1,
             )
+            if _n_amp == 0:
+                head2 = re.sub(
+                    r"(</span>\s*)(<div class=\"score-bar-bg\">)",
+                    rf"\1\n          {amp}\n          \2",
+                    head2,
+                    count=1,
+                    flags=re.DOTALL,
+                )
         chips = extra.get("red_context_html") or ""
         if chips and str(extra.get("vix_regime_ampel", "")).lower() == "red":
             return f"{head2}\n        {chips}\n        "
