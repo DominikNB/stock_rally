@@ -18,6 +18,7 @@ from lib.website_ampel_filter import (  # noqa: E402
     website_ampel_filter_css_block,
     website_ampel_filter_html,
     website_ampel_filter_js_block,
+    website_vix_guide_html,
 )
 
 
@@ -58,11 +59,29 @@ def main() -> None:
     counts = ampel_counts(signals)
     html = INDEX.read_text(encoding="utf-8")
 
-    if "id=\"ampel-filter\"" not in html:
-        css = website_ampel_filter_css_block()
-        if ".ampel-filter-bar" not in html:
-            html = html.replace("</style>", css + "\n      </style>", 1)
+    css = website_ampel_filter_css_block()
+    if ".vix-user-guide" not in html:
+        html = html.replace("</style>", css + "\n      </style>", 1)
+    elif ".ampel-filter-bar" not in html:
+        html = html.replace("</style>", css + "\n      </style>", 1)
 
+    if 'id="vix-user-guide"' not in html:
+        guide = website_vix_guide_html().strip()
+        if 'id="ampel-filter"' in html:
+            html = html.replace(
+                '<div class="section ampel-filter-bar"',
+                guide + '\n      <div class="section ampel-filter-bar"',
+                1,
+            )
+            print("VIX-Erklärblock vor dem Filter eingefügt.", flush=True)
+        else:
+            block = website_ampel_filter_html(counts)
+            marker = '<div class="page-wrap">'
+            if marker not in html:
+                sys.exit("page-wrap nicht gefunden")
+            html = html.replace(marker, marker + "\n    " + block.strip() + "\n    ", 1)
+            print("Ampel-Filter inkl. Erklärblock eingefügt.", flush=True)
+    elif 'id="ampel-filter"' not in html:
         block = website_ampel_filter_html(counts)
         marker = '<div class="page-wrap">'
         if marker not in html:

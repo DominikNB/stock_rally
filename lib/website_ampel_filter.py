@@ -1,8 +1,17 @@
-"""VIX-Ampel-Filter für die statische OOS-Signal-Website (docs/index.html)."""
+"""VIX-Ampel-Filter und Nutzer-Legende für die statische OOS-Website (docs/index.html)."""
 from __future__ import annotations
 
 from collections import Counter
 from typing import Any, Mapping, Sequence
+
+
+def _guide_thresholds() -> tuple[float, float, float, float]:
+    from lib.vix_regime_ampel import vix_ampel_thresholds
+    from lib.vix_red_context_chips import _chip_thresholds
+
+    y_min, g_min = vix_ampel_thresholds()
+    chip = _chip_thresholds()
+    return y_min, g_min, float(chip["vix3m_vix_max"]), float(chip["sector_hhi_max"])
 
 
 def ampel_counts(signals: Sequence[Mapping[str, Any]]) -> dict[str, int]:
@@ -42,7 +51,140 @@ def website_ampel_filter_css_block() -> str:
         .ampel-filter-dot--red{background:#ef5350}
         .ampel-filter-dot--yellow{background:#ffca28}
         .ampel-filter-dot--green{background:#66bb6a}
+        .vix-user-guide{margin-bottom:14px;padding:14px 16px}
+        .vix-user-guide h2{font-size:.95em;margin-bottom:8px}
+        .vix-user-guide details{margin-top:10px;border:1px solid #2d2d4e;border-radius:8px;background:#0d1117}
+        .vix-user-guide details summary{padding:10px 12px;font-size:.85em;color:#81d4fa;cursor:pointer;list-style:none}
+        .vix-user-guide details[open] summary{border-bottom:1px solid #2d2d4e;margin-bottom:0}
+        .vix-user-guide .guide-body{padding:12px 14px 14px;font-size:.8em;color:#b0bec5;line-height:1.55}
+        .vix-user-guide .guide-body p{margin:0 0 10px}
+        .vix-user-guide .guide-body h3{font-size:.88em;color:#eceff1;margin:14px 0 6px}
+        .vix-user-guide .guide-body h3:first-child{margin-top:0}
+        .vix-user-guide .guide-chip{margin:10px 0;padding:10px 12px;border-radius:8px;border:1px solid #37474f;background:#12121f}
+        .vix-user-guide .guide-chip h4{font-size:.84em;color:#81d4fa;margin:0 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .vix-user-guide .chip-swatch{font-size:.68em;padding:2px 7px;border-radius:6px;font-weight:500}
+        .vix-user-guide .chip-swatch--good{background:#1b3d24;color:#a5d6a7;border:1px solid #43a047}
+        .vix-user-guide .chip-swatch--warn{background:#3d2a1a;color:#ffcc80;border:1px solid #ef6c00}
+        .vix-user-guide .chip-swatch--na{background:#263238;color:#78909c;border:1px solid #455a64}
+        .vix-user-guide ul{margin:6px 0 0 1.1em;padding:0}
+        .vix-user-guide li{margin:4px 0}
+        .vix-user-guide strong{color:#eceff1}
+        .vix-user-guide code{font-size:.92em;color:#90caf9}
 """
+
+
+def website_vix_guide_html() -> str:
+    """Ausführliche Legende: VIX, Ampel, Rot-Chips (Berechnung + Bedeutung)."""
+    y_min, g_min, vix3m_max, hhi_max = _guide_thresholds()
+    return f"""
+      <div class="section vix-user-guide" id="vix-user-guide">
+        <h2>VIX-Ampel &amp; Kontext-Chips — Was bedeutet das?</h2>
+        <p class="section-lead">
+          Kurz erklärt für die Signalkarten unten. <strong>Kein zweites Scoring</strong> und
+          <strong>kein Filter</strong> — nur Einordnung des Marktumfelds am Signaltag.
+        </p>
+
+        <details open>
+          <summary><strong>Was ist der VIX?</strong> und die drei Ampel-Farben</summary>
+          <div class="guide-body">
+            <p>
+              Der <strong>VIX</strong> („Volatility Index“, oft CBOE VIX, Symbol <code>^VIX</code>)
+              misst die <strong>erwartete Schwankung</strong> des US-Aktienmarkts (S&amp;P-500-Optionen),
+              nicht den Kurs selbst. Hoher VIX = mehr Angst/Unsicherheit, niedriger VIX = ruhigeres Umfeld.
+              Pro Signal zeigen wir den <strong>VIX-Schlusskurs am Signaltag</strong> (Yahoo Finance).
+            </p>
+            <p>
+              Die <strong>Ampel</strong> ordnet dieses Niveau in <strong>drei Regime</strong> ein
+              (historisch auf Trainings-/Testdaten kalibriert — Signale werden <em>nicht</em> ausgeschlossen):
+            </p>
+            <ul>
+              <li><strong style="color:#a5d6a7">Grün</strong> — VIX <strong>≥ {g_min:.0f}</strong>:
+                historisch das <strong>stärkste</strong> Gesamtregime für die Modell-Signale im Schnitt.</li>
+              <li><strong style="color:#fff59d">Gelb</strong> — VIX <strong>{y_min:.0f} bis unter {g_min:.0f}</strong>:
+                mittleres Regime.</li>
+              <li><strong style="color:#ef9a9a">Rot</strong> — VIX <strong>&lt; {y_min:.0f}</strong>:
+                historisch <strong>schwächeres</strong> Gesamtregime — viele Einzeltreffer sind trotzdem möglich,
+                aber das Umfeld war im Backtest im Schnitt weniger günstig.</li>
+            </ul>
+            <p>
+              An jeder Karte: kleine <strong>Skala + drei Lichter</strong> (rot/gelb/grün) und der konkrete
+              VIX-Wert (z. B. „VIX 15,3“). Der Filter oben gruppiert alle OOS-Signale nach dieser Farbe.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary><strong>Die vier Zusatz-Chips</strong> (nur bei Ampel <em>rot</em>)</summary>
+          <div class="guide-body">
+            <p>
+              Wenn die Ampel <strong>rot</strong> ist, erscheinen unter dem Kopf der Karte bis zu
+              <strong>vier Chips</strong>. Sie sind aus OOS-Validierung (META+THRESHOLD + FINAL) als
+              <strong>Zusatz-Kontext</strong> gewählt — sie ersetzen <em>nicht</em> die Modell-Wahrscheinlichkeit
+              (<code>prob</code>) und schließen kein Signal aus.
+            </p>
+            <p>
+              <span class="chip-swatch chip-swatch--good">Grün</span> = in rot historisch <strong>günstiger</strong> ·
+              <span class="chip-swatch chip-swatch--warn">Orange</span> = eher <strong>Vorsicht</strong> ·
+              <span class="chip-swatch chip-swatch--na">Grau</span> = Daten fehlen → Chip ignorieren.
+            </p>
+
+            <div class="guide-chip">
+              <h4>1. VIX vs. 20d-Mittel</h4>
+              <p><strong>Was:</strong> Liegt der VIX <em>unter</em> oder <em>über</em> seinem eigenen
+              20-Handelstage-Mittel am Signaltag?</p>
+              <p><strong>Berechnung:</strong> Z-Score <code>regime_vix_z_20d</code> =
+              (VIX heute − Mittel der letzten 20 Börsentage) / Standardabweichung dieser 20 Tage.
+              <strong>Grün</strong> wenn Z &lt; 0 (VIX unter Mittel), <strong>Orange</strong> wenn Z ≥ 0.</p>
+              <p><strong>Was wir daraus sagen:</strong> In rot war ein <strong>relativ entspannter</strong> VIX
+              (unter dem kurzfristigen Mittel) historisch etwas günstiger — trotz niedrigem absolutem Niveau (&lt;20).</p>
+            </div>
+
+            <div class="guide-chip">
+              <h4>2. VIX-Term 3M/VIX</h4>
+              <p><strong>Was:</strong> Ist die <strong>Terminstruktur</strong> der Volatilität eher entspannt
+              oder angespannt? (Kurzlaufiger VIX vs. 3-Monats-VIX.)</p>
+              <p><strong>Berechnung:</strong> Ratio <code>vix3m_vix_ratio</code> = VIX 3 Monate (<code>^VIX3M</code>)
+              / VIX Spot (<code>^VIX</code>) am Signaltag.
+              <strong>Grün</strong> wenn Ratio &lt; <strong>{vix3m_max:.2f}</strong>,
+              <strong>Orange</strong> wenn ≥ {vix3m_max:.2f} (hohe Ratio = Kurzlaufiges Stressniveau hoch vs. längere Frist).</p>
+              <p><strong>Was wir daraus sagen:</strong> In rot war eine <strong>entspannte</strong> Termstruktur
+              historisch günstiger; <strong>Angespannt</strong> → eher skeptisch bei reiner Mitläufer-Story.</p>
+            </div>
+
+            <div class="guide-chip">
+              <h4>3. Sektor-Crowding</h4>
+              <p><strong>Was:</strong> Sind am selben Tag viele Meta-Treffer im <strong>gleichen Sektor</strong>
+              („alle kaufen Tech“) oder ist der Tag breiter gestreut?</p>
+              <p><strong>Berechnung:</strong> <code>sector_hhi_same_day</code> = Herfindahl-Index der Sektoranteile
+              unter allen Meta-Hits am Signaltag: Summe (Anteil Sektor)².
+              1,0 = nur ein Sektor; niedrig = viele Sektoren.
+              <strong>Grün</strong> wenn HHI &lt; <strong>{hhi_max:.2f}</strong>,
+              <strong>Orange</strong> wenn ≥ {hhi_max:.2f}.</p>
+              <p><strong>Was wir daraus sagen:</strong> Wenig Crowding spricht eher für eine <strong>Einzel-Titel-Idee</strong>;
+              viel Crowding → gemeinsame Sektor-/Marktbewegung, im Vergleich der Signale genauer abgrenzen.</p>
+            </div>
+
+            <div class="guide-chip">
+              <h4>4. News Sektor vs. Makro</h4>
+              <p><strong>Was:</strong> Ist der <strong>Ton der Sektor-News</strong> positiver als der
+              <strong>Makro-News</strong>-Ton (aus der News-Pipeline des Modells)?</p>
+              <p><strong>Berechnung:</strong> Differenz Sektor-Ton minus Makro-Ton
+              (<code>news_sec_*_tone</code> − <code>news_macro_*_tone</code>, gleicher Tag).
+              <strong>Grün</strong> wenn Differenz &gt; 0, <strong>Orange</strong> wenn ≤ 0.
+              <strong>Grau</strong>, wenn keine News-Scores verfügbar.</p>
+              <p><strong>Was wir daraus sagen:</strong> In rot war ein <strong>sektorgetriebener</strong> News-Hintergrund
+              historisch etwas günstiger als reine Makro-Dominanz — immer mit den <strong>belegten</strong> Meldungen
+              aus der KI-/eigenen Recherche abgleichen.</p>
+            </div>
+
+            <p style="margin-top:12px">
+              <strong>Nutzung:</strong> Zuerst Signal (Setup, News, Kurs) bewerten — dann Chips als
+              <strong>Zusatz-Risiko-/Kontext-Check</strong>. Mehr grüne Chips → etwas mehr Überzeugung in rot;
+              viele orange → vorsichtiger (Size, Stop). Keine Anlageberatung.
+            </p>
+          </div>
+        </details>
+      </div>"""
 
 
 def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
@@ -50,7 +192,7 @@ def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
     n_red = int(counts.get("red", 0))
     n_yellow = int(counts.get("yellow", 0))
     n_green = int(counts.get("green", 0))
-    return f"""
+    return website_vix_guide_html() + f"""
       <div class="section ampel-filter-bar" id="ampel-filter">
         <h2>OOS-Signale nach VIX-Ampel</h2>
         <p class="section-lead">
