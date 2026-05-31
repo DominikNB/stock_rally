@@ -1095,10 +1095,20 @@ def _run_phase17(c: Any) -> None:
         vix_ampel_panel_html,
         vix_regime_full_css_block,
     )
+    from lib.website_ampel_filter import (
+        ampel_counts,
+        website_ampel_filter_css_block,
+        website_ampel_filter_html,
+        website_ampel_filter_js_block,
+    )
 
     # Roh-CSS in f-String-Variable — NICHT {{ escapen (sonst invalides CSS im Browser).
     _site_regime_css = vix_regime_full_css_block()
+    _site_ampel_filter_css = website_ampel_filter_css_block()
     _vix_ampel_panel = vix_ampel_panel_html()
+    _ampel_filter_counts = ampel_counts(website_signals)
+    _ampel_filter_section = website_ampel_filter_html(_ampel_filter_counts)
+    _ampel_filter_js = website_ampel_filter_js_block()
 
     _charts_external = _website_chart_storage_external(c)
 
@@ -1173,8 +1183,9 @@ def _run_phase17(c: Any) -> None:
         _recent_tag = (
             '<span class="sig-recent-tag">≤30 Tage</span>' if _is_recent else ""
         )
+        _ampel_lv = str(s.get("vix_regime_ampel") or "unknown").strip().lower()
         return f"""
-      <div class="sig-card{_recent_cls}">
+      <div class="sig-card{_recent_cls}" data-vix-ampel="{_html_std.escape(_ampel_lv)}">
         <div class="sig-head">
           <span class="sig-ticker">{s['ticker']}{_recent_tag}</span>
           <span class="sig-company">{s['company']}</span>
@@ -1293,6 +1304,7 @@ def _run_phase17(c: Any) -> None:
         .sig-date{{color:#546e7a;font-size:.78em;white-space:nowrap}}
         .sig-date-pre{{font-size:.68em;color:#78909c;margin-right:5px}}
         {_site_regime_css}
+        {_site_ampel_filter_css}
         .score-bar-bg{{background:#1a1a2e;border-radius:4px;overflow:hidden;min-width:70px;max-width:110px}}
         .score-bar{{background:#4caf50;padding:2px 6px;color:#fff;font-size:.75em;white-space:nowrap;border-radius:4px}}
         img{{max-width:100%;max-height:300px;width:100%;height:auto;object-fit:contain;border-radius:5px;display:block}}
@@ -1332,6 +1344,7 @@ def _run_phase17(c: Any) -> None:
       <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: {today_str}</span>
     </header>
     <div class="page-wrap">
+    {_ampel_filter_section}
     <main class="main-col">
 
       <div class="section analysis-llm-section">
@@ -1394,6 +1407,7 @@ def _run_phase17(c: Any) -> None:
     </main>
 
     </div>
+    {_ampel_filter_js}
     </body>
     </html>"""
 
