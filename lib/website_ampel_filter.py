@@ -87,16 +87,24 @@ def website_ampel_filter_js_block() -> str:
       var tbody = document.getElementById("ampel-filter-tbody");
 
       function ampelFromCard(card) {
-        if (card.dataset.vixAmpel) return card.dataset.vixAmpel;
         var el = card.querySelector("[class*='vix-ampel--']");
-        if (!el) return "unknown";
-        var m = el.className.match(/vix-ampel--(red|yellow|green)/);
-        return m ? m[1] : "unknown";
+        if (el) {
+          var m = el.className.match(/vix-ampel--(red|yellow|green)/);
+          if (m) return m[1];
+        }
+        var lights = card.querySelectorAll(".vix-light.is-active");
+        for (var i = 0; i < lights.length; i++) {
+          var lm = lights[i].className.match(/vix-light--(red|yellow|green)/);
+          if (lm) return lm[1];
+        }
+        var pre = (card.getAttribute("data-vix-ampel") || "").toLowerCase();
+        if (pre === "red" || pre === "yellow" || pre === "green") return pre;
+        return "unknown";
       }
 
       function initCardAmpelAttrs() {
         document.querySelectorAll(".sig-card").forEach(function (card) {
-          if (!card.dataset.vixAmpel) card.dataset.vixAmpel = ampelFromCard(card);
+          card.dataset.vixAmpel = ampelFromCard(card);
         });
       }
 

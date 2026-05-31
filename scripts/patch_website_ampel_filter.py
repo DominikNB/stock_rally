@@ -27,12 +27,16 @@ def _add_card_ampel_attrs(html: str) -> tuple[str, int]:
     def _repl(m: re.Match) -> str:
         nonlocal n
         tag = m.group(0)
-        if "data-vix-ampel" in tag:
+        if "data-vix-ampel" in tag and "unknown" not in tag:
             return tag
-        chunk = html[m.end() : m.end() + 2500]
+        chunk = html[m.end() : m.end() + 4000]
         amp = "unknown"
         for c in ("red", "yellow", "green"):
-            if f"vix-ampel--{c}" in chunk:
+            if (
+                f"vix-ampel--{c}" in chunk
+                or f"vix-light--{c} is-active" in chunk
+                or f"vix-light vix-light--{c} is-active" in chunk
+            ):
                 amp = c
                 break
         n += 1
@@ -68,13 +72,20 @@ def main() -> None:
     else:
         print("Hinweis: Ampel-Filter-HTML bereits vorhanden.", flush=True)
 
-    js = website_ampel_filter_js_block()
-    if "function ampelFromCard" not in html:
+    js = website_ampel_filter_js_block().strip()
+    if 'id="ampel-filter-js"' in html:
+        html, n_js = re.subn(
+            r'<script id="ampel-filter-js">.*?</script>',
+            js,
+            html,
+            count=1,
+            flags=re.DOTALL,
+        )
+        if n_js:
+            print("JavaScript für Ampel-Filter aktualisiert.", flush=True)
+    else:
         html = html.replace("</body>", js + "\n    </body>", 1)
         print("JavaScript für Ampel-Filter eingefügt.", flush=True)
-    elif "id=\"ampel-filter-js\"" not in html:
-        html = html.replace("</body>", js + "\n    </body>", 1)
-        print("JavaScript für Ampel-Filter eingefügt (Legacy).", flush=True)
 
     html, n_cards = _add_card_ampel_attrs(html)
     INDEX.write_text(html, encoding="utf-8")
