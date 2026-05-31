@@ -78,112 +78,158 @@ def website_vix_guide_html() -> str:
     y_min, g_min, vix3m_max, hhi_max = _guide_thresholds()
     return f"""
       <div class="section vix-user-guide" id="vix-user-guide">
-        <h2>VIX-Ampel &amp; Kontext-Chips — Was bedeutet das?</h2>
+        <h2>VIX-Ampel &amp; Kontext-Chips — Erklärung</h2>
         <p class="section-lead">
-          Kurz erklärt für die Signalkarten unten. <strong>Kein zweites Scoring</strong> und
-          <strong>kein Filter</strong> — nur Einordnung des Marktumfelds am Signaltag.
+          Für jede Signalkarte: Was die Begriffe <strong>bedeuten</strong>, wie die Zahl
+          <strong>berechnet</strong> wird und wie Sie den Chip <strong>deuten</strong> können.
+          Kein zweites Scoring — nur Kontext am Signaltag.
         </p>
 
         <details open>
-          <summary><strong>Was ist der VIX?</strong> und die drei Ampel-Farben</summary>
+          <summary><strong>VIX &amp; Ampel</strong> (rot / gelb / grün)</summary>
           <div class="guide-body">
-            <p>
-              Der <strong>VIX</strong> („Volatility Index“, oft CBOE VIX, Symbol <code>^VIX</code>)
-              misst die <strong>erwartete Schwankung</strong> des US-Aktienmarkts (S&amp;P-500-Optionen),
-              nicht den Kurs selbst. Hoher VIX = mehr Angst/Unsicherheit, niedriger VIX = ruhigeres Umfeld.
-              Pro Signal zeigen wir den <strong>VIX-Schlusskurs am Signaltag</strong> (Yahoo Finance).
-            </p>
-            <p>
-              Die <strong>Ampel</strong> ordnet dieses Niveau in <strong>drei Regime</strong> ein
-              (historisch auf Trainings-/Testdaten kalibriert — Signale werden <em>nicht</em> ausgeschlossen):
-            </p>
+            <p><strong>Was ist der VIX?</strong><br>
+            Der VIX (CBOE Volatility Index, Yahoo: <code>^VIX</code>) ist ein Index aus
+            <strong>S&amp;P-500-Optionspreisen</strong>. Er misst, wie stark der Markt
+            <strong>kurzfristige Kursausschläge</strong> erwartet — nicht die Richtung (hoch/runter).
+            VIX <strong>hoch</strong> ≈ viel Angst/Unsicherheit; VIX <strong>niedrig</strong> ≈ ruhigeres Umfeld.
+            Auf der Karte: <strong>VIX-Schlusskurs am Signaltag</strong> (z. B. 15,3).</p>
+            <p><strong>Was ist die Ampel?</strong><br>
+            Wir ordnen nur dieses eine VIX-Niveau am Signaltag in <strong>drei Stufen</strong> ein
+            (aus Backtest/OOS kalibriert — <em>kein</em> Ausschluss von Signalen):</p>
             <ul>
-              <li><strong style="color:#a5d6a7">Grün</strong> — VIX <strong>≥ {g_min:.0f}</strong>:
-                historisch das <strong>stärkste</strong> Gesamtregime für die Modell-Signale im Schnitt.</li>
-              <li><strong style="color:#fff59d">Gelb</strong> — VIX <strong>{y_min:.0f} bis unter {g_min:.0f}</strong>:
-                mittleres Regime.</li>
-              <li><strong style="color:#ef9a9a">Rot</strong> — VIX <strong>&lt; {y_min:.0f}</strong>:
-                historisch <strong>schwächeres</strong> Gesamtregime — viele Einzeltreffer sind trotzdem möglich,
-                aber das Umfeld war im Backtest im Schnitt weniger günstig.</li>
+              <li><strong style="color:#ef9a9a">Rot</strong> — VIX <strong>unter {y_min:.0f}</strong>
+                (z. B. 15): historisch schwächeres Gesamtregime für die Modell-Signale.</li>
+              <li><strong style="color:#fff59d">Gelb</strong> — VIX zwischen <strong>{y_min:.0f}</strong>
+                und <strong>{g_min:.0f}</strong>: mittleres Regime.</li>
+              <li><strong style="color:#a5d6a7">Grün</strong> — VIX <strong>{g_min:.0f} oder höher</strong>:
+                historisch stärkstes Regime im Schnitt.</li>
             </ul>
-            <p>
-              An jeder Karte: kleine <strong>Skala + drei Lichter</strong> (rot/gelb/grün) und der konkrete
-              VIX-Wert (z. B. „VIX 15,3“). Der Filter oben gruppiert alle OOS-Signale nach dieser Farbe.
-            </p>
+            <p><strong>So deuten:</strong> Die Ampel beschreibt das <strong>große Markt-Wetter</strong>.
+            Ein rot markiertes Signal heißt nicht „schlecht“, sondern: Im Backtest war dieses
+            Umfeld im Schnitt weniger günstig — die vier Chips unten verfeinern das nur bei rot.</p>
+          </div>
+        </details>
+
+        <details open>
+          <summary><strong>Chip 1:</strong> VIX vs. 20d-Mittel</summary>
+          <div class="guide-body">
+            <div class="guide-chip">
+              <p><strong>Was der Name meint:</strong><br>
+              „20d-Mittel“ = <strong>Mittelwert des VIX</strong> über die letzten
+              <strong>20 Handelstage</strong> vor dem Signaltag (einfacher Durchschnitt der Schlusskurse).
+              Der Chip vergleicht: Ist der VIX <strong>heute eher unter oder über</strong> diesem
+              kurzfristigen Normalniveau?</p>
+              <p><strong>So wird gerechnet:</strong><br>
+              1) Mittel = Durchschnitt(VIX-Tag 1 … Tag 20 bis Signaltag)<br>
+              2) Streuung = Standardabweichung derselben 20 Tage<br>
+              3) <code>regime_vix_z_20d</code> = (VIX am Signaltag − Mittel) ÷ Streuung
+              (ein Z-Score, „wie viele Standardabweichungen vom Mittel“)</p>
+              <p><strong>Chip-Farbe:</strong><br>
+              <span class="chip-swatch chip-swatch--good">Grün</span> wenn Z <strong>&lt; 0</strong>
+              (VIX <em>unter</em> dem 20-Tage-Mittel — kurzfristig relativ ruhiger).<br>
+              <span class="chip-swatch chip-swatch--warn">Orange</span> wenn Z <strong>≥ 0</strong>
+              (VIX <em>über</em> dem Mittel — kurzfristig angespannter).<br>
+              <span class="chip-swatch chip-swatch--na">Grau</span> wenn zu wenig VIX-Historie.</p>
+              <p><strong>Beispiel:</strong> VIX heute 15,3; 20-Tage-Mittel 16,0 → Z negativ → grüner Chip:
+              trotz niedrigem absolutem VIX (&lt;20, Ampel rot) ist der VIX <em>relativ</em> gefallen.</p>
+              <p><strong>So deuten:</strong> In der Ampel-Stufe „rot“ war „VIX unter seinem eigenen
+              20-Tage-Schnitt“ im Backtest etwas günstiger — ein kleines Plus für Überzeugung,
+              kein Freifahrtschein.</p>
+            </div>
           </div>
         </details>
 
         <details>
-          <summary><strong>Die vier Zusatz-Chips</strong> (nur bei Ampel <em>rot</em>)</summary>
+          <summary><strong>Chip 2:</strong> VIX-Term 3M/VIX</summary>
           <div class="guide-body">
-            <p>
-              Wenn die Ampel <strong>rot</strong> ist, erscheinen unter dem Kopf der Karte bis zu
-              <strong>vier Chips</strong>. Sie sind aus OOS-Validierung (META+THRESHOLD + FINAL) als
-              <strong>Zusatz-Kontext</strong> gewählt — sie ersetzen <em>nicht</em> die Modell-Wahrscheinlichkeit
-              (<code>prob</code>) und schließen kein Signal aus.
-            </p>
-            <p>
-              <span class="chip-swatch chip-swatch--good">Grün</span> = in rot historisch <strong>günstiger</strong> ·
-              <span class="chip-swatch chip-swatch--warn">Orange</span> = eher <strong>Vorsicht</strong> ·
-              <span class="chip-swatch chip-swatch--na">Grau</span> = Daten fehlen → Chip ignorieren.
-            </p>
-
             <div class="guide-chip">
-              <h4>1. VIX vs. 20d-Mittel</h4>
-              <p><strong>Was:</strong> Liegt der VIX <em>unter</em> oder <em>über</em> seinem eigenen
-              20-Handelstage-Mittel am Signaltag?</p>
-              <p><strong>Berechnung:</strong> Z-Score <code>regime_vix_z_20d</code> =
-              (VIX heute − Mittel der letzten 20 Börsentage) / Standardabweichung dieser 20 Tage.
-              <strong>Grün</strong> wenn Z &lt; 0 (VIX unter Mittel), <strong>Orange</strong> wenn Z ≥ 0.</p>
-              <p><strong>Was wir daraus sagen:</strong> In rot war ein <strong>relativ entspannter</strong> VIX
-              (unter dem kurzfristigen Mittel) historisch etwas günstiger — trotz niedrigem absolutem Niveau (&lt;20).</p>
+              <p><strong>Was der Name meint:</strong><br>
+              „Term“ = <strong>Zeitstruktur</strong> der erwarteten Volatilität.
+              <strong>VIX</strong> (Spot) ≈ erwartete Schwankung für die <strong>nächsten ~30 Tage</strong>.
+              <strong>VIX 3M</strong> (<code>^VIX3M</code>) ≈ erwartete Schwankung für etwa
+              <strong>3 Monate</strong>. Die Ratio vergleicht: Ist die <strong>kurzfristige</strong>
+              Angst höher oder niedriger als die <strong>längerfristige</strong>?</p>
+              <p><strong>So wird gerechnet:</strong><br>
+              <code>vix3m_vix_ratio</code> = Schlusskurs <code>^VIX3M</code> ÷ Schlusskurs
+              <code>^VIX</code> (beide am Signaltag, Yahoo Finance).</p>
+              <p><strong>Chip-Farbe:</strong><br>
+              <span class="chip-swatch chip-swatch--good">Grün</span> wenn Ratio <strong>&lt; {vix3m_max:.2f}</strong>
+              (3-Monats-Vola nicht deutlich über Spot — Terminstruktur eher „entspannt“).<br>
+              <span class="chip-swatch chip-swatch--warn">Orange</span> wenn Ratio <strong>≥ {vix3m_max:.2f}</strong>
+              (Spot-VIX hoch vs. 3M — kurzfristiger Stress dominiert).<br>
+              <span class="chip-swatch chip-swatch--na">Grau</span> wenn VIX3M oder VIX fehlt.</p>
+              <p><strong>Beispiel:</strong> VIX = 18, VIX3M = 20 → Ratio 1,11 → grün.
+              VIX = 18, VIX3M = 23 → Ratio 1,28 → orange.</p>
+              <p><strong>So deuten:</strong> Orange = Markt ist <strong>kurzfristig</strong> nervöser als
+              der längere Horizont; bei reiner Mitläufer-Story eher skeptisch. Grün = kein akuter
+              „Stress-Spike“ in der Kurve.</p>
             </div>
-
-            <div class="guide-chip">
-              <h4>2. VIX-Term 3M/VIX</h4>
-              <p><strong>Was:</strong> Ist die <strong>Terminstruktur</strong> der Volatilität eher entspannt
-              oder angespannt? (Kurzlaufiger VIX vs. 3-Monats-VIX.)</p>
-              <p><strong>Berechnung:</strong> Ratio <code>vix3m_vix_ratio</code> = VIX 3 Monate (<code>^VIX3M</code>)
-              / VIX Spot (<code>^VIX</code>) am Signaltag.
-              <strong>Grün</strong> wenn Ratio &lt; <strong>{vix3m_max:.2f}</strong>,
-              <strong>Orange</strong> wenn ≥ {vix3m_max:.2f} (hohe Ratio = Kurzlaufiges Stressniveau hoch vs. längere Frist).</p>
-              <p><strong>Was wir daraus sagen:</strong> In rot war eine <strong>entspannte</strong> Termstruktur
-              historisch günstiger; <strong>Angespannt</strong> → eher skeptisch bei reiner Mitläufer-Story.</p>
-            </div>
-
-            <div class="guide-chip">
-              <h4>3. Sektor-Crowding</h4>
-              <p><strong>Was:</strong> Sind am selben Tag viele Meta-Treffer im <strong>gleichen Sektor</strong>
-              („alle kaufen Tech“) oder ist der Tag breiter gestreut?</p>
-              <p><strong>Berechnung:</strong> <code>sector_hhi_same_day</code> = Herfindahl-Index der Sektoranteile
-              unter allen Meta-Hits am Signaltag: Summe (Anteil Sektor)².
-              1,0 = nur ein Sektor; niedrig = viele Sektoren.
-              <strong>Grün</strong> wenn HHI &lt; <strong>{hhi_max:.2f}</strong>,
-              <strong>Orange</strong> wenn ≥ {hhi_max:.2f}.</p>
-              <p><strong>Was wir daraus sagen:</strong> Wenig Crowding spricht eher für eine <strong>Einzel-Titel-Idee</strong>;
-              viel Crowding → gemeinsame Sektor-/Marktbewegung, im Vergleich der Signale genauer abgrenzen.</p>
-            </div>
-
-            <div class="guide-chip">
-              <h4>4. News Sektor vs. Makro</h4>
-              <p><strong>Was:</strong> Ist der <strong>Ton der Sektor-News</strong> positiver als der
-              <strong>Makro-News</strong>-Ton (aus der News-Pipeline des Modells)?</p>
-              <p><strong>Berechnung:</strong> Differenz Sektor-Ton minus Makro-Ton
-              (<code>news_sec_*_tone</code> − <code>news_macro_*_tone</code>, gleicher Tag).
-              <strong>Grün</strong> wenn Differenz &gt; 0, <strong>Orange</strong> wenn ≤ 0.
-              <strong>Grau</strong>, wenn keine News-Scores verfügbar.</p>
-              <p><strong>Was wir daraus sagen:</strong> In rot war ein <strong>sektorgetriebener</strong> News-Hintergrund
-              historisch etwas günstiger als reine Makro-Dominanz — immer mit den <strong>belegten</strong> Meldungen
-              aus der KI-/eigenen Recherche abgleichen.</p>
-            </div>
-
-            <p style="margin-top:12px">
-              <strong>Nutzung:</strong> Zuerst Signal (Setup, News, Kurs) bewerten — dann Chips als
-              <strong>Zusatz-Risiko-/Kontext-Check</strong>. Mehr grüne Chips → etwas mehr Überzeugung in rot;
-              viele orange → vorsichtiger (Size, Stop). Keine Anlageberatung.
-            </p>
           </div>
         </details>
+
+        <details>
+          <summary><strong>Chip 3:</strong> Sektor-Crowding</summary>
+          <div class="guide-body">
+            <div class="guide-chip">
+              <p><strong>Was der Name meint:</strong><br>
+              „Crowding“ = <strong>gedrängte Signale</strong>: Am selben Signaltag feuern viele
+              Meta-Treffer gleichzeitig — vor allem im <strong>selben Sektor</strong> (z. B. fünf
+              Tech-Titel). Dann bewegt sich eher der <strong>ganze Sektor</strong>, nicht unbedingt
+              eine Einzelstory.</p>
+              <p><strong>So wird gerechnet:</strong><br>
+              Nur Treffer mit gleichem Kalenderdatum (<code>signals_same_day</code>).
+              Pro Sektor: Anteil = (Anzahl Signale in diesem Sektor) ÷ (alle Signale dieses Tages).<br>
+              <code>sector_hhi_same_day</code> = Summe über alle Sektoren von (Anteil)²
+              (Herfindahl-Index, HHI).<br>
+              • HHI nahe <strong>1,0</strong> = fast alles in einem Sektor.<br>
+              • HHI <strong>niedrig</strong> (z. B. 0,2) = viele Sektoren beteiligt.</p>
+              <p><strong>Chip-Farbe:</strong><br>
+              <span class="chip-swatch chip-swatch--good">Grün</span> wenn HHI <strong>&lt; {hhi_max:.2f}</strong>
+              (wenig Sektor-Bündelung).<br>
+              <span class="chip-swatch chip-swatch--warn">Orange</span> wenn HHI <strong>≥ {hhi_max:.2f}</strong>
+              (viel Crowding).<br>
+              <span class="chip-swatch chip-swatch--na">Grau</span> wenn nur ein Treffer am Tag (HHI nicht sinnvoll).</p>
+              <p><strong>Beispiel:</strong> 10 Signale am Tag: 8× Tech, 1× Finance, 1× Health →
+              hoher HHI → orangener Chip. 10 Signale auf 6 verschiedene Sektoren verteilt → niedriger HHI → grün.</p>
+              <p><strong>So deuten:</strong> Grün spricht für eine <strong>einzelne</strong> Idee;
+              orange: prüfen, ob Ihre Story wirklich <strong>ticker-spezifisch</strong> ist oder nur
+              Sektor-/Markt-Mitlauf (Vergleich mit anderen Treffern des Tages).</p>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary><strong>Chip 4:</strong> News Sektor vs. Makro</summary>
+          <div class="guide-body">
+            <div class="guide-chip">
+              <p><strong>Was der Name meint:</strong><br>
+              Das Modell wertet News automatisch aus (Sentiment/Ton pro Tag). Es gibt einen
+              <strong>Sektor-News-Ton</strong> (Stimmung in der Branche des Titels) und einen
+              <strong>Makro-News-Ton</strong> (allgemeine Markt-/Wirtschaftsnews). Der Chip fragt:
+              Klingt die <strong>Branche</strong> an diesem Tag positiver als das <strong>große Makro</strong>?</p>
+              <p><strong>So wird gerechnet:</strong><br>
+              Sektor-Ton minus Makro-Ton (Spalten <code>news_sec_*_tone</code> und
+              <code>news_macro_*_tone</code> der Pipeline, gleicher Tag).<br>
+              Positive Differenz → Sektor-Stimmung liegt über Makro-Stimmung.</p>
+              <p><strong>Chip-Farbe:</strong><br>
+              <span class="chip-swatch chip-swatch--good">Grün</span> wenn Differenz <strong>&gt; 0</strong>.<br>
+              <span class="chip-swatch chip-swatch--warn">Orange</span> wenn Differenz <strong>≤ 0</strong>
+              (Makro dominiert oder gleichauf).<br>
+              <span class="chip-swatch chip-swatch--na">Grau</span> wenn keine News-Scores (z. B. Lücken in GDELT).</p>
+              <p><strong>So deuten:</strong> Grün = Modell-Newslage stützt eher eine <strong>Branchen-/Titel-Story</strong>.
+              Orange = eher <strong>Markt-Makro</strong> treibt — Einzeltitel muss das per
+              <strong>eigener Recherche</strong> (IR, Medien) klar überzeugend sein. Immer mit
+              belegbaren Meldungen abgleichen, nicht nur Modell-Score.</p>
+            </div>
+          </div>
+        </details>
+
+        <p class="section-lead" style="margin-top:10px">
+          <strong>Alle vier Chips</strong> erscheinen nur, wenn die Ampel <strong>rot</strong> ist.
+          <span class="chip-swatch chip-swatch--good">Grün</span>/<span class="chip-swatch chip-swatch--warn">Orange</span>:
+          aus OOS-Tests in rot historisch günstiger/ungünstiger — <strong>keine Anlageberatung</strong>.
+        </p>
       </div>"""
 
 
@@ -218,110 +264,126 @@ def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
 
 
 def website_ampel_filter_js_block() -> str:
+    # HTML-Strings in JS mit einfachen Anführungszeichen (kein \" in index.html nötig).
     return """
     <script id="ampel-filter-js">
     (function () {
-      var active = "all";
+      var active = 'all';
       var signals = [];
-      var btns = document.querySelectorAll(".ampel-filter-btn");
-      var statusEl = document.getElementById("ampel-filter-status");
-      var listEl = document.getElementById("ampel-filter-list");
-      var tbody = document.getElementById("ampel-filter-tbody");
+      var btns = [];
+      var statusEl = null;
+      var listEl = null;
+      var tbody = null;
+      var bound = false;
 
       function ampelFromCard(card) {
-        var el = card.querySelector("[class*='vix-ampel--']");
-        if (el) {
-          var m = el.className.match(/vix-ampel--(red|yellow|green)/);
-          if (m) return m[1];
-        }
-        var lights = card.querySelectorAll(".vix-light.is-active");
-        for (var i = 0; i < lights.length; i++) {
-          var lm = lights[i].className.match(/vix-light--(red|yellow|green)/);
+        var lights = card.querySelectorAll('.vix-light.is-active');
+        var i, lm;
+        for (i = 0; i < lights.length; i++) {
+          lm = lights[i].className.match(/vix-light--(red|yellow|green)/);
           if (lm) return lm[1];
         }
-        var pre = (card.getAttribute("data-vix-ampel") || "").toLowerCase();
-        if (pre === "red" || pre === "yellow" || pre === "green") return pre;
-        return "unknown";
+        var pre = (card.getAttribute('data-vix-ampel') || '').toLowerCase();
+        if (pre === 'red' || pre === 'yellow' || pre === 'green') return pre;
+        return 'unknown';
       }
 
       function initCardAmpelAttrs() {
-        document.querySelectorAll(".sig-card").forEach(function (card) {
+        document.querySelectorAll('.sig-card').forEach(function (card) {
           card.dataset.vixAmpel = ampelFromCard(card);
         });
       }
 
       function filterCards(ampel) {
         var shown = 0, total = 0;
-        document.querySelectorAll(".sig-card").forEach(function (card) {
+        document.querySelectorAll('.sig-card').forEach(function (card) {
           total += 1;
-          var a = card.dataset.vixAmpel || "unknown";
-          var ok = ampel === "all" || a === ampel;
-          card.style.display = ok ? "" : "none";
+          var a = card.dataset.vixAmpel || 'unknown';
+          var ok = ampel === 'all' || a === ampel;
+          card.style.display = ok ? '' : 'none';
           if (ok) shown += 1;
         });
         return { shown: shown, total: total };
       }
 
       function esc(s) {
-        return String(s == null ? "" : s)
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
 
       function renderList(ampel) {
         if (!tbody || !listEl) return;
-        if (ampel === "all") {
+        if (ampel === 'all') {
           listEl.hidden = true;
-          tbody.innerHTML = "";
+          tbody.innerHTML = '';
           return;
         }
         var rows = signals.filter(function (s) {
-          return (s.vix_regime_ampel || "").toLowerCase() === ampel;
+          return (s.vix_regime_ampel || '').toLowerCase() === ampel;
         });
         rows.sort(function (a, b) {
-          return (b.date || "").localeCompare(a.date || "") || (a.ticker || "").localeCompare(b.ticker || "");
+          return (b.date || '').localeCompare(a.date || '') ||
+            (a.ticker || '').localeCompare(b.ticker || '');
         });
-        var dot = "ampel-filter-dot ampel-filter-dot--" + ampel;
-        tbody.innerHTML = rows.map(function (s) {
-          var sec = s.gics_sector || s.sector || "—";
-          var prob = typeof s.prob === "number" ? s.prob.toFixed(3) : (s.prob || "—");
-          return "<tr><td class=\"col-date\">" + esc(s.date) + "</td><td class=\"col-ticker\">"
-            + "<span class=\"" + dot + "\" aria-hidden=\"true\"></span>" + esc(s.ticker)
-            + "</td><td>" + esc(s.company || s.ticker) + "</td><td>" + esc(sec)
-            + "</td><td class=\"col-prob\">" + esc(prob) + "</td></tr>";
-        }).join("");
+        var dot = 'ampel-filter-dot ampel-filter-dot--' + ampel;
+        var html = [];
+        rows.forEach(function (s) {
+          var sec = s.gics_sector || s.sector || '—';
+          var prob = typeof s.prob === 'number' ? s.prob.toFixed(3) : (s.prob || '—');
+          html.push(
+            '<tr><td class="col-date">' + esc(s.date) + '</td>' +
+            '<td class="col-ticker"><span class="' + dot + '" aria-hidden="true"></span>' +
+            esc(s.ticker) + '</td><td>' + esc(s.company || s.ticker) + '</td><td>' +
+            esc(sec) + '</td><td class="col-prob">' + esc(prob) + '</td></tr>'
+          );
+        });
+        tbody.innerHTML = html.join('');
         listEl.hidden = rows.length === 0;
       }
 
       function apply(ampel) {
         active = ampel;
         btns.forEach(function (b) {
-          b.classList.toggle("is-active", b.getAttribute("data-ampel") === ampel);
+          b.classList.toggle('is-active', b.getAttribute('data-ampel') === ampel);
         });
         initCardAmpelAttrs();
         var cards = filterCards(ampel);
         renderList(ampel);
+        if (!statusEl) return;
         var n = signals.filter(function (s) {
-          return (s.vix_regime_ampel || "").toLowerCase() === ampel;
+          return (s.vix_regime_ampel || '').toLowerCase() === ampel;
         }).length;
-        if (ampel === "all") {
-          statusEl.textContent = "Alle OOS-Signale: " + signals.length + " gesamt; "
-            + cards.shown + " Chart-Karten sichtbar.";
+        if (ampel === 'all') {
+          statusEl.textContent = 'Alle OOS-Signale: ' + signals.length + ' gesamt; ' +
+            cards.shown + ' Chart-Karten sichtbar.';
         } else {
-          statusEl.textContent = "Ampel " + ampel + ": " + n + " OOS-Signale in der Liste; "
-            + cards.shown + " von " + cards.total + " Chart-Karten passen.";
+          statusEl.textContent = 'Ampel ' + ampel + ': ' + n + ' OOS-Signale in der Liste; ' +
+            cards.shown + ' von ' + cards.total + ' Chart-Karten passen.';
         }
       }
 
-      btns.forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          apply(btn.getAttribute("data-ampel") || "all");
-        });
-      });
+      function bindUi() {
+        var root = document.getElementById('ampel-filter');
+        if (!root) return;
+        statusEl = document.getElementById('ampel-filter-status');
+        listEl = document.getElementById('ampel-filter-list');
+        tbody = document.getElementById('ampel-filter-tbody');
+        btns = root.querySelectorAll('.ampel-filter-btn');
+        if (!bound) {
+          btns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              apply(btn.getAttribute('data-ampel') || 'all');
+            });
+          });
+          bound = true;
+        }
+      }
 
       function boot() {
-        fetch("signals.json", { cache: "no-store" })
+        bindUi();
+        fetch('signals.json', { cache: 'no-store' })
           .then(function (r) {
-            if (!r.ok) throw new Error("signals.json " + r.status);
+            if (!r.ok) throw new Error('signals.json ' + r.status);
             return r.json();
           })
           .then(function (data) {
@@ -331,12 +393,15 @@ def website_ampel_filter_js_block() -> str:
           .catch(function () {
             initCardAmpelAttrs();
             apply(active);
-            if (statusEl) statusEl.textContent += " (signals.json nicht geladen — nur Chart-Filter.)";
+            if (statusEl) {
+              statusEl.textContent = (statusEl.textContent || '') +
+                ' (signals.json nicht geladen — nur Chart-Filter.)';
+            }
           });
       }
 
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", boot);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
       } else {
         boot();
       }

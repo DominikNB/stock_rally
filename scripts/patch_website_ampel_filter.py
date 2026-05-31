@@ -65,22 +65,23 @@ def main() -> None:
     elif ".ampel-filter-bar" not in html:
         html = html.replace("</style>", css + "\n      </style>", 1)
 
-    if 'id="vix-user-guide"' not in html:
-        guide = website_vix_guide_html().strip()
-        if 'id="ampel-filter"' in html:
-            html = html.replace(
-                '<div class="section ampel-filter-bar"',
-                guide + '\n      <div class="section ampel-filter-bar"',
-                1,
-            )
-            print("VIX-Erklärblock vor dem Filter eingefügt.", flush=True)
-        else:
-            block = website_ampel_filter_html(counts)
-            marker = '<div class="page-wrap">'
-            if marker not in html:
-                sys.exit("page-wrap nicht gefunden")
-            html = html.replace(marker, marker + "\n    " + block.strip() + "\n    ", 1)
-            print("Ampel-Filter inkl. Erklärblock eingefügt.", flush=True)
+    guide = website_vix_guide_html().strip()
+    if 'id="vix-user-guide"' in html:
+        html, n_g = re.subn(
+            r'<div class="section vix-user-guide" id="vix-user-guide">[\s\S]*?</div>\s*(?=<div class="section ampel-filter-bar")',
+            guide + "\n      ",
+            html,
+            count=1,
+        )
+        if n_g:
+            print("VIX-Erklärblock aktualisiert.", flush=True)
+    elif 'id="ampel-filter"' in html:
+        html = html.replace(
+            '<div class="section ampel-filter-bar"',
+            guide + '\n      <div class="section ampel-filter-bar"',
+            1,
+        )
+        print("VIX-Erklärblock vor dem Filter eingefügt.", flush=True)
     elif 'id="ampel-filter"' not in html:
         block = website_ampel_filter_html(counts)
         marker = '<div class="page-wrap">'
