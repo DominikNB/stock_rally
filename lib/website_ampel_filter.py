@@ -77,7 +77,7 @@ def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
 
 def website_ampel_filter_js_block() -> str:
     return """
-    <script>
+    <script id="ampel-filter-js">
     (function () {
       var active = "all";
       var signals = [];
@@ -168,17 +168,27 @@ def website_ampel_filter_js_block() -> str:
         });
       });
 
-      fetch("signals.json", { cache: "no-store" })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          signals = (data && data.signals) ? data.signals : (Array.isArray(data) ? data : []);
-          initCardAmpelAttrs();
-          apply(active);
-        })
-        .catch(function () {
-          initCardAmpelAttrs();
-          apply(active);
-          if (statusEl) statusEl.textContent += " (signals.json nicht geladen — nur Chart-Filter.)";
-        });
+      function boot() {
+        fetch("signals.json", { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("signals.json " + r.status);
+            return r.json();
+          })
+          .then(function (data) {
+            signals = (data && data.signals) ? data.signals : (Array.isArray(data) ? data : []);
+            apply(active);
+          })
+          .catch(function () {
+            initCardAmpelAttrs();
+            apply(active);
+            if (statusEl) statusEl.textContent += " (signals.json nicht geladen — nur Chart-Filter.)";
+          });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", boot);
+      } else {
+        boot();
+      }
     })();
     </script>"""

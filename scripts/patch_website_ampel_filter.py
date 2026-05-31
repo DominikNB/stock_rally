@@ -55,9 +55,7 @@ def main() -> None:
     counts = ampel_counts(signals)
     html = INDEX.read_text(encoding="utf-8")
 
-    if "id=\"ampel-filter\"" in html:
-        print("Hinweis: Ampel-Filter bereits vorhanden — nur data-vix-ampel ergänzen.")
-    else:
+    if "id=\"ampel-filter\"" not in html:
         css = website_ampel_filter_css_block()
         if ".ampel-filter-bar" not in html:
             html = html.replace("</style>", css + "\n      </style>", 1)
@@ -67,10 +65,16 @@ def main() -> None:
         if marker not in html:
             sys.exit("page-wrap nicht gefunden")
         html = html.replace(marker, marker + "\n    " + block.strip() + "\n    ", 1)
+    else:
+        print("Hinweis: Ampel-Filter-HTML bereits vorhanden.", flush=True)
 
-        js = website_ampel_filter_js_block()
-        if "ampel-filter-btn" not in html:
-            html = html.replace("</body>", js + "\n    </body>", 1)
+    js = website_ampel_filter_js_block()
+    if "function ampelFromCard" not in html:
+        html = html.replace("</body>", js + "\n    </body>", 1)
+        print("JavaScript für Ampel-Filter eingefügt.", flush=True)
+    elif "id=\"ampel-filter-js\"" not in html:
+        html = html.replace("</body>", js + "\n    </body>", 1)
+        print("JavaScript für Ampel-Filter eingefügt (Legacy).", flush=True)
 
     html, n_cards = _add_card_ampel_attrs(html)
     INDEX.write_text(html, encoding="utf-8")

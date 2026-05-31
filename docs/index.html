@@ -11518,5 +11518,121 @@ Kurzfristige Rally-Einordnung: Meta-Hits — **Makro &amp; Index-Grounding**, da
     </main>
 
     </div>
+    
+    <script id="ampel-filter-js">
+    (function () {
+      var active = "all";
+      var signals = [];
+      var btns = document.querySelectorAll(".ampel-filter-btn");
+      var statusEl = document.getElementById("ampel-filter-status");
+      var listEl = document.getElementById("ampel-filter-list");
+      var tbody = document.getElementById("ampel-filter-tbody");
+
+      function ampelFromCard(card) {
+        if (card.dataset.vixAmpel) return card.dataset.vixAmpel;
+        var el = card.querySelector("[class*='vix-ampel--']");
+        if (!el) return "unknown";
+        var m = el.className.match(/vix-ampel--(red|yellow|green)/);
+        return m ? m[1] : "unknown";
+      }
+
+      function initCardAmpelAttrs() {
+        document.querySelectorAll(".sig-card").forEach(function (card) {
+          if (!card.dataset.vixAmpel) card.dataset.vixAmpel = ampelFromCard(card);
+        });
+      }
+
+      function filterCards(ampel) {
+        var shown = 0, total = 0;
+        document.querySelectorAll(".sig-card").forEach(function (card) {
+          total += 1;
+          var a = card.dataset.vixAmpel || "unknown";
+          var ok = ampel === "all" || a === ampel;
+          card.style.display = ok ? "" : "none";
+          if (ok) shown += 1;
+        });
+        return { shown: shown, total: total };
+      }
+
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      function renderList(ampel) {
+        if (!tbody || !listEl) return;
+        if (ampel === "all") {
+          listEl.hidden = true;
+          tbody.innerHTML = "";
+          return;
+        }
+        var rows = signals.filter(function (s) {
+          return (s.vix_regime_ampel || "").toLowerCase() === ampel;
+        });
+        rows.sort(function (a, b) {
+          return (b.date || "").localeCompare(a.date || "") || (a.ticker || "").localeCompare(b.ticker || "");
+        });
+        var dot = "ampel-filter-dot ampel-filter-dot--" + ampel;
+        tbody.innerHTML = rows.map(function (s) {
+          var sec = s.gics_sector || s.sector || "—";
+          var prob = typeof s.prob === "number" ? s.prob.toFixed(3) : (s.prob || "—");
+          return "<tr><td class="col-date">" + esc(s.date) + "</td><td class="col-ticker">"
+            + "<span class="" + dot + "" aria-hidden="true"></span>" + esc(s.ticker)
+            + "</td><td>" + esc(s.company || s.ticker) + "</td><td>" + esc(sec)
+            + "</td><td class="col-prob">" + esc(prob) + "</td></tr>";
+        }).join("");
+        listEl.hidden = rows.length === 0;
+      }
+
+      function apply(ampel) {
+        active = ampel;
+        btns.forEach(function (b) {
+          b.classList.toggle("is-active", b.getAttribute("data-ampel") === ampel);
+        });
+        initCardAmpelAttrs();
+        var cards = filterCards(ampel);
+        renderList(ampel);
+        var n = signals.filter(function (s) {
+          return (s.vix_regime_ampel || "").toLowerCase() === ampel;
+        }).length;
+        if (ampel === "all") {
+          statusEl.textContent = "Alle OOS-Signale: " + signals.length + " gesamt; "
+            + cards.shown + " Chart-Karten sichtbar.";
+        } else {
+          statusEl.textContent = "Ampel " + ampel + ": " + n + " OOS-Signale in der Liste; "
+            + cards.shown + " von " + cards.total + " Chart-Karten passen.";
+        }
+      }
+
+      btns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          apply(btn.getAttribute("data-ampel") || "all");
+        });
+      });
+
+      function boot() {
+        fetch("signals.json", { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("signals.json " + r.status);
+            return r.json();
+          })
+          .then(function (data) {
+            signals = (data && data.signals) ? data.signals : (Array.isArray(data) ? data : []);
+            apply(active);
+          })
+          .catch(function () {
+            initCardAmpelAttrs();
+            apply(active);
+            if (statusEl) statusEl.textContent += " (signals.json nicht geladen — nur Chart-Filter.)";
+          });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", boot);
+      } else {
+        boot();
+      }
+    })();
+    </script>
     </body>
     </html>
