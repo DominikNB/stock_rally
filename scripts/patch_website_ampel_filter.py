@@ -27,8 +27,6 @@ def _add_card_ampel_attrs(html: str) -> tuple[str, int]:
     def _repl(m: re.Match) -> str:
         nonlocal n
         tag = m.group(0)
-        if "data-vix-ampel" in tag and "unknown" not in tag:
-            return tag
         chunk = html[m.end() : m.end() + 4000]
         amp = "unknown"
         for c in ("red", "yellow", "green"):
@@ -40,6 +38,7 @@ def _add_card_ampel_attrs(html: str) -> tuple[str, int]:
                 amp = c
                 break
         n += 1
+        tag = re.sub(r'\s*data-vix-ampel="[^"]*"', "", tag)
         if tag.endswith(">"):
             return tag[:-1] + f' data-vix-ampel="{amp}">'
         return tag
