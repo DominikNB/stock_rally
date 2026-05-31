@@ -1254,7 +1254,7 @@ def _run_phase17(c: Any) -> None:
             _cards_grid(archive_chart_signals)
             or '<p class="empty">Keine älteren Signale mit Chart in diesem Export.</p>'
         )
-        recent_badge_cls = " zero" if not recent_slice else ""
+        recent_badge_cls = " zero" if not n_recent_site else ""
         _chart_chip_title = (
             "Externe PNG unter docs/charts/ — index.html bleibt unter 100 MiB"
             if _charts_external
