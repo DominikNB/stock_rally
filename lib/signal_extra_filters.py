@@ -122,6 +122,10 @@ _LLM_EXTRA_COLS = (
     "regime_tnx_ret_5d",
     "news_sentiment",
 )
+_LLM_RED_CONTEXT_COLS = (
+    "vix_regime_ampel",
+    "red_context_llm",
+)
 
 
 def ordered_llm_daily_columns(classification_column_keys: Sequence[str]) -> list[str]:
@@ -139,7 +143,13 @@ def ordered_llm_daily_columns(classification_column_keys: Sequence[str]) -> list
     )
     seen: set[str] = set()
     out: list[str] = []
-    for block in (meta, classification_column_keys, _LLM_EXTRA_COLS, _OHLC_LLM_COLS):
+    for block in (
+        meta,
+        classification_column_keys,
+        _LLM_EXTRA_COLS,
+        _LLM_RED_CONTEXT_COLS,
+        _OHLC_LLM_COLS,
+    ):
         for c in block:
             if c not in seen:
                 seen.add(c)
@@ -172,6 +182,8 @@ _SECTOR_TO_BENCH_ETF: dict[str, str] = {
     "media": "XLC",
     "communication_services": "XLC",
     "crypto": "BITO",
+    "consumer_defensive": "XLP",
+    "utilities": "XLU",
 }
 # Interne Modell-Labels ohne SPDR-Zeile (Yahoo-GICS i.d.R. „Industrials“ o.ä.)
 _INTERNAL_MODEL_SECTOR_BENCH_ALIAS: dict[str, str] = {
@@ -385,6 +397,9 @@ def ensure_llm_signal_columns(out: pd.DataFrame) -> pd.DataFrame:
     for c in _OHLC_LLM_COLS:
         if c not in o.columns:
             o[c] = np.nan
+    for c in _LLM_RED_CONTEXT_COLS:
+        if c not in o.columns:
+            o[c] = ""
     return o
 
 

@@ -215,6 +215,163 @@ def vix_regime_guide_panel_html() -> str:
     )
 
 
+def _ampel_label_de(level: str) -> str:
+    return {"red": "rot", "yellow": "gelb", "green": "grün", "unknown": "unbekannt"}.get(
+        str(level or "").strip().lower(), str(level or "")
+    )
+
+
+def red_context_llm_fields_from_row(row: Mapping[str, Any]) -> dict[str, str]:
+    """
+    Flache Felder für CSV/Gemini: Ampel + ein Absatz, der Chip-Logik mit Zahlen
+    verdichtet (keine reine Chip-Liste — zum Einweben in die Analyse).
+    """
+    from lib.vix_regime_ampel import ampel_fields_from_vix
+
+    vix = _f(row.get("regime_vix_level"))
+    amp = str(row.get("vix_regime_ampel") or "").strip().lower()
+    if not amp:
+        amp = str(ampel_fields_from_vix(vix).get("vix_regime_ampel") or "").strip().lower()
+    vix_s = f"{vix:.1f}" if vix is not None else "n/a"
+    amp_de = _ampel_label_de(amp)
+
+    if amp != "red":
+        return {
+            "vix_regime_ampel": amp or "",
+            "red_context_llm": (
+                f"VIX-Ampel {amp_de} (regime_vix_level={vix_s}). "
+                "Die vier Rot-Zusatz-Hinweise (nur bei rot) entfallen — "
+                "Einordnung über Makro, market_ret_*/sector_ret_*, News und RS; "
+                "nicht nach Chip-Farben argumentieren."
+            ),
+        }
+
+    chips = evaluate_red_context_chips(row)
+    thr = _chip_thresholds()
+    by_id = {c["id"]: c["state"] for c in chips}
+    parts: list[str] = [
+        f"VIX-Ampel rot (regime_vix_level={vix_s}): historisch schwächeres Gesamtregime — "
+        "kein Ausschluss einzelner Trades, aber erhöhte Skepsis. "
+        "Vier OOS-validierte Teilaspekte (kein zweites Scoring, ersetzen prob nicht) — "
+        "in der Analyse mit News, Alpha/Beta, Liquidität und Crowding **verweben**, "
+        "nicht als Aufzählung „Chip grün/orange“ ausgeben:"
+    ]
+
+    vix_z = _f(row.get("regime_vix_z_20d"))
+    st = by_id.get("vix_z", "na")
+    if st == "good":
+        parts.append(
+            f"VIX unter 20-Tage-Mittel (regime_vix_z_20d={vix_z:.2f}): in rot historisch günstiger — "
+            "leichte Entspannung trotz niedrigem Niveau; abwägen mit regime_vix_ret_5d und ob die "
+            "Aktien-Story eigenständig ist oder nur eine vorsichtige Marktbewegung mitnimmt."
+        )
+    elif st == "warn":
+        parts.append(
+            f"VIX über 20-Tage-Mittel (regime_vix_z_20d={vix_z:.2f}): in rot eher ungünstig — "
+            "stärkere Vorsicht bei Size/Stop; News und RS müssen die Schwäche klar überkompensieren."
+        )
+    else:
+        parts.append("VIX-vs-20d-Mittel: keine belastbaren Daten — Aspekt ignorieren.")
+
+    ratio = _f(row.get("vix3m_vix_ratio"))
+    st = by_id.get("vix_term", "na")
+    mx = thr["vix3m_vix_max"]
+    if st == "good":
+        parts.append(
+            f"VIX-Termstruktur entspannt (vix3m_vix_ratio={ratio:.3f} < {mx:.2f}): in rot historisch günstiger — "
+            "kein akuter Stress in der Kurve; trotzdem mit Makro-News und VIX-Niveau abgleichen."
+        )
+    elif st == "warn":
+        parts.append(
+            f"VIX-Termstruktur angespannt (vix3m_vix_ratio={ratio:.3f} ≥ {mx:.2f}): in rot eher ungünstig — "
+            "Rally-These skeptischer; bevorzugt Titel mit klarer eigener Story statt reiner Mitläufer."
+        )
+    else:
+        parts.append("VIX-Termstruktur (3M/VIX): keine Daten — ignorieren.")
+
+    hhi = _f(row.get("sector_hhi_same_day"))
+    n_same = _f(row.get("signals_same_day"))
+    n_sec = _f(row.get("signals_same_sector_same_day"))
+    st = by_id.get("crowding", "na")
+    hhi_max = thr["sector_hhi_max"]
+    crowd_extra = ""
+    if n_same is not None and n_sec is not None:
+        crowd_extra = f" (signals_same_day={int(n_same)}, gleicher Sektor={int(n_sec)})"
+    if st == "good":
+        parts.append(
+            f"Wenig Sektor-Crowding (sector_hhi_same_day={hhi:.3f} < {hhi_max:.2f}){crowd_extra}: "
+            "in rot günstiger — eher Einzeltitel-Idee; im Vergleich mit anderen Hits abgrenzen, "
+            "wer nur den Sektor mitspielt."
+        )
+    elif st == "warn":
+        parts.append(
+            f"Viel Sektor-Crowding (sector_hhi_same_day={hhi:.3f} ≥ {hhi_max:.2f}){crowd_extra}: "
+            "in rot eher ungünstig — gemeinsame Branchen-Story reicht oft nicht für den besten Kandidaten; "
+            "cluster_mean_corr_60d und Mitläufer-Check (ret_vs_sector_*) mitdenken."
+        )
+    else:
+        parts.append("Sektor-Crowding: keine Daten — ignorieren.")
+
+    news_diff = _news_sec_minus_macro(row)
+    st = by_id.get("news_sec", "na")
+    if st == "good":
+        nd = f"{news_diff:.3f}" if news_diff is not None else "n/a"
+        parts.append(
+            f"Sektor-News-Ton über Makro (Differenz Sektor−Makro > 0, ≈{nd}): in rot historisch günstiger — "
+            "Branchen-Narrativ kann die Story stützen; mit **belegten** Branchen-Meldungen aus der Web-Recherche "
+            "abgleichen (nicht nur Modell-News-Spalten)."
+        )
+    elif st == "warn":
+        nd = f"{news_diff:.3f}" if news_diff is not None else "n/a"
+        parts.append(
+            f"Makro-News dominiert Sektor (Differenz ≈{nd}): in rot eher ungünstig — "
+            "reine Beta-/Makro-Rally ohne firmenspezifischen Treiber skeptischer bewerten."
+        )
+    else:
+        parts.append(
+            "News Sektor vs. Makro: keine belastbaren Daten — weder als Plus noch Minus zählen; "
+            "Gewicht auf Web-Recherche zu Branche und Unternehmen."
+        )
+
+    good = sum(1 for c in chips if c["state"] == "good")
+    warn = sum(1 for c in chips if c["state"] == "warn")
+    if good >= 3 and warn == 0:
+        parts.append(
+            "Gesamtbild der vier Aspekte: überwiegend günstiger Rot-Kontext — "
+            "erhöht Überzeugung nur, wenn News und Daten-Check nicht widersprechen."
+        )
+    elif warn >= 2:
+        parts.append(
+            "Gesamtbild: mehrere ungünstige Rot-Aspekte — "
+            "Size/Überzeugung zurücknehmen, außer Story und Alpha sind klar belegt."
+        )
+    else:
+        parts.append(
+            "Gesamtbild: gemischter Rot-Kontext — keine pauschale Ablehnung; "
+            "im Vergleich der Treffer und im Fazit explizit abwägen."
+        )
+
+    return {
+        "vix_regime_ampel": "red",
+        "red_context_llm": " ".join(parts),
+    }
+
+
+def attach_red_context_llm_columns(df: "pd.DataFrame") -> "pd.DataFrame":
+    """Hängt vix_regime_ampel und red_context_llm an einen Signal-DataFrame."""
+    import pandas as pd
+
+    o = df.copy()
+    fields = [red_context_llm_fields_from_row(r) for _, r in o.iterrows()]
+    if not fields:
+        o["vix_regime_ampel"] = ""
+        o["red_context_llm"] = ""
+        return o
+    o["vix_regime_ampel"] = [f.get("vix_regime_ampel", "") for f in fields]
+    o["red_context_llm"] = [f.get("red_context_llm", "") for f in fields]
+    return o
+
+
 def attach_red_context_to_signal(signal: dict[str, Any]) -> dict[str, Any]:
     """Erweitert Signal-Dict um Chips; nur sinnvoll wenn Ampel rot."""
     amp = str(signal.get("vix_regime_ampel") or "").strip().lower()

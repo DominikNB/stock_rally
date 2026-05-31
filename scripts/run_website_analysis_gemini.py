@@ -10,6 +10,8 @@ Eingabe: bevorzugt data/master_daily_update.csv (gleiche Tabellenlogik wie websi
 
 Ausgabe: docs/analysis_llm_last.txt, docs/analysis_llm_last.html
 
+Aktualisiert danach automatisch den KI-Block in docs/index.html (GitHub Pages).
+
 python scripts/run_website_analysis_gemini.py
 """
 from __future__ import annotations
@@ -43,6 +45,8 @@ from website_analysis_common import (
     OUT_TXT,
     PROMPT_FILE,
     analysis_text_to_html,
+    ensure_daily_csv_red_context_columns,
+    patch_index_html_from_llm_analysis,
     read_signals_for_latest_day,
 )
 
@@ -283,14 +287,47 @@ def main() -> None:
             flush=True,
         )
 
+        _tickers = [str(r.get("ticker", "")).strip() for _, r in sub.iterrows() if str(r.get("ticker", "")).strip()]
+        _sectors: dict[str, list[str]] = {}
+        for _, r in sub.iterrows():
+            _t = str(r.get("ticker", "")).strip()
+            if not _t:
+                continue
+            _sec = str(r.get("sector") or r.get("gics_sector") or "—").strip()
+            _sectors.setdefault(_sec, []).append(_t)
+        _sector_lines = "\n".join(
+            f"  - {_sec}: {', '.join(sorted(set(ts)))}" for _sec, ts in sorted(_sectors.items())
+        )
+        _n_red = 0
+        if "vix_regime_ampel" in sub.columns:
+            _n_red = int(
+                sub["vix_regime_ampel"]
+                .astype(str)
+                .str.strip()
+                .str.lower()
+                .eq("red")
+                .sum()
+            )
+        _red_hint = ""
+        if _n_red:
+            _red_hint = (
+                f"VIX-Ampel rot bei {_n_red} Treffer(n): Spalte **red_context_llm** pro Zeile lesen und "
+                "in Makro, Daten-Check, Vergleich und Fazit **mit** News/RS/Liquidität **verweben** — "
+                "**keine** Chip-Farbliste für den Nutzer.\n"
+            )
         user_block = (
             f"Signaltag (aktuellster Tag in den Daten): {latest}\n"
-            f"Anzahl Treffer (Meta ≥ Schwelle, ggf. gekappt): {len(sub)}\n\n"
+            f"Anzahl Treffer (Meta ≥ Schwelle): {len(sub)}\n"
+            f"Alle Ticker dieses Signaltags: {', '.join(_tickers)}\n"
+            f"Nach Sektor/Cluster:\n{_sector_lines}\n\n"
+            f"{_red_hint}"
             f"{_steering}"
             f"{_avail}"
             "Die angehängte CSV enthält die Tabellenzeilen zu diesen Treffern. "
-            "Recherchiere bei Bedarf im Web zu News, Kursen und Kontext; nutze die CSV-Spalten "
-            "für Liquidität, Cluster, Korrelation, Earnings usw. wie im Prompt beschrieben.\n\n"
+            "Recherchiere im Web zu News, Makro und Kontext (Pflicht laut Prompt). "
+            "Vergleiche die Treffer **untereinander in Prosa** (Abschnitt „Vergleich der Signale“) — "
+            "der Nutzer soll keine Tabellen selbst abgleichen. "
+            "Nutze CSV-Spalten inkl. vix_regime_ampel / red_context_llm wie im Prompt.\n\n"
             "--- Prompt (Vorgaben) ---\n"
             f"{prompt_base}"
         )
@@ -400,6 +437,7 @@ def main() -> None:
         except Exception:
             pass
         print(f"Geschrieben: {OUT_TXT}, {OUT_HTML}, {OUT_RUN_META}")
+        patch_index_html_from_llm_analysis()
     finally:
         if uploaded is not None:
             try:

@@ -23,6 +23,7 @@ from lib.stock_rally_v10.training_phases.daily_scoring_html import run_phase_dai
 
 def main() -> None:
     bind_step_functions()
+    cfg.SCORING_ONLY = True
     cfg.log_pipeline_mode_banner()
     cfg.load_scoring_artifacts()
     run_data_download_and_split()

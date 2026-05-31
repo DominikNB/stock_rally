@@ -93,6 +93,13 @@ Die **exakten** Grenzen des **aktuellen** Laufs (Signaltag laut CSV, Ende Hauptf
    • **sector_ret_1d**, **sector_ret_2d**, **sector_ret_3d** — Entsprechend für den **Sektor-Benchmark**; **NaN**, wenn kein Sektor-Mapping. Vergleich mit **ret_1d_signal_day** und ggf. **ret_2d/3d der Aktie** (aus Kursverlauf oder indirekt über **momentum_** / Kontext) — **keine** Vermutung „Sektor stark“ ohne Zahl.  
    • **news_sentiment** — Reserviert für eine **externe** Sentiment-Pipeline; in der CSV typischerweise **leer (NaN)** — **nicht** raten oder selbst füllen.
 
+   **VIX-Ampel & Rot-Kontext (Anzeige + LLM — kein Filter, kein zweites Scoring):**  
+   • **vix_regime_ampel** — **green** / **yellow** / **red** aus **regime_vix_level** (Schwellen im Code: rot &lt; 20, gelb 20–25, grün ≥ 25).  
+   • **red_context_llm** — **Ein Absatz pro Zeile**: verdichtet die vier **Rot-Zusatz-Hinweise** (VIX vs. 20d-Mittel, VIX3M/VIX, Sektor-Crowding, News Sektor vs. Makro) **mit den zugrunde liegenden CSV-Zahlen** und einer **Einordnung**, wie sie mit News, Alpha/Beta und Liquidität **zusammen** zu gewichten sind.  
+   • **Bei Ampel ≠ rot:** Spalte erklärt, dass die Rot-Chips **entfallen** — **nicht** nach Chip-Farben argumentieren.  
+   • **Bei rot — verbindlich für die Analyse:** Den Inhalt von **red_context_llm** in **Makro-Intro**, **Der Daten-Check**, **Vergleich der Signale** und **Fazit** **einweben** (Widersprüche benennen, z. B. starke Story aber ungünstiger Rot-Kontext).  
+   • **Verboten:** dem Nutzer nur „Chip 1/3/4 grün“ oder eine **reine Chip-Liste** zu liefern — die Chips sind **Kontext-Hilfen**, die du mit **belegten** News und den übrigen CSV-Kennzahlen **abwägst**, nicht separat abschließt.
+
    **Kurzreferenz Daten (Kompakt für schnellen Abgleich — Details siehe oben):**  
    • **Cluster / Sektor:** signals_same_day, sector_share_same_day, sector_hhi_same_day (Konzentration der Sektoren).  
    • **Korrelation:** cluster_mean_corr_60d — ob Treffer „im Block“ agieren.  
@@ -168,10 +175,12 @@ Ergänze die vier Basisabfragen um **weitere, zum jeweiligen Titel passende** Su
 
 **Qualität:** Keine oberflächliche Ein-Satz-Suche — jeden **Treffer** auf **Ticker + Börse** und **Datum** prüfen; **Jahres-Rückblicke**, ältere Artikel ohne Bezug zum **Hauptfenster (Signaltag ±2 Tage, bis Signaltag 24:00 Europe/Berlin)** bzw. zum **Zusatzfenster (Steuerblock)** oder generische Branchen-Texte ohne Firmenbezug **verwerfen**.
 
+**Wenige Treffer pro Signaltag (typisch):** Es werden **nur wenige** Meta-Treffer am Signaltag erwartet. **Jeder** Treffer erhält die **volle** Tiefenanalyse (alle Unterpunkte). Der Leser soll **nicht** selbst Ticker untereinander vergleichen oder Tabellen ablesen müssen — **du** führst den Vergleich in **flüssiger Prosa** und triffst am Ende **eine klare Entscheidung**.
+
 **Reasoning-Prozess (Reihenfolge einhalten):**
 
 1. **Makro-Analyse (zuerst):** Welche **2–3** übergeordneten Markt- oder Makro-Themen / **Top-Meldungen** haben den **Leitindex** (**market_bench_symbol**) am Signaltag plausibel geprägt? Nur **belegbare** Aussagen mit **Quelle**; wenn nichts Verlässliches: knapp sagen, dass das Makrobild **unklar** oder **gemischt** ist — nichts erfinden.  
-2. **Alle Hits** des aktuellsten Signaltags je Ticker erfassen.  
+2. **Alle Hits** des aktuellsten Signaltags je Ticker erfassen (vollständige Liste — keinen weglassen).  
 3. **Ticker-Recherche (Hauptfenster):** Pro Ticker mindestens **vier** gezielte **Unternehmens**-Suchen wie im **Such-Protokoll** (Signaltag, Vortag, zwei Tage zuvor, IR/ad hoc — kurzfristiges Fenster) **und** mindestens **zwei** **Branchen-/Geschäftsbereichs**-Suchen (Pflicht).  
 3b. **Ticker- und Makro-Recherche (Zusatzfenster, Pflicht):** Wie **Such-Protokoll — Zusatzfenster**; Ergebnisse für spätere Synthese festhalten (**getrennt** vom Hauptfenster).  
 4. **Kausalität Alpha vs. Beta:** **ret_1d_signal_day** mit **market_ret_1d** und **sector_ret_1d** (und bei Bedarf **2d/3d**) vergleichen. Liegt die Aktie nur im Rahmen des Marktes (Beta / **Mitläufer**), oder klar darüber (**Alpha**)? Bei **Alpha** gezielt nach **unternehmensspezifischem** Treiber mit Quelle suchen; wenn der nicht belegbar ist, prüfen, ob der Move durch **belegbare Branchen-/Sektormeldungen** plausibel wird (mit Quelle).  
@@ -187,12 +196,22 @@ Ergänze die vier Basisabfragen um **weitere, zum jeweiligen Titel passende** Su
 
 8. **Dann abgleichen:** Passen Cluster-, Korrelations-, Liquiditäts-, RS-, Gap-, Markt-/Sektor-Renditen, Short-/Institutions- und Earnings-Infos aus der CSV zu dieser Story — oder widersprechen sie sich?
 
+8b. **Rot-Kontext einweben (wenn vix_regime_ampel=red):** **red_context_llm** lesen und **mit** News, Alpha/Beta, Crowding (**sector_hhi_same_day**, **signals_same_sector_same_day**), **regime_vix_*** und Liquidität **in einem Gedanken** verknüpfen — z. B. „Story stark, aber Termstruktur angespannt und viel Sektor-Crowding → vorsichtiger“. **Nicht** als separaten Chip-Absatz oder Farbliste; bei **Widerspruch** Story vs. Rot-Kontext **explizit** benennen.
+
 9. **Technik nur bei Bedarf:** Knapp erwähnen, wenn es die Einordnung schärft; sonst weglassen.
 
-10. **Synthese**  
-   Klar benennen, wo **Makro**, **Nachrichtenlage** (**Hauptfenster**), **Zusatzfenster** (falls relevant: neue Risiken/Chancen **nach** den Kursdaten), Liquidität, Termine, relative Stärke und Cluster zusammenpassen – und wo Risiken oder Lücken bestehen. **Fazit** muss **Zusatzfenster** mitdenken, wenn dort belastbare Fakten lagen.
+10. **Vergleich unter den Treffern (Pflicht, in Prosa — keine Tabelle für den Leser):**  
+   Nach den Einzelticker-Blöcken, **bevor** das abschließende Fazit: in **zusammenhängenden Absätzen** (keine Vergleichstabelle, keine „Spalte vs. Spalte“) erklären:
+   • Wer hat einen **eigenen, belegten** Unternehmens- oder klaren Branchen-Treiber — wer ist eher **nur Mitläufer** (Beta / gleicher Sektor / gleiches Makro)?  
+   • Gibt es **Widersprüche** zwischen den Kandidaten (z. B. stärkere Story aber schlechtere Liquidität, spekulativer Charakter, Zusatzfenster-Risiko nur bei einem Titel)?  
+   • Wenn **mehrere Ticker im gleichen Sektor** signalisieren: **einmal** die gemeinsame Branchenlage, dann **konkret** abgrenzen, **warum** einer vor dem anderen überzeugender ist (oder keiner).  
+   • **signals_same_day** / Cluster-Hinweise aus der CSV: Ist das eher eine **breite** Markt-/Sektor-Bewegung oder **echte** Einzeltitel-Ideen?  
+   Der Leser soll aus diesem Abschnitt **ohne Nachrechnen** verstehen, wie die Treffer **zueinander** stehen.
 
-11. **Rahmen**  
+11. **Synthese**  
+   Kurz zusammenfassen, wo **Makro**, **Nachrichtenlage** (**Hauptfenster**), **Zusatzfenster** (falls relevant), Liquidität und relative Stärke **über alle Kandidaten** zusammenpassen. **Zusatzfenster** mitdenken, wenn dort belastbare Fakten lagen.
+
+12. **Rahmen**  
    • **Rally-These:** Orientierung an **return_window** (Handelstage) aus der **Rally-Zieldefinition** im Kopf — das ist der vom Modell optimierte Horizont; **nicht** pauschal eine längere Swing-Spanne unterstellen.  
    • Sachlich und nachvollziehbar formulieren.
 
@@ -210,16 +229,19 @@ Output (für die Website):
   **Ticker (Name): [News-Rating: Positiv / Neutral / Spekulativ]**  
   - **Die Story:** Zuerst **unternehmensspezifisch** (mit **Quelle & Datum**); falls dort nichts Belegbares: den **vorgeschriebenen** Standard-Satz. **Immer** ergänzen: **Branchen-/Geschäftsbereich** — **belegbare** Sektormeldungen **mit Quelle & Datum**, oder der **vorgeschriebene** Satz, dass auch dort **keine** belastbare Meldung im Fenster gefunden wurde. **Rein technisch / datengetrieben** nur, wenn **weder** Firmen- **noch** Branchen-News belegbar sind (beide Ebenen ausdrücklich abgeschlossen). **Alles in diesem Unterpunkt = Hauptfenster (bis Signaltag 24:00 Europe/Berlin).**  
   - **Seit Signaltag 24:00 (Zusatzfenster):** **Pflicht-Unterpunkt.** Kurz **unternehmensspezifisch** und **Branche** (mit Quelle & Zeit), oder **„Keine belastbaren Meldungen im Zusatzfenster.“** Wenn etwas **die Einordnung verschärft oder widerspricht** (z. B. neue ad hoc), **hervorheben**.  
-  - **Der Daten-Check:** Verknüpfung von Story mit Liquidität, **ret_1d_signal_day** vs. **market_ret_1d** / **sector_ret_1d** (und bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**), RS (ret_vs_*), Gap, volume_zscore_20d, Short Interest / Inst., Earnings — **Alpha vs. Beta** kurz benennen. **Hinweis:** CSV nur bis Signaltag; Zusatzfenster-News **nicht** als neue Zahl in der Tabelle ausgeben.  
+  - **Der Daten-Check:** Verknüpfung von Story mit Liquidität, **ret_1d_signal_day** vs. **market_ret_1d** / **sector_ret_1d** (und bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**), RS (ret_vs_*), Gap, volume_zscore_20d, Short Interest / Inst., Earnings — **Alpha vs. Beta** kurz benennen. **Bei vix_regime_ampel=red:** Inhalt aus **red_context_llm** hier **mit** den genannten Kennzahlen **abwägen** (ein zusammenhängender Absatz, keine Chip-Aufzählung). **Hinweis:** CSV nur bis Signaltag; Zusatzfenster-News **nicht** als neue Zahl in der Tabelle ausgeben.  
   - **Risiko-Faktor:** Konkrete Warnung (z. B. **Earnings/Binary Event** — nur wenn **bdays_to_next_earnings** **≤ return_window**; sonst Earnings hier **nicht** überbewerten, **spekulativer Squeeze**, **geringes Volumen trotz Narrativ**, **neue Meldung im Zusatzfenster**).
 
-• Danach eine **Strategie-Zusammenfassung** über alle Ticker (wer passt am ehesten zur These, wer nicht).
+• Danach **„Vergleich der Signale“** (Überschrift ##): **flüssige Prosa**, kein Tabellenformat — der Nutzer soll **nicht** selbst Zeilen oder Karten vergleichen müssen. Hier die **gegenseitige Einordnung** aller Treffer (Mitläufer vs. Alpha, Sektor-Crowding, stärkste/schwächste Story, Risiken im Zusatzfenster).
 
-• Struktur insgesamt: Zuerst **Makro**, dann **Nachrichten & Daten-Synthese**; strukturelle CSV-Punkte einweben; Technik nur knapp wo sinnvoll — für Leser ohne technischen Hintergrund verständlich.
+• Struktur insgesamt: **Makro** → **je Ticker vollständig** (einheitliches Layout) → **Vergleich der Signale (Prosa)** → **Fazit**. Für Leser ohne technischen Hintergrund; verständlich, ohne Tabellenpflicht.
 
-• **Pflicht — abschließendes Fazit:**  
-  Klare Benennung **eines** Favoriten **oder** bewusste **Ablehnung** aller Treffer — gestützt auf **News-Daten-Synthese** (Hauptfenster **und** Zusatzfenster) und CSV-Abgleich (**nicht** nach **prob**, prob-Rankings oder Modell-Score; **nicht** auf Bauchgefühl). Kein Textende ohne diese Klärung; das letzte Wort gehört der **konkreten Aktienwahl oder der bewussten Nicht-Wahl**.
+• **Pflicht — abschließendes Fazit (letzter Abschnitt, klar erkennbar):**  
+  **Eine** verständliche Schlussfolgerung für den Nutzer: **Welche** Aktie (Ticker + Name) kommt für einen **kurzfristigen** Impuls am ehesten infrage — **oder** bewusst **keine** („heute nichts kaufen“).  
+  Begründung in **2–4 Sätzen** in Alltagssprache (News + Daten-Check + Vergleich oben), **nicht** nach **prob** oder Modell-Score.  
+  Optional: **zweiter Platz** oder „nur beobachten“ — nur wenn hilfreich, ohne zu verwirren.  
+  Kein Textende ohne diese Klärung.
 
 Kurzbeschreibung (eine Zeile für die UI):
 
-Kurzfristige Rally-Einordnung: Meta-Hits — **Makro & Index-Grounding**, dann **Nachrichten mit Belegpflicht**; Cluster/Liquidität/RS/Markt-Sektor-Renditen/Short/Earnings aus CSV; **Alpha vs. Beta**; Schluss: welche Aktie am ehesten für einen **kurzfristigen** Impuls infrage kommt — keine Anlageberatung.
+Kurzfristige Rally-Einordnung: Makro, dann jeder Treffer einzeln, **Vergleich in Prosa** (ohne Tabelle), klares **Fazit** mit konkreter Aktienwahl oder Ablehnung — keine Anlageberatung.

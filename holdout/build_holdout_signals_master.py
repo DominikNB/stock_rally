@@ -437,6 +437,9 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
             tail = [c for c in out.columns if c not in base_cols]
             out = out[base_cols + tail]
             out = ensure_llm_signal_columns(out)
+            from lib.vix_red_context_chips import attach_red_context_llm_columns
+
+            out = attach_red_context_llm_columns(out)
             print(f"Zusätzliche Filter-Spalten: {', '.join(tail)}")
             _diag = get_last_enrich_diagnostics()
             if _diag:
@@ -466,6 +469,9 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
             from lib.signal_extra_filters import ensure_llm_signal_columns
 
             out = ensure_llm_signal_columns(out)
+            from lib.vix_red_context_chips import attach_red_context_llm_columns
+
+            out = attach_red_context_llm_columns(out)
 
     MASTER_COMPLETE_CSV.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(MASTER_COMPLETE_CSV, index=False)

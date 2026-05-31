@@ -17,6 +17,57 @@ COMPLETE_CSV = ROOT / "data" / "master_complete.csv"
 HOLDOUT_CSV = ROOT / "data" / "holdout_signals.csv"
 OUT_TXT = DOCS / "analysis_llm_last.txt"
 OUT_HTML = DOCS / "analysis_llm_last.html"
+INDEX_HTML = DOCS / "index.html"
+
+
+def ensure_daily_csv_red_context_columns() -> None:
+    """Ergänzt master_daily_update.csv um vix_regime_ampel / red_context_llm falls fehlend."""
+    import pandas as pd
+
+    if not DAILY_CSV.is_file():
+        return
+    df = pd.read_csv(DAILY_CSV)
+    if df.empty or "red_context_llm" in df.columns:
+        return
+    from lib.vix_red_context_chips import attach_red_context_llm_columns
+
+    attach_red_context_llm_columns(df).to_csv(DAILY_CSV, index=False)
+
+
+def patch_index_html_from_llm_analysis() -> bool:
+    """
+    Übernimmt den KI-Body aus analysis_llm_last.html in docs/index.html
+    (ohne vollen Phase-17-Lauf). Für GitHub Pages nach Gemini-Lauf.
+    """
+    import re
+
+    if not OUT_HTML.is_file():
+        return False
+    if not INDEX_HTML.is_file():
+        print(f"Hinweis: {INDEX_HTML} fehlt — Index-Patch übersprungen.", file=sys.stderr)
+        return False
+    last = OUT_HTML.read_text(encoding="utf-8")
+    m = re.search(
+        r'<div class="analysis-llm-body prose-analysis">(.*)</div>\s*</div>\s*$',
+        last,
+        flags=re.DOTALL,
+    )
+    if not m:
+        print("Hinweis: analysis-llm-body in analysis_llm_last.html nicht gefunden.", file=sys.stderr)
+        return False
+    inner = m.group(1)
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    pat = (
+        r'(<div class="analysis-llm-body prose-analysis">).*?'
+        r'(</div>\s*\n\s*</div>\s*\n\s*<div class="section signals-recent-section">)'
+    )
+    new_html, n = re.subn(pat, r"\1" + inner + r"\2", html, count=1, flags=re.DOTALL)
+    if n != 1:
+        print(f"Hinweis: index.html KI-Block nicht gefunden (n={n}).", file=sys.stderr)
+        return False
+    INDEX_HTML.write_text(new_html, encoding="utf-8")
+    print(f"Website: {INDEX_HTML} KI-Block aktualisiert ({len(inner):,} Zeichen).", flush=True)
+    return True
 
 
 def read_signals_for_latest_day():
