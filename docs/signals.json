@@ -1,7 +1,105 @@
 {
-  "generated": "2026-05-31 23:02",
+  "generated": "2026-06-02 01:13",
   "threshold": 0.7999999999999999,
   "signals": [
+    {
+      "ticker": "ILMN",
+      "company": "Illumina",
+      "sector": "healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2026-06-01",
+      "prob": 0.8404753522433646,
+      "regime_vix_level": 16.05,
+      "vix_regime_ampel": "red",
+      "vix_regime_label": "VIX unter 20",
+      "vix_regime_hint": "Schw\u00e4cheres Gesamtregime (VIX < 20) \u2014 kein Signal-Filter; viele Einzeltreffer trotzdem m\u00f6glich.",
+      "regime_vix_z_20d": -1.3074562025731955,
+      "vix3m_vix_ratio": 1.2105919768712874,
+      "sector_hhi_same_day": 1.0,
+      "red_context_chips": [
+        {
+          "id": "vix_z",
+          "label": "VIX vs. 20d-Mittel",
+          "tooltip": "Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z < 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).",
+          "state": "good"
+        },
+        {
+          "id": "vix_term",
+          "label": "VIX-Term 3M/VIX",
+          "tooltip": "Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.",
+          "state": "warn"
+        },
+        {
+          "id": "crowding",
+          "label": "Sektor-Crowding",
+          "tooltip": "Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.",
+          "state": "warn"
+        },
+        {
+          "id": "news_sec",
+          "label": "News Sektor vs. Makro",
+          "tooltip": "Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.",
+          "state": "na"
+        }
+      ],
+      "red_context_good": 1,
+      "red_context_warn": 2,
+      "red_context_na": 1,
+      "red_context_html": "<div class=\"red-ctx-chips\" aria-label=\"Kontext in rot\"><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).\">VIX vs. 20d-Mittel</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.\">VIX-Term 3M/VIX</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.\">Sektor-Crowding</span><span class=\"red-ctx-chip red-ctx-chip--na\" title=\"Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.\">News Sektor vs. Makro</span></div>"
+    },
+    {
+      "ticker": "TMO",
+      "company": "Thermo Fisher",
+      "sector": "healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2026-06-01",
+      "prob": 0.8068569230765799,
+      "regime_vix_level": 16.05,
+      "vix_regime_ampel": "red",
+      "vix_regime_label": "VIX unter 20",
+      "vix_regime_hint": "Schw\u00e4cheres Gesamtregime (VIX < 20) \u2014 kein Signal-Filter; viele Einzeltreffer trotzdem m\u00f6glich.",
+      "regime_vix_z_20d": -1.3074562025731955,
+      "vix3m_vix_ratio": 1.2105919768712874,
+      "sector_hhi_same_day": 1.0,
+      "red_context_chips": [
+        {
+          "id": "vix_z",
+          "label": "VIX vs. 20d-Mittel",
+          "tooltip": "Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z < 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).",
+          "state": "good"
+        },
+        {
+          "id": "vix_term",
+          "label": "VIX-Term 3M/VIX",
+          "tooltip": "Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.",
+          "state": "warn"
+        },
+        {
+          "id": "crowding",
+          "label": "Sektor-Crowding",
+          "tooltip": "Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.",
+          "state": "warn"
+        },
+        {
+          "id": "news_sec",
+          "label": "News Sektor vs. Makro",
+          "tooltip": "Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.",
+          "state": "na"
+        }
+      ],
+      "red_context_good": 1,
+      "red_context_warn": 2,
+      "red_context_na": 1,
+      "red_context_html": "<div class=\"red-ctx-chips\" aria-label=\"Kontext in rot\"><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).\">VIX vs. 20d-Mittel</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.\">VIX-Term 3M/VIX</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.\">Sektor-Crowding</span><span class=\"red-ctx-chip red-ctx-chip--na\" title=\"Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.\">News Sektor vs. Makro</span></div>"
+    },
     {
       "ticker": "ACT.DE",
       "company": "AlzChem",
@@ -12,7 +110,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-05-29",
-      "prob": 0.882564586605504,
+      "prob": 0.8604480205914249,
       "regime_vix_level": 15.32,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -61,7 +159,56 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-05-28",
-      "prob": 0.8584741601832107,
+      "prob": 0.8858241703106902,
+      "regime_vix_level": 15.74,
+      "vix_regime_ampel": "red",
+      "vix_regime_label": "VIX unter 20",
+      "vix_regime_hint": "Schw\u00e4cheres Gesamtregime (VIX < 20) \u2014 kein Signal-Filter; viele Einzeltreffer trotzdem m\u00f6glich.",
+      "regime_vix_z_20d": -2.260039069944162,
+      "vix3m_vix_ratio": 1.2141042495703922,
+      "sector_hhi_same_day": 1.0,
+      "red_context_chips": [
+        {
+          "id": "vix_z",
+          "label": "VIX vs. 20d-Mittel",
+          "tooltip": "Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z < 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).",
+          "state": "good"
+        },
+        {
+          "id": "vix_term",
+          "label": "VIX-Term 3M/VIX",
+          "tooltip": "Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.",
+          "state": "warn"
+        },
+        {
+          "id": "crowding",
+          "label": "Sektor-Crowding",
+          "tooltip": "Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.",
+          "state": "warn"
+        },
+        {
+          "id": "news_sec",
+          "label": "News Sektor vs. Makro",
+          "tooltip": "Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.",
+          "state": "na"
+        }
+      ],
+      "red_context_good": 1,
+      "red_context_warn": 2,
+      "red_context_na": 1,
+      "red_context_html": "<div class=\"red-ctx-chips\" aria-label=\"Kontext in rot\"><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).\">VIX vs. 20d-Mittel</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.\">VIX-Term 3M/VIX</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.\">Sektor-Crowding</span><span class=\"red-ctx-chip red-ctx-chip--na\" title=\"Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.\">News Sektor vs. Makro</span></div>"
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-05-28",
+      "prob": 0.8076992235795181,
       "regime_vix_level": 15.74,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -110,7 +257,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-27",
-      "prob": 0.8585313310010294,
+      "prob": 0.8658013595289581,
       "regime_vix_level": 16.29,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -159,7 +306,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "internet retail",
       "date": "2026-05-27",
-      "prob": 0.84600385949781,
+      "prob": 0.8526646062670671,
       "regime_vix_level": 16.29,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -257,7 +404,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "information technology services",
       "date": "2026-05-26",
-      "prob": 0.8637666233439891,
+      "prob": 0.8643173791693913,
       "regime_vix_level": 17.01,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -1090,7 +1237,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-05-11",
-      "prob": 0.8122521292084208,
+      "prob": 0.8119981305840355,
       "regime_vix_level": 18.38,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -13354,7 +13501,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-15",
-      "prob": 0.8321069250306798,
+      "prob": 0.8319154192601259,
       "regime_vix_level": 15.69,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -20795,7 +20942,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-04-28",
-      "prob": 0.80505176899699,
+      "prob": 0.8037601892467494,
       "regime_vix_level": 25.15,
       "vix_regime_ampel": "green",
       "vix_regime_label": "Regime stark",
@@ -21299,7 +21446,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-04-16",
-      "prob": 0.8459975189028713,
+      "prob": 0.8425357516040504,
       "regime_vix_level": 32.64,
       "vix_regime_ampel": "green",
       "vix_regime_label": "Regime stark",
@@ -21320,7 +21467,7 @@
       "gics_sector_key": "real estate",
       "gics_industry_key": "real estate services",
       "date": "2025-04-16",
-      "prob": 0.8359240156290303,
+      "prob": 0.83394413526219,
       "regime_vix_level": 32.64,
       "vix_regime_ampel": "green",
       "vix_regime_label": "Regime stark",
@@ -24414,7 +24561,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-02-14",
-      "prob": 0.8503909737577589,
+      "prob": 0.849628707068254,
       "regime_vix_level": 14.77,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -25737,7 +25884,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "telecom services",
       "date": "2025-01-29",
-      "prob": 0.8608277599579368,
+      "prob": 0.8614684782843299,
       "regime_vix_level": 16.56,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -31428,6 +31575,104 @@
   ],
   "signals_holdout_final": [
     {
+      "ticker": "ILMN",
+      "company": "Illumina",
+      "sector": "healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2026-06-01",
+      "prob": 0.8404753522433646,
+      "regime_vix_level": 16.05,
+      "vix_regime_ampel": "red",
+      "vix_regime_label": "VIX unter 20",
+      "vix_regime_hint": "Schw\u00e4cheres Gesamtregime (VIX < 20) \u2014 kein Signal-Filter; viele Einzeltreffer trotzdem m\u00f6glich.",
+      "regime_vix_z_20d": -1.3074562025731955,
+      "vix3m_vix_ratio": 1.2105919768712874,
+      "sector_hhi_same_day": 1.0,
+      "red_context_chips": [
+        {
+          "id": "vix_z",
+          "label": "VIX vs. 20d-Mittel",
+          "tooltip": "Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z < 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).",
+          "state": "good"
+        },
+        {
+          "id": "vix_term",
+          "label": "VIX-Term 3M/VIX",
+          "tooltip": "Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.",
+          "state": "warn"
+        },
+        {
+          "id": "crowding",
+          "label": "Sektor-Crowding",
+          "tooltip": "Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.",
+          "state": "warn"
+        },
+        {
+          "id": "news_sec",
+          "label": "News Sektor vs. Makro",
+          "tooltip": "Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.",
+          "state": "na"
+        }
+      ],
+      "red_context_good": 1,
+      "red_context_warn": 2,
+      "red_context_na": 1,
+      "red_context_html": "<div class=\"red-ctx-chips\" aria-label=\"Kontext in rot\"><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).\">VIX vs. 20d-Mittel</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.\">VIX-Term 3M/VIX</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.\">Sektor-Crowding</span><span class=\"red-ctx-chip red-ctx-chip--na\" title=\"Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.\">News Sektor vs. Makro</span></div>"
+    },
+    {
+      "ticker": "TMO",
+      "company": "Thermo Fisher",
+      "sector": "healthcare",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Healthcare",
+      "gics_industry": "Diagnostics & Research",
+      "gics_sector_key": "healthcare",
+      "gics_industry_key": "diagnostics research",
+      "date": "2026-06-01",
+      "prob": 0.8068569230765799,
+      "regime_vix_level": 16.05,
+      "vix_regime_ampel": "red",
+      "vix_regime_label": "VIX unter 20",
+      "vix_regime_hint": "Schw\u00e4cheres Gesamtregime (VIX < 20) \u2014 kein Signal-Filter; viele Einzeltreffer trotzdem m\u00f6glich.",
+      "regime_vix_z_20d": -1.3074562025731955,
+      "vix3m_vix_ratio": 1.2105919768712874,
+      "sector_hhi_same_day": 1.0,
+      "red_context_chips": [
+        {
+          "id": "vix_z",
+          "label": "VIX vs. 20d-Mittel",
+          "tooltip": "Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z < 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).",
+          "state": "good"
+        },
+        {
+          "id": "vix_term",
+          "label": "VIX-Term 3M/VIX",
+          "tooltip": "Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.",
+          "state": "warn"
+        },
+        {
+          "id": "crowding",
+          "label": "Sektor-Crowding",
+          "tooltip": "Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.",
+          "state": "warn"
+        },
+        {
+          "id": "news_sec",
+          "label": "News Sektor vs. Makro",
+          "tooltip": "Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.",
+          "state": "na"
+        }
+      ],
+      "red_context_good": 1,
+      "red_context_warn": 2,
+      "red_context_na": 1,
+      "red_context_html": "<div class=\"red-ctx-chips\" aria-label=\"Kontext in rot\"><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).\">VIX vs. 20d-Mittel</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.\">VIX-Term 3M/VIX</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.\">Sektor-Crowding</span><span class=\"red-ctx-chip red-ctx-chip--na\" title=\"Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.\">News Sektor vs. Makro</span></div>"
+    },
+    {
       "ticker": "ACT.DE",
       "company": "AlzChem",
       "sector": "basic_materials",
@@ -31437,7 +31682,7 @@
       "gics_sector_key": "basic materials",
       "gics_industry_key": "specialty chemicals",
       "date": "2026-05-29",
-      "prob": 0.882564586605504,
+      "prob": 0.8604480205914249,
       "regime_vix_level": 15.32,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -31486,7 +31731,56 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-05-28",
-      "prob": 0.8584741601832107,
+      "prob": 0.8858241703106902,
+      "regime_vix_level": 15.74,
+      "vix_regime_ampel": "red",
+      "vix_regime_label": "VIX unter 20",
+      "vix_regime_hint": "Schw\u00e4cheres Gesamtregime (VIX < 20) \u2014 kein Signal-Filter; viele Einzeltreffer trotzdem m\u00f6glich.",
+      "regime_vix_z_20d": -2.260039069944162,
+      "vix3m_vix_ratio": 1.2141042495703922,
+      "sector_hhi_same_day": 1.0,
+      "red_context_chips": [
+        {
+          "id": "vix_z",
+          "label": "VIX vs. 20d-Mittel",
+          "tooltip": "Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z < 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).",
+          "state": "good"
+        },
+        {
+          "id": "vix_term",
+          "label": "VIX-Term 3M/VIX",
+          "tooltip": "Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.",
+          "state": "warn"
+        },
+        {
+          "id": "crowding",
+          "label": "Sektor-Crowding",
+          "tooltip": "Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.",
+          "state": "warn"
+        },
+        {
+          "id": "news_sec",
+          "label": "News Sektor vs. Makro",
+          "tooltip": "Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.",
+          "state": "na"
+        }
+      ],
+      "red_context_good": 1,
+      "red_context_warn": 2,
+      "red_context_na": 1,
+      "red_context_html": "<div class=\"red-ctx-chips\" aria-label=\"Kontext in rot\"><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).\">VIX vs. 20d-Mittel</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.\">VIX-Term 3M/VIX</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.\">Sektor-Crowding</span><span class=\"red-ctx-chip red-ctx-chip--na\" title=\"Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.\">News Sektor vs. Makro</span></div>"
+    },
+    {
+      "ticker": "WDC",
+      "company": "Western Digital",
+      "sector": "technology",
+      "classification_standard": "GICS_Yahoo",
+      "gics_sector": "Technology",
+      "gics_industry": "Computer Hardware",
+      "gics_sector_key": "technology",
+      "gics_industry_key": "computer hardware",
+      "date": "2026-05-28",
+      "prob": 0.8076992235795181,
       "regime_vix_level": 15.74,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -31535,7 +31829,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "auto manufacturers",
       "date": "2026-05-27",
-      "prob": 0.8585313310010294,
+      "prob": 0.8658013595289581,
       "regime_vix_level": 16.29,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -31584,7 +31878,7 @@
       "gics_sector_key": "consumer cyclical",
       "gics_industry_key": "internet retail",
       "date": "2026-05-27",
-      "prob": 0.84600385949781,
+      "prob": 0.8526646062670671,
       "regime_vix_level": 16.29,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -31682,7 +31976,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "information technology services",
       "date": "2026-05-26",
-      "prob": 0.8637666233439891,
+      "prob": 0.8643173791693913,
       "regime_vix_level": 17.01,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -32515,7 +32809,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2026-05-11",
-      "prob": 0.8122521292084208,
+      "prob": 0.8119981305840355,
       "regime_vix_level": 18.38,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -44779,7 +45073,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-09-15",
-      "prob": 0.8321069250306798,
+      "prob": 0.8319154192601259,
       "regime_vix_level": 15.69,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -52220,7 +52514,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-04-28",
-      "prob": 0.80505176899699,
+      "prob": 0.8037601892467494,
       "regime_vix_level": 25.15,
       "vix_regime_ampel": "green",
       "vix_regime_label": "Regime stark",
@@ -52724,7 +53018,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "aerospace defense",
       "date": "2025-04-16",
-      "prob": 0.8459975189028713,
+      "prob": 0.8425357516040504,
       "regime_vix_level": 32.64,
       "vix_regime_ampel": "green",
       "vix_regime_label": "Regime stark",
@@ -52745,7 +53039,7 @@
       "gics_sector_key": "real estate",
       "gics_industry_key": "real estate services",
       "date": "2025-04-16",
-      "prob": 0.8359240156290303,
+      "prob": 0.83394413526219,
       "regime_vix_level": 32.64,
       "vix_regime_ampel": "green",
       "vix_regime_label": "Regime stark",
@@ -55839,7 +56133,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "semiconductors",
       "date": "2025-02-14",
-      "prob": 0.8503909737577589,
+      "prob": 0.849628707068254,
       "regime_vix_level": 14.77,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -57162,7 +57456,7 @@
       "gics_sector_key": "communication services",
       "gics_industry_key": "telecom services",
       "date": "2025-01-29",
-      "prob": 0.8608277599579368,
+      "prob": 0.8614684782843299,
       "regime_vix_level": 16.56,
       "vix_regime_ampel": "red",
       "vix_regime_label": "VIX unter 20",
@@ -62851,11 +63145,11 @@
       "red_context_html": "<div class=\"red-ctx-chips\" aria-label=\"Kontext in rot\"><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).\">VIX vs. 20d-Mittel</span><span class=\"red-ctx-chip red-ctx-chip--good\" title=\"Gr\u00fcn: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.\">VIX-Term 3M/VIX</span><span class=\"red-ctx-chip red-ctx-chip--warn\" title=\"Gr\u00fcn: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.\">Sektor-Crowding</span><span class=\"red-ctx-chip red-ctx-chip--na\" title=\"Gr\u00fcn: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.\">News Sektor vs. Makro</span></div>"
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 3187,
-  "signals_html_chart_slots": 735,
-  "signals_with_chart_files": 735,
+  "signals_all_timeline_including_in_sample_count": 3190,
+  "signals_html_chart_slots": 738,
+  "signals_with_chart_files": 738,
   "chart_storage": "external",
-  "index_html_bytes_utf8": 2349741,
+  "index_html_bytes_utf8": 2369588,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS. Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); index.html unter DOCS_INDEX_HTML_MAX_BYTES."
 }

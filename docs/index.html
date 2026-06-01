@@ -160,7 +160,7 @@
     <body>
     <header>
       <h1>&#128200; Stock Signals</h1>
-      <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: 2026-05-31 23:02</span>
+      <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: 2026-06-02 01:13</span>
     </header>
     <div class="page-wrap">
     
@@ -321,12 +321,12 @@
       <div class="section ampel-filter-bar" id="ampel-filter">
         <h2>OOS-Signale nach VIX-Ampel</h2>
         <p class="section-lead">
-          Alle <strong>735</strong> FINAL-OOS-Signale (aus <code>signals.json</code>).
+          Alle <strong>738</strong> FINAL-OOS-Signale (aus <code>signals.json</code>).
           Charts unten werden mitgefiltert; die Tabelle listet jeden Treffer der gewählten Farbe.
         </p>
         <div class="ampel-filter-btns" role="group" aria-label="VIX-Ampel Filter">
-          <button type="button" class="ampel-filter-btn ampel-filter-btn--all is-active" data-ampel="all">Alle (735)</button>
-          <button type="button" class="ampel-filter-btn ampel-filter-btn--red" data-ampel="red">Rot (571)</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--all is-active" data-ampel="all">Alle (738)</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--red" data-ampel="red">Rot (574)</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--yellow" data-ampel="yellow">Gelb (115)</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--green" data-ampel="green">Grün (49)</button>
         </div>
@@ -346,7 +346,7 @@
         <h2>KI-Analyse — aktuelle Signale</h2>
         <p class="section-lead">
           Gemini-Einordnung der <strong>neuesten Meta-Hits</strong> (Datenstand letzter Signaltag in der Matrix:
-          <strong>2026-05-29</strong>). Keine Anlageberatung.
+          <strong>2026-06-01</strong>). Keine Anlageberatung.
         </p>
         <div class="analysis-llm-body prose-analysis"><h3>Marktumfeld am Signaltag: KI-Boom stützt DAX, Inflation rückläufig</h3>
 <p>Am Signaltag, dem 29. Mai 2026, profitierte der deutsche Leitindex DAX leicht von einer positiven Stimmung im Technologiesektor, getragen durch den &quot;KI-Boom&quot; und starke Quartalszahlen von Dell sowie hohe Investitionen in KI-Infrastruktur. Gleichzeitig sorgten Spekulationen auf eine mögliche Entspannung im Nahost-Konflikt, insbesondere durch Berichte über eine Verlängerung der Waffenruhe zwischen den USA und dem Iran, für eine Stabilisierung der Aktienmärkte. Auch positive Wirtschaftsdaten trugen zur Stimmung bei: Die Inflation in Deutschland zeigte im Mai einen spürbaren Rückgang auf 2,6 bis 2,7 Prozent, was primär auf einen &quot;Tankrabatt&quot; zurückgeführt wurde und als wichtiges Signal für Verbraucher und Unternehmen galt. Der DAX schloss den Tag minimal mit einem Plus von 0,05 Prozent und verzeichnete einen Wochengewinn von 0,87 Prozent sowie einen Monatsgewinn von 3,3 Prozent im Mai.</p>
@@ -372,12 +372,42 @@
       </div>
 
       <div class="section signals-recent-section">
-        <h2>Letzte 30 Tage <span class="badge">43</span></h2>
+        <h2>Letzte 30 Tage <span class="badge">45</span></h2>
         <p class="section-lead">
-          43 von 735 Chart-Slots mit Signaldatum in den letzten 30 Kalendertagen
+          45 von 738 Chart-Slots mit Signaldatum in den letzten 30 Kalendertagen
           (grüner Kartenrand). Tippen auf Chart = Vollbild.
         </p>
         <div class="signals-grid">
+      <div class="sig-card sig-card--recent" data-vix-ampel="red">
+        <div class="sig-head">
+          <span class="sig-ticker">ILMN<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Illumina</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): healthcare">Healthcare</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-01</span>
+          <div class="vix-meter" title="VIX 16.1 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:27.5%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 16.1</span></span></div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:84%">0.840</div></div>
+        </div>
+        <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
+        <a class="sig-chart-link" href="charts/full/ILMN_2026-06-01.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ILMN_2026-06-01.png" alt="ILMN 2026-06-01" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-01</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red">
+        <div class="sig-head">
+          <span class="sig-ticker">TMO<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Thermo Fisher</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): healthcare">Healthcare</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-01</span>
+          <div class="vix-meter" title="VIX 16.1 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:27.5%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 16.1</span></span></div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:80%">0.807</div></div>
+        </div>
+        <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
+        <a class="sig-chart-link" href="charts/full/TMO_2026-06-01.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/TMO_2026-06-01.png" alt="TMO 2026-06-01" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-01</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
       <div class="sig-card sig-card--recent" data-vix-ampel="red">
         <div class="sig-head">
           <span class="sig-ticker">ACT.DE<span class="sig-recent-tag">≤30 Tage</span></span>
@@ -385,11 +415,11 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): basic_materials">Basic Materials</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-05-29</span>
           <div class="vix-meter" title="VIX 15.3 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:24.2%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 15.3</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:88%">0.883</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:86%">0.860</div></div>
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ACT.DE_2026-05-29.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2026-05-29.png" alt="ACT.DE 2026-05-29" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-29</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -400,12 +430,27 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-05-28</span>
           <div class="vix-meter" title="VIX 15.7 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:26.1%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 15.7</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:85%">0.858</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:88%">0.886</div></div>
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2026-05-28.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2026-05-28.png" alt="MU 2026-05-28" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-28</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red">
+        <div class="sig-head">
+          <span class="sig-ticker">WDC<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Western Digital</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-05-28</span>
+          <div class="vix-meter" title="VIX 15.7 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:26.1%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 15.7</span></span></div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:80%">0.808</div></div>
+        </div>
+        <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
+        <a class="sig-chart-link" href="charts/full/WDC_2026-05-28.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/WDC_2026-05-28.png" alt="WDC 2026-05-28" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-28</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
       <div class="sig-card sig-card--recent" data-vix-ampel="red">
@@ -415,11 +460,11 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): consumer_cyclical">Consumer Cyclical</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-05-27</span>
           <div class="vix-meter" title="VIX 16.3 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:28.6%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 16.3</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:85%">0.859</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:86%">0.866</div></div>
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Consumer Cyclical · Auto Manufacturers</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/F_2026-05-27.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/F_2026-05-27.png" alt="F 2026-05-27" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-27</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -430,7 +475,7 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): consumer_cyclical">Consumer Cyclical</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-05-27</span>
           <div class="vix-meter" title="VIX 16.3 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:28.6%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 16.3</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:84%">0.846</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:85%">0.853</div></div>
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Consumer Cyclical · Internet Retail</p>
@@ -464,7 +509,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Information Technology Services</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/IBM_2026-05-26.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/IBM_2026-05-26.png" alt="IBM 2026-05-26" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-26</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -494,7 +539,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2026-05-22.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2026-05-22.png" alt="ARM 2026-05-22" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-22</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -539,7 +584,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Utilities · Utilities - Regulated Electric</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/D_2026-05-20.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/D_2026-05-20.png" alt="D 2026-05-20" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-20</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -554,7 +599,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Application</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/NOW_2026-05-20.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/NOW_2026-05-20.png" alt="NOW 2026-05-20" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-20</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -569,7 +614,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Energy · Oil &amp; Gas Integrated</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/XOM_2026-05-19.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/XOM_2026-05-19.png" alt="XOM 2026-05-19" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-19</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -599,7 +644,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Infrastructure</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PANW_2026-05-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PANW_2026-05-15.png" alt="PANW 2026-05-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -629,7 +674,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Consumer Defensive · Tobacco</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PM_2026-05-14.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PM_2026-05-14.png" alt="PM 2026-05-14" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-14</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -674,7 +719,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Infrastructure</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PANW_2026-05-11.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PANW_2026-05-11.png" alt="PANW 2026-05-11" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-11</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -884,7 +929,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ILMN_2026-05-06.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ILMN_2026-05-06.png" alt="ILMN 2026-05-06" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-06</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -899,7 +944,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2026-05-05.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2026-05-05.png" alt="MU 2026-05-05" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-05</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -1007,10 +1052,23 @@
         <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/GOOGL_2026-05-04.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/GOOGL_2026-05-04.png" alt="GOOGL 2026-05-04" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-04</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div></div>
       </div>
-      <div class="sig-card sig-card--recent" data-vix-ampel="red">
+
+      <div class="section vix-regime-section">
+        <h2>VIX-Regime (Ampel)</h2>
+        <div class="vix-panel"><p class="vix-panel-lead">Einordnung des <strong>VIX am Signaltag</strong> — <strong>drei Stufen</strong> (grün / gelb / rot). Nur Regime-Kontext, <strong>kein Filter</strong> für einzelne Signale.</p><div class="vix-scale"><div class="vix-scale-track" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><div class="vix-scale-legend"><span style="flex:10.00"><strong>&lt;20</strong>VIX unter 20</span><span style="flex:5.00"><strong>20–25</strong>mittel</span><span style="flex:7.00"><strong>≥25</strong>stark</span></div></div><p class="vix-panel-lead" style="margin:10px 0 0">Skala ca. 10–32 · rot &lt;20 · gelb 20–25 · grün ≥25.</p></div>
+      </div>
+
+      <div class="section signals-archive-section">
+        <h2>Ältere OOS-Signale mit Chart <span class="badge">693</span></h2>
+        <p class="section-lead">
+          Archiv: 693 ältere Signale mit Chart (von 738 FINAL-OOS gesamt).
+        </p>
+        <div class="signals-grid">
+      <div class="sig-card" data-vix-ampel="red">
         <div class="sig-head">
-          <span class="sig-ticker">NXPI<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-ticker">NXPI</span>
           <span class="sig-company">NXP Semiconductors</span>
           <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-05-01</span>
@@ -1022,20 +1080,7 @@
         <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/NXPI_2026-05-01.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/NXPI_2026-05-01.png" alt="NXPI 2026-05-01" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-05-01</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
-      </div></div>
       </div>
-
-      <div class="section vix-regime-section">
-        <h2>VIX-Regime (Ampel)</h2>
-        <div class="vix-panel"><p class="vix-panel-lead">Einordnung des <strong>VIX am Signaltag</strong> — <strong>drei Stufen</strong> (grün / gelb / rot). Nur Regime-Kontext, <strong>kein Filter</strong> für einzelne Signale.</p><div class="vix-scale"><div class="vix-scale-track" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><div class="vix-scale-legend"><span style="flex:10.00"><strong>&lt;20</strong>VIX unter 20</span><span style="flex:5.00"><strong>20–25</strong>mittel</span><span style="flex:7.00"><strong>≥25</strong>stark</span></div></div><p class="vix-panel-lead" style="margin:10px 0 0">Skala ca. 10–32 · rot &lt;20 · gelb 20–25 · grün ≥25.</p></div>
-      </div>
-
-      <div class="section signals-archive-section">
-        <h2>Ältere OOS-Signale mit Chart <span class="badge">692</span></h2>
-        <p class="section-lead">
-          Archiv: 692 ältere Signale mit Chart (von 735 FINAL-OOS gesamt).
-        </p>
-        <div class="signals-grid">
       <div class="sig-card" data-vix-ampel="red">
         <div class="sig-head">
           <span class="sig-ticker">INTC</span>
@@ -1092,7 +1137,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2026-04-24.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2026-04-24.png" alt="ARM 2026-04-24" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-04-24</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -1617,7 +1662,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2026-04-10.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2026-04-10.png" alt="MU 2026-04-10" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-04-10</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -1962,7 +2007,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/WDC_2026-03-18.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/WDC_2026-03-18.png" alt="WDC 2026-03-18" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-03-18</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -2217,7 +2262,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2026-02-10.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2026-02-10.png" alt="ARM 2026-02-10" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-02-10</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -2622,7 +2667,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2026-01-23.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2026-01-23.png" alt="MU 2026-01-23" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-01-23</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -2847,7 +2892,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ILMN_2026-01-07.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ILMN_2026-01-07.png" alt="ILMN 2026-01-07" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-01-07</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -3132,7 +3177,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-12-23.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-12-23.png" alt="MU 2025-12-23" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-12-23</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -3252,7 +3297,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ACT.DE_2025-12-09.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2025-12-09.png" alt="ACT.DE 2025-12-09" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-12-09</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -3942,7 +3987,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ILMN_2025-11-04.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ILMN_2025-11-04.png" alt="ILMN 2025-11-04" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-11-04</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -4077,7 +4122,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Information Technology Services</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/IBM_2025-10-28.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/IBM_2025-10-28.png" alt="IBM 2025-10-28" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-10-28</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -4107,7 +4152,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-10-28.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-10-28.png" alt="MU 2025-10-28" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-10-28</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -4467,7 +4512,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-10-03.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-10-03.png" alt="MU 2025-10-03" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-10-03</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -4512,7 +4557,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/TMO_2025-10-03.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/TMO_2025-10-03.png" alt="TMO 2025-10-03" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-10-03</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -4782,7 +4827,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-09-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-09-15.png" alt="MU 2025-09-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-09-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -4857,7 +4902,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-09-09.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-09-09.png" alt="MU 2025-09-09" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-09-09</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -4902,7 +4947,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/WDC_2025-09-08.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/WDC_2025-09-08.png" alt="WDC 2025-09-08" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-09-08</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -5067,7 +5112,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-08-12.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-08-12.png" alt="MU 2025-08-12" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-08-12</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -5292,7 +5337,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/TMO_2025-07-25.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/TMO_2025-07-25.png" alt="TMO 2025-07-25" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-07-25</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -5322,7 +5367,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Healthcare · Diagnostics &amp; Research</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ILMN_2025-07-25.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ILMN_2025-07-25.png" alt="ILMN 2025-07-25" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-07-25</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -5607,7 +5652,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ACT.DE_2025-07-09.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2025-07-09.png" alt="ACT.DE 2025-07-09" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-07-09</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -5742,7 +5787,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Consumer Cyclical · Auto Manufacturers</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/F_2025-07-03.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/F_2025-07-03.png" alt="F 2025-07-03" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-07-03</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -6177,7 +6222,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2025-06-26.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2025-06-26.png" alt="ARM 2025-06-26" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-06-26</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -6282,7 +6327,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-06-06.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-06-06.png" alt="MU 2025-06-06" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-06-06</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -6312,7 +6357,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ACT.DE_2025-06-04.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2025-06-04.png" alt="ACT.DE 2025-06-04" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-06-04</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -6432,7 +6477,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2025-05-16.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2025-05-16.png" alt="ARM 2025-05-16" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-05-16</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -6462,7 +6507,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/WDC_2025-05-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/WDC_2025-05-15.png" alt="WDC 2025-05-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-05-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -6732,7 +6777,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-05-14.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-05-14.png" alt="MU 2025-05-14" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-05-14</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -7002,7 +7047,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2025-05-06.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2025-05-06.png" alt="ARM 2025-05-06" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-05-06</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -7062,7 +7107,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ACT.DE_2025-05-05.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2025-05-05.png" alt="ACT.DE 2025-05-05" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-05-05</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -7242,7 +7287,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/WDC_2025-05-02.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/WDC_2025-05-02.png" alt="WDC 2025-05-02" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-05-02</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -7302,7 +7347,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Application</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/NOW_2025-04-28.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/NOW_2025-04-28.png" alt="NOW 2025-04-28" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-04-28</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -7347,7 +7392,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Infrastructure</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PANW_2025-04-28.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PANW_2025-04-28.png" alt="PANW 2025-04-28" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-04-28</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -7403,7 +7448,7 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2025-04-28</span>
           <div class="vix-meter" title="VIX 25.1 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Historisch bestes VIX-Regime (META+THRESHOLD/FINAL)."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:68.9%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green is-active"></span></span><span class="vix-meter-text"><strong>Regime stark</strong><span class="vix-meter-vix">VIX 25.1</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:80%">0.805</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:80%">0.804</div></div>
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Technology · Semiconductors</p>
@@ -7763,7 +7808,7 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): industrials">Industrials</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2025-04-16</span>
           <div class="vix-meter" title="VIX 32.6 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Historisch bestes VIX-Regime (META+THRESHOLD/FINAL)."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:100.0%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green is-active"></span></span><span class="vix-meter-text"><strong>Regime stark</strong><span class="vix-meter-vix">VIX 32.6</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:84%">0.846</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:84%">0.843</div></div>
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Industrials · Aerospace &amp; Defense</p>
@@ -7778,7 +7823,7 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): real_estate">Real Estate</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2025-04-16</span>
           <div class="vix-meter" title="VIX 32.6 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Historisch bestes VIX-Regime (META+THRESHOLD/FINAL)."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:100.0%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green is-active"></span></span><span class="vix-meter-text"><strong>Regime stark</strong><span class="vix-meter-vix">VIX 32.6</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:83%">0.836</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:83%">0.834</div></div>
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Real Estate · Real Estate Services</p>
@@ -7917,7 +7962,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ACT.DE_2025-04-14.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2025-04-14.png" alt="ACT.DE 2025-04-14" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-04-14</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -8337,7 +8382,7 @@
         </div>
         
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-03-18.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-03-18.png" alt="MU 2025-03-18" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-03-18</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -9072,7 +9117,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-02-19.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-02-19.png" alt="MU 2025-02-19" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-02-19</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -9248,7 +9293,7 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2025-02-14</span>
           <div class="vix-meter" title="VIX 14.8 am Signaltag. Nur Regime-Einordnung (filtert keine Signale). Drei Stufen: rot &lt;20, gelb 20–25, grün ≥25. Schwächeres Gesamtregime (VIX &lt; 20) — kein Signal-Filter; viele Einzeltreffer trotzdem möglich."><div class="vix-scale"><div class="vix-scale-track vix-scale-track--compact" aria-hidden="true"><span class="vix-seg vix-seg--red" style="flex:10.00"></span><span class="vix-seg vix-seg--yellow" style="flex:5.00"></span><span class="vix-seg vix-seg--green" style="flex:7.00"></span></div><span class="vix-scale-marker" style="left:21.7%"></span></div><div class="vix-meter-row"><span class="vix-lights" aria-hidden="true"><span class="vix-light vix-light--red is-active"></span><span class="vix-light vix-light--yellow"></span><span class="vix-light vix-light--green"></span></span><span class="vix-meter-text"><strong>VIX unter 20</strong><span class="vix-meter-vix">VIX 14.8</span></span></div></div>
-          <div class="score-bar-bg"><div class="score-bar" style="width:85%">0.850</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:84%">0.850</div></div>
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Technology · Semiconductors</p>
@@ -9402,7 +9447,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Consumer Defensive · Tobacco</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PM_2025-02-10.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PM_2025-02-10.png" alt="PM 2025-02-10" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-02-10</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -9552,7 +9597,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Information Technology Services</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/IBM_2025-02-03.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/IBM_2025-02-03.png" alt="IBM 2025-02-03" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-02-03</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -9897,7 +9942,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Infrastructure</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PANW_2025-01-23.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PANW_2025-01-23.png" alt="PANW 2025-01-23" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-01-23</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -9912,7 +9957,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/WDC_2025-01-23.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/WDC_2025-01-23.png" alt="WDC 2025-01-23" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-01-23</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -9927,7 +9972,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2025-01-22.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2025-01-22.png" alt="ARM 2025-01-22" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-01-22</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -9987,7 +10032,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-01-22.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-01-22.png" alt="MU 2025-01-22" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-01-22</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -10227,7 +10272,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/MU_2025-01-08.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/MU_2025-01-08.png" alt="MU 2025-01-08" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-01-08</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -10257,7 +10302,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ARM_2025-01-07.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2025-01-07.png" alt="ARM 2025-01-07" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-01-07</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -10272,7 +10317,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/ACT.DE_2025-01-07.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2025-01-07.png" alt="ACT.DE 2025-01-07" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2025-01-07</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -10587,7 +10632,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Application</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/NOW_2024-12-06.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/NOW_2024-12-06.png" alt="NOW 2024-12-06" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2024-12-06</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -10767,7 +10812,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/WDC_2024-11-27.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/WDC_2024-11-27.png" alt="WDC 2024-11-27" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2024-11-27</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -10827,7 +10872,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Information Technology Services</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/IBM_2024-11-25.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/IBM_2024-11-25.png" alt="IBM 2024-11-25" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2024-11-25</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -11142,7 +11187,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Software - Infrastructure</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PANW_2024-11-08.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PANW_2024-11-08.png" alt="PANW 2024-11-08" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2024-11-08</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -11307,7 +11352,7 @@
         </div>
         <div class="red-ctx-chips" aria-label="Kontext in rot"><span class="red-ctx-chip red-ctx-chip--good" title="Grün: VIX unter dem 20-Tage-Mittel (Z &lt; 0). Orange: darueber. In rot historisch guenstiger wenn gruen (META+THR/FINAL).">VIX vs. 20d-Mittel</span><span class="red-ctx-chip red-ctx-chip--good" title="Grün: niedrige Ratio (Termstruktur entspannt). Orange: hohe Ratio. In rot historisch schlechter wenn orange.">VIX-Term 3M/VIX</span><span class="red-ctx-chip red-ctx-chip--warn" title="Grün: wenig parallele Signale im gleichen Sektor (niedriger HHI). Orange: viel Crowding am Signaltag.">Sektor-Crowding</span><span class="red-ctx-chip red-ctx-chip--na" title="Grün: Sektor-News-Ton ueber Makro-News. Orange: Makro dominiert. In rot historisch guenstiger wenn gruen.">News Sektor vs. Makro</span></div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Consumer Defensive · Tobacco</p>
-        
+        <p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>
         <a class="sig-chart-link" href="charts/full/PM_2024-10-24.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/PM_2024-10-24.png" alt="PM 2024-10-24" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2024-10-24</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
@@ -11424,11 +11469,11 @@
           <div class="chip">Threshold <strong>0.800</strong></div>
           <div class="chip" title="Meta-Wahrscheinlichkeit pro Signal — unabhängig vom produktiven Threshold">prob typisch 0.20–0.50</div>
           <div class="chip">Tickers <strong>277</strong></div>
-          <div class="chip" title="Externe PNG unter docs/charts/ — index.html bleibt unter 100 MiB">Charts <strong>735</strong> / 735 OOS</div>
-          <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>735</strong></div>
+          <div class="chip" title="Externe PNG unter docs/charts/ — index.html bleibt unter 100 MiB">Charts <strong>738</strong> / 738 OOS</div>
+          <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>738</strong></div>
           <div class="chip" title="Letzter Handelstag der THRESHOLD-Stichprobe bei der Kalibrierung von best_threshold">Threshold-Kalibrierung: Stichprobe bis <strong>2024-10-09</strong></div>
-          <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>2026-05-29</strong></div>
-          <div class="chip">Run <strong>2026-05-31 23:02</strong></div>
+          <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>2026-06-01</strong></div>
+          <div class="chip">Run <strong>2026-06-02 01:13</strong></div>
         </div>
       </div>
 
