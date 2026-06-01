@@ -226,6 +226,54 @@ def _run_phase13(c: Any) -> None:
         getattr(c, "META_OBJECTIVE_MIN_SIGNALS_PER_DAY_PER_FOLD", 1.0) or 1.0
     )
     _meta_winrate_tie = float(getattr(c, "META_OBJECTIVE_WINRATE_RETURN_TIEBREAKER", 0.1) or 0.0)
+    # Zentral-Aggregat über Signal-Returns: "median" (robust gegen Outlier) oder "mean" (Legacy).
+    _meta_sig_agg = str(getattr(c, "META_OBJECTIVE_SIGNAL_AGGREGATION", "median")).strip().lower()
+    if _meta_sig_agg not in {"mean", "median"}:
+        print(
+            f"WARNUNG: Unbekanntes META_OBJECTIVE_SIGNAL_AGGREGATION={_meta_sig_agg!r} -> fallback 'median'.",
+            flush=True,
+        )
+        _meta_sig_agg = "median"
+    # Numpy-Reducer als Closure – wird in beiden Score-Pfaden (CV + Phase 5) verwendet.
+    _agg_central = np.median if _meta_sig_agg == "median" else np.mean
+
+    # Horizon-Aggregation pro Signal: "mean" (Legacy), "median" oder "trimmed_mean".
+    _meta_hor_agg = str(getattr(c, "META_OBJECTIVE_HORIZON_AGGREGATION", "trimmed_mean")).strip().lower()
+    if _meta_hor_agg not in {"mean", "median", "trimmed_mean"}:
+        print(
+            f"WARNUNG: Unbekanntes META_OBJECTIVE_HORIZON_AGGREGATION={_meta_hor_agg!r} -> fallback 'trimmed_mean'.",
+            flush=True,
+        )
+        _meta_hor_agg = "trimmed_mean"
+    _meta_hor_trim = float(getattr(c, "META_OBJECTIVE_HORIZON_TRIM_FRAC", 0.20) or 0.0)
+    _meta_hor_trim = float(np.clip(_meta_hor_trim, 0.0, 0.49))  # 0.49 = noch ≥1 Element übrig
+
+    def _agg_horizon(rlist) -> float:
+        """Aggregiert die per-Horizont-Returns eines einzelnen Signals.
+
+        ``trimmed_mean``: bei n Horizonten werden ``k = floor(trim_frac * n)`` Werte am
+        oberen UND unteren Ende verworfen, der Rest gemittelt. Beispiele:
+          - n=5, trim_frac=0.20 → k=1 → Mean der mittleren 3 (Tag 2, 3, 4 sortiert).
+          - n=8, trim_frac=0.20 → k=1 → Mean der mittleren 6.
+          - n=5, trim_frac=0.40 → k=2 → degeneriert auf reinen Median (mittlerer Wert).
+        Bei zu aggressivem Trim (2k≥n) fällt die Funktion sauber auf Median zurück.
+        """
+        if not rlist:
+            return 0.0
+        arr = np.asarray(rlist, dtype=np.float64)
+        if _meta_hor_agg == "mean":
+            return float(np.mean(arr))
+        if _meta_hor_agg == "median":
+            return float(np.median(arr))
+        # trimmed_mean: symmetrisch beidseitig kürzen.
+        n = arr.size
+        k = int(np.floor(_meta_hor_trim * n))
+        if k <= 0:
+            return float(np.mean(arr))
+        if 2 * k >= n:
+            return float(np.median(arr))
+        srt = np.sort(arr)
+        return float(np.mean(srt[k:n - k]))
     if _meta_obj_mode not in {"tp_precision", "signal_mean_return", "signal_win_rate"}:
         print(
             f"WARNUNG: Unbekanntes META_OBJECTIVE_MODE={_meta_obj_mode!r} -> fallback 'tp_precision'.",
@@ -243,7 +291,10 @@ def _run_phase13(c: Any) -> None:
         + (
             f" | horizons={_hold_horizons} | min_signals_per_fold={_meta_min_signals} "
             f"| min_signals_per_day_per_fold={_meta_min_signals_per_day:.3f} "
-            f"| winrate_return_tiebreaker={_meta_winrate_tie:.3f}"
+            f"| winrate_return_tiebreaker={_meta_winrate_tie:.3f} "
+            f"| signal_agg={_meta_sig_agg} "
+            f"| horizon_agg={_meta_hor_agg}"
+            + (f"(trim={_meta_hor_trim:.2f})" if _meta_hor_agg == "trimmed_mean" else "")
             if _meta_obj_mode in {"signal_mean_return", "signal_win_rate"}
             else ""
         ),
@@ -415,7 +466,9 @@ def _run_phase13(c: Any) -> None:
                         rlist.append(pj / entry_open - 1.0)
                 if rlist:
                     n_signals += 1
-                    signal_scores.append(float(np.mean(rlist)))
+                    # Robuste Per-Signal-Aggregation über die Horizonte (Median/Trimmed-Mean/Mean);
+                    # ein einzelner h-Tag-Spike (Earnings/Gap) zieht sonst den Score dieses Signals.
+                    signal_scores.append(_agg_horizon(rlist))
         return signal_scores, n_signals, n_raw_signals, len(signal_days_any)
 
     def _score_tp_precision_from_arrays(
@@ -586,7 +639,8 @@ def _run_phase13(c: Any) -> None:
                     base_return_score = -1.0
                     win_rate = 0.0
                 else:
-                    base_return_score = float(np.mean(sig_scores))
+                    # Zentral-Aggregat (Median/Mean) gegen Outlier-Dominanz bei wenigen Signalen.
+                    base_return_score = float(_agg_central(sig_scores))
                     win_rate = float(np.mean(np.asarray(sig_scores, dtype=np.float64) > 0.0))
                 if _meta_obj_mode == "signal_win_rate":
                     fs = 1.0 + win_rate + (_meta_winrate_tie * base_return_score)
@@ -934,7 +988,8 @@ def _run_phase13(c: Any) -> None:
                             base_return_score = -1.0
                             win_rate = 0.0
                         else:
-                            base_return_score = float(np.mean(sig_scores))
+                            # Median/Mean per Config — dämpft Mega-Ausreißer einzelner Signale.
+                            base_return_score = float(_agg_central(sig_scores))
                             win_rate = float(np.mean(np.asarray(sig_scores, dtype=np.float64) > 0.0))
                         if _meta_obj_mode == "signal_win_rate":
                             # Kernziel: Anteil profitabler Signale maximieren.
@@ -1268,38 +1323,273 @@ def _run_phase13(c: Any) -> None:
 
     print(f"THRESHOLD-Set: Positive Rate = {y_threshold.mean():.1%}")
     # Produktiver Threshold: separat auf THRESHOLD-Set gewählt (nested-konform, ohne Val-Leakage).
-    _seed_thr = float(meta_study.best_params.get("meta_eval_threshold", 0.5))
-    best_threshold, _thr_fit_score = _pick_threshold_nested(
-        _seed_thr,
-        probs_cal=y_prob_threshold,
-        dates_cal=df_threshold["Date"].values,
-        tickers_cal=df_threshold["ticker"].values,
-        y_cal=y_threshold,
-        open_cal=(df_threshold["open"].values if "open" in df_threshold.columns else df_threshold["close"].values),
-        close_cal=df_threshold["close"].values,
-        vol_stress_cal=(df_threshold["vol_stress"].values if "vol_stress" in df_threshold.columns else None),
-        blue_cal=(df_threshold[_blue_col].values if _blue_col in df_threshold.columns else None),
-        volume_z_cal=(df_threshold["volume_zscore"].values if "volume_zscore" in df_threshold.columns else None),
-        vvix_ratio_cal=(df_threshold["mr_vvix_div_vix"].values if "mr_vvix_div_vix" in df_threshold.columns else None),
-        rsi_cal=(df_threshold[f"rsi_{int(rsi_w)}d"].values if f"rsi_{int(rsi_w)}d" in df_threshold.columns else None),
-        bb_cal=(df_threshold[f"bb_pband_{int(getattr(c, 'bb_w', c.SEED_PARAMS.get('bb_window', 20)))}"].values if f"bb_pband_{int(getattr(c, 'bb_w', c.SEED_PARAMS.get('bb_window', 20)))}" in df_threshold.columns else None),
-        rsi_window=rsi_w,
-        signal_skip_near_peak=SIGNAL_SKIP_NEAR_PEAK,
-        peak_lookback_days=PEAK_LOOKBACK_DAYS,
-        peak_min_dist_from_high_pct=PEAK_MIN_DIST_FROM_HIGH_PCT,
-        signal_max_rsi=SIGNAL_MAX_RSI,
-        signal_max_vol_stress_z=SIGNAL_MAX_VOL_STRESS_Z,
-        signal_min_blue_sky_volume_z=SIGNAL_MIN_BLUE_SKY_VOLUME_Z,
-        dyn_vvix_trigger=DYN_VVIX_TRIGGER,
-        dyn_rsi_trigger=DYN_RSI_TRIGGER,
-        dyn_bb_pband_trigger=DYN_BB_PBAND_TRIGGER,
-        mult_final_threshold_1=MULT_FINAL_THRESHOLD_1,
-        mult_final_threshold_2=MULT_FINAL_THRESHOLD_2,
-        mult_final_threshold_3=MULT_FINAL_THRESHOLD_3,
+    # Seed-Wahl: optional nested_thr_mean aus bestem Meta-Trial (mehr Datenbasis, robuster),
+    # sonst der reine Trial-Parameter ``meta_eval_threshold`` (Legacy-Verhalten).
+    _seed_trial = float(meta_study.best_params.get("meta_eval_threshold", 0.5))
+    _use_nested_seed = bool(getattr(c, "META_PHASE5_SEED_USE_NESTED_THR_MEAN", True))
+    _seed_raw = _seed_trial
+    _seed_origin = "meta_eval_threshold"
+    if _use_nested_seed:
+        try:
+            _nested_mean = float(
+                meta_study.best_trial.user_attrs.get("nested_thr_mean", float("nan"))
+            )
+        except Exception:
+            _nested_mean = float("nan")
+        if np.isfinite(_nested_mean) and 0.0 < _nested_mean < 1.0:
+            _seed_raw = float(_nested_mean)
+            _seed_origin = "nested_thr_mean(best_trial)"
+    # Wenn Meta-Probabilities kalibriert werden (isotonic/sigmoid), den Seed durch
+    # dieselbe Kalibrierung schicken — der Seed kam aus Meta-CV mit rohen Probs und
+    # wäre sonst in der falschen Skala.
+    _seed_thr = float(_seed_raw)
+    if callable(_cal_apply):
+        try:
+            _seed_thr = float(np.clip(_cal_apply(np.array([_seed_raw]))[0], 1e-4, 1 - 1e-4))
+        except Exception as _ce:
+            print(
+                f"  [Phase-5 Seed] Kalibrierung konnte nicht auf Seed angewendet werden ({_ce}); "
+                f"nutze rohen Seed.",
+                flush=True,
+            )
+            _seed_thr = float(_seed_raw)
+    print(
+        f"Phase-5 Seed-Threshold: raw={_seed_raw:.3f} → kalibriert={_seed_thr:.3f} "
+        f"(Quelle={_seed_origin}; Trial-Parameter meta_eval_threshold={_seed_trial:.3f}; "
+        f"Kalibrierungs-Methode={(_cal_obj or {}).get('method') if isinstance(_cal_obj, dict) else 'none'})",
+        flush=True,
     )
+
+    _soft_cov_enabled = bool(getattr(c, "META_PHASE5_SOFT_COVERAGE_ENABLED", False))
+    _floor_frac = float(getattr(c, "META_PHASE5_DENSITY_FLOOR_FRACTION", 0.5))
+    _soft_w = float(getattr(c, "META_PHASE5_DENSITY_SOFT_PENALTY_WEIGHT", 1.0))
+    _floor_density = max(0.0, float(_meta_min_signals_per_day) * _floor_frac)
+
+    def _phase5_score_grid(seed_threshold):
+        """Bewertet jedes Grid-Threshold mit dem Phase-5-Objective.
+
+        Returns Tuple ``(best_thr, best_score, rows, n_days_total)``.
+
+        ``rows`` enthält pro Threshold ``(thr, fs, n_sig, n_sig_days, cov/d, mean_ret,
+        win_rate, mode)``. ``mode`` ist eines von:
+          - ``"ok"``      : Coverage >= target (vollwertiger Score).
+          - ``"soft"``    : (nur bei SOFT_COVERAGE_ENABLED=True) target > Coverage >= FLOOR
+                            (Score = 1 + return − penalty).
+          - ``"hard-cut"``: Coverage < target und soft-coverage AUS → Repräsentativitätsschutz
+                            greift (``fs = -(target − coverage)``).
+          - ``"floor"``   : (nur bei SOFT_COVERAGE_ENABLED=True) Coverage < FLOOR.
+        """
+        _thr_grid = np.unique(
+            np.clip(
+                np.concatenate(
+                    [
+                        np.linspace(0.05, 0.95, 19, dtype=np.float64),
+                        np.array([float(seed_threshold)], dtype=np.float64),
+                    ]
+                ),
+                0.001,
+                0.999,
+            )
+        )
+        _open_cal = (
+            df_threshold["open"].values
+            if "open" in df_threshold.columns
+            else df_threshold["close"].values
+        )
+        _close_cal = df_threshold["close"].values
+        _dates_cal = df_threshold["Date"].values
+        _tickers_cal = df_threshold["ticker"].values
+        _vol_stress_cal = (
+            df_threshold["vol_stress"].values
+            if "vol_stress" in df_threshold.columns
+            else None
+        )
+        _blue_cal = (
+            df_threshold[_blue_col].values if _blue_col in df_threshold.columns else None
+        )
+        _volume_z_cal = (
+            df_threshold["volume_zscore"].values
+            if "volume_zscore" in df_threshold.columns
+            else None
+        )
+        _vvix_ratio_cal = (
+            df_threshold["mr_vvix_div_vix"].values
+            if "mr_vvix_div_vix" in df_threshold.columns
+            else None
+        )
+        _rsi_col_p5 = f"rsi_{int(rsi_w)}d"
+        _bb_col_p5 = (
+            f"bb_pband_{int(getattr(c, 'bb_w', c.SEED_PARAMS.get('bb_window', 20)))}"
+        )
+        _rsi_cal = (
+            df_threshold[_rsi_col_p5].values
+            if _rsi_col_p5 in df_threshold.columns
+            else None
+        )
+        _bb_cal = (
+            df_threshold[_bb_col_p5].values
+            if _bb_col_p5 in df_threshold.columns
+            else None
+        )
+
+        n_days_total = int(pd.Series(_dates_cal).nunique())
+        rows = []
+        best_thr = float(seed_threshold)
+        best_score = -np.inf
+        for thr in _thr_grid:
+            _sig_scores, _n_sig, _n_raw, _n_sig_days = _signal_forward_return_scores_cv(
+                y_prob_threshold,
+                _dates_cal,
+                _tickers_cal,
+                float(thr),
+                CONSECUTIVE_DAYS,
+                SIGNAL_COOLDOWN_DAYS,
+                _open_cal,
+                _close_cal,
+                rsi_w,
+                SIGNAL_SKIP_NEAR_PEAK,
+                PEAK_LOOKBACK_DAYS,
+                PEAK_MIN_DIST_FROM_HIGH_PCT,
+                SIGNAL_MAX_RSI,
+                SIGNAL_MAX_VOL_STRESS_Z,
+                SIGNAL_MIN_BLUE_SKY_VOLUME_Z,
+                DYN_VVIX_TRIGGER,
+                DYN_RSI_TRIGGER,
+                DYN_BB_PBAND_TRIGGER,
+                MULT_FINAL_THRESHOLD_1,
+                MULT_FINAL_THRESHOLD_2,
+                MULT_FINAL_THRESHOLD_3,
+                _hold_horizons,
+                vol_stress_arr=_vol_stress_cal,
+                blue_sky_breakout_arr=_blue_cal,
+                volume_zscore_arr=_volume_z_cal,
+                vvix_ratio_arr=_vvix_ratio_cal,
+                rsi_arr=_rsi_cal,
+                bb_pband_arr=_bb_cal,
+            )
+            day_coverage = (
+                float(_n_sig_days) / float(n_days_total) if n_days_total > 0 else 0.0
+            )
+            if _n_sig == 0 or not _sig_scores:
+                base_return = -1.0
+                win_rate = 0.0
+            else:
+                # Phase 5: gleiche Zentral-Aggregation wie in Meta-CV (Median = Default).
+                base_return = float(_agg_central(_sig_scores))
+                win_rate = float(np.mean(np.asarray(_sig_scores, dtype=np.float64) > 0.0))
+            if _soft_cov_enabled:
+                if day_coverage < _floor_density:
+                    fs = -2.0 - float(_floor_density - day_coverage)
+                    mode = "floor"
+                else:
+                    if _meta_obj_mode == "signal_win_rate":
+                        fs_core = 1.0 + win_rate + (_meta_winrate_tie * base_return)
+                    else:
+                        fs_core = 1.0 + base_return
+                    if day_coverage < float(_meta_min_signals_per_day):
+                        penalty = _soft_w * float(
+                            _meta_min_signals_per_day - day_coverage
+                        )
+                        fs = fs_core - penalty
+                        mode = "soft"
+                    else:
+                        fs = fs_core
+                        mode = "ok"
+            else:
+                # Hartes Coverage-Gate (Repräsentativitätsschutz, wie in der Meta-CV).
+                if day_coverage < float(_meta_min_signals_per_day):
+                    fs = -float(_meta_min_signals_per_day - day_coverage)
+                    mode = "hard-cut"
+                else:
+                    if _meta_obj_mode == "signal_win_rate":
+                        fs = 1.0 + win_rate + (_meta_winrate_tie * base_return)
+                    else:
+                        fs = 1.0 + base_return
+                    mode = "ok"
+            rows.append(
+                (
+                    float(thr),
+                    float(fs),
+                    int(_n_sig),
+                    int(_n_sig_days),
+                    float(day_coverage),
+                    float(base_return),
+                    float(win_rate),
+                    mode,
+                )
+            )
+            if (fs > best_score) or (
+                np.isclose(fs, best_score)
+                and abs(float(thr) - float(seed_threshold))
+                < abs(best_thr - float(seed_threshold))
+            ):
+                best_score = float(fs)
+                best_thr = float(thr)
+        return best_thr, float(best_score), rows, n_days_total
+
+    if _soft_cov_enabled:
+        print(
+            f"Phase-5 Threshold-Wahl: SOFT-coverage aktiv "
+            f"(target_density={_meta_min_signals_per_day:.3f}/d, "
+            f"floor={_floor_density:.3f}/d [={_floor_frac:.0%} des Ziels], "
+            f"soft_penalty_weight={_soft_w:.2f}).",
+            flush=True,
+        )
+    else:
+        print(
+            f"Phase-5 Threshold-Wahl: HARTES Coverage-Gate aktiv "
+            f"(target_density={_meta_min_signals_per_day:.3f}/d; "
+            f"Modus 'hard-cut' = Threshold unterhalb des Ziels wird als Repräsentativitäts-"
+            f"schutz abgelehnt).",
+            flush=True,
+        )
+
+    best_threshold, _thr_fit_score, _thr_rows, _n_days_thr = _phase5_score_grid(_seed_thr)
+
+    # Diagnose-Tabelle: Top-12 nach fs.
+    _sorted = sorted(_thr_rows, key=lambda r: -r[1])[:12]
+    _target_days_abs = int(np.ceil(_meta_min_signals_per_day * _n_days_thr))
+    _floor_days_abs = int(np.ceil(_floor_density * _n_days_thr)) if _soft_cov_enabled else 0
+    print(
+        f"  THRESHOLD-Set: {_n_days_thr} Kalendertage; "
+        f"target = mind. {_target_days_abs} Signaltage absolut"
+        + (f", floor = mind. {_floor_days_abs} Signaltage absolut" if _soft_cov_enabled else "")
+        + ".",
+        flush=True,
+    )
+    print(
+        "  Phase-5 Threshold-Diagnose (Top-12 nach Score; zeigt warum bestimmte Schwellen verlieren):",
+        flush=True,
+    )
+    print(
+        "    thr   | fs       | n_sig | sig_days | cov/d  | mean_ret | win_rate | mode",
+        flush=True,
+    )
+    for r in _sorted:
+        print(
+            f"    {r[0]:.3f} | {r[1]:+.4f} | {r[2]:5d} | {r[3]:8d} | "
+            f"{r[4]:.3f} | {r[5]:+.4f} | {r[6]:.3f}    | {r[7]}",
+            flush=True,
+        )
+    # Zusätzlich: zeige Performance der Thresholds, die das Gate verfehlen (sortiert nach mean_ret).
+    _missed = [r for r in _thr_rows if r[7] in ("hard-cut", "floor", "soft")]
+    if _missed:
+        _miss_top = sorted(_missed, key=lambda r: -r[5])[:5]
+        print(
+            "  Gate-verfehlende Thresholds (höchste mean_ret, abgelehnt wegen Coverage):",
+            flush=True,
+        )
+        for r in _miss_top:
+            print(
+                f"    {r[0]:.3f} | fs={r[1]:+.4f} | n_sig={r[2]:5d} | sig_days={r[3]:4d} | "
+                f"cov/d={r[4]:.3f} | mean_ret={r[5]:+.4f} | win={r[6]:.3f} | {r[7]}",
+                flush=True,
+            )
+
     f1_thresh = best_threshold  # Downstream-Kompatibilität (Plot-Linie).
     print(
-        f"Gewählter produktiver Threshold (nested; auf THRESHOLD-Set gewählt, seed={_seed_thr:.3f}): {best_threshold:.3f}",
+        f"Gewählter produktiver Threshold (Phase 5, soft-coverage={'on' if _soft_cov_enabled else 'off'}, "
+        f"seed={_seed_thr:.3f}): {best_threshold:.3f} (score={_thr_fit_score:+.4f})",
         flush=True,
     )
 

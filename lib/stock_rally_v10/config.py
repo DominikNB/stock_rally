@@ -30,11 +30,16 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 # Live-Terminal-Logs (Windows/IDE): sonst bleiben viele print-Ausgaben blockgepuffert.
+# Zusätzlich Encoding auf UTF-8 stellen, damit Sonderzeichen (→, —, …) auf Windows
+# (cp1252) nicht zu UnicodeEncodeError im News-Code-Pfad führen.
 for _stream in (sys.stdout, sys.stderr):
     try:
-        _stream.reconfigure(line_buffering=True)
+        _stream.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
     except (AttributeError, OSError, ValueError):
-        pass
+        try:
+            _stream.reconfigure(line_buffering=True)
+        except (AttributeError, OSError, ValueError):
+            pass
 
 # ── Google Cloud / BigQuery: ADC (optional, vor BQ_PROJECT_ID) ───────────
 def _default_application_default_credentials_path() -> Path | None:
@@ -489,6 +494,8 @@ _SECTOR_KEYWORDS_PRIMARY = {
     "real_estate": ["real estate", "mortgage rates", "housing market"],
     "communication_services": ["telecom", "5G", "broadband", "streaming", "advertising"],
     "crypto": ["Bitcoin", "Ethereum", "crypto regulation", "DeFi"],
+    "consumer_defensive": ["consumer staples", "food prices", "dividend", "household products"],
+    "utilities": ["electric utility", "power grid", "regulated utility", "natural gas utility"],
 }
 SECTOR_KEYWORDS = dict(_SECTOR_KEYWORDS_PRIMARY)
 
@@ -544,6 +551,14 @@ _SECTOR_BQ_THEME_WHERE_PRIMARY = {
         "(V2Themes LIKE '%CRYPTO%' OR V2Themes LIKE '%BITCOIN%' OR V2Themes LIKE '%BLOCKCHAIN%' "
         "OR V2Themes LIKE '%ETHEREUM%')"
     ),
+    "consumer_defensive": (
+        "(V2Themes LIKE '%CONSUMER%' OR V2Themes LIKE '%FOOD%' OR V2Themes LIKE '%RETAIL%' "
+        "OR V2Themes LIKE '%GROCERY%' OR V2Themes LIKE '%INFLATION%')"
+    ),
+    "utilities": (
+        "(V2Themes LIKE '%ENERGY%' OR V2Themes LIKE '%ELECTRIC%' OR V2Themes LIKE '%POWER%' "
+        "OR V2Themes LIKE '%UTILITY%' OR V2Themes LIKE '%GRID%' OR V2Themes LIKE '%GAS%')"
+    ),
 }
 SECTOR_BQ_THEME_WHERE = dict(_SECTOR_BQ_THEME_WHERE_PRIMARY)
 
@@ -560,6 +575,7 @@ TICKERS_BY_SECTOR = {
     'technology': ['AAPL', 'MSFT', 'NVDA', 'CRM', 'CSCO', 'INTC', 'IBM', 'ASML',
                    'TSM', 'AMD', 'PANW', 'ADBE', 'STX', 'WDC', 'MU', 'NXPI', 'TER',
                    'LRCX', 'NOW', 'ANET', 'FI',
+                   'GOOGL', 'META', 'AVGO', 'ARM',
                    'SAP.DE', 'IFX.DE',
                    'NEM.DE', 'BC8.DE',
                    'TMV.DE', 'COK.DE', 'YSN.DE', 'GFT.DE', 'NA9.DE',
@@ -568,6 +584,7 @@ TICKERS_BY_SECTOR = {
     # ── Financial Services ─────────────────────────────────────────────────
     # DAX: DB1, HNR1  |  MDAX: TLX  |  SDAX: MLP, GLJ, PBB, HABA, WUW, DBAG, HYQ
     'financial_services': ['JPM', 'GS', 'AXP', 'V', 'MS', 'MCO', 'SPGI', 'SCHW', 'TROW', 'AMP',
+                           'BAC', 'C', 'WFC',
                            'ALV.DE', 'MUV2.DE', 'DBK.DE', 'CBK.DE', 'BNP.PA',
                            'DB1.DE', 'HNR1.DE',
                            'TLX.DE',
@@ -576,7 +593,7 @@ TICKERS_BY_SECTOR = {
     # ── Healthcare ─────────────────────────────────────────────────────────
     # DAX: FME, SHL  |  MDAX: SRT3  |  SDAX: AFX, EUZ, DMP, GXI, DRW3, O2BC, EVT
     'healthcare': ['JNJ', 'UNH', 'MRK', 'AMGN', 'NVS', 'REGN', 'VRTX', 'BIIB', 'GILD', 'ALGN', 'IDXX',
-                   'ISRG', 'ILMN',
+                   'ISRG', 'ILMN', 'LLY', 'ABBV', 'TMO', 'DHR',
                    'BAYN.DE', 'FRE.DE', 'MRK.DE', 'FME.DE', 'SHL.DE',
                    'SRT3.DE',
                    'AFX.DE', 'EUZ.DE', 'DMP.DE', 'GXI.DE', 'DRW3.DE', 'EVT.DE'],
@@ -584,7 +601,7 @@ TICKERS_BY_SECTOR = {
     # ── Consumer Cyclical (inkl. Automotive-Basket) ───────────────────────
     # DAX: BEI  |  SDAX: FIE, HBH, DOU, SZU, HFG, KWS, EVD, DHER
     # DAX Automotive: VOW3, BMW, MBG, CON, PAH3, P911, DTG  |  MDAX: TGR, SHA
-    'consumer_cyclical': ['KO', 'MCD', 'NKE', 'PG', 'WMT', 'HD', 'DIS',
+    'consumer_cyclical': ['MCD', 'NKE', 'WMT', 'HD', 'DIS',
                           'AMZN', 'NFLX', 'BKNG', 'TSLA', 'TJX', 'ORLY', 'ULTA', 'LULU',
                           'ADS.DE', 'BOSS.DE', 'HEN3.DE', 'PUM.DE', 'ZAL.DE', 'MC.PA',
                           'BEI.DE',
@@ -599,6 +616,7 @@ TICKERS_BY_SECTOR = {
     # SDAX: DUE, JST, SFQ, NOEJ, VOS, WAC, INH, MUX, STM, KSB, HDD
     'industrials': ['CAT', 'BA', 'HON', 'MMM', 'SHW', 'TRV', 'DOW', 'FDX',
                     'URI', 'DE', 'FAST', 'ODFL', 'ETN',
+                    'RTX', 'LMT', 'UNP', 'UPS',
                     'SIE.DE', 'RHM.DE', 'MTX.DE', 'AIR.DE', 'DHL.DE', 'G1A.DE',
                     'KBX.DE', 'HOC.F', 'KGX.DE', 'JUN3.DE', 'TKA.DE', 'HAG.DE',
                     'R3NK.DE', 'LHA.DE', 'FRA.DE', 'HLAG.DE', 'RAA.DE',
@@ -637,15 +655,90 @@ TICKERS_BY_SECTOR = {
     'communication_services': ['DTE.DE', 'T', 'VZ', 'TMUS', 'ORA.PA',
                                'TEF.MC', 'UTDI.DE', 'FNTN.DE', '1U1.DE',
                                'RRTL.DE', 'SPG.DE', 'BVB.DE', 'PSM.DE', 'CWC.DE', 'G24.DE'],
+
+    # ── Consumer Defensive / Staples (2026-05 Erweiterung) ─────────────────
+    'consumer_defensive': ['KO', 'PG', 'PEP', 'COST', 'CL', 'MDLZ', 'GIS', 'KHC', 'KMB',
+                           'MO', 'PM', 'STZ', 'SYY', 'HSY', 'MKC'],
+
+    # ── Utilities (2026-05 Erweiterung) ────────────────────────────────────
+    'utilities': ['SO', 'D', 'AEP', 'EXC', 'SRE', 'XEL', 'ED', 'WEC', 'ES', 'PPL', 'AES',
+                  'ENEL.MI'],
 }
 
 # Alphabetically sorted sector labels (0-based)
 SECTOR_LABELS = {s: i for i, s in enumerate(sorted(TICKERS_BY_SECTOR.keys()))}
-# basic_materials=0, communication_services=1, consumer_cyclical=2, crypto=3,
-# energy=4, financial_services=5, healthcare=6, industrials=7, real_estate=8, technology=9
+# basic_materials=0, communication_services=1, consumer_cyclical=2, consumer_defensive=3,
+# crypto=4, energy=5, financial_services=6, healthcare=7, industrials=8, real_estate=9,
+# technology=10, utilities=11
 
 TICKER_TO_SECTOR = {t: s for s, tl in TICKERS_BY_SECTOR.items() for t in tl}
 ALL_TICKERS = [t for tl in TICKERS_BY_SECTOR.values() for t in tl]
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Sektor-Key Normalisierung
+# ──────────────────────────────────────────────────────────────────────────────
+# Wir mischen drei Quellen für Sektor-Strings:
+#  1. ``TICKERS_BY_SECTOR.keys()`` (Internformat): lowercase + underscore
+#     → "technology", "consumer_cyclical", "communication_services" …
+#  2. yfinance/Yahoo GICS (Anzeigeformat): Title-Case + Leerzeichen
+#     → "Technology", "Consumer Cyclical", "Communication Services" …
+#  3. Externe Quellen (Reports/Manifeste): gelegentlich Sondervarianten.
+#
+# News-Cache, BigQuery-Channels und die GCAM/Theme-Konfiguration laufen auf Variante 1.
+# Würden wir Variante 2 ungefiltert an einen Merge auf ``["Date", "sector"]`` geben,
+# matched NUR ``crypto`` (zufällig identisch). Die Folge: 237 von 243 Equity-Ticker
+# bekommen 0 % News-Fill (Diagnose bestätigt). Lösung: vor jedem Merge, jeder
+# Persistenz und jeder Sektor-Lookup ``normalize_sector_key`` aufrufen.
+_SECTOR_KEY_ALIASES = {
+    # Yahoo-Sonderfälle / abweichende Schreibweisen → Internformat.
+    "consumer defensive": "consumer_defensive",
+    "consumer staples": "consumer_defensive",
+    "utilities": "utilities",
+    "cryptocurrency": "crypto",
+    "crypto-asset": "crypto",
+    "telecommunication services": "communication_services",
+    "telecom services": "communication_services",
+    "telecommunications": "communication_services",
+    # Volle Sicherheits-Aliasse (idempotent).
+    **{k: k for k in TICKERS_BY_SECTOR.keys()},
+}
+
+
+def normalize_sector_key(value) -> str:
+    """yfinance-/Display-Sektor → internes Cache-/Channel-Schema.
+
+    Idempotent: bereits normalisierte Keys (``technology``) bleiben unverändert.
+    Unbekannte Sektoren werden auf ``"unknown"`` gemappt, damit ein nachfolgender
+    News-Merge sie eindeutig ignoriert (NaN-Block) statt einen Mismatch zu erzeugen.
+
+    Beispiele:
+        >>> normalize_sector_key("Consumer Cyclical")
+        'consumer_cyclical'
+        >>> normalize_sector_key("Technology")
+        'technology'
+        >>> normalize_sector_key("technology")
+        'technology'
+        >>> normalize_sector_key(None)
+        'unknown'
+    """
+    if value is None:
+        return "unknown"
+    s = str(value).strip()
+    if not s:
+        return "unknown"
+    s_low = s.lower()
+    # 1. Alias-Treffer (vor der Umwandlung Leerzeichen→Unterstrich).
+    if s_low in _SECTOR_KEY_ALIASES:
+        return _SECTOR_KEY_ALIASES[s_low]
+    # 2. Standardweg: "Consumer Cyclical" → "consumer_cyclical".
+    s_norm = s_low.replace(" ", "_").replace("-", "_")
+    if s_norm in TICKERS_BY_SECTOR:
+        return s_norm
+    if s_norm in _SECTOR_KEY_ALIASES:
+        return _SECTOR_KEY_ALIASES[s_norm]
+    # 3. Konnte nicht zugeordnet werden — als unknown markieren.
+    return "unknown"
 
 # Company display names
 COMPANY_NAMES = {
@@ -660,11 +753,13 @@ COMPANY_NAMES = {
     'ADBE': 'Adobe', 'STX': 'Seagate', 'WDC': 'Western Digital', 'MU': 'Micron',
     'NXPI': 'NXP Semiconductors', 'TER': 'Teradyne', 'LRCX': 'Lam Research',
     'NOW': 'ServiceNow', 'ANET': 'Arista Networks', 'FI': 'Fiserv',
+    'GOOGL': 'Alphabet', 'META': 'Meta Platforms', 'AVGO': 'Broadcom', 'ARM': 'Arm Holdings',
     'SAP.DE': 'SAP', 'IFX.DE': 'Infineon', 'ASML': 'ASML',
     # Finance
     'JPM': 'JPMorgan', 'GS': 'Goldman Sachs', 'AXP': 'AmEx', 'V': 'Visa',
     'MS': 'Morgan Stanley', 'MCO': "Moody's", 'SPGI': 'S&P Global',
     'SCHW': 'Charles Schwab', 'TROW': 'T. Rowe Price', 'AMP': 'Ameriprise',
+    'BAC': 'Bank of America', 'C': 'Citigroup', 'WFC': 'Wells Fargo',
     'ALV.DE': 'Allianz', 'MUV2.DE': 'Munich Re', 'DBK.DE': 'Deutsche Bank',
     'CBK.DE': 'Commerzbank', 'BNP.PA': 'BNP Paribas',
     # Healthcare
@@ -672,6 +767,7 @@ COMPANY_NAMES = {
     'ISRG': 'Intuitive Surgical', 'ILMN': 'Illumina',
     'REGN': 'Regeneron', 'VRTX': 'Vertex', 'BIIB': 'Biogen',
     'GILD': 'Gilead', 'ALGN': 'Align Technology', 'IDXX': 'IDEXX Labs',
+    'LLY': 'Eli Lilly', 'ABBV': 'AbbVie', 'TMO': 'Thermo Fisher', 'DHR': 'Danaher',
     'BAYN.DE': 'Bayer', 'FRE.DE': 'Fresenius', 'MRK.DE': 'Merck KGaA',
     'SRT3.DE': 'Sartorius', 'NVS': 'Novartis',
     # Consumer
@@ -686,6 +782,7 @@ COMPANY_NAMES = {
     'FDX': 'FedEx',
     'URI': 'United Rentals', 'DE': 'Deere', 'FAST': 'Fastenal',
     'ODFL': 'Old Dominion Freight Line', 'ETN': 'Eaton',
+    'RTX': 'RTX', 'LMT': 'Lockheed Martin', 'UNP': 'Union Pacific', 'UPS': 'UPS',
     'SHW': 'Sherwin-Williams', 'TRV': 'Travelers', 'DOW': 'Dow Inc.',
     'SIE.DE': 'Siemens', 'RHM.DE': 'Rheinmetall', 'MTX.DE': 'MTU Aero',
     'AIR.DE': 'Airbus', 'DHL.DE': 'DHL Group', 'G1A.DE': 'GEA Group',
@@ -765,6 +862,16 @@ COMPANY_NAMES = {
     'GFT.DE': 'GFT Technologies', 'NA9.DE': 'Nagarro', 'AOF.DE': 'ATOSS Software',
     'ELG.DE': 'Elmos Semiconductor', 'AIXA.DE': 'Aixtron',
     'SMHN.DE': 'SÜSS MicroTec', 'KTN.DE': 'Kontron',
+    # Consumer defensive / staples
+    'PEP': 'PepsiCo', 'COST': 'Costco', 'CL': 'Colgate-Palmolive',
+    'MDLZ': 'Mondelez', 'GIS': 'General Mills', 'KHC': 'Kraft Heinz',
+    'KMB': 'Kimberly-Clark', 'MO': 'Altria', 'PM': 'Philip Morris',
+    'STZ': 'Constellation Brands', 'SYY': 'Sysco', 'HSY': "Hershey's", 'MKC': 'McCormick',
+    # Utilities
+    'SO': 'Southern Company', 'D': 'Dominion Energy', 'AEP': 'American Electric Power',
+    'EXC': 'Exelon', 'SRE': 'Sempra', 'XEL': 'Xcel Energy', 'ED': 'Consolidated Edison',
+    'WEC': 'WEC Energy', 'ES': 'Eversource', 'PPL': 'PPL', 'AES': 'AES',
+    'ENEL.MI': 'Enel',
 }
 
 # Rollierende Anker-Ticker (Top-N nach Marktkap): Spillover-Signal, weniger GDELT-Rauschen.

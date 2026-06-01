@@ -97,8 +97,17 @@ def _assign_join_columns(
     key_df = df[keys].copy()
     if "Date" in keys:
         key_df["Date"] = pd.to_datetime(key_df["Date"]).dt.normalize()
-    idx = pd.MultiIndex.from_frame(key_df)
-    r_ix = r.set_index(keys)
+    # Bei Single-Key (z. B. ``on="Date"`` für Makro-News) muss der Reindex auf einem
+    # gewöhnlichen Index laufen — ``pd.MultiIndex.from_frame`` würde einen 1-Level-
+    # MultiIndex erzeugen, ``set_index(keys)`` bei 1-Element-Liste aber einen flachen
+    # Index. Folge: ``reindex`` matched NICHTS → alle Werte NaN.
+    # Genau dieser Bug ließ ``news_macro_*`` als ``all_nan`` aus dem Col-Screen fallen.
+    if len(keys) == 1:
+        idx = pd.Index(key_df[keys[0]].to_numpy(), name=keys[0])
+        r_ix = r.set_index(keys[0])
+    else:
+        idx = pd.MultiIndex.from_frame(key_df)
+        r_ix = r.set_index(keys)
     if r_ix.index.has_duplicates:
         r_ix = r_ix[~r_ix.index.duplicated(keep="last")]
     aligned = r_ix.reindex(idx)
@@ -935,23 +944,46 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
     add_yahoo_gics_feature_columns(df, _gics_cache)
     # Primär nach Yahoo-Sector zuordnen (2-stufige Yahoo-Klassifikation ist bereits in gics_* enthalten).
     # Fallback auf Legacy-Map nur, wenn Yahoo für ein Symbol keinen Sector liefert.
+    # Beide Quellen liefern unterschiedlich formatierte Sektor-Strings (Yahoo: "Technology"
+    # / "Consumer Cyclical"; Legacy: "technology" / "consumer_cyclical"). Der News-Cache
+    # und der spätere Merge in ``_apply_news_merges_for_one_tag`` arbeiten ausschließlich
+    # auf dem Legacy-Schema. Ohne Normalisierung matchte daher nur ``crypto`` zufällig —
+    # alle anderen Equity-Sektoren bekamen 0 % News-Fill (Bug bis 2026-05).
     _legacy_sector = df["ticker"].map(cfg.TICKER_TO_SECTOR)
     _gics_sector = df["gics_sector"].astype(str).str.strip()
     _gics_sector = _gics_sector.mask(_gics_sector.eq(""), np.nan)
-    df["sector"] = _gics_sector.fillna(_legacy_sector).fillna("unknown")
+    _raw_sector = _gics_sector.fillna(_legacy_sector).fillna("unknown")
+    df["sector_raw"] = _raw_sector.astype(str)
+    df["sector"] = _raw_sector.map(cfg.normalize_sector_key).astype(str)
     _sector_labels = {s: i for i, s in enumerate(sorted({str(x) for x in df["sector"].dropna().unique()}))}
     df["sector_id"] = df["sector"].map(_sector_labels).astype(float)
-    # Laufzeit-Konsistenz für alle späteren Phasen (Website/Reports/Filter).
+    # Laufzeit-Konsistenz für alle späteren Phasen (Website/Reports/Filter):
+    # nur normalisierte Sektor-Strings im Mapping ablegen, damit Reports & News-Lookups
+    # konsistent bleiben (Yahoo-Anzeigeform bleibt im DataFrame via ``sector_raw`` erhalten).
     cfg.SECTOR_LABELS = _sector_labels
     cfg.TICKER_TO_SECTOR = {
-        t: (v.get("gics_sector") or cfg.TICKER_TO_SECTOR.get(t) or "unknown")
+        t: cfg.normalize_sector_key(
+            v.get("gics_sector") or cfg.TICKER_TO_SECTOR.get(t) or "unknown"
+        )
         for t, v in _gics_cache.items()
     }
+    _unknown_n = int((df["sector"] == "unknown").sum())
+    _unknown_tickers = sorted(set(df.loc[df["sector"] == "unknown", "ticker"].astype(str)))
     print(
-        f"assemble_features: Sector-Mapping = Yahoo (fallback legacy), "
-        f"{len(_sector_labels)} Sektoren im Lauf.",
+        f"assemble_features: Sector-Mapping = Yahoo (normalisiert; Fallback legacy), "
+        f"{len(_sector_labels)} Sektoren im Lauf "
+        f"(unknown: {_unknown_n} Zeilen, {len(_unknown_tickers)} Ticker).",
         flush=True,
     )
+    if _unknown_tickers:
+        # Hinweis ohne Lärm: erste 10 Ticker reichen, sonst füllt es den Log voll.
+        _show = ", ".join(_unknown_tickers[:10])
+        _tail = " …" if len(_unknown_tickers) > 10 else ""
+        print(
+            f"assemble_features: News-Sektor unbekannt → kein Sektor-News-Merge "
+            f"für {_show}{_tail}",
+            flush=True,
+        )
     df["month"] = df["Date"].dt.month.astype(float)
 
     btc = df[df["ticker"] == "BTC-USD"][["Date", "momentum_20d"]].rename(

@@ -32,7 +32,7 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
-SCORING_ONLY = False
+SCORING_ONLY = True
 # True → Base-Optuna/Base-Modelle bleiben aus Artefakt bestehen; Training startet direkt bei Meta.
 # Voraussetzung: SCORING_ONLY=False und ein vorhandenes ``SCORING_ARTIFACT_PATH``.
 RETRAIN_META_ONLY = False
@@ -153,7 +153,7 @@ N_META_TRIALS         = 150
 # - "tp_precision": bisherige Zielfunktion (TP/Precision/FP-Run Constraints).
 # - "signal_mean_return": mittlere Signal-Rendite über Haltehorizonte (z. B. 1..5 Tage).
 # - "signal_win_rate": Anteil der Signale mit positivem mittlerem Horizon-Return.
-META_OBJECTIVE_MODE = "signal_mean_return"
+META_OBJECTIVE_MODE = "tp_precision"
 # Für signal_mean_return: pro Signal Mittelwert dieser Forward-Renditen, dann ZENTRAL-Aggregat
 # (Mean oder Median, gesteuert via META_OBJECTIVE_SIGNAL_AGGREGATION) über alle Signale.
 META_SIGNAL_RETURN_HORIZONS = (1, 2, 3, 4, 5)
