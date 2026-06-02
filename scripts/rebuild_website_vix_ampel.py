@@ -1,5 +1,5 @@
 """
-VIX-Ampel + Rot-Kontext-Chips in docs/signals.json und docs/index.html nachziehen.
+VIX-Ampel + Rot-Regime-Gesamtaussage in docs/signals.json und docs/index.html nachziehen.
 
   python scripts/rebuild_website_vix_ampel.py
 """
@@ -19,12 +19,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from lib.vix_regime_ampel import ampel_fields_from_vix, vix_ampel_html_span, vix_regime_full_css_block
-from lib.vix_red_context_chips import (
-    attach_red_context_to_signal,
-    red_context_chips_html,
-    vix_regime_guide_panel_html,
-)
-from lib.red_signal_quality import attach_red_quality_to_signal, calibrate_gld_ret5_median_red_ref, inject_gld_median_red_ref
+from lib.red_regime_summary import attach_red_regime_summary
+from lib.red_signal_quality import calibrate_gld_ret5_median_red_ref, inject_gld_median_red_ref
+from lib.vix_red_context_chips import vix_regime_guide_panel_html
 
 MASTER = ROOT / "data" / "master_complete.csv"
 SIGNALS_JSON = ROOT / "docs" / "signals.json"
@@ -141,8 +138,7 @@ def _lookup_from_master() -> dict[tuple[str, str], dict]:
                     row[c] = None
         vix = row.get("regime_vix_level")
         row.update(ampel_fields_from_vix(vix))
-        attach_red_context_to_signal(row)
-        attach_red_quality_to_signal(row)
+        attach_red_regime_summary(row)
         out[key] = row
     return out
 
@@ -169,12 +165,10 @@ def _enrich_signals(
         d = str(s.get("date", ""))[:10]
         if s.get("gld_ret_5d") is None and d in gld_by_date:
             s["gld_ret_5d"] = gld_by_date[d].get("gld_ret_5d")
-        attach_red_context_to_signal(s)
     _fill_gld_ret5_on_signals(signals, gld_by_date)
-    gld_ref = calibrate_gld_ret5_median_red_ref()
     for s in signals:
         inject_gld_median_red_ref(s)
-        attach_red_quality_to_signal(s)
+        attach_red_regime_summary(s)
     return n_master
 
 
@@ -185,9 +179,9 @@ def _lookup_from_signals(signals: list[dict]) -> dict[tuple[str, str], dict]:
         key = _signal_key(s)
         row = {c: s.get(c) for c in _CHIP_COLS if c in s}
         row["vix_regime_ampel"] = s.get("vix_regime_ampel")
-        row["red_context_html"] = s.get("red_context_html")
-        row["red_quality_html"] = s.get("red_quality_html")
-        row["red_quality_tier"] = s.get("red_quality_tier")
+        row["red_summary_html"] = s.get("red_summary_html")
+        row["red_summary_de"] = s.get("red_summary_de")
+        row["red_summary_tier"] = s.get("red_summary_tier")
         out[key] = row
     return out
 
@@ -252,6 +246,18 @@ def _strip_old_ampel_blocks(html: str) -> str:
     html = re.sub(r'\s*<div class="red-ctx-chips"[^>]*>.*?</div>\s*', "\n        ", html, flags=re.DOTALL)
     html = re.sub(
         r'\s*<span class="red-quality-badge[^"]*"[^>]*>.*?</span>\s*',
+        "\n        ",
+        html,
+        flags=re.DOTALL,
+    )
+    html = re.sub(
+        r'\s*<span class="red-gld-quality[^"]*"[^>]*>.*?</span>\s*',
+        "\n        ",
+        html,
+        flags=re.DOTALL,
+    )
+    html = re.sub(
+        r'\s*<p class="red-regime-summary[^"]*"[^>]*>.*?</p>\s*',
         "\n        ",
         html,
         flags=re.DOTALL,
@@ -355,19 +361,13 @@ def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
                     count=1,
                     flags=re.DOTALL,
                 )
-        chips = extra.get("red_context_html") or ""
-        quality = extra.get("red_quality_html") or ""
-        if chips and str(extra.get("vix_regime_ampel", "")).lower() == "red":
-            block = f"{head2}\n        {chips}\n        "
-            if quality:
-                block = f"{head2}\n        {quality}\n        {chips}\n        "
-            return block
-        if quality and str(extra.get("vix_regime_ampel", "")).lower() == "red":
-            return f"{head2}\n        {quality}\n        "
+        summary = extra.get("red_summary_html") or ""
+        if summary and str(extra.get("vix_regime_ampel", "")).lower() == "red":
+            return f"{head2}\n        {summary}\n        "
         return f"{head2}\n        "
 
     html, n = pat2.subn(_head_repl, html)
-    print(f"  index.html: {n} Karten (Ampel + Rot-Chips)")
+    print(f"  index.html: {n} Karten (Ampel + Rot-Gesamtaussage)")
 
     html = _inject_vix_panel(html)
     html = _uncollapse_oos_section(html)

@@ -112,7 +112,27 @@ def website_vix_guide_html() -> str:
         </details>
 
         <details open>
-          <summary><strong>Chip 1:</strong> VIX vs. 20d-Mittel</summary>
+          <summary><strong>Rot-Regime</strong> — eine Gesamtaussage pro Signal</summary>
+          <div class="guide-body">
+            <p>Bei <strong>roter Ampel</strong> erscheint eine Zeile statt separater Chips und Badges:</p>
+            <p class="guide-chip" style="margin:10px 0">
+              <strong>Rot-Regime:</strong> Signal-Qualität: günstiger (1/1) · Marktkontext: gemischt
+            </p>
+            <p><strong>Signal-Qualität</strong> (OOS-validiert, steuert die Farbe der Zeile):</p>
+            <ul>
+              <li><strong>günstiger</strong> — beide Faktoren ok, oder der eine bekannte Faktor ist ok</li>
+              <li><strong>neutral</strong> — genau einer von zwei Faktoren ok (Liquidität + GLD)</li>
+              <li><strong>vorsichtig</strong> — kein Faktor ok oder beide ungünstig</li>
+            </ul>
+            <p>Faktoren: <code>liquidity_tier=ok</code>, <code>gld_ret_5d</code> unter globalem Rot-Median.
+            Chips fließen <em>nicht</em> in den Score (OOS-Test: Verschlechterung).</p>
+            <p><strong>Marktkontext</strong> (nur Text): Einordnung der drei Chips — VIX vs. 20d, VIX-Term, Crowding.
+            Kein zweiter numerischer Score.</p>
+          </div>
+        </details>
+
+        <details>
+          <summary><strong>Details:</strong> Chip 1 — VIX vs. 20d-Mittel</summary>
           <div class="guide-body">
             <div class="guide-chip">
               <p><strong>Was der Name meint:</strong><br>
@@ -199,39 +219,17 @@ def website_vix_guide_html() -> str:
           </div>
         </details>
 
-        <details open>
+        <details>
           <summary><strong>Rot-Qualität</strong> (OOS-validiertes Badge)</summary>
           <div class="guide-body">
-            <p><strong>Was ist das?</strong><br>
-            Zusätzlich zu den drei Kontext-Chips erscheint bei <strong>roter Ampel</strong> ein
-            Qualitäts-Badge (<em>hoch / mittel / niedrig</em>). Es nutzt nur Faktoren, die in
-            META+THR und FINAL-OOS historisch stabil waren — kein zweites Modell-Scoring.</p>
-            <div class="guide-chip">
-              <h4><span class="red-quality-badge red-quality-badge--hoch" style="font-size:.75em">Qualität hoch (2/2)</span></h4>
-              <p><strong>Faktor 1 — Liquidität ok:</strong><br>
-              <code>liquidity_tier == ok</code> (ADV-Perzentil am Signaltag nicht „dünn“).
-              OOS: +1,0 pp vs. dünnere Titel im rot-Regime (FINAL n≈111).</p>
-              <p><strong>Faktor 2 — Gold schwach 5d:</strong><br>
-              <code>gld_ret_5d</code> (GLD, Yahoo) liegt <strong>unter dem globalen Median</strong>
-              aller rot-Signale im Backtest (<code>gld_ret5_median_red_ref</code>, kalibriert aus
-              <code>master_complete.csv</code>). Kein Flucht-in-Gold / Risk-off-Kontext.
-              OOS: +1,0 pp (FINAL).</p>
-              <p><strong>Stufen:</strong> 2/2 = hoch, 1/2 = mittel, 0/2 = niedrig.
-              Fehlende Daten → Badge ggf. ausgeblendet.</p>
-              <p><strong>Nicht im Score (nur Tooltip):</strong> Alpha vs. Markt/Sektor
-              (<code>alpha_sec_5d</code> / <code>alpha_mkt_5d</code>) — in IS oft positiv,
-              FINAL nicht stabil genug für einen Filter.</p>
-            </div>
-            <p><strong>So deuten:</strong> Das Badge sortiert <em>innerhalb</em> rot nach
-            historisch robusteren Merkmalen — es ersetzt weder die Ampel noch die Chips und
-            ist <strong>keine Anlageberatung</strong>.</p>
+            <p>Die Signal-Qualität in der Rot-Regime-Zeile nutzt nur die OOS-validierten Faktoren
+            Liquidität und GLD (siehe oben). Die frühere separate Badge-Anzeige ist in die Zeile integriert.</p>
           </div>
         </details>
 
         <p class="section-lead" style="margin-top:10px">
-          <strong>Alle drei Chips</strong> erscheinen nur, wenn die Ampel <strong>rot</strong> ist.
-          <span class="chip-swatch chip-swatch--good">Grün</span>/<span class="chip-swatch chip-swatch--warn">Orange</span>:
-          aus OOS-Tests in rot historisch günstiger/ungünstiger — <strong>keine Anlageberatung</strong>.
+          Die <strong>Rot-Regime-Zeile</strong> erscheint nur bei roter Ampel.
+          Signal-Qualität ist OOS-validiert; Marktkontext ist ergänzender Text — <strong>keine Anlageberatung</strong>.
         </p>
       </div>"""
 

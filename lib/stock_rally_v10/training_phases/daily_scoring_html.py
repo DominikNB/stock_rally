@@ -526,8 +526,7 @@ def _run_phase17(c: Any) -> None:
         if _exported_ho is not None and len(_exported_ho) > 0:
             _cls_keys = list(CLASSIFICATION_COLUMN_KEYS)
             from lib.vix_regime_ampel import ampel_fields_from_vix
-            from lib.vix_red_context_chips import attach_red_context_to_signal
-            from lib.red_signal_quality import attach_red_quality_to_signal
+            from lib.red_regime_summary import attach_red_regime_summary
 
             _chip_cols = (
                 "regime_vix_z_20d",
@@ -564,8 +563,7 @@ def _run_phase17(c: Any) -> None:
                                 _sig[_cc] = str(_v)
                         elif _v is not None and not (isinstance(_v, float) and _v != _v):
                             _sig[_cc] = float(_v)
-                attach_red_context_to_signal(_sig)
-                attach_red_quality_to_signal(_sig)
+                attach_red_regime_summary(_sig)
                 signals_holdout_final.append(_sig)
             _sort_website_signals_newest_first(signals_holdout_final)
             print(
@@ -1124,8 +1122,7 @@ def _run_phase17(c: Any) -> None:
         has_chart = bool(ch)
         bar = int(s["prob"] * 100)
         _ampel_html = vix_ampel_html_span(s)
-        _red_ctx_html = str(s.get("red_context_html") or "")
-        _red_quality_html = str(s.get("red_quality_html") or "")
+        _red_summary_html = str(s.get("red_summary_html") or "")
         _yf_note = (
             '<p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der '
             "Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>"
@@ -1201,8 +1198,7 @@ def _run_phase17(c: Any) -> None:
           {_ampel_html}
           <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
         </div>
-        {_red_quality_html}
-        {_red_ctx_html}
+        {_red_summary_html}
         {_gics_html}
         {_yf_note}
         {chart_html}

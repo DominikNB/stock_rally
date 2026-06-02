@@ -4,11 +4,10 @@ Rot-Signal-Qualität (VIX < 20): nur OOS-validierte Komponenten.
 Validierung: scripts/_scratch_validate_red_quality_tiers.py
   → data/_scratch_red_quality_validation.json
 
-Stand 2026-06: OOS-bestätigt (META+THR + FINAL, gleiche Richtung, Δ ≥ 0.1pp):
-  • liquidity_ok   — liquidity_tier == ok
-  • gld_ret5_low   — gld_ret_5d unter globalem Median aller rot-Signale (master_complete)
+Stand 2026-06: OOS-bestätigt (META+THR + FINAL, gleiche Richtung):
+  • gld_ret5_low   — gld_ret_5d unter globalem Rot-Median (master_complete)
 
-Alpha/RS/Chips: IS oft positiv, FINAL nicht stabil → nur Anzeige der Rohwerte, kein Score.
+Liquidität/Chips: nicht im Badge (OOS nicht stabil bzw. FINAL untrennbar).
 """
 from __future__ import annotations
 
@@ -22,7 +21,7 @@ VALIDATION_JSON = ROOT / "data" / "_scratch_red_quality_validation.json"
 MASTER_CSV = ROOT / "data" / "master_complete.csv"
 
 # Fallback falls JSON fehlt (Ergebnis Validierungslauf)
-_DEFAULT_PASSED = ("liquidity_ok", "gld_ret5_low")
+_DEFAULT_PASSED = ("gld_ret5_low",)
 # Kalibrierung master_complete rot (2026-06-02)
 _DEFAULT_GLD_MEDIAN_RED = 0.0132005008183191
 

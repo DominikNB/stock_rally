@@ -171,15 +171,9 @@ def vix_regime_guide_panel_html() -> str:
         "<em>kein Ausschluss</em> einzelner Trades; viele Treffer bleiben möglich.</li>"
         "</ul>"
         "<p class=\"vix-panel-lead\" style=\"margin-top:10px\">"
-        "<strong>Nur bei rot:</strong> drei Zusatz-Chips pro Signal (kein zweites Scoring). "
-        "Sie ersetzen <em>nicht</em> Modell-Wahrscheinlichkeit und Threshold.</p>"
-        "<ul class=\"vix-guide-list\">"
-        "<li><strong>Grüner Chip</strong> = Kontext historisch günstig in rot (Train + Test).</li>"
-        "<li><strong>Oranger Chip</strong> = eher Vorsicht (Size, Stop, Skepsis).</li>"
-        "<li><strong>Grau</strong> = Daten fehlen — Chip ignorieren.</li>"
-        "<li>Entscheidung: erst Signal ja/nein (prob/Setup), dann in rot: "
-        "mehr grüne Chips → mehr Überzeugung; viele orange → vorsichtiger handeln.</li>"
-        "</ul></div>"
+        "<strong>Nur bei rot:</strong> Badge <em>Qualität 0/1</em> — nur GLD 5d vs. globalem Rot-Median. "
+        "Keine Chips, kein zweites Scoring.</p>"
+        "</div>"
     )
 
 
