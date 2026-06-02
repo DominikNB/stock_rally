@@ -6,7 +6,8 @@ Baut eine einzige CSV mit allen Holdout-Signal-Daten (keine Joins nötig):
   • Trainings-Label-Eval (train_target, rally, eval_note) aus models/scoring_artifacts.joblib, falls vorhanden
   • Zusätzliche Filter (Liquidität, Cluster, Sektor-HHI, Korrelation, Cross-Section-Ranks,
     OHLCV-Technik, Earnings-Fenster) — signal_extra_filters.py
-    Standard: **an**; mit `--no-filters` abschaltbar (schneller, schlankere CSV).
+  • **News-Töne** aus ``data/feature_shards_news`` (Sektor/Makro für Rot-Chip) — immer,
+    unabhängig von ``--no-filters`` (nur Zusatzfilter lassen sich abschalten).
 
 Ausgabe:
   • **data/master_complete.csv** — volle Historie: Meta + Forward-Renditen + Trainingslabels + Zusatzfilter
@@ -35,6 +36,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import joblib
+import json
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -45,6 +47,7 @@ HOLDOUT_CSV = ROOT / "data" / "holdout_signals.csv"
 MASTER_COMPLETE_CSV = ROOT / "data" / "master_complete.csv"
 MASTER_DAILY_CSV = ROOT / "data" / "master_daily_update.csv"
 ARTIFACT = ROOT / "models" / "scoring_artifacts.joblib"
+NEWS_SHARD_DIR = ROOT / "data" / "feature_shards_news"
 HORIZONS = (2, 4, 6, 8, 10)
 try:
     from lib.stock_rally_v10 import config as _sr_cfg_for_yf
@@ -158,6 +161,91 @@ def _build_daily_update(full: pd.DataFrame, ret_cols: list[str]) -> pd.DataFrame
     return sub.drop(columns=drop, errors="ignore")
 
 
+def _merge_news_shard_for_holdout(sig: pd.DataFrame) -> pd.DataFrame:
+    """
+    Sektor-/Makro-News-Töne aus dem News-Shard (wie Training/Scoring) — für Rot-Chip
+    „News Sektor vs. Makro“ und Export nach signals.json / master_complete.
+    """
+    manifest_path = NEWS_SHARD_DIR / "news_shards_manifest.json"
+    if not manifest_path.is_file():
+        print(
+            "Hinweis: News-Shard fehlt (data/feature_shards_news) — News-Chip bleibt grau.",
+            flush=True,
+        )
+        return sig
+    if not ARTIFACT.is_file():
+        print(
+            "Hinweis: models/scoring_artifacts.joblib fehlt — News-Merge übersprungen.",
+            flush=True,
+        )
+        return sig
+
+    try:
+        from lib.stock_rally_v10 import config as cfg
+        from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+
+        artifact = joblib.load(ARTIFACT)
+        best_params = artifact.get("best_params") or {}
+        for req in ("news_mom_w", "news_vol_ma", "news_tone_roll"):
+            if req not in best_params:
+                print(
+                    f"Hinweis: best_params ohne {req} — News-Merge übersprungen.",
+                    flush=True,
+                )
+                return sig
+
+        cfg._FEATURE_NEWS_SHARDS_ACTIVE = True
+        cfg.FEATURE_SHARD_DIR = str(NEWS_SHARD_DIR.resolve())
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        cfg.NEWS_SHARD_MANIFEST = {
+            str(k): str(NEWS_SHARD_DIR / v) for k, v in (manifest.get("tags") or {}).items()
+        }
+
+        frame = sig.copy()
+        frame["Date"] = pd.to_datetime(frame["Date"]).dt.normalize()
+        if "sector" not in frame.columns:
+            frame["sector"] = ""
+        frame["sector"] = frame["sector"].astype(str).replace({"": np.nan, "nan": np.nan})
+        frame["sector"] = frame["sector"].fillna(
+            frame["ticker"].astype(str).map(cfg.TICKER_TO_SECTOR).fillna("unknown")
+        )
+
+        keys = frame[["Date", "ticker", "sector"]].copy()
+        merged = merge_news_shard_from_best_params(keys, best_params)
+        tag = cfg.news_feat_tag(
+            int(best_params["news_mom_w"]),
+            int(best_params["news_vol_ma"]),
+            int(best_params["news_tone_roll"]),
+        )
+        mc = f"news_macro_{tag}_tone"
+        sc = f"news_sec_{tag}_tone"
+        if mc not in merged.columns or sc not in merged.columns:
+            print(
+                f"Hinweis: News-Shard ohne {mc}/{sc} — News-Chip grau.",
+                flush=True,
+            )
+            return sig
+
+        keep = ["Date", "ticker", mc, sc]
+        slim = merged[keep].drop_duplicates(subset=["Date", "ticker"])
+        out = frame.merge(slim, on=["Date", "ticker"], how="left")
+        out["news_sec_minus_macro_tone"] = pd.to_numeric(out[sc], errors="coerce") - pd.to_numeric(
+            out[mc], errors="coerce"
+        )
+        nn = int(out["news_sec_minus_macro_tone"].notna().sum())
+        print(
+            f"  … News-Shard ({mc}, {sc}): {nn}/{len(out)} Zeilen mit Sektor−Makro-Ton",
+            flush=True,
+        )
+        return out
+    except FileNotFoundError as exc:
+        print(f"Hinweis: News-Shard nicht gefunden ({exc}) — News-Chip bleibt grau.", flush=True)
+        return sig
+    except Exception as exc:
+        print(f"Warnung: News-Shard-Merge fehlgeschlagen ({exc}).", file=sys.stderr, flush=True)
+        return sig
+
+
 def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
     """
     holdout_df: optional DataFrame inkl. Klassifikationsspalten (s. _CLASSIFICATION_META_COLS).
@@ -215,6 +303,8 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
 
     sig["Date"] = pd.to_datetime(sig["Date"]).dt.normalize()
     sig["signal_date"] = sig["Date"]
+
+    sig = _merge_news_shard_for_holdout(sig)
 
     end_d = (sig["signal_date"].max() + pd.Timedelta(days=40)).strftime("%Y-%m-%d")
     tickers = sorted(sig["ticker"].unique())
@@ -418,6 +508,15 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
             out[c] = np.nan if c != "eval_note" else ""
     base_cols = meta + fwd_meta + lab
     out = out[base_cols]
+
+    _news_extra = [
+        c
+        for c in sig.columns
+        if str(c).startswith("news_") or c == "news_sec_minus_macro_tone"
+    ]
+    for c in _news_extra:
+        if c not in out.columns:
+            out[c] = sig[c].values
 
     if WITH_FILTERS:
         try:

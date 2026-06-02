@@ -26,7 +26,8 @@ from lib.vix_red_context_chips import (
 )
 
 MASTER = ROOT / "data" / "master_complete.csv"
-SHARD = ROOT / "data" / "feature_shards_news" / "news_tag_3_20_5.parquet"
+ARTIFACT = ROOT / "models" / "scoring_artifacts.joblib"
+NEWS_SHARD_DIR = ROOT / "data" / "feature_shards_news"
 SIGNALS_JSON = ROOT / "docs" / "signals.json"
 INDEX_HTML = ROOT / "docs" / "index.html"
 
@@ -63,21 +64,51 @@ def _vix3m_ratio_by_date(dates: pd.Series) -> dict[str, float]:
     return {d.strftime("%Y-%m-%d"): float(ratio.loc[d]) for d in ratio.index if pd.notna(ratio.loc[d])}
 
 
+def _news_shard_path() -> Path | None:
+    if not ARTIFACT.is_file():
+        return None
+    try:
+        import joblib
+
+        from lib.stock_rally_v10 import config as cfg
+
+        bp = joblib.load(ARTIFACT).get("best_params") or {}
+        w, v, r = int(bp["news_mom_w"]), int(bp["news_vol_ma"]), int(bp["news_tone_roll"])
+        tag = cfg.news_feat_tag(w, v, r)
+        p = NEWS_SHARD_DIR / f"news_tag_{tag}.parquet"
+        return p if p.is_file() else None
+    except Exception:
+        return None
+
+
 def _merge_news_tones(mc: pd.DataFrame) -> pd.DataFrame:
-    if not SHARD.is_file():
+    if "news_sec_minus_macro_tone" in mc.columns and mc["news_sec_minus_macro_tone"].notna().sum() > 50:
         return mc
-    tones = pd.read_parquet(
-        SHARD,
-        columns=["Date", "ticker", "news_macro_3_20_5_tone", "news_sec_3_20_5_tone"],
-    )
+    shard = _news_shard_path()
+    if shard is None:
+        return mc
+    try:
+        import joblib
+
+        from lib.stock_rally_v10 import config as cfg
+
+        bp = joblib.load(ARTIFACT).get("best_params") or {}
+        tag = cfg.news_feat_tag(
+            int(bp["news_mom_w"]), int(bp["news_vol_ma"]), int(bp["news_tone_roll"])
+        )
+        mc_col = f"news_macro_{tag}_tone"
+        sc_col = f"news_sec_{tag}_tone"
+    except Exception:
+        return mc
+    tones = pd.read_parquet(shard, columns=["Date", "ticker", mc_col, sc_col])
     tones["Date"] = pd.to_datetime(tones["Date"]).dt.normalize()
     mc = mc.copy()
     mc["Date"] = pd.to_datetime(mc["Date"]).dt.normalize()
     merged = mc.merge(tones, on=["Date", "ticker"], how="left", suffixes=("", "_shard"))
     if "news_sec_minus_macro_tone" not in merged.columns:
         merged["news_sec_minus_macro_tone"] = (
-            pd.to_numeric(merged["news_sec_3_20_5_tone"], errors="coerce")
-            - pd.to_numeric(merged["news_macro_3_20_5_tone"], errors="coerce")
+            pd.to_numeric(merged[sc_col], errors="coerce")
+            - pd.to_numeric(merged[mc_col], errors="coerce")
         )
     return merged
 
@@ -120,16 +151,91 @@ def _lookup_from_master() -> dict[tuple[str, str], dict]:
     return out
 
 
-def _enrich_signals(signals: list[dict], lookup: dict[tuple[str, str], dict]) -> int:
-    n = 0
-    for s in signals:
-        key = (str(s.get("ticker", "")), str(s.get("date", ""))[:10])
-        extra = lookup.get(key)
-        if not extra:
+def _news_tone_column_names() -> tuple[str, str] | None:
+    shard = _news_shard_path()
+    if shard is None:
+        return None
+    try:
+        import joblib
+
+        from lib.stock_rally_v10 import config as cfg
+
+        bp = joblib.load(ARTIFACT).get("best_params") or {}
+        tag = cfg.news_feat_tag(
+            int(bp["news_mom_w"]), int(bp["news_vol_ma"]), int(bp["news_tone_roll"])
+        )
+        return f"news_macro_{tag}_tone", f"news_sec_{tag}_tone"
+    except Exception:
+        return None
+
+
+def _news_lookup_from_shard(keys: set[tuple[str, str]]) -> dict[tuple[str, str], dict]:
+    """News-Töne für beliebige (ticker, date)-Paare — unabhängig von master_complete."""
+    col_pair = _news_tone_column_names()
+    shard = _news_shard_path()
+    if not keys or col_pair is None or shard is None:
+        return {}
+    mc_col, sc_col = col_pair
+    tones = pd.read_parquet(shard, columns=["Date", "ticker", mc_col, sc_col])
+    tones["Date"] = pd.to_datetime(tones["Date"]).dt.normalize()
+    tones["ticker"] = tones["ticker"].astype(str).str.strip()
+    req = pd.DataFrame(
+        [{"ticker": t, "Date": pd.Timestamp(d)} for t, d in sorted(keys)],
+    )
+    req["Date"] = pd.to_datetime(req["Date"]).dt.normalize()
+    merged = req.merge(tones, on=["Date", "ticker"], how="left")
+    out: dict[tuple[str, str], dict] = {}
+    for _, r in merged.iterrows():
+        sc = pd.to_numeric(r.get(sc_col), errors="coerce")
+        mc = pd.to_numeric(r.get(mc_col), errors="coerce")
+        if not (np.isfinite(sc) and np.isfinite(mc)):
             continue
-        s.update(extra)
-        n += 1
-    return n
+        key = (str(r["ticker"]), pd.Timestamp(r["Date"]).strftime("%Y-%m-%d"))
+        out[key] = {
+            mc_col: float(mc),
+            sc_col: float(sc),
+            "news_sec_minus_macro_tone": float(sc - mc),
+        }
+    print(f"  News-Shard Lookup: {len(out):,}/{len(keys):,} Signale mit Sektor−Makro-Ton")
+    return out
+
+
+def _signal_key(s: dict) -> tuple[str, str]:
+    return (str(s.get("ticker", "")).strip(), str(s.get("date", ""))[:10])
+
+
+def _enrich_signals(
+    signals: list[dict],
+    master_lookup: dict[tuple[str, str], dict],
+    news_lookup: dict[tuple[str, str], dict],
+) -> tuple[int, int]:
+    """Master-Kennzahlen + News-Töne; Chips immer neu berechnen."""
+    n_master = 0
+    n_news = 0
+    for s in signals:
+        key = _signal_key(s)
+        extra = master_lookup.get(key)
+        if extra:
+            s.update(extra)
+            n_master += 1
+        news = news_lookup.get(key)
+        if news:
+            s.update(news)
+            n_news += 1
+        attach_red_context_to_signal(s)
+    return n_master, n_news
+
+
+def _lookup_from_signals(signals: list[dict]) -> dict[tuple[str, str], dict]:
+    """Lookup für index.html aus angereicherten Signal-Dicts."""
+    out: dict[tuple[str, str], dict] = {}
+    for s in signals:
+        key = _signal_key(s)
+        row = {c: s.get(c) for c in _CHIP_COLS if c in s}
+        row["vix_regime_ampel"] = s.get("vix_regime_ampel")
+        row["red_context_html"] = s.get("red_context_html")
+        out[key] = row
+    return out
 
 
 def _fix_doubled_css_braces(html: str) -> str:
@@ -306,15 +412,23 @@ def main() -> None:
     if not MASTER.is_file():
         raise SystemExit(f"Fehlt: {MASTER}")
 
-    lookup = _lookup_from_master()
-    print(f"Lookup: {len(lookup):,} Zeilen")
+    master_lookup = _lookup_from_master()
+    print(f"Master-Lookup: {len(master_lookup):,} Zeilen")
 
     if SIGNALS_JSON.is_file():
         payload = json.loads(SIGNALS_JSON.read_text(encoding="utf-8"))
+        all_keys: set[tuple[str, str]] = set()
         for key in ("signals", "signals_holdout_final"):
             if key in payload and isinstance(payload[key], list):
-                n = _enrich_signals(payload[key], lookup)
-                print(f"  signals.json [{key}]: {n} Signale")
+                all_keys.update(_signal_key(s) for s in payload[key])
+        news_lookup = _news_lookup_from_shard(all_keys)
+
+        html_lookup: dict[tuple[str, str], dict] = {}
+        for key in ("signals", "signals_holdout_final"):
+            if key in payload and isinstance(payload[key], list):
+                nm, nn = _enrich_signals(payload[key], master_lookup, news_lookup)
+                print(f"  signals.json [{key}]: master={nm}, news={nn} von {len(payload[key])}")
+                html_lookup.update(_lookup_from_signals(payload[key]))
         payload["vix_ampel_version"] = 4
         payload["vix_ampel_stages"] = 3
         payload["red_context_chips"] = 4
@@ -322,10 +436,12 @@ def main() -> None:
             json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
+    else:
+        html_lookup = master_lookup
 
     if INDEX_HTML.is_file():
         html = INDEX_HTML.read_text(encoding="utf-8")
-        html = _patch_index_html(html, lookup)
+        html = _patch_index_html(html, html_lookup)
         INDEX_HTML.write_text(html, encoding="utf-8")
         print(f"  geschrieben: {INDEX_HTML}")
 
