@@ -95,10 +95,10 @@ Die **exakten** Grenzen des **aktuellen** Laufs (Signaltag laut CSV, Ende Hauptf
 
    **VIX-Ampel & Rot-Kontext (Anzeige + LLM — kein Filter, kein zweites Scoring):**  
    • **vix_regime_ampel** — **green** / **yellow** / **red** aus **regime_vix_level** (Schwellen im Code: rot &lt; 20, gelb 20–25, grün ≥ 25).  
-   • **red_context_llm** — **Ein Absatz pro Zeile**: verdichtet die vier **Rot-Zusatz-Hinweise** (VIX vs. 20d-Mittel, VIX3M/VIX, Sektor-Crowding, News Sektor vs. Makro) **mit den zugrunde liegenden CSV-Zahlen** und einer **Einordnung**, wie sie mit News, Alpha/Beta und Liquidität **zusammen** zu gewichten sind.  
+   • **red_context_llm** — **Ein Absatz pro Zeile**: verdichtet die drei **Rot-Zusatz-Hinweise** (VIX vs. 20d-Mittel, VIX3M/VIX, Sektor-Crowding) **mit den zugrunde liegenden CSV-Zahlen** und einer **Einordnung**, wie sie mit News, Alpha/Beta und Liquidität **zusammen** zu gewichten sind.  
    • **Bei Ampel ≠ rot:** Spalte erklärt, dass die Rot-Chips **entfallen** — **nicht** nach Chip-Farben argumentieren.  
    • **Bei rot — verbindlich für die Analyse:** Den Inhalt von **red_context_llm** in **Makro-Intro**, **Der Daten-Check**, **Vergleich der Signale** und **Fazit** **einweben** (Widersprüche benennen, z. B. starke Story aber ungünstiger Rot-Kontext).  
-   • **Verboten:** dem Nutzer nur „Chip 1/3/4 grün“ oder eine **reine Chip-Liste** zu liefern — die Chips sind **Kontext-Hilfen**, die du mit **belegten** News und den übrigen CSV-Kennzahlen **abwägst**, nicht separat abschließt.
+   • **Verboten:** dem Nutzer nur „Chip 1/2/3 grün“ oder eine **reine Chip-Liste** zu liefern — die Chips sind **Kontext-Hilfen**, die du mit **belegten** News und den übrigen CSV-Kennzahlen **abwägst**, nicht separat abschließt.
 
    **Kurzreferenz Daten (Kompakt für schnellen Abgleich — Details siehe oben):**  
    • **Cluster / Sektor:** signals_same_day, sector_share_same_day, sector_hhi_same_day (Konzentration der Sektoren).  

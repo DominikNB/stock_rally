@@ -107,7 +107,7 @@ def website_vix_guide_html() -> str:
             </ul>
             <p><strong>So deuten:</strong> Die Ampel beschreibt das <strong>große Markt-Wetter</strong>.
             Ein rot markiertes Signal heißt nicht „schlecht“, sondern: Im Backtest war dieses
-            Umfeld im Schnitt weniger günstig — die vier Chips unten verfeinern das nur bei rot.</p>
+            Umfeld im Schnitt weniger günstig — die drei Chips unten verfeinern das nur bei rot.</p>
           </div>
         </details>
 
@@ -199,34 +199,8 @@ def website_vix_guide_html() -> str:
           </div>
         </details>
 
-        <details>
-          <summary><strong>Chip 4:</strong> News Sektor vs. Makro</summary>
-          <div class="guide-body">
-            <div class="guide-chip">
-              <p><strong>Was der Name meint:</strong><br>
-              Das Modell wertet News automatisch aus (Sentiment/Ton pro Tag). Es gibt einen
-              <strong>Sektor-News-Ton</strong> (Stimmung in der Branche des Titels) und einen
-              <strong>Makro-News-Ton</strong> (allgemeine Markt-/Wirtschaftsnews). Der Chip fragt:
-              Klingt die <strong>Branche</strong> an diesem Tag positiver als das <strong>große Makro</strong>?</p>
-              <p><strong>So wird gerechnet:</strong><br>
-              Sektor-Ton minus Makro-Ton (Spalten <code>news_sec_*_tone</code> und
-              <code>news_macro_*_tone</code> der Pipeline, gleicher Tag).<br>
-              Positive Differenz → Sektor-Stimmung liegt über Makro-Stimmung.</p>
-              <p><strong>Chip-Farbe:</strong><br>
-              <span class="chip-swatch chip-swatch--good">Grün</span> wenn Differenz <strong>&gt; 0</strong>.<br>
-              <span class="chip-swatch chip-swatch--warn">Orange</span> wenn Differenz <strong>≤ 0</strong>
-              (Makro dominiert oder gleichauf).<br>
-              <span class="chip-swatch chip-swatch--na">Grau</span> wenn keine News-Scores (z. B. Lücken in GDELT).</p>
-              <p><strong>So deuten:</strong> Grün = Modell-Newslage stützt eher eine <strong>Branchen-/Titel-Story</strong>.
-              Orange = eher <strong>Markt-Makro</strong> treibt — Einzeltitel muss das per
-              <strong>eigener Recherche</strong> (IR, Medien) klar überzeugend sein. Immer mit
-              belegbaren Meldungen abgleichen, nicht nur Modell-Score.</p>
-            </div>
-          </div>
-        </details>
-
         <p class="section-lead" style="margin-top:10px">
-          <strong>Alle vier Chips</strong> erscheinen nur, wenn die Ampel <strong>rot</strong> ist.
+          <strong>Alle drei Chips</strong> erscheinen nur, wenn die Ampel <strong>rot</strong> ist.
           <span class="chip-swatch chip-swatch--good">Grün</span>/<span class="chip-swatch chip-swatch--warn">Orange</span>:
           aus OOS-Tests in rot historisch günstiger/ungünstiger — <strong>keine Anlageberatung</strong>.
         </p>

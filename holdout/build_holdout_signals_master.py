@@ -163,8 +163,7 @@ def _build_daily_update(full: pd.DataFrame, ret_cols: list[str]) -> pd.DataFrame
 
 def _merge_news_shard_for_holdout(sig: pd.DataFrame) -> pd.DataFrame:
     """
-    Sektor-/Makro-News-Töne aus dem News-Shard (wie Training/Scoring) — für Rot-Chip
-    „News Sektor vs. Makro“ und Export nach signals.json / master_complete.
+    Sektor-/Makro-News-Töne aus dem News-Shard (wie Training/Scoring) — für CSV/LLM-Export.
     """
     manifest_path = NEWS_SHARD_DIR / "news_shards_manifest.json"
     if not manifest_path.is_file():

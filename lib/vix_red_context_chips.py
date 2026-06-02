@@ -1,13 +1,12 @@
 """
 Kontext-Chips nur fuer VIX-Regime rot (VIX < 20).
 
-Vier nicht-redundante Hinweise, OOS auf META+THRESHOLD + FINAL validiert
+Drei nicht-redundante Hinweise, OOS auf META+THRESHOLD + FINAL validiert
 (scripts/_scratch_validate_all_context.py). Kein Filter — nur Anzeige.
 
   1. VIX unter 20-Tage-Mittel (regime_vix_z_20d < 0)
   2. VIX-Termstruktur entspannt (VIX3M/VIX unter Schwelle)
   3. Wenig Sektor-Crowding (sector_hhi_same_day unter Median-Referenz)
-  4. Sektor-News positiver als Makro (news_sec_minus_macro_tone > 0)
 """
 from __future__ import annotations
 
@@ -39,14 +38,6 @@ _CHIP_SPECS: tuple[dict[str, str], ...] = (
             "Orange: viel Crowding am Signaltag."
         ),
     },
-    {
-        "id": "news_sec",
-        "label": "News Sektor vs. Makro",
-        "tooltip": (
-            "Grün: Sektor-News-Ton ueber Makro-News. "
-            "Orange: Makro dominiert. In rot historisch guenstiger wenn gruen."
-        ),
-    },
 )
 
 
@@ -74,31 +65,15 @@ def _f(val: Any) -> float | None:
     return x
 
 
-def _news_sec_minus_macro(row: Mapping[str, Any]) -> float | None:
-    if "news_sec_minus_macro_tone" in row:
-        return _f(row.get("news_sec_minus_macro_tone"))
-    sec = macro = None
-    for k, v in row.items():
-        ks = str(k)
-        if ks.startswith("news_sec") and ks.endswith("_tone"):
-            sec = _f(v)
-        if ks.startswith("news_macro") and ks.endswith("_tone"):
-            macro = _f(v)
-    if sec is None or macro is None:
-        return None
-    return sec - macro
-
-
 def evaluate_red_context_chips(row: Mapping[str, Any]) -> list[dict[str, Any]]:
     """
-    Liefert 4 Chips mit state in good | warn | na.
+    Liefert 3 Chips mit state in good | warn | na.
     good = historisch guenstig in rot; warn = unguenstig; na = Daten fehlen.
     """
     thr = _chip_thresholds()
     vix_z = _f(row.get("regime_vix_z_20d"))
     vix_ratio = _f(row.get("vix3m_vix_ratio"))
     hhi = _f(row.get("sector_hhi_same_day"))
-    news_diff = _news_sec_minus_macro(row)
 
     states: dict[str, str] = {}
 
@@ -122,13 +97,6 @@ def evaluate_red_context_chips(row: Mapping[str, Any]) -> list[dict[str, Any]]:
         states["crowding"] = "good"
     else:
         states["crowding"] = "warn"
-
-    if news_diff is None:
-        states["news_sec"] = "na"
-    elif news_diff > 0:
-        states["news_sec"] = "good"
-    else:
-        states["news_sec"] = "warn"
 
     out: list[dict[str, Any]] = []
     for spec in _CHIP_SPECS:
@@ -203,7 +171,7 @@ def vix_regime_guide_panel_html() -> str:
         "<em>kein Ausschluss</em> einzelner Trades; viele Treffer bleiben möglich.</li>"
         "</ul>"
         "<p class=\"vix-panel-lead\" style=\"margin-top:10px\">"
-        "<strong>Nur bei rot:</strong> vier Zusatz-Chips pro Signal (kein zweites Scoring). "
+        "<strong>Nur bei rot:</strong> drei Zusatz-Chips pro Signal (kein zweites Scoring). "
         "Sie ersetzen <em>nicht</em> Modell-Wahrscheinlichkeit und Threshold.</p>"
         "<ul class=\"vix-guide-list\">"
         "<li><strong>Grüner Chip</strong> = Kontext historisch günstig in rot (Train + Test).</li>"
@@ -240,7 +208,7 @@ def red_context_llm_fields_from_row(row: Mapping[str, Any]) -> dict[str, str]:
             "vix_regime_ampel": amp or "",
             "red_context_llm": (
                 f"VIX-Ampel {amp_de} (regime_vix_level={vix_s}). "
-                "Die vier Rot-Zusatz-Hinweise (nur bei rot) entfallen — "
+                "Die drei Rot-Zusatz-Hinweise (nur bei rot) entfallen — "
                 "Einordnung über Makro, market_ret_*/sector_ret_*, News und RS; "
                 "nicht nach Chip-Farben argumentieren."
             ),
@@ -252,7 +220,7 @@ def red_context_llm_fields_from_row(row: Mapping[str, Any]) -> dict[str, str]:
     parts: list[str] = [
         f"VIX-Ampel rot (regime_vix_level={vix_s}): historisch schwächeres Gesamtregime — "
         "kein Ausschluss einzelner Trades, aber erhöhte Skepsis. "
-        "Vier OOS-validierte Teilaspekte (kein zweites Scoring, ersetzen prob nicht) — "
+        "Drei OOS-validierte Teilaspekte (kein zweites Scoring, ersetzen prob nicht) — "
         "in der Analyse mit News, Alpha/Beta, Liquidität und Crowding **verweben**, "
         "nicht als Aufzählung „Chip grün/orange“ ausgeben:"
     ]
@@ -312,32 +280,11 @@ def red_context_llm_fields_from_row(row: Mapping[str, Any]) -> dict[str, str]:
     else:
         parts.append("Sektor-Crowding: keine Daten — ignorieren.")
 
-    news_diff = _news_sec_minus_macro(row)
-    st = by_id.get("news_sec", "na")
-    if st == "good":
-        nd = f"{news_diff:.3f}" if news_diff is not None else "n/a"
-        parts.append(
-            f"Sektor-News-Ton über Makro (Differenz Sektor−Makro > 0, ≈{nd}): in rot historisch günstiger — "
-            "Branchen-Narrativ kann die Story stützen; mit **belegten** Branchen-Meldungen aus der Web-Recherche "
-            "abgleichen (nicht nur Modell-News-Spalten)."
-        )
-    elif st == "warn":
-        nd = f"{news_diff:.3f}" if news_diff is not None else "n/a"
-        parts.append(
-            f"Makro-News dominiert Sektor (Differenz ≈{nd}): in rot eher ungünstig — "
-            "reine Beta-/Makro-Rally ohne firmenspezifischen Treiber skeptischer bewerten."
-        )
-    else:
-        parts.append(
-            "News Sektor vs. Makro: keine belastbaren Daten — weder als Plus noch Minus zählen; "
-            "Gewicht auf Web-Recherche zu Branche und Unternehmen."
-        )
-
     good = sum(1 for c in chips if c["state"] == "good")
     warn = sum(1 for c in chips if c["state"] == "warn")
-    if good >= 3 and warn == 0:
+    if good == 3 and warn == 0:
         parts.append(
-            "Gesamtbild der vier Aspekte: überwiegend günstiger Rot-Kontext — "
+            "Gesamtbild der drei Aspekte: durchweg günstiger Rot-Kontext — "
             "erhöht Überzeugung nur, wenn News und Daten-Check nicht widersprechen."
         )
     elif warn >= 2:

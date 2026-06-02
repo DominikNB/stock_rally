@@ -532,7 +532,6 @@ def _run_phase17(c: Any) -> None:
                 "regime_vix_z_20d",
                 "vix3m_vix_ratio",
                 "sector_hhi_same_day",
-                "news_sec_minus_macro_tone",
             )
             signals_holdout_final = []
             for _, _r in _exported_ho.iterrows():
@@ -556,9 +555,6 @@ def _run_phase17(c: Any) -> None:
                         _v = _r.get(_cc)
                         if _v is not None and not (isinstance(_v, float) and _v != _v):
                             _sig[_cc] = float(_v)
-                for _ck, _cv in _r.items():
-                    if str(_ck).startswith(("news_sec_", "news_macro_")) and str(_ck).endswith("_tone"):
-                        _sig[str(_ck)] = _cv
                 attach_red_context_to_signal(_sig)
                 signals_holdout_final.append(_sig)
             _sort_website_signals_newest_first(signals_holdout_final)
