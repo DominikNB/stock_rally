@@ -527,11 +527,17 @@ def _run_phase17(c: Any) -> None:
             _cls_keys = list(CLASSIFICATION_COLUMN_KEYS)
             from lib.vix_regime_ampel import ampel_fields_from_vix
             from lib.vix_red_context_chips import attach_red_context_to_signal
+            from lib.red_signal_quality import attach_red_quality_to_signal
 
             _chip_cols = (
                 "regime_vix_z_20d",
                 "vix3m_vix_ratio",
                 "sector_hhi_same_day",
+                "liquidity_tier",
+                "gld_ret_5d",
+                "gld_ret5_median_same_day",
+                "alpha_sec_5d",
+                "alpha_mkt_5d",
             )
             signals_holdout_final = []
             for _, _r in _exported_ho.iterrows():
@@ -553,9 +559,13 @@ def _run_phase17(c: Any) -> None:
                 for _cc in _chip_cols:
                     if _cc in _r.index:
                         _v = _r.get(_cc)
-                        if _v is not None and not (isinstance(_v, float) and _v != _v):
+                        if _cc == "liquidity_tier":
+                            if _v is not None and not (isinstance(_v, float) and _v != _v):
+                                _sig[_cc] = str(_v)
+                        elif _v is not None and not (isinstance(_v, float) and _v != _v):
                             _sig[_cc] = float(_v)
                 attach_red_context_to_signal(_sig)
+                attach_red_quality_to_signal(_sig)
                 signals_holdout_final.append(_sig)
             _sort_website_signals_newest_first(signals_holdout_final)
             print(
@@ -1115,6 +1125,7 @@ def _run_phase17(c: Any) -> None:
         bar = int(s["prob"] * 100)
         _ampel_html = vix_ampel_html_span(s)
         _red_ctx_html = str(s.get("red_context_html") or "")
+        _red_quality_html = str(s.get("red_quality_html") or "")
         _yf_note = (
             '<p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der '
             "Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>"
@@ -1190,6 +1201,7 @@ def _run_phase17(c: Any) -> None:
           {_ampel_html}
           <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
         </div>
+        {_red_quality_html}
         {_red_ctx_html}
         {_gics_html}
         {_yf_note}

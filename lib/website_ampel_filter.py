@@ -199,6 +199,34 @@ def website_vix_guide_html() -> str:
           </div>
         </details>
 
+        <details open>
+          <summary><strong>Rot-Qualität</strong> (OOS-validiertes Badge)</summary>
+          <div class="guide-body">
+            <p><strong>Was ist das?</strong><br>
+            Zusätzlich zu den drei Kontext-Chips erscheint bei <strong>roter Ampel</strong> ein
+            Qualitäts-Badge (<em>hoch / mittel / niedrig</em>). Es nutzt nur Faktoren, die in
+            META+THR und FINAL-OOS historisch stabil waren — kein zweites Modell-Scoring.</p>
+            <div class="guide-chip">
+              <h4><span class="red-quality-badge red-quality-badge--hoch" style="font-size:.75em">Qualität hoch (2/2)</span></h4>
+              <p><strong>Faktor 1 — Liquidität ok:</strong><br>
+              <code>liquidity_tier == ok</code> (ADV-Perzentil am Signaltag nicht „dünn“).
+              OOS: +1,0 pp vs. dünnere Titel im rot-Regime (FINAL n≈111).</p>
+              <p><strong>Faktor 2 — Gold schwach 5d:</strong><br>
+              <code>gld_ret_5d</code> (GLD, Yahoo) liegt <strong>unter dem Tages-Median</strong>
+              aller Signale am selben Datum. Kein Flucht-in-Gold / Risk-off-Kontext.
+              OOS: +1,0 pp (FINAL).</p>
+              <p><strong>Stufen:</strong> 2/2 = hoch, 1/2 = mittel, 0/2 = niedrig.
+              Fehlende Daten → Badge ggf. ausgeblendet.</p>
+              <p><strong>Nicht im Score (nur Tooltip):</strong> Alpha vs. Markt/Sektor
+              (<code>alpha_sec_5d</code> / <code>alpha_mkt_5d</code>) — in IS oft positiv,
+              FINAL nicht stabil genug für einen Filter.</p>
+            </div>
+            <p><strong>So deuten:</strong> Das Badge sortiert <em>innerhalb</em> rot nach
+            historisch robusteren Merkmalen — es ersetzt weder die Ampel noch die Chips und
+            ist <strong>keine Anlageberatung</strong>.</p>
+          </div>
+        </details>
+
         <p class="section-lead" style="margin-top:10px">
           <strong>Alle drei Chips</strong> erscheinen nur, wenn die Ampel <strong>rot</strong> ist.
           <span class="chip-swatch chip-swatch--good">Grün</span>/<span class="chip-swatch chip-swatch--warn">Orange</span>:

@@ -188,10 +188,11 @@ def vix_ampel_css_block() -> str:
 """
 
 def vix_regime_full_css_block() -> str:
-    """Ampel + Rot-Kontext-Chips."""
+    """Ampel + Rot-Kontext-Chips + Rot-Qualitäts-Badge."""
+    from lib.red_signal_quality import red_quality_css_block
     from lib.vix_red_context_chips import red_context_chips_css_block
 
-    return vix_ampel_css_block() + red_context_chips_css_block()
+    return vix_ampel_css_block() + red_context_chips_css_block() + red_quality_css_block()
 
 
 def vix_ampel_tooltip(c: dict[str, Any]) -> str:

@@ -24,6 +24,7 @@ from lib.vix_red_context_chips import (
     red_context_chips_html,
     vix_regime_guide_panel_html,
 )
+from lib.red_signal_quality import attach_red_quality_to_signal
 
 MASTER = ROOT / "data" / "master_complete.csv"
 SIGNALS_JSON = ROOT / "docs" / "signals.json"
@@ -35,6 +36,13 @@ _CHIP_COLS = (
     "vix3m_vix_ratio",
     "sector_hhi_same_day",
 )
+_QUALITY_COLS = (
+    "liquidity_tier",
+    "gld_ret_5d",
+    "gld_ret5_median_same_day",
+    "alpha_sec_5d",
+    "alpha_mkt_5d",
+)
 
 
 def _calibrate_sector_hhi_max(mc: pd.DataFrame) -> float:
@@ -44,6 +52,58 @@ def _calibrate_sector_hhi_max(mc: pd.DataFrame) -> float:
     if len(sub) < 30:
         return 0.35
     return float(sub.median())
+
+
+def _gld_ret5_by_date(dates: pd.Series) -> dict[str, dict[str, float]]:
+    """GLD 5d-Rendite je Kalendertag (Signaltag)."""
+    if dates.empty:
+        return {}
+    start = (pd.to_datetime(dates.min()) - pd.Timedelta(days=40)).strftime("%Y-%m-%d")
+    end = (pd.to_datetime(dates.max()) + pd.Timedelta(days=5)).strftime("%Y-%m-%d")
+    out: dict[str, dict[str, float]] = {}
+    try:
+        raw = yf.download("GLD", start=start, end=end, progress=False, auto_adjust=True)
+        if raw is None or len(raw) == 0:
+            return {}
+        s = raw["Close"] if not isinstance(raw.columns, pd.MultiIndex) else raw["Close"]["GLD"]
+        s = pd.to_numeric(s, errors="coerce")
+        s.index = pd.to_datetime(s.index).tz_localize(None).normalize()
+        r5 = s.pct_change(5)
+        for d, v in r5.items():
+            if np.isfinite(v):
+                out[pd.Timestamp(d).strftime("%Y-%m-%d")] = {"gld_ret_5d": float(v)}
+    except Exception:
+        pass
+    return out
+
+
+def _apply_gld_ret5_to_signals(signals: list[dict], by_date: dict[str, dict[str, float]]) -> None:
+    for s in signals:
+        if s.get("gld_ret_5d") is not None:
+            continue
+        d = str(s.get("date", ""))[:10]
+        feat = by_date.get(d)
+        if feat:
+            s["gld_ret_5d"] = feat.get("gld_ret_5d")
+    by_day: dict[str, list[float]] = {}
+    for s in signals:
+        d = str(s.get("date", ""))[:10]
+        g = s.get("gld_ret_5d")
+        if g is None:
+            continue
+        try:
+            gv = float(g)
+        except (TypeError, ValueError):
+            continue
+        if gv == gv:
+            by_day.setdefault(d, []).append(gv)
+    med_by_day = {d: float(np.median(vs)) for d, vs in by_day.items() if vs}
+    for s in signals:
+        if s.get("gld_ret5_median_same_day") is not None:
+            continue
+        d = str(s.get("date", ""))[:10]
+        if d in med_by_day:
+            s["gld_ret5_median_same_day"] = med_by_day[d]
 
 
 def _vix3m_ratio_by_date(dates: pd.Series) -> dict[str, float]:
@@ -84,16 +144,21 @@ def _lookup_from_master() -> dict[tuple[str, str], dict]:
     for _, r in mc.iterrows():
         key = (str(r["ticker"]), pd.Timestamp(r["Date"]).strftime("%Y-%m-%d"))
         row: dict = {}
-        for c in _CHIP_COLS:
+        for c in _CHIP_COLS + _QUALITY_COLS:
             if c in r.index:
                 try:
-                    v = float(r[c])
-                    row[c] = None if v != v else v
+                    v = r[c]
+                    if c == "liquidity_tier":
+                        row[c] = None if v is None or (isinstance(v, float) and v != v) else str(v)
+                    else:
+                        v = float(v)
+                        row[c] = None if v != v else v
                 except (TypeError, ValueError):
                     row[c] = None
         vix = row.get("regime_vix_level")
         row.update(ampel_fields_from_vix(vix))
         attach_red_context_to_signal(row)
+        attach_red_quality_to_signal(row)
         out[key] = row
     return out
 
@@ -106,6 +171,10 @@ def _enrich_signals(
     signals: list[dict],
     master_lookup: dict[tuple[str, str], dict],
 ) -> int:
+    dates = pd.Series([str(s.get("date", ""))[:10] for s in signals])
+    gld_by_date = _gld_ret5_by_date(dates)
+    if gld_by_date:
+        print(f"  GLD 5d-Rendite: {len(gld_by_date)} Handelstage")
     n_master = 0
     for s in signals:
         key = _signal_key(s)
@@ -113,7 +182,13 @@ def _enrich_signals(
         if extra:
             s.update(extra)
             n_master += 1
+        d = str(s.get("date", ""))[:10]
+        if s.get("gld_ret_5d") is None and d in gld_by_date:
+            s["gld_ret_5d"] = gld_by_date[d].get("gld_ret_5d")
         attach_red_context_to_signal(s)
+    _apply_gld_ret5_to_signals(signals, gld_by_date)
+    for s in signals:
+        attach_red_quality_to_signal(s)
     return n_master
 
 
@@ -125,6 +200,8 @@ def _lookup_from_signals(signals: list[dict]) -> dict[tuple[str, str], dict]:
         row = {c: s.get(c) for c in _CHIP_COLS if c in s}
         row["vix_regime_ampel"] = s.get("vix_regime_ampel")
         row["red_context_html"] = s.get("red_context_html")
+        row["red_quality_html"] = s.get("red_quality_html")
+        row["red_quality_tier"] = s.get("red_quality_tier")
         out[key] = row
     return out
 
@@ -287,8 +364,14 @@ def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
                     flags=re.DOTALL,
                 )
         chips = extra.get("red_context_html") or ""
+        quality = extra.get("red_quality_html") or ""
         if chips and str(extra.get("vix_regime_ampel", "")).lower() == "red":
-            return f"{head2}\n        {chips}\n        "
+            block = f"{head2}\n        {chips}\n        "
+            if quality:
+                block = f"{head2}\n        {quality}\n        {chips}\n        "
+            return block
+        if quality and str(extra.get("vix_regime_ampel", "")).lower() == "red":
+            return f"{head2}\n        {quality}\n        "
         return f"{head2}\n        "
 
     html, n = pat2.subn(_head_repl, html)

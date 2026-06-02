@@ -33,6 +33,7 @@ from __future__ import annotations
 import os
 import sys
 import warnings
+from pathlib import Path
 from typing import Sequence
 from contextlib import contextmanager
 from datetime import date, datetime
@@ -120,11 +121,20 @@ _LLM_EXTRA_COLS = (
     "vix3m_vix_ratio",
     "regime_spy_realvol_5d_ann",
     "regime_tnx_ret_5d",
+    "gld_ret_5d",
+    "oil_ret_5d",
+    "dxy_ret_5d",
+    "macro_event_within_2bd",
+    "gld_ret5_median_same_day",
     "news_sentiment",
 )
 _LLM_RED_CONTEXT_COLS = (
     "vix_regime_ampel",
     "red_context_llm",
+    "red_quality_tier",
+    "red_quality_hits",
+    "red_quality_max",
+    "red_quality_alpha_hint",
 )
 
 
@@ -386,6 +396,7 @@ def ensure_llm_signal_columns(out: pd.DataFrame) -> pd.DataFrame:
                 "earnings_date_known",
                 "earnings_beyond_swing_15b",
                 "earnings_too_soon_lt3b",
+                "macro_event_within_2bd",
             ):
                 o[c] = False
             elif c == "next_earnings_date":
@@ -825,6 +836,8 @@ def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
             {
                 "Date": d,
                 "regime_vix_level": v_lvl,
+                "regime_vix_ret_1d": _pct_ret_last_n_trading_days(vix, d, 1),
+                "regime_vix_ret_5d": _pct_ret_last_n_trading_days(vix, d, 5),
                 "regime_vix_z_20d": _vix_z_vs_20d(vix, d),
                 "vix3m_vix_ratio": ratio,
                 "regime_spy_realvol_5d_ann": _spy_realized_vol_n_ann(spy, d, 5),
@@ -837,6 +850,8 @@ def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
     feat = feat.drop_duplicates(subset=["Date"], keep="last").set_index("Date")
     for col in (
         "regime_vix_level",
+        "regime_vix_ret_1d",
+        "regime_vix_ret_5d",
         "regime_vix_z_20d",
         "vix3m_vix_ratio",
         "regime_spy_realvol_5d_ann",
@@ -849,6 +864,89 @@ def _add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
 def add_short_horizon_macro_regime_columns(out: pd.DataFrame) -> pd.DataFrame:
     """US-Kurzfrist-Regime (^VIX, SPY-RV, ^TNX) — öffentliche Hülle für Training/Classifier-Enrich."""
     return _add_short_horizon_macro_regime_columns(out)
+
+
+def _macro_event_days_index() -> pd.DatetimeIndex:
+    """FOMC/CPI-Näherung (US) — kompakt, erweiterbar via data/_scratch_us_macro_event_days.json."""
+    path = Path(__file__).resolve().parents[1] / "data" / "_scratch_us_macro_event_days.json"
+    if path.is_file():
+        try:
+            import json
+
+            obj = json.loads(path.read_text(encoding="utf-8"))
+            days = [pd.Timestamp(d).normalize() for d in obj.get("dates", [])]
+            if days:
+                return pd.DatetimeIndex(days)
+        except Exception:
+            pass
+    fomc = pd.to_datetime(
+        [
+            "2024-01-31", "2024-03-20", "2024-05-01", "2024-06-12", "2024-07-31",
+            "2024-09-18", "2024-11-07", "2024-12-18", "2025-01-29", "2025-03-19",
+            "2025-05-07", "2025-06-18", "2025-07-30", "2025-09-17", "2025-12-10",
+            "2026-01-28", "2026-03-18",
+        ]
+    ).normalize()
+    return pd.DatetimeIndex(fomc.unique())
+
+
+def _bdays_to_macro_event(signal_d: pd.Timestamp, event_days: pd.DatetimeIndex, window: int = 2) -> bool:
+    sd = pd.Timestamp(signal_d).normalize()
+    for ed in event_days:
+        ed = pd.Timestamp(ed).normalize()
+        if abs((ed - sd).days) <= window:
+            return True
+    return False
+
+
+def _add_cross_asset_macro_calendar_columns(out: pd.DataFrame) -> pd.DataFrame:
+    """Cross-Asset 5d-Renditen (GLD, Öl, DXY) + Makro-Kalender-Fenster am Signaltag."""
+    o = out
+    o["Date"] = pd.to_datetime(o["Date"]).dt.normalize()
+    d_min = o["Date"].min() - pd.Timedelta(days=40)
+    d_max = o["Date"].max() + pd.Timedelta(days=5)
+    start_s = d_min.strftime("%Y-%m-%d")
+    end_s = d_max.strftime("%Y-%m-%d")
+    syms = {"gld_ret_5d": "GLD", "oil_ret_5d": "CL=F", "dxy_ret_5d": "DX-Y.NYB"}
+    asset_rows: dict[str, dict[pd.Timestamp, float]] = {k: {} for k in syms}
+    try:
+        raw = yf.download(list(syms.values()), start=start_s, end=end_s, progress=False, auto_adjust=True)
+        if raw is not None and len(raw):
+            for col, sym in syms.items():
+                if isinstance(raw.columns, pd.MultiIndex):
+                    s = raw["Close"][sym]
+                else:
+                    s = raw["Close"]
+                s = pd.to_numeric(s, errors="coerce")
+                s.index = pd.to_datetime(s.index).tz_localize(None).normalize()
+                r5 = s.pct_change(5)
+                for d, v in r5.items():
+                    if np.isfinite(v):
+                        asset_rows[col][pd.Timestamp(d).normalize()] = float(v)
+    except Exception:
+        pass
+    ev_days = _macro_event_days_index()
+    rows: list[dict] = []
+    for d in sorted(o["Date"].unique()):
+        d = pd.Timestamp(d).normalize()
+        rows.append(
+            {
+                "Date": d,
+                "gld_ret_5d": asset_rows["gld_ret_5d"].get(d, np.nan),
+                "oil_ret_5d": asset_rows["oil_ret_5d"].get(d, np.nan),
+                "dxy_ret_5d": asset_rows["dxy_ret_5d"].get(d, np.nan),
+                "macro_event_within_2bd": _bdays_to_macro_event(d, ev_days, 2),
+            }
+        )
+    feat = pd.DataFrame(rows).drop_duplicates(subset=["Date"], keep="last")
+    o = o.merge(feat, on="Date", how="left")
+    if "gld_ret_5d" in o.columns:
+        o["gld_ret5_median_same_day"] = o.groupby("Date")["gld_ret_5d"].transform("median")
+    return o
+
+
+def add_cross_asset_macro_calendar_columns(out: pd.DataFrame) -> pd.DataFrame:
+    return _add_cross_asset_macro_calendar_columns(out)
 
 
 def _sector_etf_for_label(sector: str | float | None) -> str | None:
@@ -1424,6 +1522,8 @@ def enrich_signal_frame(
         flush=True,
     )
     out = _add_short_horizon_macro_regime_columns(out)
+    print("  … Zusatzfilter: Cross-Asset (GLD/Öl/DXY) + Makro-Kalender …", flush=True)
+    out = _add_cross_asset_macro_calendar_columns(out)
     out = ensure_llm_signal_columns(out)
     global _LAST_ENRICH_DIAGNOSTICS
     _LAST_ENRICH_DIAGNOSTICS = _build_metric_failure_report(out)
