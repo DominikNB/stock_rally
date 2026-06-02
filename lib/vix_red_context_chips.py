@@ -171,8 +171,8 @@ def vix_regime_guide_panel_html() -> str:
         "<em>kein Ausschluss</em> einzelner Trades; viele Treffer bleiben möglich.</li>"
         "</ul>"
         "<p class=\"vix-panel-lead\" style=\"margin-top:10px\">"
-        "<strong>Nur bei rot:</strong> Badge <em>Qualität 0/1</em> — nur GLD 5d vs. globalem Rot-Median. "
-        "Keine Chips, kein zweites Scoring.</p>"
+        "<strong>Nur bei rot:</strong> Badge <em>Qualität 0/1/2</em> — GLD 5d + Makro-GDELT Vol-Spike "
+        "(ruhige Nachrichtenlage). Kein Modell-Score.</p>"
         "</div>"
     )
 

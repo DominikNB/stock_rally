@@ -5,9 +5,10 @@ Validierung: scripts/_scratch_validate_red_quality_tiers.py
   → data/_scratch_red_quality_validation.json
 
 Stand 2026-06: OOS-bestätigt (META+THR + FINAL, gleiche Richtung):
-  • gld_ret5_low   — gld_ret_5d unter globalem Rot-Median (master_complete)
+  • gld_ret5_low           — gld_ret_5d unter globalem Rot-Median
+  • macro_vol_spike_low    — news_macro_*_vol_spike unter Rot-Median (GDELT)
 
-Liquidität/Chips: nicht im Badge (OOS nicht stabil bzw. FINAL untrennbar).
+Badge 0/1/2 = Summe (GLD-Punkt + Makro-Spike-Punkt). ≥1 vs 0: OOS +0,94 pp (FINAL).
 """
 from __future__ import annotations
 
@@ -24,8 +25,12 @@ MASTER_CSV = ROOT / "data" / "master_complete.csv"
 _DEFAULT_PASSED = ("gld_ret5_low",)
 # Kalibrierung master_complete rot (2026-06-02)
 _DEFAULT_GLD_MEDIAN_RED = 0.0132005008183191
+_DEFAULT_MACRO_SPIKE_MED_RED = 1.021951
+NEWS_MACRO_FEAT_TAG = "3_20_10"
+NEWS_MACRO_VOL_SPIKE_COL = f"news_macro_{NEWS_MACRO_FEAT_TAG}_vol_spike"
 
 _gld_median_red_ref: float | None = None
+_macro_spike_median_red_ref: float | None = None
 
 
 def _f(val: Any) -> float | None:
@@ -89,6 +94,61 @@ def calibrate_gld_ret5_median_red_ref(*, force: bool = False) -> float:
 def inject_gld_median_red_ref(row: dict[str, Any]) -> None:
     if row.get("gld_ret5_median_red_ref") is None:
         row["gld_ret5_median_red_ref"] = calibrate_gld_ret5_median_red_ref()
+
+
+def calibrate_macro_vol_spike_median_red_ref(*, force: bool = False) -> float:
+    """Makro-Vol-Spike-Median über rot-Signale (META+THR-Kalibrierung, fest für Live)."""
+    global _macro_spike_median_red_ref
+    if _macro_spike_median_red_ref is not None and not force:
+        return _macro_spike_median_red_ref
+    research = ROOT / "data" / "_scratch_red_research_batch.json"
+    if research.is_file():
+        try:
+            obj = json.loads(research.read_text(encoding="utf-8"))
+            v = (obj.get("thresholds") or {}).get("macro_spike_med")
+            if v is not None and float(v) == float(v):
+                _macro_spike_median_red_ref = float(v)
+                return _macro_spike_median_red_ref
+        except Exception:
+            pass
+    shard = ROOT / "data" / "feature_shards_news" / f"news_tag_{NEWS_MACRO_FEAT_TAG}.parquet"
+    if MASTER_CSV.is_file() and shard.is_file():
+        try:
+            import pandas as pd
+
+            mc = pd.read_csv(MASTER_CSV, usecols=["Date", "regime_vix_level", "dataset"])
+            mc["Date"] = pd.to_datetime(mc["Date"])
+            vix = pd.to_numeric(mc["regime_vix_level"], errors="coerce")
+            rot = mc[vix < 20].copy()
+            if "dataset" in rot.columns:
+                rot = rot[rot["dataset"].isin(["META+THR", "META", "THRESHOLD"])]
+            sh = pd.read_parquet(shard, columns=["Date", NEWS_MACRO_VOL_SPIKE_COL])
+            sh["Date"] = pd.to_datetime(sh["Date"]).dt.normalize()
+            sh = sh.drop_duplicates("Date")
+            m = rot[["Date"]].drop_duplicates().merge(sh, on="Date", how="inner")
+            spike = pd.to_numeric(m[NEWS_MACRO_VOL_SPIKE_COL], errors="coerce")
+            if spike.notna().sum() >= 30:
+                _macro_spike_median_red_ref = float(spike.median())
+                return _macro_spike_median_red_ref
+        except Exception:
+            pass
+    _macro_spike_median_red_ref = _DEFAULT_MACRO_SPIKE_MED_RED
+    return _macro_spike_median_red_ref
+
+
+def inject_macro_vol_spike_median_red_ref(row: dict[str, Any]) -> None:
+    if row.get("macro_vol_spike_median_red_ref") is None:
+        row["macro_vol_spike_median_red_ref"] = calibrate_macro_vol_spike_median_red_ref()
+
+
+def _macro_vol_spike_low(row: Mapping[str, Any], *, ref_median: float | None = None) -> bool | None:
+    v = _f(row.get(NEWS_MACRO_VOL_SPIKE_COL))
+    if v is None:
+        return None
+    med = ref_median if ref_median is not None else _f(row.get("macro_vol_spike_median_red_ref"))
+    if med is None:
+        med = calibrate_macro_vol_spike_median_red_ref()
+    return v <= med
 
 
 def _liquidity_ok(row: Mapping[str, Any]) -> bool | None:

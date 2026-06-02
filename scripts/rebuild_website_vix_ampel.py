@@ -20,7 +20,13 @@ if str(ROOT) not in sys.path:
 
 from lib.vix_regime_ampel import ampel_fields_from_vix, vix_ampel_html_span, vix_regime_full_css_block
 from lib.red_regime_summary import attach_red_regime_summary
-from lib.red_signal_quality import calibrate_gld_ret5_median_red_ref, inject_gld_median_red_ref
+from lib.red_signal_quality import (
+    NEWS_MACRO_VOL_SPIKE_COL,
+    calibrate_gld_ret5_median_red_ref,
+    calibrate_macro_vol_spike_median_red_ref,
+    inject_gld_median_red_ref,
+    inject_macro_vol_spike_median_red_ref,
+)
 from lib.vix_red_context_chips import vix_regime_guide_panel_html
 
 MASTER = ROOT / "data" / "master_complete.csv"
@@ -49,6 +55,36 @@ def _calibrate_sector_hhi_max(mc: pd.DataFrame) -> float:
     if len(sub) < 30:
         return 0.35
     return float(sub.median())
+
+
+def _macro_vol_spike_by_date(dates: pd.Series) -> dict[str, float]:
+    """Makro-GDELT Vol-Spike je Kalendertag (marktweit, identisch pro Ticker)."""
+    if dates.empty:
+        return {}
+    path = ROOT / "data" / "feature_shards_news" / "news_tag_3_20_10.parquet"
+    if not path.is_file():
+        return {}
+    try:
+        sh = pd.read_parquet(path, columns=["Date", NEWS_MACRO_VOL_SPIKE_COL])
+        sh["Date"] = pd.to_datetime(sh["Date"]).dt.normalize()
+        sh = sh.drop_duplicates("Date")
+        out: dict[str, float] = {}
+        for _, row in sh.iterrows():
+            v = row[NEWS_MACRO_VOL_SPIKE_COL]
+            if pd.notna(v):
+                out[pd.Timestamp(row["Date"]).strftime("%Y-%m-%d")] = float(v)
+        return out
+    except Exception:
+        return {}
+
+
+def _fill_macro_vol_spike_on_signals(signals: list[dict], by_date: dict[str, float]) -> None:
+    for s in signals:
+        if s.get(NEWS_MACRO_VOL_SPIKE_COL) is not None:
+            continue
+        d = str(s.get("date", ""))[:10]
+        if d in by_date:
+            s[NEWS_MACRO_VOL_SPIKE_COL] = by_date[d]
 
 
 def _gld_ret5_by_date(dates: pd.Series) -> dict[str, dict[str, float]]:
@@ -119,7 +155,13 @@ def _lookup_from_master() -> dict[tuple[str, str], dict]:
         print(f"  VIX3M/VIX nachgeladen: {mc['vix3m_vix_ratio'].notna().sum()} Zeilen")
 
     gld_ref = calibrate_gld_ret5_median_red_ref(force=True)
+    spike_ref = calibrate_macro_vol_spike_median_red_ref(force=True)
     print(f"  GLD-5d-Median (rot, global): {gld_ref:.6f}")
+    print(f"  Makro-Vol-Spike-Median (rot): {spike_ref:.4f}")
+
+    spike_by_date = _macro_vol_spike_by_date(mc["Date"])
+    if spike_by_date:
+        print(f"  Makro-Vol-Spike Shard-Tage: {len(spike_by_date)}")
 
     out: dict[tuple[str, str], dict] = {}
     for _, r in mc.iterrows():
@@ -136,6 +178,11 @@ def _lookup_from_master() -> dict[tuple[str, str], dict]:
                         row[c] = None if v != v else v
                 except (TypeError, ValueError):
                     row[c] = None
+        dkey = pd.Timestamp(r["Date"]).strftime("%Y-%m-%d")
+        if row.get(NEWS_MACRO_VOL_SPIKE_COL) is None and dkey in spike_by_date:
+            row[NEWS_MACRO_VOL_SPIKE_COL] = spike_by_date[dkey]
+        inject_gld_median_red_ref(row)
+        inject_macro_vol_spike_median_red_ref(row)
         vix = row.get("regime_vix_level")
         row.update(ampel_fields_from_vix(vix))
         attach_red_regime_summary(row)
@@ -153,8 +200,11 @@ def _enrich_signals(
 ) -> int:
     dates = pd.Series([str(s.get("date", ""))[:10] for s in signals])
     gld_by_date = _gld_ret5_by_date(dates)
+    spike_by_date = _macro_vol_spike_by_date(dates)
     if gld_by_date:
         print(f"  GLD 5d-Rendite: {len(gld_by_date)} Handelstage")
+    if spike_by_date:
+        print(f"  Makro-Vol-Spike: {len(spike_by_date)} Shard-Tage")
     n_master = 0
     for s in signals:
         key = _signal_key(s)
@@ -166,8 +216,10 @@ def _enrich_signals(
         if s.get("gld_ret_5d") is None and d in gld_by_date:
             s["gld_ret_5d"] = gld_by_date[d].get("gld_ret_5d")
     _fill_gld_ret5_on_signals(signals, gld_by_date)
+    _fill_macro_vol_spike_on_signals(signals, spike_by_date)
     for s in signals:
         inject_gld_median_red_ref(s)
+        inject_macro_vol_spike_median_red_ref(s)
         attach_red_regime_summary(s)
     return n_master
 
