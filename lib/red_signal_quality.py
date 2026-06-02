@@ -6,7 +6,7 @@ Validierung: scripts/_scratch_validate_red_quality_tiers.py
 
 Stand 2026-06: OOS-bestätigt (META+THR + FINAL, gleiche Richtung, Δ ≥ 0.1pp):
   • liquidity_ok   — liquidity_tier == ok
-  • gld_ret5_low   — gld_ret_5d unter Tages-Median (Risk-on vs. Gold-Rally)
+  • gld_ret5_low   — gld_ret_5d unter globalem Median aller rot-Signale (master_complete)
 
 Alpha/RS/Chips: IS oft positiv, FINAL nicht stabil → nur Anzeige der Rohwerte, kein Score.
 """
@@ -19,9 +19,14 @@ from typing import Any, Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATION_JSON = ROOT / "data" / "_scratch_red_quality_validation.json"
+MASTER_CSV = ROOT / "data" / "master_complete.csv"
 
 # Fallback falls JSON fehlt (Ergebnis Validierungslauf)
 _DEFAULT_PASSED = ("liquidity_ok", "gld_ret5_low")
+# Kalibrierung master_complete rot (2026-06-02)
+_DEFAULT_GLD_MEDIAN_RED = 0.0132005008183191
+
+_gld_median_red_ref: float | None = None
 
 
 def _f(val: Any) -> float | None:
@@ -48,6 +53,45 @@ def passed_component_ids() -> tuple[str, ...]:
     return _DEFAULT_PASSED
 
 
+def calibrate_gld_ret5_median_red_ref(*, force: bool = False) -> float:
+    """
+    Globaler GLD-5d-Median über alle rot-Signale (VIX < 20) — wie in der Validierung.
+    Identisch für alle Ticker am selben Tag (GLD ist marktweit).
+    """
+    global _gld_median_red_ref
+    if _gld_median_red_ref is not None and not force:
+        return _gld_median_red_ref
+    if VALIDATION_JSON.is_file():
+        try:
+            obj = json.loads(VALIDATION_JSON.read_text(encoding="utf-8"))
+            v = obj.get("gld_ret5_median_red_ref")
+            if v is not None and float(v) == float(v):
+                _gld_median_red_ref = float(v)
+                return _gld_median_red_ref
+        except Exception:
+            pass
+    if MASTER_CSV.is_file():
+        try:
+            import pandas as pd
+
+            mc = pd.read_csv(MASTER_CSV)
+            vix = pd.to_numeric(mc.get("regime_vix_level"), errors="coerce")
+            gld = pd.to_numeric(mc.get("gld_ret_5d"), errors="coerce")
+            sub = gld[(vix < 20) & gld.notna()]
+            if len(sub) >= 30:
+                _gld_median_red_ref = float(sub.median())
+                return _gld_median_red_ref
+        except Exception:
+            pass
+    _gld_median_red_ref = _DEFAULT_GLD_MEDIAN_RED
+    return _gld_median_red_ref
+
+
+def inject_gld_median_red_ref(row: dict[str, Any]) -> None:
+    if row.get("gld_ret5_median_red_ref") is None:
+        row["gld_ret5_median_red_ref"] = calibrate_gld_ret5_median_red_ref()
+
+
 def _liquidity_ok(row: Mapping[str, Any]) -> bool | None:
     tier = row.get("liquidity_tier")
     if tier is None or str(tier).strip() == "":
@@ -59,11 +103,9 @@ def _gld_ret5_low(row: Mapping[str, Any], *, ref_median: float | None = None) ->
     g = _f(row.get("gld_ret_5d"))
     if g is None:
         return None
-    med = ref_median if ref_median is not None else _f(row.get("gld_ret5_median_same_day"))
+    med = ref_median if ref_median is not None else _f(row.get("gld_ret5_median_red_ref"))
     if med is None:
-        med = _f(row.get("_gld_ret5_median_ref"))
-    if med is None:
-        return None
+        med = calibrate_gld_ret5_median_red_ref()
     return g < med
 
 
@@ -174,6 +216,7 @@ def attach_red_quality_to_signal(signal: dict[str, Any]) -> dict[str, Any]:
         signal["red_quality_hits"] = 0
         signal["red_quality_max"] = 0
         return signal
+    inject_gld_median_red_ref(signal)
     fields = red_quality_fields_from_row(signal)
     signal.update(fields)
     signal["red_quality_html"] = red_quality_badge_html(fields)
@@ -185,6 +228,8 @@ def attach_red_quality_llm_columns(df: "pd.DataFrame") -> "pd.DataFrame":
     import pandas as pd
 
     o = df.copy()
+    gld_ref = calibrate_gld_ret5_median_red_ref()
+    o["gld_ret5_median_red_ref"] = gld_ref
     rows: list[dict[str, Any]] = []
     for _, r in o.iterrows():
         amp = str(r.get("vix_regime_ampel") or "").strip().lower()

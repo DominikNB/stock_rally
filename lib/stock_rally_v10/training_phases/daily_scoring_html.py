@@ -535,7 +535,7 @@ def _run_phase17(c: Any) -> None:
                 "sector_hhi_same_day",
                 "liquidity_tier",
                 "gld_ret_5d",
-                "gld_ret5_median_same_day",
+                "gld_ret5_median_red_ref",
                 "alpha_sec_5d",
                 "alpha_mkt_5d",
             )

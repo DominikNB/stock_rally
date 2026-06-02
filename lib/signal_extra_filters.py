@@ -125,7 +125,7 @@ _LLM_EXTRA_COLS = (
     "oil_ret_5d",
     "dxy_ret_5d",
     "macro_event_within_2bd",
-    "gld_ret5_median_same_day",
+    "gld_ret5_median_red_ref",
     "news_sentiment",
 )
 _LLM_RED_CONTEXT_COLS = (
@@ -941,7 +941,9 @@ def _add_cross_asset_macro_calendar_columns(out: pd.DataFrame) -> pd.DataFrame:
     feat = pd.DataFrame(rows).drop_duplicates(subset=["Date"], keep="last")
     o = o.merge(feat, on="Date", how="left")
     if "gld_ret_5d" in o.columns:
-        o["gld_ret5_median_same_day"] = o.groupby("Date")["gld_ret_5d"].transform("median")
+        from lib.red_signal_quality import calibrate_gld_ret5_median_red_ref
+
+        o["gld_ret5_median_red_ref"] = calibrate_gld_ret5_median_red_ref()
     return o
 
 

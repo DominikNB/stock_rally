@@ -212,8 +212,9 @@ def website_vix_guide_html() -> str:
               <code>liquidity_tier == ok</code> (ADV-Perzentil am Signaltag nicht „dünn“).
               OOS: +1,0 pp vs. dünnere Titel im rot-Regime (FINAL n≈111).</p>
               <p><strong>Faktor 2 — Gold schwach 5d:</strong><br>
-              <code>gld_ret_5d</code> (GLD, Yahoo) liegt <strong>unter dem Tages-Median</strong>
-              aller Signale am selben Datum. Kein Flucht-in-Gold / Risk-off-Kontext.
+              <code>gld_ret_5d</code> (GLD, Yahoo) liegt <strong>unter dem globalen Median</strong>
+              aller rot-Signale im Backtest (<code>gld_ret5_median_red_ref</code>, kalibriert aus
+              <code>master_complete.csv</code>). Kein Flucht-in-Gold / Risk-off-Kontext.
               OOS: +1,0 pp (FINAL).</p>
               <p><strong>Stufen:</strong> 2/2 = hoch, 1/2 = mittel, 0/2 = niedrig.
               Fehlende Daten → Badge ggf. ausgeblendet.</p>

@@ -24,7 +24,7 @@ from lib.vix_red_context_chips import (
     red_context_chips_html,
     vix_regime_guide_panel_html,
 )
-from lib.red_signal_quality import attach_red_quality_to_signal
+from lib.red_signal_quality import attach_red_quality_to_signal, calibrate_gld_ret5_median_red_ref, inject_gld_median_red_ref
 
 MASTER = ROOT / "data" / "master_complete.csv"
 SIGNALS_JSON = ROOT / "docs" / "signals.json"
@@ -39,7 +39,7 @@ _CHIP_COLS = (
 _QUALITY_COLS = (
     "liquidity_tier",
     "gld_ret_5d",
-    "gld_ret5_median_same_day",
+    "gld_ret5_median_red_ref",
     "alpha_sec_5d",
     "alpha_mkt_5d",
 )
@@ -77,7 +77,7 @@ def _gld_ret5_by_date(dates: pd.Series) -> dict[str, dict[str, float]]:
     return out
 
 
-def _apply_gld_ret5_to_signals(signals: list[dict], by_date: dict[str, dict[str, float]]) -> None:
+def _fill_gld_ret5_on_signals(signals: list[dict], by_date: dict[str, dict[str, float]]) -> None:
     for s in signals:
         if s.get("gld_ret_5d") is not None:
             continue
@@ -85,25 +85,6 @@ def _apply_gld_ret5_to_signals(signals: list[dict], by_date: dict[str, dict[str,
         feat = by_date.get(d)
         if feat:
             s["gld_ret_5d"] = feat.get("gld_ret_5d")
-    by_day: dict[str, list[float]] = {}
-    for s in signals:
-        d = str(s.get("date", ""))[:10]
-        g = s.get("gld_ret_5d")
-        if g is None:
-            continue
-        try:
-            gv = float(g)
-        except (TypeError, ValueError):
-            continue
-        if gv == gv:
-            by_day.setdefault(d, []).append(gv)
-    med_by_day = {d: float(np.median(vs)) for d, vs in by_day.items() if vs}
-    for s in signals:
-        if s.get("gld_ret5_median_same_day") is not None:
-            continue
-        d = str(s.get("date", ""))[:10]
-        if d in med_by_day:
-            s["gld_ret5_median_same_day"] = med_by_day[d]
 
 
 def _vix3m_ratio_by_date(dates: pd.Series) -> dict[str, float]:
@@ -139,6 +120,9 @@ def _lookup_from_master() -> dict[tuple[str, str], dict]:
         by_date = _vix3m_ratio_by_date(mc["Date"])
         mc["vix3m_vix_ratio"] = mc["Date"].dt.strftime("%Y-%m-%d").map(by_date)
         print(f"  VIX3M/VIX nachgeladen: {mc['vix3m_vix_ratio'].notna().sum()} Zeilen")
+
+    gld_ref = calibrate_gld_ret5_median_red_ref(force=True)
+    print(f"  GLD-5d-Median (rot, global): {gld_ref:.6f}")
 
     out: dict[tuple[str, str], dict] = {}
     for _, r in mc.iterrows():
@@ -186,8 +170,10 @@ def _enrich_signals(
         if s.get("gld_ret_5d") is None and d in gld_by_date:
             s["gld_ret_5d"] = gld_by_date[d].get("gld_ret_5d")
         attach_red_context_to_signal(s)
-    _apply_gld_ret5_to_signals(signals, gld_by_date)
+    _fill_gld_ret5_on_signals(signals, gld_by_date)
+    gld_ref = calibrate_gld_ret5_median_red_ref()
     for s in signals:
+        inject_gld_median_red_ref(s)
         attach_red_quality_to_signal(s)
     return n_master
 
@@ -264,6 +250,12 @@ def _strip_old_ampel_blocks(html: str) -> str:
         flags=re.DOTALL,
     )
     html = re.sub(r'\s*<div class="red-ctx-chips"[^>]*>.*?</div>\s*', "\n        ", html, flags=re.DOTALL)
+    html = re.sub(
+        r'\s*<span class="red-quality-badge[^"]*"[^>]*>.*?</span>\s*',
+        "\n        ",
+        html,
+        flags=re.DOTALL,
+    )
     return html
 
 
