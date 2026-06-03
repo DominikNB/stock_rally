@@ -1245,17 +1245,9 @@ def _run_phase13(c: Any) -> None:
             "und Phase 5 wählt den produktiven Schwellenwert auf THRESHOLD.)"
         )
 
-    rng_final_meta = np.random.RandomState(rs)
-    perm_final = rng_final_meta.permutation(len(X_meta_test))
-    n_fit_final = int(len(perm_final) * 0.9)
     meta_clf = xgb.XGBClassifier(**meta_best)
-    meta_clf.fit(
-        X_meta_test[perm_final[:n_fit_final]],
-        y_test[perm_final[:n_fit_final]],
-        eval_set=[(X_meta_test[perm_final[n_fit_final:]], y_test[perm_final[n_fit_final:]])],
-        verbose=False,
-    )
-    print("Finales Meta-Modell trainiert.")
+    meta_clf.fit(X_meta_test, y_test, verbose=False)
+    print("Finales Meta-Modell trainiert (gesamtes META, ohne Early Stopping).")
 
     print("\n" + "=" * 60)
     print("Meta-Learner SHAP: Welche Features sind dem Meta-Classifier wichtig?")

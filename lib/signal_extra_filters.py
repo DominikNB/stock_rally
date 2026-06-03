@@ -24,7 +24,7 @@ data/master_complete.csv / master_daily_update.csv vorrechenbar, damit ein LLM d
     market_ret_1d/2d/3d, sector_ret_1d/2d/3d (kumulativ über 1/2/3 Handelstage bis Signaltag)
   • Kurzfristiges Regime (US, bis Signaltag, eigener Yahoo-Download): regime_vix_level, regime_vix_ret_1d/5d,
     regime_vix_z_20d, regime_spy_realvol_5d_ann, regime_tnx_ret_5d
-  • Platzhalter: news_sentiment (derzeit nicht befüllt — NaN)
+  • news_sentiment: GDELT Makro-Tone oder news_sec_minus_macro_tone (falls vorhanden)
 
 Keine harten externen Abhängigkeiten außer yfinance/pandas/numpy.
 """
@@ -130,11 +130,11 @@ _LLM_EXTRA_COLS = (
 )
 _LLM_RED_CONTEXT_COLS = (
     "vix_regime_ampel",
+    "quality_red",
+    "red_summary_de",
+    "red_summary_tooltip",
     "red_context_llm",
     "red_quality_tier",
-    "red_quality_hits",
-    "red_quality_max",
-    "red_quality_alpha_hint",
 )
 
 
@@ -1258,8 +1258,28 @@ def _add_market_sector_bench_columns(
     o["sector_ret_1d"] = s1
     o["sector_ret_2d"] = s2
     o["sector_ret_3d"] = s3
-    o["news_sentiment"] = np.nan
-    return o
+    return _fill_news_sentiment_column(o)
+
+
+def _fill_news_sentiment_column(o: pd.DataFrame) -> pd.DataFrame:
+    """LLM/CSV: news_sentiment aus GDELT (Sektor−Makro oder Makro-Tone)."""
+    out = o.copy()
+    if "news_sec_minus_macro_tone" in out.columns:
+        v = pd.to_numeric(out["news_sec_minus_macro_tone"], errors="coerce")
+        if v.notna().any():
+            out["news_sentiment"] = v
+            return out
+    macro_cols = [
+        c
+        for c in out.columns
+        if str(c).startswith("news_macro_") and str(c).endswith("_tone")
+    ]
+    if macro_cols:
+        best = max(macro_cols, key=lambda c: int(out[c].notna().sum()))
+        out["news_sentiment"] = pd.to_numeric(out[best], errors="coerce")
+    else:
+        out["news_sentiment"] = np.nan
+    return out
 
 
 def _beta_alpha_panel(
@@ -1526,6 +1546,7 @@ def enrich_signal_frame(
     out = _add_short_horizon_macro_regime_columns(out)
     print("  … Zusatzfilter: Cross-Asset (GLD/Öl/DXY) + Makro-Kalender …", flush=True)
     out = _add_cross_asset_macro_calendar_columns(out)
+    out = _fill_news_sentiment_column(out)
     out = ensure_llm_signal_columns(out)
     global _LAST_ENRICH_DIAGNOSTICS
     _LAST_ENRICH_DIAGNOSTICS = _build_metric_failure_report(out)

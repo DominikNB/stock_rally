@@ -113,6 +113,59 @@ def red_quality_badge_html(fields: Mapping[str, Any]) -> str:
     )
 
 
+def attach_red_regime_llm_columns(df: "pd.DataFrame") -> "pd.DataFrame":
+    """Rot-Badge 0/1/2 + VIX-Ampel für CSV/LLM (gleiche Logik wie Website ``attach_red_regime_summary``)."""
+    import pandas as pd
+
+    from lib.vix_regime_ampel import ampel_fields_from_vix
+
+    o = df.copy()
+    if "vix_regime_ampel" not in o.columns and "regime_vix_level" in o.columns:
+        amps = [
+            ampel_fields_from_vix(
+                None
+                if v is None or (isinstance(v, float) and v != v)
+                else float(v)
+            )
+            for v in pd.to_numeric(o["regime_vix_level"], errors="coerce")
+        ]
+        o["vix_regime_ampel"] = [a.get("vix_regime_ampel", "") for a in amps]
+
+    rows_out: list[dict[str, Any]] = []
+    for _, r in o.iterrows():
+        sig = dict(r)
+        vix_raw = sig.get("regime_vix_level")
+        if "vix_regime_ampel" not in sig or not str(sig.get("vix_regime_ampel") or "").strip():
+            sig.update(
+                ampel_fields_from_vix(
+                    None
+                    if vix_raw is None or (isinstance(vix_raw, float) and vix_raw != vix_raw)
+                    else float(vix_raw)
+                )
+            )
+        attach_red_regime_summary(sig)
+        rows_out.append(sig)
+
+    if not rows_out:
+        return o
+
+    extra_cols = (
+        "vix_regime_ampel",
+        "quality_red",
+        "quality_gld",
+        "quality_spike_ok",
+        "red_summary_tier",
+        "red_summary_de",
+        "red_summary_tooltip",
+        "red_context_llm",
+        "red_quality_tier",
+    )
+    extra = pd.DataFrame(rows_out)
+    for c in extra_cols:
+        o[c] = extra[c].values if c in extra.columns else ""
+    return o
+
+
 def attach_red_regime_summary(signal: dict[str, Any]) -> dict[str, Any]:
     """Hängt Rot-Qualitäts-Badge 0/1/2 an rot-Signale (UI + JSON)."""
     amp = str(signal.get("vix_regime_ampel") or "").strip().lower()
@@ -125,6 +178,8 @@ def attach_red_regime_summary(signal: dict[str, Any]) -> dict[str, Any]:
         signal["red_summary_html"] = ""
         signal["red_context_html"] = ""
         signal["red_quality_html"] = ""
+        signal["red_context_llm"] = ""
+        signal["red_quality_tier"] = ""
         return signal
 
     fields = red_quality_fields(signal)
@@ -133,6 +188,13 @@ def attach_red_regime_summary(signal: dict[str, Any]) -> dict[str, Any]:
     signal["red_quality_html"] = signal["red_summary_html"]
     signal["red_context_html"] = ""
     signal["red_context_chips"] = []
+    signal["red_context_llm"] = str(fields.get("red_summary_de") or "")
+    q = fields.get("quality_red")
+    signal["red_quality_tier"] = (
+        {0: "niedrig", 1: "mittel", 2: "hoch"}.get(int(q), "")
+        if q is not None
+        else ""
+    )
     return signal
 
 

@@ -38,8 +38,22 @@ def _news_fill_column_list() -> list[str]:
     )
 
 
+def _apply_news_missing_mask(df: pd.DataFrame, fill_news: list[str]) -> None:
+    """Mask-Feature: 1 = keine gültigen News-Werte in ``fill_news``, 0 = mindestens eine Spalte befüllt."""
+    want = [c for c in fill_news if c in df.columns]
+    if not want:
+        df["news_missing"] = np.float32(1.0)
+        return
+    arr = df[want].to_numpy(dtype=np.float64, copy=False)
+    if arr.ndim == 1:
+        row_has = np.isfinite(arr)
+    else:
+        row_has = np.any(np.isfinite(arr), axis=1)
+    df["news_missing"] = np.where(row_has, np.float32(0.0), np.float32(1.0))
+
+
 def _apply_news_fill(df: pd.DataFrame, fill_news: list[str], *, log_prefix: str = "") -> None:
-    """News-Spalten: fehlende als 0 anlegen; vorhandene per **einem** fillna (keine tausend Einzelzuweisungen).
+    """News-Spalten: fehlende als NaN; vorhandene NaN bleiben. ``news_missing`` = 1 wenn alles fehlt.
 
     Der frühere Loop pro Spalte triggert oft Block-Konsolidierung / hohen RAM — Batch ist günstiger.
     """
@@ -50,22 +64,16 @@ def _apply_news_fill(df: pd.DataFrame, fill_news: list[str], *, log_prefix: str 
     missing = [c for c in want if c not in colset]
     present = [c for c in want if c in colset]
     if missing:
-        # Eine einzige Block-Zuweisung statt vieler Einzel-Zuweisungen — vermeidet
-        # pandas-BlockManager-Konsolidierung bei mehreren tausend Spalten und sorgt für
-        # einen sauberen float32-Typ (statt mancher pandas-Versionen die np.float32(0.0)
-        # als 0-d-Array in eine ``object``-Spalte umsetzen).
-        zeros = pd.DataFrame(
-            np.zeros((len(df), len(missing)), dtype=np.float32),
-            columns=missing,
+        nan_block = pd.DataFrame(
+            {c: np.full(len(df), np.nan, dtype=np.float32) for c in missing},
             index=df.index,
         )
-        df[missing] = zeros
-    if present:
-        df[present] = df[present].fillna(0.0)
+        df[missing] = nan_block
+    _apply_news_missing_mask(df, want)
     if log_prefix:
         print(
-            f"{log_prefix}News-Fill: {len(present):,} Spalten fillna (Batch), "
-            f"{len(missing):,} neu als 0 — Liste hatte {len(want):,} Namen.",
+            f"{log_prefix}News-Fill: {len(present):,} Spalten (NaN bleibt), "
+            f"{len(missing):,} neu als NaN — Liste hatte {len(want):,} Namen; news_missing gesetzt.",
             flush=True,
         )
 
@@ -1117,13 +1125,24 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
     if cfg.USE_NEWS_SENTIMENT:
         if sentiment_df is None or sentiment_df.empty:
             print(
-                "assemble_features [News]: Keine News-Daten vorhanden. Lauf geht weiter; News-Features werden mit 0.0 belegt.",
+                "assemble_features [News]: Keine News-Daten vorhanden. Lauf geht weiter; "
+                "News-Features bleiben NaN (+ news_missing=1).",
                 flush=True,
             )
             if meta_only:
-                for c in cfg.FEAT_COLS:
-                    if str(c).startswith("news_"):
-                        df[c] = 0.0
+                _fill_news = [
+                    c
+                    for c in (getattr(cfg, "FEAT_COLS", []) or [])
+                    if str(c).startswith("news_") and c != "news_missing"
+                ]
+                if _fill_news:
+                    _apply_news_fill(
+                        df,
+                        _fill_news,
+                        log_prefix="assemble_features [News meta_only ohne Daten]: ",
+                    )
+                else:
+                    df["news_missing"] = np.float32(1.0)
             else:
                 _fill_news = _news_fill_column_list()
                 print(
@@ -1183,13 +1202,17 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
                     df = _merge_anchor_quality_idx_news_for_tag(
                         df, s, mom_w, vol_ma, tone_roll, tag
                     )
-                for c in cfg.FEAT_COLS:
-                    if not str(c).startswith("news_"):
-                        continue
-                    if c not in df.columns:
-                        df[c] = 0.0
-                    else:
-                        df[c] = df[c].fillna(0.0)
+                _fill_news = [
+                    c
+                    for c in cfg.FEAT_COLS
+                    if str(c).startswith("news_") and c != "news_missing"
+                ]
+                if _fill_news:
+                    _apply_news_fill(
+                        df,
+                        _fill_news,
+                        log_prefix="assemble_features [News meta_only Lücken]: ",
+                    )
                 _apply_news_regime_tone_interactions(df, tag)
                 _apply_news_sign_confirmation(df, tag)
             else:

@@ -1499,6 +1499,21 @@ def _run_phase17(c: Any) -> None:
         f"docs/signals.json {len(website_signals)} OOS signals public "
         f"({len(all_hist_signals)} mit Schwelle über alle Zeiten nur intern gezählt)"
     )
+    if website_signals:
+        try:
+            from holdout.build_holdout_signals_master import rebuild_master_from_signals_json
+
+            _mc = rebuild_master_from_signals_json(docs_dir / "signals.json")
+            if _mc is not None and len(_mc) > 0:
+                print(
+                    f"master_complete.csv für {len(_mc)} signals.json-Keys neu geschrieben.",
+                    flush=True,
+                )
+        except Exception as _e_mj:
+            print(
+                f"Warnung: master_complete aus signals.json fehlgeschlagen ({_e_mj}).",
+                flush=True,
+            )
     print("\nOpen docs/index.html in a browser to preview.")
     _dl = getattr(c, "DATA_LOAD_REPORT", None)
     if isinstance(_dl, dict):

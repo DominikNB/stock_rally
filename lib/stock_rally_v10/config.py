@@ -1122,6 +1122,7 @@ def build_news_model_cols(
     out.extend(
         _news_sign_confirmation_colnames(tag, enabled=add_sign_confirmation)
     )
+    out.append("news_missing")
     return out
 
 

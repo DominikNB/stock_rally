@@ -89,6 +89,40 @@ def next_trading_day_after(signal_d: pd.Timestamp, dates: pd.DatetimeIndex) -> p
     return pd.Timestamp(after[0]).normalize()
 
 
+def _fixed_y_labels_per_ticker(
+    raw: pd.DataFrame, tickers: list[str]
+) -> dict[str, tuple[dict[pd.Timestamp, int], dict[pd.Timestamp, int]]]:
+    """Trainings-Labels wie Pipeline: ``cfg.fixed_y_label_mode()`` (z. B. rally_plus_entry)."""
+    from lib.stock_rally_v10 import config as _cfg
+    from lib.stock_rally_v10.target import _create_target_one_ticker_fixed_bands
+
+    per_ticker: dict[str, tuple[dict[pd.Timestamp, int], dict[pd.Timestamp, int]]] = {}
+    mode = _cfg.fixed_y_label_mode()
+    for t in tickers:
+        ohlc = _ticker_ohlc(raw, t)
+        if ohlc is None or len(ohlc) < 30:
+            continue
+        sub = pd.DataFrame(
+            {
+                "close": ohlc["Close"].astype(np.float64).values,
+                "open": ohlc["Open"].astype(np.float64).values,
+            },
+            index=pd.to_datetime(ohlc.index).tz_localize(None).normalize(),
+        )
+        rally_arr, target_arr = _create_target_one_ticker_fixed_bands(sub)
+        dates = sub.index
+        per_ticker[t] = (
+            {dates[j]: int(target_arr[j]) for j in range(len(dates))},
+            {dates[j]: int(rally_arr[j]) for j in range(len(dates))},
+        )
+    if per_ticker:
+        print(
+            f"Train-Label-Eval: feste Band-Regel ({mode}) — {len(per_ticker)} Ticker-Serien",
+            flush=True,
+        )
+    return per_ticker
+
+
 def create_target_one_ticker(close: np.ndarray, rw: int, rt: float, ld: int, ed: int, mt: int):
     """Gleiche Logik wie analyze_holdout_signal_quality / Notebook."""
     n = len(close)
@@ -428,45 +462,13 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
     out["rally"] = np.nan
     out["eval_note"] = ""
 
-    if ARTIFACT.is_file():
-        bp = joblib.load(ARTIFACT)["best_params"]
-        rw = int(bp["return_window"])
-        rt = float(bp["rally_threshold"])
-        ld = int(bp["lead_days"])
-        ed = int(bp["entry_days"])
-        mt = int(bp["min_rally_tail_days"])
-        print(
-            f"Train-Label-Eval: return_window={rw}, rally_threshold={rt:.4f}, "
-            f"lead_days={ld}, entry_days={ed}, min_rally_tail_days={mt}",
-            flush=True,
-        )
-        print(
-            "  … Rally/Target je Ticker (erste Meldung gleich; danach ca. alle 5 Ticker) …",
-            flush=True,
-        )
+    print(
+        "  … Rally/Target je Ticker (feste cfg.FIXED_Y_*-Regel, wie Training) …",
+        flush=True,
+    )
+    per_ticker = _fixed_y_labels_per_ticker(raw, tickers)
 
-        per_ticker: dict[str, tuple[dict, dict]] = {}
-        _step_lab = max(5, _progress_step(len(tickers), 20))
-        for _k, t in enumerate(tickers, 1):
-            close = None
-            try:
-                close = _close_series(raw, t)
-            except Exception:
-                pass
-            if close is not None and len(close) >= 30:
-                dates = pd.to_datetime(close.index).tz_localize(None).normalize()
-                c = close.values.astype(np.float64)
-                rally_arr, target_arr = create_target_one_ticker(c, rw, rt, ld, ed, mt)
-                date_to_r = {dates[j]: int(rally_arr[j]) for j in range(len(dates))}
-                date_to_t = {dates[j]: int(target_arr[j]) for j in range(len(dates))}
-                per_ticker[t] = (date_to_t, date_to_r)
-            if _k == 1 or _k % _step_lab == 0 or _k == len(tickers):
-                print(
-                    f"  … Train-Labels {_k}/{len(tickers)} Ticker "
-                    f"({len(per_ticker)} Serien)",
-                    flush=True,
-                )
-
+    if per_ticker:
         sig_r = sig.reset_index(drop=True)
         print("  … Labels den Holdout-Zeilen zuordnen (vektorisiert) …", flush=True)
         _no = len(out)
@@ -494,7 +496,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
         out["train_target"] = _tt
         out["rally"] = _rv
     else:
-        print(f"Hinweis: {ARTIFACT} fehlt — train_target/rally bleiben leer.")
+        print("Hinweis: Keine Label-Serien — train_target/rally bleiben leer.")
 
     # Spaltenreihenfolge
     meta = ["ticker", "Date", "prob", "threshold_used", "company", "sector"] + list(
@@ -535,11 +537,9 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
             tail = [c for c in out.columns if c not in base_cols]
             out = out[base_cols + tail]
             out = ensure_llm_signal_columns(out)
-            from lib.vix_red_context_chips import attach_red_context_llm_columns
-            from lib.red_signal_quality import attach_red_quality_llm_columns
+            from lib.red_regime_summary import attach_red_regime_llm_columns
 
-            out = attach_red_context_llm_columns(out)
-            out = attach_red_quality_llm_columns(out)
+            out = attach_red_regime_llm_columns(out)
             print(f"Zusätzliche Filter-Spalten: {', '.join(tail)}")
             _diag = get_last_enrich_diagnostics()
             if _diag:
@@ -569,11 +569,9 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
             from lib.signal_extra_filters import ensure_llm_signal_columns
 
             out = ensure_llm_signal_columns(out)
-            from lib.vix_red_context_chips import attach_red_context_llm_columns
-            from lib.red_signal_quality import attach_red_quality_llm_columns
+            from lib.red_regime_summary import attach_red_regime_llm_columns
 
-            out = attach_red_context_llm_columns(out)
-            out = attach_red_quality_llm_columns(out)
+            out = attach_red_regime_llm_columns(out)
 
     MASTER_COMPLETE_CSV.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(MASTER_COMPLETE_CSV, index=False)
@@ -603,5 +601,57 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
     return out
 
 
+SIGNALS_JSON = ROOT / "docs" / "signals.json"
+
+
+def holdout_rows_from_signals_json(path: Path | None = None) -> pd.DataFrame:
+    """Meta-Zeilen für alle Einträge in ``docs/signals.json`` (Website/OOS-Keys)."""
+    p = path or SIGNALS_JSON
+    if not p.is_file():
+        raise FileNotFoundError(p)
+    payload = json.loads(p.read_text(encoding="utf-8"))
+    signals: list[dict] = []
+    if isinstance(payload, list):
+        signals = payload
+    elif isinstance(payload, dict):
+        for key in ("signals", "signals_holdout_final"):
+            block = payload.get(key)
+            if isinstance(block, list) and block:
+                signals = block
+                break
+    if not signals:
+        return pd.DataFrame(columns=list(_MIN_META_COLS) + list(_CLASSIFICATION_META_COLS))
+    rows: list[dict] = []
+    for s in signals:
+        rows.append(
+            {
+                "ticker": str(s.get("ticker", "")).strip(),
+                "Date": str(s.get("date", s.get("Date", "")))[:10],
+                "prob": s.get("prob", np.nan),
+                "threshold_used": s.get("threshold_used", np.nan),
+                "company": s.get("company", s.get("ticker", "")),
+                "sector": s.get("sector", "—"),
+                **{k: s.get(k, "") for k in _CLASSIFICATION_META_COLS},
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def rebuild_master_from_signals_json(path: Path | None = None) -> pd.DataFrame | None:
+    """``master_complete.csv`` für alle Keys in signals.json neu aufbauen."""
+    sig = holdout_rows_from_signals_json(path)
+    if sig.empty:
+        print("rebuild_master_from_signals_json: 0 Signale — Abbruch.", flush=True)
+        return None
+    print(
+        f"rebuild_master_from_signals_json: {len(sig)} Signale aus {path or SIGNALS_JSON}",
+        flush=True,
+    )
+    return main(holdout_df=sig)
+
+
 if __name__ == "__main__":
-    main()
+    if "--from-signals-json" in sys.argv:
+        rebuild_master_from_signals_json()
+    else:
+        main()

@@ -427,6 +427,12 @@ def _patch_index_html(html: str, lookup: dict[tuple[str, str], dict]) -> str:
 
 
 def main() -> None:
+    if SIGNALS_JSON.is_file():
+        from holdout.build_holdout_signals_master import rebuild_master_from_signals_json
+
+        print("Master-Complete aus docs/signals.json neu bauen …", flush=True)
+        rebuild_master_from_signals_json(SIGNALS_JSON)
+
     if not MASTER.is_file():
         raise SystemExit(f"Fehlt: {MASTER}")
 
