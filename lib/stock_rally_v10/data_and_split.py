@@ -180,6 +180,17 @@ def _print_training_windows_summary(
     )
 
 
+def meta_only_features_for_assemble(*, scoring_only: bool, retrain_meta_only: bool) -> bool:
+    """RETRAIN_META_ONLY-Shortcut nur beim Meta-Neutraining — nie bei SCORING_ONLY/Phase 17."""
+    if scoring_only and retrain_meta_only:
+        print(
+            "SCORING_ONLY: RETRAIN_META_ONLY wird für assemble_features ignoriert "
+            "(volle Feature-Matrix wie nach Training).",
+            flush=True,
+        )
+    return bool(retrain_meta_only) and not bool(scoring_only)
+
+
 def run_data_download_and_split() -> None:
     """Download → Target → Indikatoren → Features → Split (Zeit oder Legacy-Ticker)."""
     cfg.log_pipeline_mode_banner()
@@ -236,10 +247,14 @@ def run_data_download_and_split() -> None:
             cfg_mod=cfg,
         )
     sentiment_df = fetch_news_sentiment(df_with_indicators)
+    _meta_only_features = meta_only_features_for_assemble(
+        scoring_only=bool(getattr(cfg, "SCORING_ONLY", False)),
+        retrain_meta_only=_retrain_meta_only,
+    )
     df_features = assemble_features(
         df_with_indicators,
         sentiment_df,
-        meta_only=_retrain_meta_only,
+        meta_only=_meta_only_features,
     )
 
     cfg.df_raw = df_raw

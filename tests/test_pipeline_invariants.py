@@ -14,6 +14,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
+def test_scoring_only_ignores_retrain_meta_for_features():
+    from lib.stock_rally_v10.data_and_split import meta_only_features_for_assemble
+
+    assert meta_only_features_for_assemble(scoring_only=True, retrain_meta_only=True) is False
+    assert meta_only_features_for_assemble(scoring_only=True, retrain_meta_only=False) is False
+    assert meta_only_features_for_assemble(scoring_only=False, retrain_meta_only=True) is True
+    assert meta_only_features_for_assemble(scoring_only=False, retrain_meta_only=False) is False
+
+
 def test_apply_news_fill_nan_and_missing_mask():
     from lib.stock_rally_v10.features import _apply_news_fill
 
@@ -84,6 +93,43 @@ def test_holdout_rows_from_signals_json(tmp_path: Path):
     assert len(df) == 1
     assert df.iloc[0]["ticker"] == "AAPL"
     assert str(df.iloc[0]["Date"])[:10] == "2024-06-01"
+
+
+def test_save_base_feature_shap_report_writes_json_and_csv(tmp_path: Path):
+    from lib.base_feature_shap_export import (
+        build_base_feature_shap_payload,
+        save_base_feature_shap_report,
+    )
+
+    shap_df = pd.DataFrame(
+        {
+            "feature_raw": ["a", "b"],
+            "feature": ["A", "B"],
+            "mean_abs_shap": [0.5, 0.1],
+        }
+    )
+    payload = build_base_feature_shap_payload(
+        shap_df=shap_df,
+        feat_cols=["a", "b"],
+        feat_display=["A", "B"],
+        topk_names=["a"],
+        topk_k=1,
+        topk_mass_frac=0.9,
+        shap_sample_rows=100,
+        meta_shap_cum_frac=0.85,
+        rsi_w=21,
+        bb_w=15,
+        sma_w=30,
+        random_state=42,
+    )
+    jp = tmp_path / "base.json"
+    cp = tmp_path / "base.csv"
+    save_base_feature_shap_report(payload, json_paths=(jp,), csv_paths=(cp,))
+    assert jp.is_file()
+    assert cp.is_file()
+    loaded = json.loads(jp.read_text(encoding="utf-8"))
+    assert len(loaded["shap_mean_abs_sorted"]) == 2
+    assert loaded["topk_names_raw"] == ["a"]
 
 
 def test_meta_final_fit_no_eval_set_in_source():

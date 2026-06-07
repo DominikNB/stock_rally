@@ -9,7 +9,6 @@ target-rule helpers, ticker lists, and column builders.
 import datetime
 import os
 from pathlib import Path
-from tkinter import FALSE
 
 # =============================================================================
 # 1. Kalender & Laufmodus (Kurse / Training; GCP-Auth siehe oben)
@@ -33,10 +32,10 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
-SCORING_ONLY = False
+SCORING_ONLY = True
 # True → Base-Optuna/Base-Modelle bleiben aus Artefakt bestehen; Training startet direkt bei Meta.
 # Voraussetzung: SCORING_ONLY=False und ein vorhandenes ``SCORING_ARTIFACT_PATH``.
-RETRAIN_META_ONLY = True
+RETRAIN_META_ONLY = False
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
@@ -279,9 +278,8 @@ SPLIT_MODE = "time"
 # Da der produktive Threshold jetzt direkt aus Meta-Optuna kommt, kann META größer und THRESHOLD kleiner sein.
 # THRESHOLD bleibt als separates Diagnose-/Monitoring-Fenster bestehen.
 # SPLIT_MODE=ticker: dieselben BASE/META-Anteile + Purge teilen nur den TRAIN-Kalender (gleiche Ticker).
-TIME_SPLIT_FRAC_BASE = 0.40
-# Nach Phase-11-Pruning kann META größer sein (weniger RAM in Phase 12).
-TIME_SPLIT_FRAC_META = 0.40
+TIME_SPLIT_FRAC_BASE = 0.45
+TIME_SPLIT_FRAC_META = 0.35
 TIME_SPLIT_FRAC_THRESHOLD = 0.05
 TIME_PURGE_TRADING_DAYS = 5
 
@@ -313,7 +311,7 @@ SEED_PARAMS = dict(
     sma_window=50,
     news_mom_w=3,
     news_vol_ma=20,
-    news_tone_roll=3,  # muss in NEWS_TONE_ROLL_WINDOWS + Shard-Manifest liegen (nicht 1)
+    news_tone_roll=1,
     news_extra_zscore_w=20,
     news_extra_tone_accel=True,
     news_extra_macro_sec_diff=True,

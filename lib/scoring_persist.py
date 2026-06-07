@@ -100,12 +100,21 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
         _opt_y_default = bool(getattr(_cfg, "OPT_OPTIMIZE_Y_TARGETS", True))
     except Exception:
         _opt_y_default = True
+    _base_shap = g.get("base_feature_shap_report")
+    if _base_shap is None:
+        try:
+            from lib.base_feature_shap_export import load_base_feature_shap_report
+
+            _base_shap = load_base_feature_shap_report()
+        except Exception:
+            _base_shap = None
     bundle = {
         "base_models": g["base_models"],
         "meta_clf": g["meta_clf"],
         "meta_proba_calibrator": g.get("meta_proba_calibrator"),
         "best_threshold": float(g["best_threshold"]),
         "FEAT_COLS": list(g["FEAT_COLS"]),
+        "FEAT_COLS_PRUNED": list(g.get("FEAT_COLS_PRUNED") or g["FEAT_COLS"]),
         "topk_idx": np.asarray(g["topk_idx"]),
         "topk_names": list(g["topk_names"]),
         "best_params": dict(g["best_params"]),
@@ -145,6 +154,7 @@ def save_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
             None if g.get("meta_optuna_best_value") is None else float(g.get("meta_optuna_best_value"))
         ),
         "meta_optuna_best_user_attrs": dict(g.get("meta_optuna_best_user_attrs") or {}),
+        "base_feature_shap_report": _base_shap,
     }
     joblib.dump(bundle, path)
     print(f"Gespeichert: {path}  (threshold={bundle['best_threshold']:.4f})")
@@ -174,10 +184,19 @@ def load_scoring_artifacts(g: MutableMapping[str, Any], path: Path | None = None
     g["meta_proba_calibrator"] = b.get("meta_proba_calibrator")
     g["best_threshold"] = float(b["best_threshold"])
     g["FEAT_COLS"] = list(b["FEAT_COLS"])
+    g["FEAT_COLS_PRUNED"] = list(b.get("FEAT_COLS_PRUNED") or b["FEAT_COLS"])
     g["topk_idx"] = np.asarray(b["topk_idx"])
     g["topk_names"] = list(b["topk_names"])
     if b.get("best_params") is not None:
         g["best_params"] = dict(b["best_params"])
+    try:
+        from lib.stock_rally_v10.news_tag_sync import sync_topk_for_meta
+
+        sync_topk_for_meta(g, feat_cols=g.get("FEAT_COLS"), best_params=g.get("best_params"))
+    except Exception as exc:
+        print(f"[Artefakt] News-Tag-Sync für topk übersprungen: {exc}", flush=True)
+    if b.get("base_feature_shap_report") is not None:
+        g["base_feature_shap_report"] = dict(b["base_feature_shap_report"])
     g["CONSECUTIVE_DAYS"] = int(b.get("CONSECUTIVE_DAYS", 2))
     g["SIGNAL_COOLDOWN_DAYS"] = int(b.get("SIGNAL_COOLDOWN_DAYS", 4))
     g["rsi_w"] = int(b["rsi_w"])

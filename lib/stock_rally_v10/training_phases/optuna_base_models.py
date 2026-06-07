@@ -1,7 +1,6 @@
 """Phase 12: Optuna, Rebuild, Base-Modelle, SHAP."""
 from __future__ import annotations
 
-import json
 from typing import Any
 from pathlib import Path
 
@@ -17,9 +16,32 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from lib.base_feature_shap_export import (
+    build_base_feature_shap_payload,
+    save_base_feature_shap_report,
+)
+from lib.shap_adf import apply_shap_adf, enrich_shap_payload_with_adf
 from lib.stock_rally_v10.features import merge_news_shard_from_best_params, merge_news_survivors_into_df
-from lib.stock_rally_v10.optuna_train import intersect_feat_cols_with_prescreen_kept
+from lib.stock_rally_v10.news_tag_sync import news_tag_from_params, sync_topk_for_meta
+from lib.stock_rally_v10.optuna_train import (
+    intersect_feat_cols_with_prescreen_kept,
+    intersect_feat_cols_with_statistical_prune,
+)
 from lib.stock_rally_v10.extended_base_features import append_macro_regime_vol_numeric_cols
+
+
+def _xgb_focal_logloss_metric(pr: np.ndarray, dtrain: xgb.DMatrix) -> tuple[str, float]:
+    """Eval-Metrik für ``xgb.train`` mit Focal-Custom-Objective (sonst leeres ``evals_log`` → ES-Crash)."""
+    y = dtrain.get_label()
+    return (
+        "logloss",
+        float(
+            np.mean(
+                -y * np.log(np.clip(1 / (1 + np.exp(-pr)), 1e-7, 1 - 1e-7))
+                - (1 - y) * np.log(np.clip(1 / (1 + np.exp(pr)), 1e-7, 1 - 1e-7))
+            )
+        ),
+    )
 
 
 def _auto_scale_pos_weight(y: np.ndarray) -> float:
@@ -527,22 +549,123 @@ def _run_phase12(c: Any) -> None:
     )
 
     _nan_sentinel = np.float32(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+    best_params["news_tag"] = news_tag_from_params(best_params, c)
+    c.best_params = best_params
+
+    FEAT_COLS_FULL = list(FEAT_COLS)
     X_train_all = df_train[FEAT_COLS].to_numpy(dtype=np.float32, copy=True)
     np.nan_to_num(X_train_all, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
     y_train_all = df_train["target"].values.astype(np.int8)
 
+    rename_map = c.build_rename_map(
+        rsi_w,
+        bb_w,
+        sma_w,
+        best_params.get("news_mom_w"),
+        best_params.get("news_vol_ma"),
+        best_params.get("news_tone_roll"),
+        best_params.get("news_extra_zscore_w"),
+        best_params.get("news_extra_tone_accel"),
+        best_params.get("news_extra_macro_sec_diff"),
+        btc_momentum_z_window=_btc_z,
+        market_breadth_z_window=_brd_z,
+        rel_momentum_window=_rel_m,
+        adr_window=_adr_w,
+        breakout_lookback_window=_brk_w,
+        vcp_window=_vcp_w,
+        btc_corr_window=_btc_cw,
+        yz_vol_window=_yz_w,
+        downside_vol_window=_dv_w,
+        ret_moment_window=_rm_w,
+        amihud_window=_am_w,
+        vcp_lower_low_window=_ll_w,
+        breakout_volume_trigger_z=_bvt_z,
+        news_add_sign_confirmation=_news_sc,
+    )
+    feat_display_full = [rename_map.get(col, col) for col in FEAT_COLS_FULL]
+
     print("\n" + "=" * 60)
-    print("Feature-Diagnose vor Base-Training")
+    print("Feature-Diagnose vor Base-Training (volle FEAT_COLS aus Optuna)")
     print("=" * 60)
-    _log_feature_health("BASE TRAIN", df_train, FEAT_COLS)
-    _log_feature_health("META TRAIN (for stacking inputs)", df_test, FEAT_COLS)
-    _log_feature_health("THRESHOLD", df_threshold, FEAT_COLS)
-    _log_feature_health("FINAL", df_final, FEAT_COLS)
+    _log_feature_health("BASE TRAIN", df_train, FEAT_COLS_FULL)
+    _log_feature_health("META TRAIN (for stacking inputs)", df_test, FEAT_COLS_FULL)
+    _log_feature_health("THRESHOLD", df_threshold, FEAT_COLS_FULL)
+    _log_feature_health("FINAL", df_final, FEAT_COLS_FULL)
+
+    _adf_result = None
+    rs = c.RANDOM_STATE
+    esr = c.EARLY_STOPPING_ROUNDS
+    base_use_spw = bool(getattr(c, "BASE_USE_SCALE_POS_WEIGHT", True))
+
+    if bool(getattr(c, "SHAP_ADF_ENABLED", False)):
+        print("\n" + "=" * 60)
+        print("Phase 2a: SHAP-Probe (XGB-1 auf voller FEAT_COLS) → ADF-Pruning")
+        print("=" * 60)
+        X_probe_test = df_test[FEAT_COLS_FULL].to_numpy(dtype=np.float32, copy=True)
+        np.nan_to_num(
+            X_probe_test, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False
+        )
+        rng_probe = np.random.RandomState(rs)
+        probe_idx = rng_probe.choice(
+            len(X_probe_test), size=min(2000, len(X_probe_test)), replace=False
+        )
+        rng_es_p = np.random.RandomState(rs)
+        perm_p = rng_es_p.permutation(len(X_train_all))
+        n_fit_p = max(1, min(int(len(perm_p) * 0.9), len(perm_p) - 1))
+        fit_p, es_p = perm_p[:n_fit_p], perm_p[n_fit_p:]
+        dtrain_p = xgb.DMatrix(X_train_all[fit_p], label=y_train_all[fit_p])
+        des_p = xgb.DMatrix(X_train_all[es_p], label=y_train_all[es_p])
+        p_probe = {**xgb_base_params, "seed": rs, "disable_default_eval_metric": 1}
+        if base_use_spw:
+            p_probe["scale_pos_weight"] = _auto_scale_pos_weight(y_train_all[fit_p])
+        xgb_probe = xgb.train(
+            p_probe,
+            dtrain_p,
+            num_boost_round=xgb_base_params["n_estimators"],
+            obj=focal_obj,
+            evals=[(des_p, "es")],
+            custom_metric=_xgb_focal_logloss_metric,
+            early_stopping_rounds=esr,
+            verbose_eval=False,
+        )
+        shap_probe = shap.TreeExplainer(xgb_probe).shap_values(
+            xgb.DMatrix(X_probe_test[probe_idx])
+        )
+        mean_shap_probe = np.abs(shap_probe).mean(axis=0)
+        shap_df_probe = (
+            pd.DataFrame(
+                {
+                    "feature_raw": FEAT_COLS_FULL,
+                    "feature": feat_display_full,
+                    "mean_abs_shap": mean_shap_probe,
+                }
+            )
+            .sort_values("mean_abs_shap", ascending=False)
+            .reset_index(drop=True)
+        )
+        _adf_result = apply_shap_adf(feat_cols=FEAT_COLS_FULL, shap_df=shap_df_probe, cfg_mod=c)
+        FEAT_COLS = list(_adf_result.feat_cols_full)
+        feat_display = [rename_map.get(col, col) for col in FEAT_COLS]
+        c.FEAT_COLS_PRUNED = list(_adf_result.feat_cols_pruned)
+        c.FEAT_COLS_DROPPED = list(_adf_result.feat_cols_dropped)
+        X_train_all = df_train[FEAT_COLS].to_numpy(dtype=np.float32, copy=True)
+        np.nan_to_num(
+            X_train_all, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False
+        )
+        print(
+            f"\nFeature-Diagnose nach ADF ({len(FEAT_COLS)} Spalten für Base-Training):",
+            flush=True,
+        )
+        _log_feature_health("BASE TRAIN (pruned)", df_train, FEAT_COLS)
 
     print("\n" + "=" * 60)
     print("Phase 2: Training 10 base models")
     print("=" * 60)
+    _meta_exclude = frozenset(str(x) for x in (getattr(c, "BASE_MODELS_META_EXCLUDE", ()) or ()))
+    if _meta_exclude:
+        print(f"  Meta-Stack-Ausschluss: {sorted(_meta_exclude)}", flush=True)
     base_models = []
+    _shap_xgb_model = None
 
     def _bootstrap_split(seed_i, X, y):
         rng = np.random.RandomState(seed_i)
@@ -552,9 +675,6 @@ def _run_phase12(c: Any) -> None:
             oob_idx = boot_idx[int(len(boot_idx) * 0.9) :]
         return X[boot_idx], y[boot_idx], X[oob_idx], y[oob_idx]
 
-    rs = c.RANDOM_STATE
-    esr = c.EARLY_STOPPING_ROUNDS
-    base_use_spw = bool(getattr(c, "BASE_USE_SCALE_POS_WEIGHT", True))
     sk_class_weight = _auto_class_weight_dict(y_train_all) if base_use_spw else None
 
     for m_idx, seed_i in enumerate([rs, rs + 1, rs + 2, rs + 3]):
@@ -576,19 +696,16 @@ def _run_phase12(c: Any) -> None:
             num_boost_round=xgb_base_params["n_estimators"],
             obj=focal_obj,
             evals=[(des_m, "es")],
-            custom_metric=lambda pr, d: (
-                "logloss",
-                float(
-                    np.mean(
-                        -d.get_label() * np.log(np.clip(1 / (1 + np.exp(-pr)), 1e-7, 1 - 1e-7))
-                        - (1 - d.get_label()) * np.log(np.clip(1 / (1 + np.exp(pr)), 1e-7, 1 - 1e-7))
-                    )
-                ),
-            ),
+            custom_metric=_xgb_focal_logloss_metric,
             early_stopping_rounds=esr,
             verbose_eval=False,
         )
-        base_models.append((name, bst, "xgb"))
+        if name == "XGB-1":
+            _shap_xgb_model = bst
+        if name not in _meta_exclude:
+            base_models.append((name, bst, "xgb"))
+        else:
+            print(f"  {name} trainiert (SHAP/ADF), nicht im Meta-Stack.")
         print(f"  {name} done — best iteration: {bst.best_iteration}")
 
     for m_idx, seed_i in enumerate([rs + 10, rs + 11, rs + 12]):
@@ -686,9 +803,12 @@ def _run_phase12(c: Any) -> None:
             ),
         ]
     )
-    lr_pipe.fit(X_train_all, y_train_all)
-    base_models.append(("LR", lr_pipe, "lr"))
-    print("  LR done.")
+    if "LR" not in _meta_exclude:
+        lr_pipe.fit(X_train_all, y_train_all)
+        base_models.append(("LR", lr_pipe, "lr"))
+        print("  LR done.")
+    else:
+        print("  LR übersprungen (BASE_MODELS_META_EXCLUDE).")
 
     print(f"\nBase models ready: {[m[0] for m in base_models]}")
 
@@ -696,37 +816,13 @@ def _run_phase12(c: Any) -> None:
     print("Phase 3: SHAP feature selection")
     print("=" * 60)
 
+    if not bool(getattr(c, "SHAP_ADF_ENABLED", False)):
+        feat_display = feat_display_full
+
     X_test_feat = df_test[FEAT_COLS].to_numpy(dtype=np.float32, copy=True)
     X_final_feat = df_final[FEAT_COLS].to_numpy(dtype=np.float32, copy=True)
     np.nan_to_num(X_test_feat, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
     np.nan_to_num(X_final_feat, nan=_nan_sentinel, posinf=_nan_sentinel, neginf=_nan_sentinel, copy=False)
-
-    rename_map = c.build_rename_map(
-        rsi_w,
-        bb_w,
-        sma_w,
-        best_params.get("news_mom_w"),
-        best_params.get("news_vol_ma"),
-        best_params.get("news_tone_roll"),
-        best_params.get("news_extra_zscore_w"),
-        best_params.get("news_extra_tone_accel"),
-        best_params.get("news_extra_macro_sec_diff"),
-        btc_momentum_z_window=_btc_z,
-        market_breadth_z_window=_brd_z,
-        rel_momentum_window=_rel_m,
-        adr_window=_adr_w,
-        breakout_lookback_window=_brk_w,
-        vcp_window=_vcp_w,
-        btc_corr_window=_btc_cw,
-        yz_vol_window=_yz_w,
-        downside_vol_window=_dv_w,
-        ret_moment_window=_rm_w,
-        amihud_window=_am_w,
-        vcp_lower_low_window=_ll_w,
-        breakout_volume_trigger_z=_bvt_z,
-        news_add_sign_confirmation=_news_sc,
-    )
-    feat_display = [rename_map.get(col, col) for col in FEAT_COLS]
 
     _shap_hp = {
         k: best_params[k]
@@ -748,7 +844,7 @@ def _run_phase12(c: Any) -> None:
 
     rng_shap = np.random.RandomState(rs)
     shap_idx = rng_shap.choice(len(X_test_feat), size=min(2000, len(X_test_feat)), replace=False)
-    xgb_model_1 = base_models[0][1]
+    xgb_model_1 = _shap_xgb_model if _shap_xgb_model is not None else base_models[0][1]
     explainer = shap.TreeExplainer(xgb_model_1)
     shap_vals = explainer.shap_values(xgb.DMatrix(X_test_feat[shap_idx]))
     mean_shap = np.abs(shap_vals).mean(axis=0)
@@ -762,32 +858,36 @@ def _run_phase12(c: Any) -> None:
     )
     print("\nMittlere |SHAP| (alle Features, absteigend):")
     print(shap_df.to_string(index=False))
-    try:
-        out_path = Path("data") / "base_feature_shap_report.json"
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        _records = []
-        for i, row in shap_df.iterrows():
-            _records.append(
-                {
-                    "rank": int(i + 1),
-                    "feature_display": str(row["feature"]),
-                    "feature_raw": str(row["feature_raw"]),
-                    "mean_abs_shap": float(row["mean_abs_shap"]),
-                }
-            )
-        payload = {
-            "phase": "base_training_phase12",
-            "feature_count": int(len(FEAT_COLS)),
-            "features_raw": [str(x) for x in FEAT_COLS],
-            "features_display": [str(x) for x in feat_display],
-            "topk_names_raw": [str(x) for x in topk_names],
-            "shap_mean_abs_sorted": _records,
-        }
-        out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        print(f"Base-SHAP-Export geschrieben: {out_path}", flush=True)
-    except Exception as _e_shap_export:
-        print(f"Warnung: Base-SHAP-Export fehlgeschlagen ({_e_shap_export})", flush=True)
-    _shap_zeroish = (shap_df["mean_abs_shap"] <= 1e-12).sum()
+
+    topk, _mass_frac = _resolve_meta_shap_top_k(c, mean_shap)
+    topk_idx = np.argsort(mean_shap)[::-1][:topk]
+    topk_names = [FEAT_COLS[i] for i in topk_idx]
+
+    _shap_payload = build_base_feature_shap_payload(
+        shap_df=shap_df,
+        feat_cols=FEAT_COLS,
+        feat_display=feat_display,
+        topk_names=topk_names,
+        topk_k=topk,
+        topk_mass_frac=_mass_frac,
+        shap_sample_rows=int(len(shap_idx)),
+        meta_shap_cum_frac=getattr(c, "META_SHAP_CUM_FRAC", None),
+        rsi_w=int(rsi_w),
+        bb_w=int(bb_w),
+        sma_w=int(sma_w),
+        random_state=int(rs),
+    )
+    if _adf_result is not None:
+        _shap_payload["feature_count_before_adf"] = len(FEAT_COLS_FULL)
+        _shap_payload["features_raw_before_adf"] = FEAT_COLS_FULL
+        _shap_payload = enrich_shap_payload_with_adf(_shap_payload, _adf_result, c)
+    else:
+        c.FEAT_COLS_PRUNED = list(FEAT_COLS)
+        c.FEAT_COLS_DROPPED = []
+    save_base_feature_shap_report(_shap_payload)
+    c.base_feature_shap_report = _shap_payload
+
+    _shap_zeroish = int(_shap_payload.get("shap_zeroish_count", 0))
     if _shap_zeroish:
         print(
             f"Hinweis: {_shap_zeroish} Feature(s) mit ~0 mittlerer |SHAP| — beim XGB-1 typisch für Spalten, "
@@ -812,10 +912,6 @@ def _run_phase12(c: Any) -> None:
         max_display=min(20, len(FEAT_COLS)),
         show=True,
     )
-
-    topk, _mass_frac = _resolve_meta_shap_top_k(c, mean_shap)
-    topk_idx = np.argsort(mean_shap)[::-1][:topk]
-    topk_names = [FEAT_COLS[i] for i in topk_idx]
     _cf = getattr(c, "META_SHAP_CUM_FRAC", None)
     if _cf is not None:
         print(
@@ -861,5 +957,7 @@ def _run_phase12(c: Any) -> None:
     c.FEAT_COLS = FEAT_COLS
     c.base_models = base_models
     c.rename_map = rename_map
-    c.topk_idx = topk_idx
     c.topk_names = topk_names
+    c.topk_idx = topk_idx
+    sync_topk_for_meta(c, feat_cols=FEAT_COLS, best_params=best_params)
+    c.base_feature_shap_report = _shap_payload

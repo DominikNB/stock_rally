@@ -24,6 +24,12 @@ from lib.stock_rally_v10.equity_classification import (
 _NEWS_SHARD_FRAME_CACHE: dict[tuple[str, tuple[str, ...]], pd.DataFrame] = {}
 
 
+def clear_news_shard_frame_cache() -> None:
+    """RAM freigeben (z. B. nach Phase-11-Tag oder vor Optuna)."""
+    _NEWS_SHARD_FRAME_CACHE.clear()
+    gc.collect()
+
+
 def _news_fill_column_list() -> list[str]:
     """Spalten für ``assemble_features``-Fill (News): Optuna-Superset oder volle ``all_news_model``-Liste."""
     mode = str(getattr(cfg, "FEATURE_ASSEMBLE_NEWS_FILL", "optuna_union")).strip().lower()
@@ -809,8 +815,8 @@ def merge_news_shard_into_df(
     _nan_sentinel = float(getattr(cfg, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
     ix_pos = s_ix.index.get_indexer(idx)
     for c in news_cols:
-        raw = pd.to_numeric(s_ix[c], errors="coerce").to_numpy(dtype=np.float64, copy=False)
-        out = np.full(len(ix_pos), np.nan, dtype=np.float64)
+        raw = pd.to_numeric(s_ix[c], errors="coerce").to_numpy(dtype=np.float32, copy=False)
+        out = np.full(len(ix_pos), np.nan, dtype=np.float32)
         m = ix_pos >= 0
         out[m] = raw[ix_pos[m]]
         arr = np.nan_to_num(

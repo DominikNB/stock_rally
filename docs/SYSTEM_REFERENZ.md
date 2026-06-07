@@ -6,6 +6,7 @@ Dieses Dokument beschreibt das Projekt **stock_rally** so präzise, dass die Log
 
 | § | Thema |
 |---|--------|
+| — | [**Pipeline-Übersicht**](PIPELINE_OVERVIEW.md) (Phasen, Signale, Features, Top-100-SHAP) |
 | [1](#1-zweck-des-systems) | Zweck des Systems |
 | [2](#2-verzeichnisstruktur-funktional) | Verzeichnisstruktur (funktional) |
 | [3](#3-konfiguration-und-umgebung) | Konfiguration und Umgebung |

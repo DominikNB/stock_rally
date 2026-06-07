@@ -16,12 +16,51 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 
 from lib.stock_rally_v10.features import merge_news_shard_from_best_params
+from lib.stock_rally_v10.news_tag_sync import sync_topk_for_meta
 from lib.stock_rally_v10.optuna_train import (
     _FOLD_PENALTY_INSUFFICIENT_LABELED_DATA,
     _blue_sky_weak_volume_mask_1d,
     _dynamic_threshold_mask_1d,
     _vol_stress_mask_1d,
 )
+
+
+class _MetaOptunaReplay:
+    """Minimaler Ersatz für optuna.Study wenn Post-Study-Checkpoint geladen wird."""
+
+    def __init__(self, best_params: dict, best_value: float, user_attrs: dict | None = None):
+        self.best_params = dict(best_params)
+        self.best_value = float(best_value)
+        self.best_trial = type("Trial", (), {"user_attrs": dict(user_attrs or {})})()
+
+
+def _meta_optuna_checkpoint_path(c: Any) -> Path:
+    return Path(getattr(c, "META_OPTUNA_CHECKPOINT_PATH", "models/meta_optuna_poststudy_checkpoint.json"))
+
+
+def _save_meta_optuna_checkpoint(c: Any, best_params: dict, best_value: float) -> Path:
+    path = _meta_optuna_checkpoint_path(c)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "best_params": {k: (bool(v) if isinstance(v, (bool, np.bool_)) else v) for k, v in best_params.items()},
+        "best_value": float(best_value),
+    }
+    path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    return path
+
+
+def _load_meta_optuna_checkpoint(c: Any) -> _MetaOptunaReplay | None:
+    path = _meta_optuna_checkpoint_path(c)
+    if not path.is_file():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data.get("best_params"), dict):
+        return None
+    return _MetaOptunaReplay(
+        data["best_params"],
+        float(data.get("best_value", 0.0)),
+        data.get("user_attrs") if isinstance(data.get("user_attrs"), dict) else None,
+    )
 
 
 def _auto_scale_pos_weight(y: np.ndarray) -> float:
@@ -43,6 +82,7 @@ def run_phase_meta_learner_and_threshold(cfg_mod: Any) -> None:
 
 def _run_phase13(c: Any) -> None:
     base_models = c.base_models
+    sync_topk_for_meta(c, feat_cols=getattr(c, "FEAT_COLS", None), best_params=getattr(c, "best_params", None))
     topk_idx = c.topk_idx
     topk_names = c.topk_names
     # Im RETRAIN_META_ONLY-Pfad kann Phase 12 (wo rename_map gesetzt wird) übersprungen sein.
@@ -215,6 +255,7 @@ def _run_phase13(c: Any) -> None:
     print("=" * 60)
 
     _OPT_MIN_PRECISION = c.OPT_MIN_PRECISION_META
+    _meta_hard_prec_gate = bool(getattr(c, "META_PRECISION_HARD_GATE", True))
     _apply_filters_cv = c._apply_filters_cv
     _OPT_MAX_CONSEC_FP = c._OPT_MAX_CONSEC_FP
     _meta_obj_mode = str(getattr(c, "META_OBJECTIVE_MODE", "tp_precision")).strip().lower()
@@ -289,14 +330,17 @@ def _run_phase13(c: Any) -> None:
     print(
         f"Meta-Objective-Modus: {_meta_obj_mode}"
         + (
-            f" | horizons={_hold_horizons} | min_signals_per_fold={_meta_min_signals} "
-            f"| min_signals_per_day_per_fold={_meta_min_signals_per_day:.3f} "
-            f"| winrate_return_tiebreaker={_meta_winrate_tie:.3f} "
-            f"| signal_agg={_meta_sig_agg} "
-            f"| horizon_agg={_meta_hor_agg}"
-            + (f"(trim={_meta_hor_trim:.2f})" if _meta_hor_agg == "trimmed_mean" else "")
-            if _meta_obj_mode in {"signal_mean_return", "signal_win_rate"}
-            else ""
+            f" | precision_gate={'mean-CV→sum(n_TP)' if _meta_hard_prec_gate else 'soft-sigmoid'} "
+            f"| OPT_MIN_PRECISION_META={_OPT_MIN_PRECISION:.0%}"
+            if _meta_obj_mode == "tp_precision"
+            else (
+                f" | horizons={_hold_horizons} | min_signals_per_fold={_meta_min_signals} "
+                f"| min_signals_per_day_per_fold={_meta_min_signals_per_day:.3f} "
+                f"| winrate_return_tiebreaker={_meta_winrate_tie:.3f} "
+                f"| signal_agg={_meta_sig_agg} "
+                f"| horizon_agg={_meta_hor_agg}"
+                + (f"(trim={_meta_hor_trim:.2f})" if _meta_hor_agg == "trimmed_mean" else "")
+            )
         ),
         flush=True,
     )
@@ -529,9 +573,6 @@ def _run_phase13(c: Any) -> None:
             dyn_mult_3=mult_final_threshold_3,
             return_details=True,
         )
-        # Kontinuierliche Variante des bisherigen Vier-Pfade-Scores.
-        # Ziel: monoton steigend in Precision UND in n_tp ohne harten Sprung an
-        # ``_OPT_MIN_PRECISION``. Optuna findet so früher tragfähige Regionen.
         if max_cfp > _OPT_MAX_CONSEC_FP:
             # Hart-Constraint bleibt — Drawdown durch lange FP-Serien ist nicht weichzukochen.
             fs = -2.0 - (max_cfp - _OPT_MAX_CONSEC_FP) * 0.1
@@ -552,21 +593,48 @@ def _run_phase13(c: Any) -> None:
                 fs = 0.0
         else:
             precision = float(n_tp) / float(n_sig)
-            # Sigmoid-Gate, zentriert auf _OPT_MIN_PRECISION; Slope so gewählt, dass bei
-            # ±0.05 das Gate bei ~0.27 bzw. ~0.73 liegt → glatter Übergang ohne Sprung.
-            slope = 20.0
-            gate = 1.0 / (1.0 + np.exp(-slope * (precision - _OPT_MIN_PRECISION)))
-            # Über der Schwelle: Belohnung mit n_tp (skaliert), darunter ein glatter
-            # negativer Score in [-1, ~0). Konvexe Mischung über das Gate.
-            score_above = float(n_tp) * gate
-            score_below = (precision - 1.0) * (1.0 - gate)
-            fs = float(score_above + score_below)
+            if _meta_hard_prec_gate:
+                # Slice-Score (Cal/Val): Gate erfüllt → Trefferzahl, sonst Penalty.
+                if precision >= _OPT_MIN_PRECISION:
+                    fs = float(n_tp)
+                else:
+                    fs = float(precision - 1.0)
+            else:
+                # Legacy: Sigmoid-Gate für glattere Optuna-Landschaft.
+                slope = 20.0
+                gate = 1.0 / (1.0 + np.exp(-slope * (precision - _OPT_MIN_PRECISION)))
+                score_above = float(n_tp) * gate
+                score_below = (precision - 1.0) * (1.0 - gate)
+                fs = float(score_above + score_below)
         return (
             fs,
             int(det.get("n_raw_signals", 0)),
             int(det.get("n_final_signals", n_sig)),
             int(det.get("n_signal_days", 0)),
+            int(n_tp),
+            int(max_cfp),
         )
+
+    def _meta_tp_precision_trial_score(
+        fold_n_tp: list[int],
+        fold_n_sig: list[int],
+        fold_max_cfp: list[int],
+    ) -> float:
+        """Trial-Ziel: mean CV-Precision >= Gate → Summe n_TP, sonst mean(precision)−1."""
+        if any(int(m) > int(_OPT_MAX_CONSEC_FP) for m in fold_max_cfp):
+            worst = max(int(m) for m in fold_max_cfp if int(m) > int(_OPT_MAX_CONSEC_FP))
+            return float(-2.0 - (worst - _OPT_MAX_CONSEC_FP) * 0.1)
+        precisions = [
+            float(tp) / float(sig)
+            for tp, sig in zip(fold_n_tp, fold_n_sig, strict=True)
+            if int(sig) > 0
+        ]
+        if not precisions:
+            return -1.0
+        mean_prec = float(np.mean(precisions))
+        if mean_prec >= _OPT_MIN_PRECISION:
+            return float(sum(fold_n_tp))
+        return float(mean_prec - 1.0)
 
     def _score_return_mode_from_arrays(
         probs_arr,
@@ -724,7 +792,7 @@ def _run_phase13(c: Any) -> None:
                     mult_final_threshold_3=mult_final_threshold_3,
                 )
             else:
-                fs, _, _, _ = _score_tp_precision_from_arrays(
+                fs, _, _, _, _, _ = _score_tp_precision_from_arrays(
                     probs_cal,
                     dates_cal,
                     tickers_cal,
@@ -808,6 +876,9 @@ def _run_phase13(c: Any) -> None:
         _bb_test = df_test[_bb_col].values if _bb_col in df_test.columns else None
 
         fold_scores: list[float] = []
+        wf_fold_n_tp: list[int] = []
+        wf_fold_n_sig: list[int] = []
+        wf_fold_max_cfp: list[int] = []
         trial_raw_signals = 0
         trial_final_signals = 0
         trial_sig_per_day_sum = 0.0
@@ -1000,7 +1071,7 @@ def _run_phase13(c: Any) -> None:
                         if n_sig < _meta_min_signals:
                             fs -= 0.05 * float(_meta_min_signals - n_sig)
             else:
-                fs, n_raw_sig, n_sig, n_sig_days = _score_tp_precision_from_arrays(
+                fs, n_raw_sig, n_sig, n_sig_days, n_tp_val, max_cfp_val = _score_tp_precision_from_arrays(
                     probs,
                     _dates_test[val_mask],
                     _tickers_test[val_mask],
@@ -1029,6 +1100,9 @@ def _run_phase13(c: Any) -> None:
                 )
                 trial_raw_signals += int(n_raw_sig)
                 trial_final_signals += int(n_sig)
+                wf_fold_n_tp.append(int(n_tp_val))
+                wf_fold_n_sig.append(int(n_sig))
+                wf_fold_max_cfp.append(int(max_cfp_val))
                 # Tagesabdeckung auch im tp_precision-Pfad mitführen, damit
                 # ``avg_signals_per_day`` im Log nicht mehr immer 0.000 ausweist.
                 _val_dates_tp = _dates_test[val_mask]
@@ -1036,6 +1110,8 @@ def _run_phase13(c: Any) -> None:
                 if _n_val_days_tp > 0:
                     trial_sig_per_day_sum += float(n_sig_days) / float(_n_val_days_tp)
                     trial_sig_per_day_n += 1
+            if _meta_obj_mode == "tp_precision" and _meta_hard_prec_gate and wf_fold_n_tp:
+                fs = _meta_tp_precision_trial_score(wf_fold_n_tp, wf_fold_n_sig, wf_fold_max_cfp)
             fold_scores.append(fs)
             trial.report(fs, fold_i)
             trial.set_user_attr("n_raw_signals", int(trial_raw_signals))
@@ -1064,6 +1140,21 @@ def _run_phase13(c: Any) -> None:
         )
         if fold_scores:
             trial.set_user_attr("n_meta_wf_folds_scored", int(len(fold_scores)))
+        if wf_fold_n_tp:
+            _mtp = int(sum(wf_fold_n_tp))
+            _msig = int(sum(wf_fold_n_sig))
+            trial.set_user_attr("meta_wf_n_tp_sum", _mtp)
+            trial.set_user_attr("tp_n", _mtp)
+            trial.set_user_attr("meta_wf_n_signals_sum", _msig)
+            if _msig > 0:
+                _fold_precs = [
+                    float(tp) / float(sig)
+                    for tp, sig in zip(wf_fold_n_tp, wf_fold_n_sig, strict=True)
+                    if int(sig) > 0
+                ]
+                if _fold_precs:
+                    trial.set_user_attr("meta_wf_precision_mean", float(np.mean(_fold_precs)))
+                trial.set_user_attr("meta_wf_precision_pooled", float(_mtp) / float(_msig))
         if trial_nested_thresholds:
             trial.set_user_attr("nested_thr_mean", float(np.mean(trial_nested_thresholds)))
             trial.set_user_attr("nested_thr_min", float(np.min(trial_nested_thresholds)))
@@ -1072,7 +1163,11 @@ def _run_phase13(c: Any) -> None:
             trial.set_user_attr("spw_mean", float(np.mean(trial_spw_values)))
             trial.set_user_attr("spw_min", float(np.min(trial_spw_values)))
             trial.set_user_attr("spw_max", float(np.max(trial_spw_values)))
-        return np.mean(fold_scores) if fold_scores else -1.0
+        if insufficient_meta_fold_tags:
+            return float(np.mean(fold_scores)) if fold_scores else -1.0
+        if _meta_obj_mode == "tp_precision" and _meta_hard_prec_gate and wf_fold_n_tp:
+            return _meta_tp_precision_trial_score(wf_fold_n_tp, wf_fold_n_sig, wf_fold_max_cfp)
+        return float(np.mean(fold_scores)) if fold_scores else -1.0
 
     def _meta_trial_log_callback(study, frozen_trial):
         _raw = frozen_trial.user_attrs.get("n_raw_signals")
@@ -1108,50 +1203,70 @@ def _run_phase13(c: Any) -> None:
             flush=True,
         )
 
-    meta_sampler = optuna.samplers.TPESampler(multivariate=True, constant_liar=True, seed=42)
-    meta_pruner = optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=1)
-    meta_study = optuna.create_study(direction="maximize", sampler=meta_sampler, pruner=meta_pruner)
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
-    _meta_seed = getattr(c, "meta_optuna_best_params", None)
-    if isinstance(_meta_seed, dict) and _meta_seed:
-        _allowed = {
-            "signal_skip_near_peak",
-            "peak_lookback_days",
-            "peak_min_dist_from_high_pct",
-            "dyn_rsi_trigger",
-            "signal_max_rsi",
-            "signal_max_vol_stress_z",
-            "meta_eval_threshold",
-            "mult_final_threshold_1",
-            "mult_final_threshold_2",
-            "mult_final_threshold_3",
-            "dyn_vvix_trigger",
-            "dyn_bb_pband_trigger",
-            "signal_min_blue_sky_volume_z",
-            "max_depth",
-            "min_child_weight",
-            "gamma",
-            "reg_alpha",
-            "reg_lambda",
-            "learning_rate",
-            "n_estimators",
-            "subsample",
-            "colsample_bytree",
-        }
-        _seed_trial = {k: _meta_seed[k] for k in _allowed if k in _meta_seed}
-        if _seed_trial:
-            meta_study.enqueue_trial(_seed_trial)
-            print(
-                f"Meta-Optuna: Seed-Trial aus gespeichertem meta_optuna_best_params enqueued "
-                f"({len(_seed_trial)} Parameter).",
-                flush=True,
+    _skip_meta_optuna = bool(getattr(c, "SKIP_META_OPTUNA", False)) or int(
+        getattr(c, "N_META_TRIALS", 150)
+    ) <= 0
+    meta_study: Any
+    if _skip_meta_optuna:
+        _replay = _load_meta_optuna_checkpoint(c)
+        if _replay is None:
+            raise RuntimeError(
+                "SKIP_META_OPTUNA/N_META_TRIALS<=0, aber kein gültiger Meta-Optuna-Checkpoint: "
+                f"{_meta_optuna_checkpoint_path(c)}"
             )
-    meta_study.optimize(
-        meta_objective,
-        n_trials=c.N_META_TRIALS,
-        show_progress_bar=True,
-        callbacks=[_meta_trial_log_callback],
-    )
+        meta_study = _replay
+        print(
+            f"Meta-Optuna übersprungen — Checkpoint geladen "
+            f"(score={meta_study.best_value:.4f}, {len(meta_study.best_params)} Parameter).",
+            flush=True,
+        )
+    else:
+        meta_sampler = optuna.samplers.TPESampler(multivariate=True, constant_liar=True, seed=42)
+        meta_pruner = optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=1)
+        meta_study = optuna.create_study(direction="maximize", sampler=meta_sampler, pruner=meta_pruner)
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        _meta_seed = getattr(c, "meta_optuna_best_params", None)
+        if isinstance(_meta_seed, dict) and _meta_seed:
+            _allowed = {
+                "signal_skip_near_peak",
+                "peak_lookback_days",
+                "peak_min_dist_from_high_pct",
+                "dyn_rsi_trigger",
+                "signal_max_rsi",
+                "signal_max_vol_stress_z",
+                "meta_eval_threshold",
+                "mult_final_threshold_1",
+                "mult_final_threshold_2",
+                "mult_final_threshold_3",
+                "dyn_vvix_trigger",
+                "dyn_bb_pband_trigger",
+                "signal_min_blue_sky_volume_z",
+                "max_depth",
+                "min_child_weight",
+                "gamma",
+                "reg_alpha",
+                "reg_lambda",
+                "learning_rate",
+                "n_estimators",
+                "subsample",
+                "colsample_bytree",
+            }
+            _seed_trial = {k: _meta_seed[k] for k in _allowed if k in _meta_seed}
+            if _seed_trial:
+                meta_study.enqueue_trial(_seed_trial)
+                print(
+                    f"Meta-Optuna: Seed-Trial aus gespeichertem meta_optuna_best_params enqueued "
+                    f"({len(_seed_trial)} Parameter).",
+                    flush=True,
+                )
+        meta_study.optimize(
+            meta_objective,
+            n_trials=c.N_META_TRIALS,
+            show_progress_bar=True,
+            callbacks=[_meta_trial_log_callback],
+        )
+        _ckpt = _save_meta_optuna_checkpoint(c, meta_study.best_params, meta_study.best_value)
+        print(f"Meta-Optuna Checkpoint gespeichert: {_ckpt}", flush=True)
     print("Meta-Optuna — finale Bestwerte (alle Trial-Parameter):", flush=True)
     for _k in sorted(meta_study.best_params.keys()):
         print(f"  {_k} = {meta_study.best_params[_k]!r}", flush=True)
@@ -1175,7 +1290,6 @@ def _run_phase13(c: Any) -> None:
     meta_best.update(
         tree_method="hist",
         eval_metric="aucpr",
-        early_stopping_rounds=20,
         seed=rs,
     )
     if bool(getattr(c, "META_USE_SCALE_POS_WEIGHT", True)):
@@ -1232,10 +1346,16 @@ def _run_phase13(c: Any) -> None:
             f"horizons={_hold_horizons})"
         )
     else:
+        if _meta_hard_prec_gate:
+            _gate_lbl = (
+                f"Summe n_TP wenn mean CV-Precision>={_OPT_MIN_PRECISION:.0%}, "
+                f"sonst mean(precision)−1"
+            )
+        else:
+            _gate_lbl = "soft TP/fold (Sigmoid)"
         print(
             f"\nMeta-Learner best score={meta_study.best_value:.4f}  "
-            f"(= mean TP/fold bei Filter-Prec>={_OPT_MIN_PRECISION:.0%}, "
-            f"max consec FP <= {_OPT_MAX_CONSEC_FP})"
+            f"(= {_gate_lbl}; max consec FP <= {_OPT_MAX_CONSEC_FP})"
         )
     _met = meta_study.best_params.get("meta_eval_threshold")
     if _met is not None:
@@ -1245,7 +1365,12 @@ def _run_phase13(c: Any) -> None:
             "und Phase 5 wählt den produktiven Schwellenwert auf THRESHOLD.)"
         )
 
-    meta_clf = xgb.XGBClassifier(**meta_best)
+    # Produktions-Fit: gesamtes META, alle n_estimators — kein eval_set (XGB verlangt
+    # eval_set, sobald early_stopping_rounds gesetzt ist; CV-Trials nutzen ES weiterhin).
+    meta_fit_params = {
+        k: v for k, v in meta_best.items() if k != "early_stopping_rounds"
+    }
+    meta_clf = xgb.XGBClassifier(**meta_fit_params)
     meta_clf.fit(X_meta_test, y_test, verbose=False)
     print("Finales Meta-Modell trainiert (gesamtes META, ohne Early Stopping).")
 
@@ -1294,7 +1419,7 @@ def _run_phase13(c: Any) -> None:
     plt.show()
 
     print("\n" + "=" * 60)
-    print("Phase 5: Produktiver Threshold direkt aus Meta-Optuna")
+    print("Phase 5: Produktiver Threshold (WF-CV auf THRESHOLD bei tp_precision)")
     print("=" * 60)
 
     print(f"Scoring THRESHOLD-Set ({len(y_threshold):,} Zeilen)...", flush=True)
@@ -1356,6 +1481,196 @@ def _run_phase13(c: Any) -> None:
     _floor_frac = float(getattr(c, "META_PHASE5_DENSITY_FLOOR_FRACTION", 0.5))
     _soft_w = float(getattr(c, "META_PHASE5_DENSITY_SOFT_PENALTY_WEIGHT", 1.0))
     _floor_density = max(0.0, float(_meta_min_signals_per_day) * _floor_frac)
+    _use_p5_wf_cv = (
+        bool(getattr(c, "META_PHASE5_USE_WF_CV", True))
+        and _meta_obj_mode == "tp_precision"
+    )
+    _n_p5_folds = int(getattr(c, "N_PHASE5_FOLDS", 3) or 3)
+    _p5_min_train_frac = float(getattr(c, "META_PHASE5_MIN_TRAIN_FRAC", 0.40) or 0.40)
+
+    def _phase5_thr_arrays():
+        """Gemeinsame THRESHOLD-Arrays für Phase-5 Grid und WF-CV."""
+        _open_cal = (
+            df_threshold["open"].values
+            if "open" in df_threshold.columns
+            else df_threshold["close"].values
+        )
+        _close_cal = df_threshold["close"].values
+        _dates_cal = df_threshold["Date"].values
+        _tickers_cal = df_threshold["ticker"].values
+        _vol_stress_cal = (
+            df_threshold["vol_stress"].values
+            if "vol_stress" in df_threshold.columns
+            else None
+        )
+        _blue_cal = (
+            df_threshold[_blue_col].values if _blue_col in df_threshold.columns else None
+        )
+        _volume_z_cal = (
+            df_threshold["volume_zscore"].values
+            if "volume_zscore" in df_threshold.columns
+            else None
+        )
+        _vvix_ratio_cal = (
+            df_threshold["mr_vvix_div_vix"].values
+            if "mr_vvix_div_vix" in df_threshold.columns
+            else None
+        )
+        _rsi_col_p5 = f"rsi_{int(rsi_w)}d"
+        _bb_col_p5 = (
+            f"bb_pband_{int(getattr(c, 'bb_w', c.SEED_PARAMS.get('bb_window', 20)))}"
+        )
+        _rsi_cal = (
+            df_threshold[_rsi_col_p5].values
+            if _rsi_col_p5 in df_threshold.columns
+            else None
+        )
+        _bb_cal = (
+            df_threshold[_bb_col_p5].values
+            if _bb_col_p5 in df_threshold.columns
+            else None
+        )
+        return (
+            _open_cal,
+            _close_cal,
+            _dates_cal,
+            _tickers_cal,
+            _vol_stress_cal,
+            _blue_cal,
+            _volume_z_cal,
+            _vvix_ratio_cal,
+            _rsi_cal,
+            _bb_cal,
+        )
+
+    def _phase5_nested_wf_cv(seed_threshold):
+        """Nested WF-CV auf THRESHOLD — analog Meta Phase 4 (tp_precision)."""
+        (
+            _open_cal,
+            _close_cal,
+            _dates_cal,
+            _tickers_cal,
+            _vol_stress_cal,
+            _blue_cal,
+            _volume_z_cal,
+            _vvix_ratio_cal,
+            _rsi_cal,
+            _bb_cal,
+        ) = _phase5_thr_arrays()
+        all_dates_thr = np.sort(df_threshold["Date"].unique())
+        n_thr_dates = len(all_dates_thr)
+        min_train = int(n_thr_dates * _p5_min_train_frac)
+        fold_size = (n_thr_dates - min_train) // max(1, _n_p5_folds)
+        if fold_size < 1 or min_train < 10:
+            print(
+                f"  [Phase-5 WF-CV] Zu wenig THRESHOLD-Tage ({n_thr_dates}); "
+                f"Fallback auf Seed={seed_threshold:.3f}.",
+                flush=True,
+            )
+            return float(seed_threshold), float("nan"), [], [], n_thr_dates
+
+        date_to_idx_thr = {d: i for i, d in enumerate(all_dates_thr)}
+        df_thr_idx = df_threshold["Date"].map(date_to_idx_thr).values
+        _date_norm_thr = pd.to_datetime(df_threshold["Date"], errors="coerce").dt.normalize().values
+
+        fold_rows: list[tuple] = []
+        fold_nested_thrs: list[float] = []
+        fold_val_scores: list[float] = []
+
+        for fold_i in range(_n_p5_folds):
+            train_end = min_train + fold_i * fold_size
+            val_end = min_train + (fold_i + 1) * fold_size
+            if val_end > n_thr_dates:
+                break
+
+            tr_mask = df_thr_idx < train_end
+            val_mask = (df_thr_idx >= train_end) & (df_thr_idx < val_end)
+            if int(val_mask.sum()) < 5:
+                continue
+
+            tr_idx = np.where(tr_mask)[0]
+            tr_dates = pd.to_datetime(df_threshold["Date"].iloc[tr_idx], errors="coerce").dt.normalize()
+            tr_unique = np.sort(tr_dates.dropna().unique())
+            if len(tr_unique) < 10:
+                continue
+            split_pos = max(1, int(len(tr_unique) * 0.80))
+            split_pos = min(split_pos, len(tr_unique) - 1)
+            cal_start = tr_unique[split_pos]
+            inner_cal_mask = tr_mask & (_date_norm_thr >= cal_start)
+            if int(inner_cal_mask.sum()) < 5:
+                continue
+
+            nested_thr, nested_cal_score = _pick_threshold_nested(
+                seed_threshold,
+                probs_cal=y_prob_threshold[inner_cal_mask],
+                dates_cal=_dates_cal[inner_cal_mask],
+                tickers_cal=_tickers_cal[inner_cal_mask],
+                y_cal=y_threshold[inner_cal_mask],
+                open_cal=_open_cal[inner_cal_mask],
+                close_cal=_close_cal[inner_cal_mask],
+                vol_stress_cal=None if _vol_stress_cal is None else _vol_stress_cal[inner_cal_mask],
+                blue_cal=None if _blue_cal is None else _blue_cal[inner_cal_mask],
+                volume_z_cal=None if _volume_z_cal is None else _volume_z_cal[inner_cal_mask],
+                vvix_ratio_cal=None if _vvix_ratio_cal is None else _vvix_ratio_cal[inner_cal_mask],
+                rsi_cal=None if _rsi_cal is None else _rsi_cal[inner_cal_mask],
+                bb_cal=None if _bb_cal is None else _bb_cal[inner_cal_mask],
+                rsi_window=rsi_w,
+                signal_skip_near_peak=SIGNAL_SKIP_NEAR_PEAK,
+                peak_lookback_days=PEAK_LOOKBACK_DAYS,
+                peak_min_dist_from_high_pct=PEAK_MIN_DIST_FROM_HIGH_PCT,
+                signal_max_rsi=SIGNAL_MAX_RSI,
+                signal_max_vol_stress_z=SIGNAL_MAX_VOL_STRESS_Z,
+                signal_min_blue_sky_volume_z=SIGNAL_MIN_BLUE_SKY_VOLUME_Z,
+                dyn_vvix_trigger=DYN_VVIX_TRIGGER,
+                dyn_rsi_trigger=DYN_RSI_TRIGGER,
+                dyn_bb_pband_trigger=DYN_BB_PBAND_TRIGGER,
+                mult_final_threshold_1=MULT_FINAL_THRESHOLD_1,
+                mult_final_threshold_2=MULT_FINAL_THRESHOLD_2,
+                mult_final_threshold_3=MULT_FINAL_THRESHOLD_3,
+            )
+            val_fs, _, n_sig_v, _, _, _ = _score_tp_precision_from_arrays(
+                y_prob_threshold[val_mask],
+                _dates_cal[val_mask],
+                _tickers_cal[val_mask],
+                y_threshold[val_mask],
+                nested_thr,
+                close_arr=_close_cal[val_mask],
+                vol_stress_arr=None if _vol_stress_cal is None else _vol_stress_cal[val_mask],
+                blue_arr=None if _blue_cal is None else _blue_cal[val_mask],
+                volume_z_arr=None if _volume_z_cal is None else _volume_z_cal[val_mask],
+                vvix_ratio_arr=None if _vvix_ratio_cal is None else _vvix_ratio_cal[val_mask],
+                rsi_arr=None if _rsi_cal is None else _rsi_cal[val_mask],
+                bb_arr=None if _bb_cal is None else _bb_cal[val_mask],
+                rsi_window=rsi_w,
+                signal_skip_near_peak=SIGNAL_SKIP_NEAR_PEAK,
+                peak_lookback_days=PEAK_LOOKBACK_DAYS,
+                peak_min_dist_from_high_pct=PEAK_MIN_DIST_FROM_HIGH_PCT,
+                signal_max_rsi=SIGNAL_MAX_RSI,
+                signal_max_vol_stress_z=SIGNAL_MAX_VOL_STRESS_Z,
+                signal_min_blue_sky_volume_z=SIGNAL_MIN_BLUE_SKY_VOLUME_Z,
+                dyn_vvix_trigger=DYN_VVIX_TRIGGER,
+                dyn_rsi_trigger=DYN_RSI_TRIGGER,
+                dyn_bb_pband_trigger=DYN_BB_PBAND_TRIGGER,
+                mult_final_threshold_1=MULT_FINAL_THRESHOLD_1,
+                mult_final_threshold_2=MULT_FINAL_THRESHOLD_2,
+                mult_final_threshold_3=MULT_FINAL_THRESHOLD_3,
+            )
+            fold_nested_thrs.append(float(nested_thr))
+            fold_val_scores.append(float(val_fs))
+            fold_rows.append(
+                (int(fold_i), float(nested_thr), float(nested_cal_score), float(val_fs), int(n_sig_v))
+            )
+
+        if not fold_nested_thrs:
+            print(
+                f"  [Phase-5 WF-CV] Keine verwertbaren Folds; Fallback auf Seed={seed_threshold:.3f}.",
+                flush=True,
+            )
+            return float(seed_threshold), float("nan"), [], [], n_thr_dates
+
+        best_thr = float(np.median(fold_nested_thrs))
+        mean_cv = float(np.mean(fold_val_scores))
+        return best_thr, mean_cv, fold_rows, fold_nested_thrs, n_thr_dates
 
     def _phase5_score_grid(seed_threshold):
         """Bewertet jedes Grid-Threshold mit dem Phase-5-Objective.
@@ -1519,68 +1834,104 @@ def _run_phase13(c: Any) -> None:
                 best_thr = float(thr)
         return best_thr, float(best_score), rows, n_days_total
 
-    if _soft_cov_enabled:
+    _thr_rows: list = []
+    if _use_p5_wf_cv:
         print(
-            f"Phase-5 Threshold-Wahl: SOFT-coverage aktiv "
-            f"(target_density={_meta_min_signals_per_day:.3f}/d, "
-            f"floor={_floor_density:.3f}/d [={_floor_frac:.0%} des Ziels], "
-            f"soft_penalty_weight={_soft_w:.2f}).",
+            f"Phase-5 Threshold-Wahl: nested WF-CV auf THRESHOLD "
+            f"(folds={_n_p5_folds}, min_train={_p5_min_train_frac:.0%}, "
+            f"objective=tp_precision, OPT_MIN_PRECISION_META={_OPT_MIN_PRECISION:.0%}).",
             flush=True,
         )
-    else:
+        (
+            best_threshold,
+            _thr_fit_score,
+            _p5_cv_rows,
+            _p5_nested_thrs,
+            _n_days_thr,
+        ) = _phase5_nested_wf_cv(_seed_thr)
         print(
-            f"Phase-5 Threshold-Wahl: HARTES Coverage-Gate aktiv "
-            f"(target_density={_meta_min_signals_per_day:.3f}/d; "
-            f"Modus 'hard-cut' = Threshold unterhalb des Ziels wird als Repräsentativitäts-"
-            f"schutz abgelehnt).",
+            f"  THRESHOLD-Set: {_n_days_thr} Kalendertage; "
+            f"{len(_p5_cv_rows)} WF-Folds ausgewertet.",
             flush=True,
         )
-
-    best_threshold, _thr_fit_score, _thr_rows, _n_days_thr = _phase5_score_grid(_seed_thr)
-
-    # Diagnose-Tabelle: Top-12 nach fs.
-    _sorted = sorted(_thr_rows, key=lambda r: -r[1])[:12]
-    _target_days_abs = int(np.ceil(_meta_min_signals_per_day * _n_days_thr))
-    _floor_days_abs = int(np.ceil(_floor_density * _n_days_thr)) if _soft_cov_enabled else 0
-    print(
-        f"  THRESHOLD-Set: {_n_days_thr} Kalendertage; "
-        f"target = mind. {_target_days_abs} Signaltage absolut"
-        + (f", floor = mind. {_floor_days_abs} Signaltage absolut" if _soft_cov_enabled else "")
-        + ".",
-        flush=True,
-    )
-    print(
-        "  Phase-5 Threshold-Diagnose (Top-12 nach Score; zeigt warum bestimmte Schwellen verlieren):",
-        flush=True,
-    )
-    print(
-        "    thr   | fs       | n_sig | sig_days | cov/d  | mean_ret | win_rate | mode",
-        flush=True,
-    )
-    for r in _sorted:
-        print(
-            f"    {r[0]:.3f} | {r[1]:+.4f} | {r[2]:5d} | {r[3]:8d} | "
-            f"{r[4]:.3f} | {r[5]:+.4f} | {r[6]:.3f}    | {r[7]}",
-            flush=True,
-        )
-    # Zusätzlich: zeige Performance der Thresholds, die das Gate verfehlen (sortiert nach mean_ret).
-    _missed = [r for r in _thr_rows if r[7] in ("hard-cut", "floor", "soft")]
-    if _missed:
-        _miss_top = sorted(_missed, key=lambda r: -r[5])[:5]
-        print(
-            "  Gate-verfehlende Thresholds (höchste mean_ret, abgelehnt wegen Coverage):",
-            flush=True,
-        )
-        for r in _miss_top:
+        if _p5_cv_rows:
             print(
-                f"    {r[0]:.3f} | fs={r[1]:+.4f} | n_sig={r[2]:5d} | sig_days={r[3]:4d} | "
-                f"cov/d={r[4]:.3f} | mean_ret={r[5]:+.4f} | win={r[6]:.3f} | {r[7]}",
+                "  Phase-5 WF-CV (nested thr auf Cal, tp_precision-Score auf Val):",
                 flush=True,
             )
+            print(
+                "    fold | nested_thr | cal_score | val_score | n_sig_val",
+                flush=True,
+            )
+            for fold_i, nth, cal_s, val_s, n_sig_v in _p5_cv_rows:
+                print(
+                    f"    {fold_i:4d} | {nth:10.3f} | {cal_s:+.4f}    | {val_s:+.4f}    | {n_sig_v:9d}",
+                    flush=True,
+                )
+            print(
+                f"  nested_thr median={best_threshold:.3f} "
+                f"(min={min(_p5_nested_thrs):.3f}, max={max(_p5_nested_thrs):.3f}); "
+                f"mean val_score={_thr_fit_score:+.4f}",
+                flush=True,
+            )
+    else:
+        if _soft_cov_enabled:
+            print(
+                f"Phase-5 Threshold-Wahl: einmaliges Grid (Return/Coverage), SOFT-coverage aktiv "
+                f"(target_density={_meta_min_signals_per_day:.3f}/d, "
+                f"floor={_floor_density:.3f}/d [={_floor_frac:.0%} des Ziels], "
+                f"soft_penalty_weight={_soft_w:.2f}).",
+                flush=True,
+            )
+        else:
+            print(
+                f"Phase-5 Threshold-Wahl: einmaliges Grid (Return/Coverage), HARTES Coverage-Gate "
+                f"(target_density={_meta_min_signals_per_day:.3f}/d).",
+                flush=True,
+            )
+        best_threshold, _thr_fit_score, _thr_rows, _n_days_thr = _phase5_score_grid(_seed_thr)
+        _sorted = sorted(_thr_rows, key=lambda r: -r[1])[:12]
+        _target_days_abs = int(np.ceil(_meta_min_signals_per_day * _n_days_thr))
+        _floor_days_abs = int(np.ceil(_floor_density * _n_days_thr)) if _soft_cov_enabled else 0
+        print(
+            f"  THRESHOLD-Set: {_n_days_thr} Kalendertage; "
+            f"target = mind. {_target_days_abs} Signaltage absolut"
+            + (f", floor = mind. {_floor_days_abs} Signaltage absolut" if _soft_cov_enabled else "")
+            + ".",
+            flush=True,
+        )
+        print(
+            "  Phase-5 Threshold-Diagnose (Top-12 nach Score; zeigt warum bestimmte Schwellen verlieren):",
+            flush=True,
+        )
+        print(
+            "    thr   | fs       | n_sig | sig_days | cov/d  | mean_ret | win_rate | mode",
+            flush=True,
+        )
+        for r in _sorted:
+            print(
+                f"    {r[0]:.3f} | {r[1]:+.4f} | {r[2]:5d} | {r[3]:8d} | "
+                f"{r[4]:.3f} | {r[5]:+.4f} | {r[6]:.3f}    | {r[7]}",
+                flush=True,
+            )
+        _missed = [r for r in _thr_rows if r[7] in ("hard-cut", "floor", "soft")]
+        if _missed:
+            _miss_top = sorted(_missed, key=lambda r: -r[5])[:5]
+            print(
+                "  Gate-verfehlende Thresholds (höchste mean_ret, abgelehnt wegen Coverage):",
+                flush=True,
+            )
+            for r in _miss_top:
+                print(
+                    f"    {r[0]:.3f} | fs={r[1]:+.4f} | n_sig={r[2]:5d} | sig_days={r[3]:4d} | "
+                    f"cov/d={r[4]:.3f} | mean_ret={r[5]:+.4f} | win={r[6]:.3f} | {r[7]}",
+                    flush=True,
+                )
 
     f1_thresh = best_threshold  # Downstream-Kompatibilität (Plot-Linie).
+    _p5_mode = "wf-cv-tp_precision" if _use_p5_wf_cv else f"grid-{_meta_obj_mode}"
     print(
-        f"Gewählter produktiver Threshold (Phase 5, soft-coverage={'on' if _soft_cov_enabled else 'off'}, "
+        f"Gewählter produktiver Threshold (Phase 5, mode={_p5_mode}, "
         f"seed={_seed_thr:.3f}): {best_threshold:.3f} (score={_thr_fit_score:+.4f})",
         flush=True,
     )

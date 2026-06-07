@@ -20,8 +20,33 @@ def _disp(raw: str) -> str:
 
 
 def main() -> None:
+    from lib.base_feature_shap_export import load_base_feature_shap_report
+
     meta_path = ROOT / "data" / "meta_feature_shap_report.json"
     pres_path = ROOT / "data" / "feature_prescreen_v1.json"
+
+    base_payload = load_base_feature_shap_report()
+    if base_payload:
+        rows = base_payload.get("shap_mean_abs_sorted") or []
+        print("=== BASE (Phase 12, XGB-1, volle FEAT_COLS, mean |SHAP|) ===")
+        print(
+            f"Features: {base_payload.get('feature_count')}  "
+            f"Top-K: {base_payload.get('topk_k')}  "
+            f"Stand: {base_payload.get('built_on_utc', '')}\n"
+        )
+        for r in rows[:30]:
+            print(
+                f"{r['rank']:3d}. {_disp(str(r['feature_raw'])):44s}  "
+                f"{float(r['mean_abs_shap']):.4f}"
+            )
+        if len(rows) > 30:
+            print(f"  … +{len(rows) - 30} weitere (siehe models/base_feature_shap_report.csv)")
+        n0 = int(base_payload.get("shap_zeroish_count", 0))
+        if n0:
+            print(f"\n  |SHAP|≈0: {n0} Features")
+    else:
+        print("Base-SHAP-Report fehlt (models/ oder data/base_feature_shap_report.json)")
+    print()
 
     if meta_path.is_file():
         meta = json.loads(meta_path.read_text(encoding="utf-8"))

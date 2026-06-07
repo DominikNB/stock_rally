@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -46,6 +47,20 @@ TRAINING_MACRO_VOL_COLS: tuple[str, ...] = (
     "mr_dxy_level",
     "mr_dxy_mom_20d",
     "mr_dxy_mom_60d",
+    # FRED — Zinskurve / Fed-Liquidität / Kurzrate
+    "mr_t10y2y",
+    "mr_t10y2y_ret5d",
+    "mr_t10y2y_ret1d",
+    "mr_walcl",
+    "mr_walcl_chg_5d",
+    "mr_walcl_chg_20d",
+    "mr_effr",
+    "mr_effr_ret5d",
+    "mr_effr_ret1d",
+    # Sentiment — CNN Fear & Greed (0=extreme fear, 100=extreme greed)
+    "mr_fear_greed",
+    "mr_fear_greed_ret5d",
+    "mr_fear_greed_z_20d",
 )
 
 
@@ -310,6 +325,42 @@ def _vix_utils_vvix_series(
     return vvix
 
 
+def _merge_fred_level_with_returns(
+    out: pd.DataFrame,
+    series: pd.Series | None,
+    level_col: str,
+    *,
+    ffill_limit: int = 5,
+    ret_1d: bool = True,
+    ret_5d: bool = True,
+    pct_chg_5d: bool = False,
+    pct_chg_20d: bool = False,
+) -> pd.DataFrame:
+    """Merge FRED-Level auf ``Date`` + optional Returns / %-Änderungen (Tageskalender)."""
+    out = _merge_yahoo_level(out, series, level_col)
+    if level_col not in out.columns:
+        return out
+    ud = (
+        out[["Date", level_col]]
+        .drop_duplicates(subset=["Date"])
+        .sort_values("Date", kind="mergesort")
+    )
+    lvl = pd.to_numeric(ud[level_col], errors="coerce").ffill(limit=max(0, int(ffill_limit)))
+    extra: dict[str, pd.Series] = {level_col: lvl}
+    if ret_1d:
+        extra[f"{level_col}_ret1d"] = lvl / lvl.shift(1).replace(0, np.nan) - 1.0
+    if ret_5d:
+        extra[f"{level_col}_ret5d"] = lvl / lvl.shift(5).replace(0, np.nan) - 1.0
+    if pct_chg_5d:
+        extra[f"{level_col}_chg_5d"] = lvl / lvl.shift(5).replace(0, np.nan) - 1.0
+    if pct_chg_20d:
+        extra[f"{level_col}_chg_20d"] = lvl / lvl.shift(20).replace(0, np.nan) - 1.0
+    ud = ud.assign(**{k: v.values for k, v in extra.items()})
+    drop_cols = [c for c in ud.columns if c != "Date" and c in out.columns]
+    out = out.drop(columns=drop_cols, errors="ignore").merge(ud, on="Date", how="left")
+    return out
+
+
 def _merge_yahoo_level(
     out: pd.DataFrame,
     series: pd.Series | None,
@@ -356,8 +407,15 @@ def _impute_vvix_level_series(
     return out
 
 
-def enrich_macro_volatility_features(df: pd.DataFrame) -> pd.DataFrame:
+def enrich_macro_volatility_features(
+    df: pd.DataFrame,
+    *,
+    cfg_mod: Any | None = None,
+) -> pd.DataFrame:
     """Nur Spalten aus ``TRAINING_MACRO_VOL_COLS`` (ohne ``regime_*`` — die kommen vom Regime-Merge)."""
+    if cfg_mod is None:
+        from lib.stock_rally_v10 import config as cfg_mod  # type: ignore[assignment]
+
     out = df.copy()
     if "Date" not in out.columns:
         return out
@@ -534,5 +592,59 @@ def enrich_macro_volatility_features(df: pd.DataFrame) -> pd.DataFrame:
             on="Date",
             how="left",
         )
+
+    # ── FRED: Zinskurve, Fed-Bilanz, Effektive Fed Funds Rate ─────────────────
+    if bool(getattr(cfg_mod, "FRED_MACRO_POLICY_ENABLED", True)):
+        t10_id = str(getattr(cfg_mod, "FRED_SERIES_T10Y2Y", "T10Y2Y"))
+        wal_id = str(getattr(cfg_mod, "FRED_SERIES_WALCL", "WALCL"))
+        effr_ids = tuple(getattr(cfg_mod, "FRED_SERIES_EFFR", ("DFF", "EFFR")))
+
+        out = _merge_fred_level_with_returns(
+            out,
+            _vol_index_series_with_fallback(
+                label="mr_t10y2y",
+                d_min=d_min,
+                d_max=d_max,
+                fred_ids=(t10_id,),
+                yahoo_symbols=(),
+            ),
+            "mr_t10y2y",
+            ffill_limit=5,
+        )
+        out = _merge_fred_level_with_returns(
+            out,
+            _vol_index_series_with_fallback(
+                label="mr_walcl",
+                d_min=d_min,
+                d_max=d_max,
+                fred_ids=(wal_id,),
+                yahoo_symbols=(),
+            ),
+            "mr_walcl",
+            ffill_limit=12,
+            ret_1d=False,
+            ret_5d=False,
+            pct_chg_5d=True,
+            pct_chg_20d=True,
+        )
+        out = _merge_fred_level_with_returns(
+            out,
+            _vol_index_series_with_fallback(
+                label="mr_effr",
+                d_min=d_min,
+                d_max=d_max,
+                fred_ids=effr_ids,
+                yahoo_symbols=(),
+            ),
+            "mr_effr",
+            ffill_limit=5,
+        )
+
+    try:
+        from lib.stock_rally_v10.macro_fear_greed import attach_fear_greed_columns
+
+        out = attach_fear_greed_columns(out, cfg_mod=cfg_mod)
+    except Exception as exc:
+        print(f"[MacroVola] Fear & Greed übersprungen: {exc}", flush=True)
 
     return out

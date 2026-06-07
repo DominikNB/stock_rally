@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from lib.stock_rally_v10 import config as cfg
 from lib.stock_rally_v10.macro_vol_enrich import (
     TRAINING_MACRO_VOL_COLS,
     enrich_macro_volatility_features,
@@ -23,7 +24,7 @@ def augment_df_macro_regime_and_vol(df: pd.DataFrame) -> pd.DataFrame:
         "assemble_features: enrich_macro_volatility_features (nur Training-spf. mr_*) …",
         flush=True,
     )
-    return enrich_macro_volatility_features(out)
+    return enrich_macro_volatility_features(out, cfg_mod=cfg)
 
 
 def append_macro_regime_vol_numeric_cols(

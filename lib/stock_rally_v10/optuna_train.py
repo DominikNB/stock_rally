@@ -372,6 +372,82 @@ def intersect_feat_cols_with_prescreen_kept(
     return out
 
 
+def intersect_feat_cols_with_statistical_prune(
+    feat_cols: list[str],
+    *,
+    cfg_mod: Any,
+    trial_news_tag: str | None = None,
+) -> list[str]:
+    """Schnittmenge mit Phase-11-Survivors.
+
+    Mit ``survivors_by_tag`` (Variante A): ``trial_news_tag`` wählt die passende Liste,
+    sodass jedes News-Fenster in Optuna **gefilterte** News behält (nicht 0, nicht ~500 Roh).
+
+    ``STATISTICAL_PRE_PRUNE_STRICT_NEWS_IN_OPTUNA=True``: ``news_*`` nur aus dieser Liste.
+    """
+    if not bool(getattr(cfg_mod, "OPTUNA_INTERSECT_FEAT_COLS_WITH_STATISTICAL_PRUNE", True)):
+        return feat_cols
+    from lib.stock_rally_v10.training_phases.feature_pre_pruning import (
+        resolve_statistical_survivors_for_tag,
+    )
+
+    survivors = resolve_statistical_survivors_for_tag(cfg_mod, trial_news_tag)
+    if not survivors:
+        print(
+            "[Optuna] intersect statistical prune: keine Survivors auf cfg — "
+            "Phase 11 gelaufen?",
+            flush=True,
+        )
+        return feat_cols
+    strict_news = bool(getattr(cfg_mod, "STATISTICAL_PRE_PRUNE_STRICT_NEWS_IN_OPTUNA", True))
+    prefixes = tuple(
+        getattr(cfg_mod, "STATISTICAL_PRE_PRUNE_WHITELIST_PREFIXES", ("mr_", "regime_"))
+    )
+    exact = frozenset(
+        getattr(
+            cfg_mod,
+            "STATISTICAL_PRE_PRUNE_WHITELIST_EXACT",
+            ("month", "sector_id", "gics_sector_id", "gics_industry_id"),
+        )
+    )
+    out: list[str] = []
+    seen: set[str] = set()
+    n_in = len(feat_cols)
+    n_news_in = sum(1 for c in feat_cols if str(c).startswith("news_"))
+    for c in feat_cols:
+        sc = str(c)
+        if sc in seen:
+            continue
+        if sc.startswith("news_"):
+            if strict_news:
+                if sc in survivors:
+                    out.append(sc)
+                    seen.add(sc)
+            else:
+                out.append(sc)
+                seen.add(sc)
+        elif sc in survivors or any(sc.startswith(p) for p in prefixes) or sc in exact:
+            out.append(sc)
+            seen.add(sc)
+    min_keep = int(getattr(cfg_mod, "STATISTICAL_PRE_PRUNE_MIN_KEEP", 80))
+    if len(out) < min(12, min_keep):
+        print(
+            f"[Optuna] intersect statistical prune: nur {len(out)} Spalten — "
+            f"ungefilterte feat_cols ({n_in}) behalten.",
+            flush=True,
+        )
+        return feat_cols
+    if len(out) < n_in:
+        n_news_out = sum(1 for c in out if c.startswith("news_"))
+        print(
+            f"[Optuna] feat_cols ∩ Phase-11 survivors: {n_in} → {len(out)} Spalten "
+            f"(|survivors|={len(survivors)}, news {n_news_in}→{n_news_out}, "
+            f"strict_news={strict_news}, trial_tag={trial_news_tag!r}).",
+            flush=True,
+        )
+    return out
+
+
 def _rsi_from_close_1d(close_arr, window):
     """RSI für Anti-Peak-Filter aus Schlusskursen (ta) — unabhängig von FEAT_COLS."""
     if close_arr is None or window is None:
@@ -848,6 +924,31 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
         n_trials = int(cfg.N_OPTUNA_TRIALS)
     else:
         n_trials = int(n_trials)
+    if n_trials <= 0:
+        if try_load_base_optuna_checkpoint(cfg):
+            best = dict(cfg.base_optuna_best_params)
+            seed_params = dict(getattr(cfg, "SEED_PARAMS", None) or {})
+            for k, v in seed_params.items():
+                if k not in best:
+                    best[k] = v
+            if not cfg.opt_optimize_y_targets():
+                _, _wh, _rt, _, _ld, _ed, _ = cfg.fixed_y_rule_params()
+                best["return_window"] = _wh
+                best["rally_threshold"] = _rt
+                best["lead_days"] = _ld
+                best["entry_days"] = _ed
+                best["min_rally_tail_days"] = 5
+            cfg.base_optuna_best_params = dict(best)
+            print(
+                "[Optuna] Phase 1 übersprungen (N_OPTUNA_TRIALS<=0) — "
+                f"Base-Checkpoint übernommen (|params|={len(best)}).",
+                flush=True,
+            )
+            return best
+        raise ValueError(
+            "N_OPTUNA_TRIALS<=0, aber kein gültiger Base-Checkpoint "
+            f"({ _base_optuna_checkpoint_path(cfg).resolve()!s })."
+        )
     wf = getattr(cfg, "OPTUNA_WF_SPLITS", None)
     wf = int(wf) if wf is not None else cfg.N_WF_SPLITS
     if wf < 1:
@@ -958,6 +1059,7 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
     df_base["_date_idx"] = df_base["Date"].map(date_to_idx)
 
     def objective(trial):
+        _t_trial = time.perf_counter()
         # ── Rally-/Label-Params (nur wenn opt_optimize_y_targets() True) ──────────
         if _opt_y:
             return_window   = trial.suggest_int(  'return_window',   3,    12)
@@ -1185,6 +1287,24 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             breakout_lookback_window=breakout_lookback_window,
             cfg_mod=cfg,
         )
+        _trial_news_tag = (
+            cfg.news_feat_tag(news_mom_w, news_vol_ma, news_tone_roll)
+            if cfg.USE_NEWS_SENTIMENT
+            else None
+        )
+        feat_cols = intersect_feat_cols_with_statistical_prune(
+            feat_cols,
+            cfg_mod=cfg,
+            trial_news_tag=_trial_news_tag,
+        )
+        _n_news_fc = sum(1 for c in feat_cols if str(c).startswith("news_"))
+        if trial.number == 0 or trial.number % 10 == 0:
+            print(
+                f"[Optuna Trial {trial.number}] {len(feat_cols)} feat_cols "
+                f"(news={_n_news_fc}), wf_folds={wf}, "
+                f"train_rows={len(df_trial):,} …",
+                flush=True,
+            )
         # Defensive Sicherung: ``build_feature_cols`` kann Spalten emittieren, deren Erzeugung
         # an dynamischen Bedingungen hängt (z. B. News-Anchor-Sign-Bestätigung, neue Indikatoren
         # ohne aktiviertes Flag). Wenn so etwas durchschlägt, lieber den einzelnen Trial sauber
@@ -1465,7 +1585,13 @@ def optimize_xgb(df_train, n_trials=None, seed_params=cfg.SEED_PARAMS):
             trial.set_user_attr("nested_thr_max", float(np.max(trial_nested_thresholds)))
         if _subset and pool:
             trial.set_user_attr("feature_subset_columns", list(feat_cols))
-        return np.mean(fold_scores) if fold_scores else -1.0
+        _score = float(np.mean(fold_scores)) if fold_scores else -1.0
+        print(
+            f"[Optuna Trial {trial.number}] fertig in {time.perf_counter() - _t_trial:.1f}s — "
+            f"score={_score:.4f}, feat_cols={len(feat_cols)}, folds={len(fold_scores)}",
+            flush=True,
+        )
+        return _score
 
     _chk_path = _base_optuna_checkpoint_path(cfg)
     _chk_exists = _chk_path.is_file()

@@ -24,6 +24,7 @@ from lib.stock_rally_v10 import config as cfg
 from lib.stock_rally_v10.anchor_maintenance import ensure_anchor_schedule_current
 from lib.stock_rally_v10.data_and_split import run_data_download_and_split
 from lib.stock_rally_v10.post_split_embedded import run_training_scoring_and_export
+from lib.stock_rally_v10.training_phases.feature_pre_pruning import run_statistical_pre_pruning
 
 
 def bind_step_functions() -> None:
@@ -151,6 +152,7 @@ def run_pipeline_default() -> None:
     _log_loaded_config_snapshot()
     ensure_anchor_schedule_current(cfg)
     run_data_download_and_split()
+    run_statistical_pre_pruning(cfg)
     run_training_scoring_and_export()
 
 

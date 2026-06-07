@@ -1,0 +1,27 @@
+{
+  "best_params": {
+    "signal_skip_near_peak": false,
+    "peak_lookback_days": 22,
+    "peak_min_dist_from_high_pct": 0.00946505111314072,
+    "dyn_rsi_trigger": 70.62171116012179,
+    "signal_max_rsi": 80.73883027054644,
+    "signal_max_vol_stress_z": 1.9647022697326293,
+    "meta_eval_threshold": 0.3103579209176468,
+    "mult_final_threshold_1": 1.2225756227245603,
+    "mult_final_threshold_2": 1.2430439301413958,
+    "mult_final_threshold_3": 1.0290909396396275,
+    "dyn_vvix_trigger": 8.595613544211645,
+    "dyn_bb_pband_trigger": 1.097264756697239,
+    "signal_min_blue_sky_volume_z": 0.34352158348916845,
+    "max_depth": 3,
+    "min_child_weight": 93,
+    "gamma": 2.1415800533420564,
+    "reg_alpha": 0.022852332689155944,
+    "reg_lambda": 0.006748882975295986,
+    "learning_rate": 0.11783612916379561,
+    "n_estimators": 55,
+    "subsample": 0.7049080071989978,
+    "colsample_bytree": 0.365408657544929
+  },
+  "best_value": 106.0
+}
