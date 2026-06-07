@@ -9,6 +9,7 @@ target-rule helpers, ticker lists, and column builders.
 import datetime
 import os
 from pathlib import Path
+from tkinter import FALSE
 
 # =============================================================================
 # 1. Kalender & Laufmodus (Kurse / Training; GCP-Auth siehe oben)
@@ -32,10 +33,10 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
-SCORING_ONLY = True
+SCORING_ONLY = False
 # True → Base-Optuna/Base-Modelle bleiben aus Artefakt bestehen; Training startet direkt bei Meta.
 # Voraussetzung: SCORING_ONLY=False und ein vorhandenes ``SCORING_ARTIFACT_PATH``.
-RETRAIN_META_ONLY = False
+RETRAIN_META_ONLY = True
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
 PHASE17_SIGNAL_FILTER_JOBS = -1
@@ -63,6 +64,8 @@ _SCORING_ARTIFACT_SAVED_THIS_SESSION = False
 # rot: VIX < VIX_AMPEL_YELLOW_MIN | gelb: bis GREEN | grün: ab GREEN
 VIX_AMPEL_YELLOW_MIN = 20.0
 VIX_AMPEL_GREEN_MIN = 25.0
+# Website Kontext-Ampel (grün): VIX am Signaltag ≥ dieser Wert und kein Makro-Event ±2 Handelstage.
+SIGNAL_CONTEXT_VIX_GREEN_MIN = 20.0
 # Rot-Kontext-Chips (OOS META+THR + FINAL, scripts/_scratch_validate_all_context.py)
 VIX_RED_CHIP_VIX3M_RATIO_MAX = 1.16
 VIX_RED_CHIP_SECTOR_HHI_MAX = 0.35
@@ -75,7 +78,7 @@ VIX_RED_CHIP_SECTOR_HHI_MAX = 0.35
 N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
 OPT_MIN_PRECISION_BASE   = 0.64   # Phase 1 Base-XGB
-OPT_MIN_PRECISION_META   = 0.99  # Phase 4 Meta-Learner (inkl. produktivem Threshold aus Meta-Optuna)
+OPT_MIN_PRECISION_META   = 0.99  # Phase 4 Meta-CV + Phase 5 WF-CV: hartes Precision-Gate (s. META_PRECISION_HARD_GATE)
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_META  # Reports/PR-Plots: gleiches Gate wie Meta
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
 PHASE5_MIN_SIGNALS    = 5
@@ -142,6 +145,7 @@ FIXED_Y_RALLY_SIGNAL_ENTRY_DAYS = 2
 FIXED_Y_RALLY_PLUS_TARGET_OVERLAP_MODE = "union"  # "greedy_first" | "union"
 EARLY_STOPPING_ROUNDS = 30
 N_OPTUNA_TRIALS       = 150  # mehr Coverage im großen Kombinationsraum (TPE warm-up + Exploitation)
+# 0 = Base-Optuna überspringen, wenn ``models/base_optuna_checkpoint.joblib`` existiert (Resume nach Fix).
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
 # N_OPTUNA_TRIALS × OPTUNA_WF_SPLITS × (rebuild_target + XGB pro Fold).
@@ -149,11 +153,17 @@ OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro T
 # tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
 OPTUNA_SHOW_PROGRESS_BAR = None
 N_META_TRIALS         = 150
+# True (oder N_META_TRIALS=0) + vorhandener META_OPTUNA_CHECKPOINT_PATH → Optuna überspringen.
+SKIP_META_OPTUNA = False
+META_OPTUNA_CHECKPOINT_PATH = Path("models") / "meta_optuna_poststudy_checkpoint.json"
 # Meta-Objective in den Fold-Validierungen:
 # - "tp_precision": bisherige Zielfunktion (TP/Precision/FP-Run Constraints).
 # - "signal_mean_return": mittlere Signal-Rendite über Haltehorizonte (z. B. 1..5 Tage).
 # - "signal_win_rate": Anteil der Signale mit positivem mittlerem Horizon-Return.
 META_OBJECTIVE_MODE = "tp_precision"
+# True: Meta-CV wie Base — mittlere Filter-Precision über WF-Folds >= OPT_MIN_PRECISION_META,
+# dann Trial-Score = Summe n_TP; darunter Penalty mean(precision)−1. False = weiches Sigmoid (Legacy).
+META_PRECISION_HARD_GATE = True
 # Für signal_mean_return: pro Signal Mittelwert dieser Forward-Renditen, dann ZENTRAL-Aggregat
 # (Mean oder Median, gesteuert via META_OBJECTIVE_SIGNAL_AGGREGATION) über alle Signale.
 META_SIGNAL_RETURN_HORIZONS = (1, 2, 3, 4, 5)
@@ -197,6 +207,12 @@ META_PHASE5_DENSITY_SOFT_PENALTY_WEIGHT = 1.0
 # Der Seed wird – wenn die Meta-Probabilities kalibriert werden – durch dieselbe
 # Kalibrierung geschickt, damit Seed und Threshold-Grid auf derselben Skala leben.
 META_PHASE5_SEED_USE_NESTED_THR_MEAN = True
+# Phase 5 bei META_OBJECTIVE_MODE="tp_precision": nested Walk-Forward-CV auf THRESHOLD
+# (gleiche Logik wie Meta Phase 4 — Threshold pro Fold auf Cal, Bewertung auf Val).
+# False → Legacy: einmaliges Grid auf gesamtem THRESHOLD (Return/Coverage, kein CV).
+META_PHASE5_USE_WF_CV = True
+N_PHASE5_FOLDS = 3
+META_PHASE5_MIN_TRAIN_FRAC = 0.40
 # Wahrscheinlichkeitsskalierung für Meta-Classifier-Ausgaben:
 # - "none": rohe predict_proba
 # - "sigmoid": Platt-Skalierung (logistische Kalibrierung)
@@ -263,8 +279,9 @@ SPLIT_MODE = "time"
 # Da der produktive Threshold jetzt direkt aus Meta-Optuna kommt, kann META größer und THRESHOLD kleiner sein.
 # THRESHOLD bleibt als separates Diagnose-/Monitoring-Fenster bestehen.
 # SPLIT_MODE=ticker: dieselben BASE/META-Anteile + Purge teilen nur den TRAIN-Kalender (gleiche Ticker).
-TIME_SPLIT_FRAC_BASE = 0.45
-TIME_SPLIT_FRAC_META = 0.35
+TIME_SPLIT_FRAC_BASE = 0.40
+# Nach Phase-11-Pruning kann META größer sein (weniger RAM in Phase 12).
+TIME_SPLIT_FRAC_META = 0.40
 TIME_SPLIT_FRAC_THRESHOLD = 0.05
 TIME_PURGE_TRADING_DAYS = 5
 
@@ -296,7 +313,7 @@ SEED_PARAMS = dict(
     sma_window=50,
     news_mom_w=3,
     news_vol_ma=20,
-    news_tone_roll=1,
+    news_tone_roll=3,  # muss in NEWS_TONE_ROLL_WINDOWS + Shard-Manifest liegen (nicht 1)
     news_extra_zscore_w=20,
     news_extra_tone_accel=True,
     news_extra_macro_sec_diff=True,
@@ -412,6 +429,63 @@ FEATURE_PRESCREEN_ARTIFACT_NAME = "feature_prescreen_v1.json"
 FEATURE_PRESCREEN_REUSE_SAME_CALENDAR_DAY = True
 # Wird zur Laufzeit von ``feature_prescreen.run_feature_prescreen`` befüllt.
 _FEATURE_PRESCREEN_ARTIFACT: dict | None = None
+
+# ── FRED Makro-Policy + Fear & Greed (macro_vol_enrich.py) ───────────────────
+# Loader: fredapi + FRED_API_KEY in .env; Fallback FRED-CSV. Fear & Greed: CNN JSON.
+FRED_MACRO_POLICY_ENABLED = True
+FRED_SERIES_T10Y2Y = "T10Y2Y"
+FRED_SERIES_WALCL = "WALCL"
+FRED_SERIES_EFFR = ("DFF", "EFFR")
+FEAR_GREED_ENABLED = True
+FEAR_GREED_API_URL = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
+FEAR_GREED_CACHE_FILE = os.path.join(os.getcwd(), "data", "fear_greed_cache.json")
+# Nach neuen mr_*-Spalten: Cache-Version erhöhen (macro_augment_cache.py).
+MACRO_AUGMENT_CACHE_VERSION = 2
+MACRO_AUGMENT_CACHE_ENABLED = True
+MACRO_AUGMENT_CACHE_DIR = os.path.join(os.getcwd(), "data", "macro_augment_cache")
+
+# ── Phase 11: Statistisches Pre-Pruning (nur df_train / BASE, vor Phase 12) ───
+STATISTICAL_PRE_PRUNE_ENABLED = True
+# True: vorhandenes ``statistical_pre_prune_v1.json`` laden (kein 18×-MI-Rebuild nach Absturz/Fix).
+STATISTICAL_PRE_PRUNE_REUSE_ARTIFACT = True
+STATISTICAL_PRE_PRUNE_MAX_SENTINEL_FRAC = 0.98  # Drop wenn ≥98 % Sentinel/NaN
+STATISTICAL_PRE_PRUNE_MI_TOP_K = 150
+STATISTICAL_PRE_PRUNE_MI_MAX_ROWS = None  # None = Auto-Cap über MI_MATRIX_BUDGET_MB (siehe unten)
+STATISTICAL_PRE_PRUNE_MI_MATRIX_BUDGET_MB = 180.0  # MI-Matrix ~float32; Auto-Stichprobe wenn größer
+STATISTICAL_PRE_PRUNE_MI_MIN_SCORE = 0.0
+STATISTICAL_PRE_PRUNE_MIN_KEEP = 80
+STATISTICAL_PRE_PRUNE_WHITELIST_PREFIXES = ("mr_", "regime_")
+STATISTICAL_PRE_PRUNE_WHITELIST_EXACT = (
+    "month",
+    "sector_id",
+    "gics_sector_id",
+    "gics_industry_id",
+)
+OPTUNA_INTERSECT_FEAT_COLS_WITH_STATISTICAL_PRUNE = True
+# Phase 11: pro News-Shard-Tag (Manifest) Sparsity+MI → ``survivors_by_tag`` für Optuna.
+STATISTICAL_PRE_PRUNE_PER_TAG_NEWS = True
+# True: Optuna nutzt nur news_* aus Survivors des **Trial-Tags** (gefiltert, kein Trial ohne News).
+STATISTICAL_PRE_PRUNE_STRICT_NEWS_IN_OPTUNA = True
+STATISTICAL_PRE_PRUNE_DIR = os.path.join(os.getcwd(), "data")
+STATISTICAL_PRE_PRUNE_ARTIFACT_NAME = "statistical_pre_prune_v1.json"
+STATISTICAL_PRE_PRUNE_LOG_TOP_MI = 15  # Top-N MI-Features im Log
+STATISTICAL_PRE_PRUNE_LOG_DROP_SAMPLE = 12  # Beispiel-Spalten nach Sparsity-Drop
+STATISTICAL_PRE_PRUNE_NEWS_TAG = "5_10_3"  # Fallback-Shard wenn SEED-Tag fehlt
+_FEAT_COLS_STATISTICAL_SURVIVORS: list[str] | None = None
+_FEAT_COLS_STATISTICAL_SURVIVORS_BY_TAG: dict[str, list[str]] | None = None
+
+# Meta-Stack: Base-Modelle mit ~0 Meta-SHAP optional weglassen (XGB-1 bleibt für SHAP/ADF-Probe).
+BASE_MODELS_META_EXCLUDE: tuple[str, ...] = ("XGB-1", "LR")
+
+# ── SHAP-ADF (Phase 12: nach Optuna, vor Training aller Base-Modelle) ───────
+# Ablauf: XGB-1-Probe auf voller FEAT_COLS → SHAP → prune → 10 Base-Modelle auf pruned.
+SHAP_ADF_ENABLED = True
+SHAP_ADF_MIN_ABS_SHAP = 1e-6
+SHAP_ADF_MIN_KEEP = 80
+SHAP_ADF_ALWAYS_KEEP_PREFIXES = ("mr_", "regime_")
+SHAP_ADF_ALWAYS_KEEP_EXACT = ("month", "sector_id", "gics_sector_id", "gics_industry_id")
+# True (Standard): FEAT_COLS = pruned; alle Base-Modelle nutzen dieselbe kurze Liste.
+SHAP_ADF_REPLACE_FEAT_COLS = True
 
 # Volles News-Fenster-Grid: News liegt nur in Shard-Dateien (FEATURE_SHARD_DIR), nicht als breite Spalten in df_features.
 FEATURE_SHARD_DIR = os.path.join(os.getcwd(), "data", "feature_shards_news")

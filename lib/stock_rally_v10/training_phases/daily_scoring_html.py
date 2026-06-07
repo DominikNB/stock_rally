@@ -525,27 +525,14 @@ def _run_phase17(c: Any) -> None:
         _exported_ho = _build_holdout_master(holdout_df=pd.DataFrame(_ho_rows))
         if _exported_ho is not None and len(_exported_ho) > 0:
             _cls_keys = list(CLASSIFICATION_COLUMN_KEYS)
-            from lib.vix_regime_ampel import ampel_fields_from_vix
-            from lib.red_regime_summary import attach_red_regime_summary
+            from lib.signal_context_tier import attach_signal_context_tier
 
-            _chip_cols = (
-                "regime_vix_z_20d",
-                "vix3m_vix_ratio",
-                "sector_hhi_same_day",
-                "liquidity_tier",
-                "gld_ret_5d",
-                "gld_ret5_median_red_ref",
-                "alpha_sec_5d",
-                "alpha_mkt_5d",
+            _ctx_cols = (
+                "regime_vix_level",
+                "macro_event_within_2bd",
             )
             signals_holdout_final = []
             for _, _r in _exported_ho.iterrows():
-                _vix_raw = _r.get("regime_vix_level")
-                _amp = ampel_fields_from_vix(
-                    None
-                    if _vix_raw is None or (isinstance(_vix_raw, float) and _vix_raw != _vix_raw)
-                    else float(_vix_raw)
-                )
                 _sig = {
                     "ticker": str(_r["ticker"]),
                     "company": str(_r.get("company", _r["ticker"])),
@@ -553,17 +540,22 @@ def _run_phase17(c: Any) -> None:
                     **{k: str(_r.get(k, "")) for k in _cls_keys},
                     "date": str(_r["Date"])[:10],
                     "prob": float(_r["prob"]),
-                    **_amp,
                 }
-                for _cc in _chip_cols:
-                    if _cc in _r.index:
-                        _v = _r.get(_cc)
-                        if _cc == "liquidity_tier":
-                            if _v is not None and not (isinstance(_v, float) and _v != _v):
-                                _sig[_cc] = str(_v)
-                        elif _v is not None and not (isinstance(_v, float) and _v != _v):
-                            _sig[_cc] = float(_v)
-                attach_red_regime_summary(_sig)
+                for _cc in _ctx_cols:
+                    if _cc not in _r.index:
+                        continue
+                    _v = _r.get(_cc)
+                    if _cc == "macro_event_within_2bd":
+                        if _v is not None and not (isinstance(_v, float) and _v != _v):
+                            if isinstance(_v, (bool, np.bool_)):
+                                _sig[_cc] = bool(_v)
+                            elif isinstance(_v, (int, float)):
+                                _sig[_cc] = bool(int(_v))
+                            else:
+                                _sig[_cc] = str(_v).strip().lower() in {"true", "1", "yes"}
+                    elif _v is not None and not (isinstance(_v, float) and _v != _v):
+                        _sig[_cc] = float(_v)
+                attach_signal_context_tier(_sig)
                 signals_holdout_final.append(_sig)
             _sort_website_signals_newest_first(signals_holdout_final)
             print(
@@ -1094,10 +1086,9 @@ def _run_phase17(c: Any) -> None:
     )
     _k_step = max(1, _cfg_param_int(c, "DOCS_WEBSITE_HTML_SHRINK_STEP", _DOCS_WEBSITE_HTML_SHRINK_STEP_DEFAULT))
 
-    from lib.vix_regime_ampel import (
-        vix_ampel_html_span,
-        vix_ampel_panel_html,
-        vix_regime_full_css_block,
+    from lib.signal_context_tier import (
+        context_tier_full_css_block,
+        context_tier_panel_html,
     )
     from lib.website_ampel_filter import (
         ampel_counts,
@@ -1107,9 +1098,9 @@ def _run_phase17(c: Any) -> None:
     )
 
     # Roh-CSS in f-String-Variable — NICHT {{ escapen (sonst invalides CSS im Browser).
-    _site_regime_css = vix_regime_full_css_block()
+    _site_regime_css = context_tier_full_css_block()
     _site_ampel_filter_css = website_ampel_filter_css_block()
-    _vix_ampel_panel = vix_ampel_panel_html()
+    _context_tier_panel = context_tier_panel_html()
     _ampel_filter_counts = ampel_counts(website_signals)
     _ampel_filter_section = website_ampel_filter_html(_ampel_filter_counts)
     _ampel_filter_js = website_ampel_filter_js_block()
@@ -1121,8 +1112,7 @@ def _run_phase17(c: Any) -> None:
         ch = _cch.get(key)
         has_chart = bool(ch)
         bar = int(s["prob"] * 100)
-        _ampel_html = vix_ampel_html_span(s)
-        _red_summary_html = str(s.get("red_summary_html") or "")
+        _ampel_html = str(s.get("context_tier_html") or "")
         _yf_note = (
             '<p class="yf-hint">Kursnachzug (yfinance) fehlgeschlagen — Chart endet am letzten Tag der '
             "Feature-Matrix; beim nächsten Lauf kann es wieder klappen.</p>"
@@ -1187,9 +1177,9 @@ def _run_phase17(c: Any) -> None:
         _recent_tag = (
             '<span class="sig-recent-tag">≤30 Tage</span>' if _is_recent else ""
         )
-        _ampel_lv = str(s.get("vix_regime_ampel") or "unknown").strip().lower()
+        _ampel_lv = str(s.get("context_tier") or s.get("vix_regime_ampel") or "unknown").strip().lower()
         return f"""
-      <div class="sig-card{_recent_cls}" data-vix-ampel="{_html_std.escape(_ampel_lv)}">
+      <div class="sig-card{_recent_cls}" data-vix-ampel="{_html_std.escape(_ampel_lv)}" data-context-tier="{_html_std.escape(_ampel_lv)}">
         <div class="sig-head">
           <span class="sig-ticker">{s['ticker']}{_recent_tag}</span>
           <span class="sig-company">{s['company']}</span>
@@ -1198,7 +1188,6 @@ def _run_phase17(c: Any) -> None:
           {_ampel_html}
           <div class="score-bar-bg"><div class="score-bar" style="width:{bar}%">{s['prob']:.3f}</div></div>
         </div>
-        {_red_summary_html}
         {_gics_html}
         {_yf_note}
         {chart_html}
@@ -1369,9 +1358,9 @@ def _run_phase17(c: Any) -> None:
         {recent_signals_html}
       </div>
 
-      <div class="section vix-regime-section">
-        <h2>VIX-Regime (Ampel)</h2>
-        {_vix_ampel_panel}
+      <div class="section context-tier-section">
+        <h2>Kontext-Ampel</h2>
+        {_context_tier_panel}
       </div>
 
       <div class="section signals-archive-section">
