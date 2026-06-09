@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-08 10:44",
+  "generated": "2026-06-09 09:11",
   "threshold": 0.9,
   "signals": [
     {
@@ -31,7 +31,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2026-06-02",
-      "prob": 0.9124727310304249,
+      "prob": 0.9094139821399685,
       "regime_vix_level": 15.770000457763672,
       "macro_event_within_2bd": false,
       "context_tier": "yellow",
@@ -9134,7 +9134,7 @@
       "gics_sector_key": "industrials",
       "gics_industry_key": "specialty industrial machinery",
       "date": "2026-06-02",
-      "prob": 0.9124727310304249,
+      "prob": 0.9094139821399685,
       "regime_vix_level": 15.770000457763672,
       "macro_event_within_2bd": false,
       "context_tier": "yellow",
@@ -18207,7 +18207,7 @@
       "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.1 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 2385,
+  "signals_all_timeline_including_in_sample_count": 2384,
   "signals_html_chart_slots": 479,
   "signals_with_chart_files": 479,
   "chart_storage": "external",
