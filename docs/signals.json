@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-09 09:11",
+  "generated": "2026-06-10 16:17",
   "threshold": 0.9,
   "signals": [
     {
@@ -9083,25 +9083,6 @@
       "context_hint_de": "VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
       "vix_regime_ampel": "yellow",
       "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-10-24",
-      "prob": 0.9018707443076196,
-      "regime_vix_level": 19.079999923706055,
-      "macro_event_within_2bd": false,
-      "context_tier": "yellow",
-      "context_label_de": "Standard",
-      "context_hint_de": "VIX 19.1 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
-      "vix_regime_ampel": "yellow",
-      "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.1 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
     }
   ],
   "signals_holdout_final": [
@@ -18186,32 +18167,13 @@
       "context_hint_de": "VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
       "vix_regime_ampel": "yellow",
       "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-10-24",
-      "prob": 0.9018707443076196,
-      "regime_vix_level": 19.079999923706055,
-      "macro_event_within_2bd": false,
-      "context_tier": "yellow",
-      "context_label_de": "Standard",
-      "context_hint_de": "VIX 19.1 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
-      "vix_regime_ampel": "yellow",
-      "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.1 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 2384,
-  "signals_html_chart_slots": 479,
-  "signals_with_chart_files": 479,
+  "signals_all_timeline_including_in_sample_count": 2385,
+  "signals_html_chart_slots": 478,
+  "signals_with_chart_files": 478,
   "chart_storage": "external",
-  "index_html_bytes_utf8": 885959,
+  "index_html_bytes_utf8": 884257,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS. Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); index.html unter DOCS_INDEX_HTML_MAX_BYTES."
 }
