@@ -1,7 +1,26 @@
 {
-  "generated": "2026-06-11 07:33",
+  "generated": "2026-06-14 20:33",
   "threshold": 0.9,
   "signals": [
+    {
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "sector": "industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-06-11",
+      "prob": 0.9052789273093932,
+      "regime_vix_level": 19.440000534057617,
+      "macro_event_within_2bd": false,
+      "context_tier": "yellow",
+      "context_label_de": "Standard",
+      "context_hint_de": "VIX 19.4 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
+      "vix_regime_ampel": "yellow",
+      "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.4 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
+    },
     {
       "ticker": "AVGO",
       "company": "Broadcom",
@@ -9064,29 +9083,29 @@
       "context_hint_de": "Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.",
       "vix_regime_ampel": "red",
       "context_tier_html": "<span class=\"context-tier context-tier--red\" title=\"Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Makro-Risiko</span>"
-    },
-    {
-      "ticker": "S92.DE",
-      "company": "SMA Solar",
-      "sector": "technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Solar",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "solar",
-      "date": "2024-10-28",
-      "prob": 0.9108631361002028,
-      "regime_vix_level": 19.799999237060547,
-      "macro_event_within_2bd": false,
-      "context_tier": "yellow",
-      "context_label_de": "Standard",
-      "context_hint_de": "VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
-      "vix_regime_ampel": "yellow",
-      "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
     }
   ],
   "signals_holdout_final": [
     {
+      "ticker": "HDD.DE",
+      "company": "Heidelberger Druck",
+      "sector": "industrials",
+      "classification_standard": "ICB_or_GICS_Yahoo",
+      "gics_sector": "Industrials",
+      "gics_industry": "Specialty Industrial Machinery",
+      "gics_sector_key": "industrials",
+      "gics_industry_key": "specialty industrial machinery",
+      "date": "2026-06-11",
+      "prob": 0.9052789273093932,
+      "regime_vix_level": 19.440000534057617,
+      "macro_event_within_2bd": false,
+      "context_tier": "yellow",
+      "context_label_de": "Standard",
+      "context_hint_de": "VIX 19.4 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
+      "vix_regime_ampel": "yellow",
+      "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.4 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
+    },
+    {
       "ticker": "AVGO",
       "company": "Broadcom",
       "sector": "technology",
@@ -18148,32 +18167,13 @@
       "context_hint_de": "Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.",
       "vix_regime_ampel": "red",
       "context_tier_html": "<span class=\"context-tier context-tier--red\" title=\"Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Makro-Risiko</span>"
-    },
-    {
-      "ticker": "S92.DE",
-      "company": "SMA Solar",
-      "sector": "technology",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Technology",
-      "gics_industry": "Solar",
-      "gics_sector_key": "technology",
-      "gics_industry_key": "solar",
-      "date": "2024-10-28",
-      "prob": 0.9108631361002028,
-      "regime_vix_level": 19.799999237060547,
-      "macro_event_within_2bd": false,
-      "context_tier": "yellow",
-      "context_label_de": "Standard",
-      "context_hint_de": "VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.",
-      "vix_regime_ampel": "yellow",
-      "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.8 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 2384,
+  "signals_all_timeline_including_in_sample_count": 2385,
   "signals_html_chart_slots": 478,
   "signals_with_chart_files": 478,
   "chart_storage": "external",
-  "index_html_bytes_utf8": 884194,
+  "index_html_bytes_utf8": 884042,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS. Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); index.html unter DOCS_INDEX_HTML_MAX_BYTES."
 }
