@@ -95,6 +95,58 @@ def test_holdout_rows_from_signals_json(tmp_path: Path):
     assert str(df.iloc[0]["Date"])[:10] == "2024-06-01"
 
 
+def test_ticker_ohlc_includes_high_low_for_atr_labels():
+    from holdout.build_holdout_signals_master import _ticker_ohlc
+
+    idx = pd.to_datetime(["2024-01-02", "2024-01-03"])
+    raw = pd.DataFrame(
+        {
+            ("Open", "AAPL"): [100.0, 101.0],
+            ("High", "AAPL"): [102.0, 103.0],
+            ("Low", "AAPL"): [99.0, 100.0],
+            ("Close", "AAPL"): [101.0, 102.0],
+        },
+        index=idx,
+    )
+    raw.columns = pd.MultiIndex.from_tuples(raw.columns)
+    ohlc = _ticker_ohlc(raw, "AAPL")
+    assert ohlc is not None
+    assert list(ohlc.columns) == ["Open", "Close", "High", "Low"]
+
+
+def test_ticker_ohlc_synthesizes_high_low_when_missing():
+    from holdout.build_holdout_signals_master import _ticker_ohlc
+
+    idx = pd.to_datetime(["2024-01-02", "2024-01-03"])
+    raw = pd.DataFrame(
+        {
+            ("Open", "AAPL"): [100.0, 101.0],
+            ("Close", "AAPL"): [101.0, 102.0],
+        },
+        index=idx,
+    )
+    raw.columns = pd.MultiIndex.from_tuples(raw.columns)
+    ohlc = _ticker_ohlc(raw, "AAPL")
+    assert ohlc is not None
+    assert list(ohlc["High"]) == [101.0, 102.0]
+    assert list(ohlc["Low"]) == [100.0, 101.0]
+
+    # group_by="ticker" Layout (wie Training-Download)
+    raw2 = pd.DataFrame(
+        {
+            ("AAPL", "Open"): [100.0, 101.0],
+            ("AAPL", "High"): [102.0, 103.0],
+            ("AAPL", "Low"): [99.0, 100.0],
+            ("AAPL", "Close"): [101.0, 102.0],
+        },
+        index=idx,
+    )
+    raw2.columns = pd.MultiIndex.from_tuples(raw2.columns)
+    ohlc2 = _ticker_ohlc(raw2, "AAPL")
+    assert ohlc2 is not None
+    assert list(ohlc2.columns) == ["Open", "Close", "High", "Low"]
+
+
 def test_save_base_feature_shap_report_writes_json_and_csv(tmp_path: Path):
     from lib.base_feature_shap_export import (
         build_base_feature_shap_payload,

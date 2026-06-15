@@ -65,17 +65,44 @@ def _progress_step(n: int, parts: int = 10) -> int:
     return max(1, n // parts)
 
 
-def _ticker_ohlc(raw: pd.DataFrame, ticker: str) -> pd.DataFrame | None:
+def _ohlc_field(raw: pd.DataFrame, field: str, ticker: str) -> pd.Series | None:
     try:
         if isinstance(raw.columns, pd.MultiIndex):
-            o = raw["Open"][ticker]
-            c = raw["Close"][ticker]
-        else:
-            o = raw["Open"]
-            c = raw["Close"]
+            cols = raw.columns
+            if (ticker, field) in cols:
+                return raw[(ticker, field)]
+            if (field, ticker) in cols:
+                return raw[(field, ticker)]
+            if field in cols.get_level_values(0):
+                col = raw[field]
+                if isinstance(col, pd.DataFrame):
+                    return col[ticker] if ticker in col.columns else None
+                return col
+            return None
+        return raw[field] if field in raw.columns else None
+    except Exception:
+        return None
+
+
+def _ticker_ohlc(raw: pd.DataFrame, ticker: str) -> pd.DataFrame | None:
+    try:
+        o = _ohlc_field(raw, "Open", ticker)
+        c = _ohlc_field(raw, "Close", ticker)
+        if o is None or c is None:
+            return None
+        h = _ohlc_field(raw, "High", ticker)
+        l = _ohlc_field(raw, "Low", ticker)
     except Exception:
         return None
     df = pd.DataFrame({"Open": o, "Close": c})
+    if h is not None and l is not None:
+        df["High"] = h
+        df["Low"] = l
+    else:
+        # Wie target.py: fehlendes H/L → aus Open/Close ableiten (ATR-Proxy).
+        oc = df[["Open", "Close"]].apply(pd.to_numeric, errors="coerce")
+        df["High"] = oc.max(axis=1)
+        df["Low"] = oc.min(axis=1)
     df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
     df = df.sort_index().dropna(how="all")
     return df if len(df) else None
@@ -89,8 +116,26 @@ def next_trading_day_after(signal_d: pd.Timestamp, dates: pd.DatetimeIndex) -> p
     return pd.Timestamp(after[0]).normalize()
 
 
+def _ohlc_to_target_frame(ohlc: pd.DataFrame) -> pd.DataFrame:
+    """Open/High/Low/Close → lowercase Frame für target.py (High/Low optional)."""
+    close = pd.to_numeric(ohlc["Close"], errors="coerce")
+    open_ = pd.to_numeric(
+        ohlc["Open"] if "Open" in ohlc.columns else ohlc["Close"], errors="coerce"
+    )
+    high = pd.to_numeric(
+        ohlc["High"] if "High" in ohlc.columns else ohlc["Close"], errors="coerce"
+    )
+    low = pd.to_numeric(
+        ohlc["Low"] if "Low" in ohlc.columns else ohlc["Close"], errors="coerce"
+    )
+    return pd.DataFrame(
+        {"close": close, "open": open_, "high": high, "low": low},
+        index=pd.to_datetime(ohlc.index).tz_localize(None).normalize(),
+    )
+
+
 def _fixed_y_labels_per_ticker(
-    raw: pd.DataFrame, tickers: list[str]
+    ohlc_by_ticker: dict[str, pd.DataFrame],
 ) -> dict[str, tuple[dict[pd.Timestamp, int], dict[pd.Timestamp, int]]]:
     """Trainings-Labels wie Pipeline: ``cfg.fixed_y_label_mode()`` (z. B. rally_plus_entry)."""
     from lib.stock_rally_v10 import config as _cfg
@@ -98,17 +143,10 @@ def _fixed_y_labels_per_ticker(
 
     per_ticker: dict[str, tuple[dict[pd.Timestamp, int], dict[pd.Timestamp, int]]] = {}
     mode = _cfg.fixed_y_label_mode()
-    for t in tickers:
-        ohlc = _ticker_ohlc(raw, t)
+    for t, ohlc in ohlc_by_ticker.items():
         if ohlc is None or len(ohlc) < 30:
             continue
-        sub = pd.DataFrame(
-            {
-                "close": ohlc["Close"].astype(np.float64).values,
-                "open": ohlc["Open"].astype(np.float64).values,
-            },
-            index=pd.to_datetime(ohlc.index).tz_localize(None).normalize(),
-        )
+        sub = _ohlc_to_target_frame(ohlc)
         rally_arr, target_arr = _create_target_one_ticker_fixed_bands(sub)
         dates = sub.index
         per_ticker[t] = (
@@ -351,6 +389,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
         auto_adjust=True,
         threads=False,
         progress=False,
+        group_by="ticker",
     )
     _n_bar = int(len(raw)) if raw is not None and hasattr(raw, "__len__") else 0
     print(
@@ -466,7 +505,7 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
         "  … Rally/Target je Ticker (feste cfg.FIXED_Y_*-Regel, wie Training) …",
         flush=True,
     )
-    per_ticker = _fixed_y_labels_per_ticker(raw, tickers)
+    per_ticker = _fixed_y_labels_per_ticker(dfs)
 
     if per_ticker:
         sig_r = sig.reset_index(drop=True)
@@ -597,6 +636,15 @@ def main(holdout_df: pd.DataFrame | None = None) -> pd.DataFrame | None:
             f"  H={h}d: n={nn}  Mittel={s.mean():+.2%}  Median={s.median():+.2%}  "
             f"Anteil>0={(s > 0).sum() / nn:.1%}"
         )
+
+    try:
+        from holdout.oos_performance import build_performance_report, write_performance_json
+
+        _perf = build_performance_report(ROOT)
+        _perf_path = write_performance_json(ROOT / "data" / "holdout_oos_performance.json", _perf)
+        print(f"Geschrieben: {_perf_path}  (OOS-Performance-Summary)", flush=True)
+    except Exception as _pe:
+        print(f"Warnung: holdout_oos_performance.json nicht geschrieben ({_pe}).", file=sys.stderr)
 
     return out
 
