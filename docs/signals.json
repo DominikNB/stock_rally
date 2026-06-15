@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-15 23:05",
+  "generated": "2026-06-15 23:42",
   "threshold": 0.7999999999999999,
   "signals": [
     {
@@ -30975,11 +30975,11 @@
       "context_tier_html": "<span class=\"context-tier context-tier--yellow\" title=\"VIX 19.3 unter 20 \u2014 ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Standard</span>"
     }
   ],
-  "signals_all_timeline_including_in_sample_count": 4861,
+  "signals_all_timeline_including_in_sample_count": 4859,
   "signals_html_chart_slots": 815,
   "signals_with_chart_files": 815,
   "chart_storage": "external",
-  "index_html_bytes_utf8": 1473512,
+  "index_html_bytes_utf8": 1477051,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS. Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); index.html unter DOCS_INDEX_HTML_MAX_BYTES."
 }
