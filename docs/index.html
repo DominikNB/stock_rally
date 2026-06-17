@@ -160,7 +160,7 @@
     <body>
     <header>
       <h1>&#128200; Stock Signals</h1>
-      <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: 2026-06-16 08:47</span>
+      <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: 2026-06-17 08:32</span>
     </header>
     <div class="page-wrap">
     
@@ -217,12 +217,12 @@
       <div class="section ampel-filter-bar" id="ampel-filter">
         <h2>OOS-Signale nach Kontext-Ampel</h2>
         <p class="section-lead">
-          Alle <strong>815</strong> FINAL-OOS-Signale (aus <code>signals.json</code>).
+          Alle <strong>823</strong> FINAL-OOS-Signale (aus <code>signals.json</code>).
           Charts werden mitgefiltert; die Tabelle listet jeden Treffer der gewählten Farbe.
         </p>
         <div class="ampel-filter-btns" role="group" aria-label="Kontext-Ampel Filter">
-          <button type="button" class="ampel-filter-btn ampel-filter-btn--all is-active" data-ampel="all">Alle (815)</button>
-          <button type="button" class="ampel-filter-btn ampel-filter-btn--red" data-ampel="red">Rot (194)</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--all is-active" data-ampel="all">Alle (823)</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--red" data-ampel="red">Rot (202)</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--yellow" data-ampel="yellow">Gelb (444)</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--green" data-ampel="green">Grün (177)</button>
         </div>
@@ -242,7 +242,7 @@
         <h2>KI-Analyse — aktuelle Signale</h2>
         <p class="section-lead">
           Gemini-Einordnung der <strong>neuesten Meta-Hits</strong> (Datenstand letzter Signaltag in der Matrix:
-          <strong>2026-06-15</strong>). Keine Anlageberatung.
+          <strong>2026-06-16</strong>). Keine Anlageberatung.
         </p>
         <div class="analysis-llm-body prose-analysis"><p>Makro-Intro</p>
 <p>Am Signaltag, dem 15. Juni 2026, zeigte sich ein gemischtes, aber tendenziell positives Marktumfeld. Der deutsche Leitindex DAX (<code class="analysis-code">^GDAXI</code>) verzeichnete eine Tagesrendite von 1,76 %, während der breitere US-Markt, repräsentiert durch den S&amp;P 500 (<code class="analysis-code">^GSPC</code>), einen Anstieg von 0,50 % aufwies. Das VIX-Regime wurde jedoch als &quot;rot&quot; eingestuft (<code class="analysis-code">regime_vix_level</code> von 17,68), was auf erhöhte Marktstressfaktoren oder Unsicherheit hindeutet. Der Kontext des &quot;roten&quot; Ampelstatus weist auf eine schwache Performance von Gold hin (GLD -2,70 % gegenüber einem Median von +1,22 %), was eine untypische Reaktion für ein solches Marktregime darstellt und auf spezifische Marktspannungen hindeuten könnte, die keine Flucht in Edelmetalle begünstigen. Gleichzeitig wird von einer &quot;News-Ruhe&quot; gesprochen, was einen potenziellen Widerspruch zwischen technischem Stresssignal und wahrgenommener Nachrichtenlage darstellt.</p>
@@ -272,24 +272,108 @@
       </div>
 
       <div class="section signals-recent-section">
-        <h2>Letzte 30 Tage <span class="badge">41</span></h2>
+        <h2>Letzte 30 Tage <span class="badge">49</span></h2>
         <p class="section-lead">
-          41 von 815 Chart-Slots mit Signaldatum in den letzten 30 Kalendertagen
+          49 von 823 Chart-Slots mit Signaldatum in den letzten 30 Kalendertagen
           (grüner Kartenrand). Tippen auf Chart = Vollbild.
         </p>
         <div class="signals-grid">
       <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
         <div class="sig-head">
-          <span class="sig-ticker">ACT.DE<span class="sig-recent-tag">≤30 Tage</span></span>
-          <span class="sig-company">AlzChem</span>
+          <span class="sig-ticker">FRA.DE<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Fraport</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): industrials">Industrials</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-16</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:86%">0.866</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Industrials · Airports &amp; Air Services</p>
+        
+        <a class="sig-chart-link" href="charts/full/FRA.DE_2026-06-16.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/FRA.DE_2026-06-16.png" alt="FRA.DE 2026-06-16" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-16</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">BKNG<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Booking</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): consumer_cyclical">Consumer Cyclical</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-16</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:85%">0.854</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Consumer Cyclical · Travel Services</p>
+        
+        <a class="sig-chart-link" href="charts/full/BKNG_2026-06-16.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/BKNG_2026-06-16.png" alt="BKNG 2026-06-16" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-16</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">CON.DE<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Continental</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): consumer_cyclical">Consumer Cyclical</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-16</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:82%">0.823</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Consumer Cyclical · Auto Parts</p>
+        
+        <a class="sig-chart-link" href="charts/full/CON.DE_2026-06-16.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/CON.DE_2026-06-16.png" alt="CON.DE 2026-06-16" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-16</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">ANET<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Arista Networks</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-16</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:80%">0.805</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Computer Hardware</p>
+        
+        <a class="sig-chart-link" href="charts/full/ANET_2026-06-16.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ANET_2026-06-16.png" alt="ANET 2026-06-16" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-16</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">FCX<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Freeport-McMoRan</span>
           <span class="sig-sector" title="Modell-Cluster (News/Features): basic_materials">Basic Materials</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-16</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:80%">0.801</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Basic Materials · Copper</p>
+        
+        <a class="sig-chart-link" href="charts/full/FCX_2026-06-16.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/FCX_2026-06-16.png" alt="FCX 2026-06-16" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-16</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">INTC<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Intel</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-15</span>
           <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
-          <div class="score-bar-bg"><div class="score-bar" style="width:83%">0.832</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:91%">0.912</div></div>
         </div>
-        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
         
-        <a class="sig-chart-link" href="charts/full/ACT.DE_2026-06-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2026-06-15.png" alt="ACT.DE 2026-06-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <a class="sig-chart-link" href="charts/full/INTC_2026-06-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/INTC_2026-06-15.png" alt="INTC 2026-06-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">ARM<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Arm Holdings</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-15</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:90%">0.905</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Technology · Semiconductors</p>
+        
+        <a class="sig-chart-link" href="charts/full/ARM_2026-06-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ARM_2026-06-15.png" alt="ARM 2026-06-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
       <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
@@ -299,11 +383,39 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): basic_materials">Basic Materials</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-15</span>
           <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
-          <div class="score-bar-bg"><div class="score-bar" style="width:82%">0.824</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:87%">0.876</div></div>
         </div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
         
         <a class="sig-chart-link" href="charts/full/ALB_2026-06-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ALB_2026-06-15.png" alt="ALB 2026-06-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">ACT.DE<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">AlzChem</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): basic_materials">Basic Materials</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-15</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:87%">0.872</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Basic Materials · Specialty Chemicals</p>
+        
+        <a class="sig-chart-link" href="charts/full/ACT.DE_2026-06-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/ACT.DE_2026-06-15.png" alt="ACT.DE 2026-06-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
+        <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
+      </div>
+      <div class="sig-card sig-card--recent" data-vix-ampel="red" data-context-tier="red">
+        <div class="sig-head">
+          <span class="sig-ticker">VH2.DE<span class="sig-recent-tag">≤30 Tage</span></span>
+          <span class="sig-company">Friedrich Vorwerk</span>
+          <span class="sig-sector" title="Modell-Cluster (News/Features): industrials">Industrials</span>
+          <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2026-06-15</span>
+          <span class="context-tier context-tier--red" title="Makro-Termin (z. B. FOMC, CPI) innerhalb von ±2 Handelstagen — historisch schwächere OOS-Renditen. Modell-Signal bleibt gültig."><span class="context-tier-dot" aria-hidden="true"></span>Makro-Risiko</span>
+          <div class="score-bar-bg"><div class="score-bar" style="width:82%">0.829</div></div>
+        </div>
+        <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Industrials · Engineering &amp; Construction</p>
+        
+        <a class="sig-chart-link" href="charts/full/VH2.DE_2026-06-15.png" target="_blank" rel="noopener noreferrer"><img class="sig-chart-thumb" src="charts/thumb/VH2.DE_2026-06-15.png" alt="VH2.DE 2026-06-15" loading="lazy"></a><p class="sig-chart-tap">Tippen für Vollbild (im Browser vergrößerbar)</p>
         <p class="sig-chart-note" style="font-size:0.72em;color:#546e7a;margin-top:6px;line-height:1.35">Merkmale und Kursbasis für dieses Signal: bis einschließlich <strong>2026-06-15</strong> (nicht der Zeitpunkt der Berechnung); rechts vom grünen Strich nur nachgelagerter Kurs (Anzeige) — kein Look-ahead fürs Modell.</p>
       </div>
       <div class="sig-card sig-card--recent" data-vix-ampel="yellow" data-context-tier="yellow">
@@ -862,7 +974,7 @@
       <div class="section signals-archive-section">
         <h2>Ältere OOS-Signale mit Chart <span class="badge">774</span></h2>
         <p class="section-lead">
-          Archiv: 774 ältere Signale mit Chart (von 815 FINAL-OOS gesamt).
+          Archiv: 774 ältere Signale mit Chart (von 823 FINAL-OOS gesamt).
         </p>
         <div class="signals-grid">
       <div class="sig-card" data-vix-ampel="yellow" data-context-tier="yellow">
@@ -10294,7 +10406,7 @@
           <span class="sig-sector" title="Modell-Cluster (News/Features): technology">Technology</span>
           <span class="sig-date" title="Kurs- und Merkmalsdaten bis einschließlich diesem Tag — nicht der Laufzeitpunkt der Berechnung"><span class="sig-date-pre">Daten bis</span> 2025-02-11</span>
           <span class="context-tier context-tier--yellow" title="VIX 16.0 unter 20 — ruhigeres Marktregime; Modell-Signal ohne Makro-Warnung."><span class="context-tier-dot" aria-hidden="true"></span>Standard</span>
-          <div class="score-bar-bg"><div class="score-bar" style="width:86%">0.861</div></div>
+          <div class="score-bar-bg"><div class="score-bar" style="width:86%">0.860</div></div>
         </div>
         <p class="sig-gics" title="Näherung aus Yahoo Finance; keine offiziellen MSCI-GICS-Codes im Free-Tier">ICB_or_GICS_Yahoo — Technology · Software - Infrastructure</p>
         
@@ -11709,11 +11821,11 @@
           <div class="chip">Threshold <strong>0.800</strong></div>
           <div class="chip" title="Meta-Wahrscheinlichkeit pro Signal — unabhängig vom produktiven Threshold">prob typisch 0.20–0.50</div>
           <div class="chip">Tickers <strong>277</strong></div>
-          <div class="chip" title="Externe PNG unter docs/charts/ — index.html bleibt unter 100 MiB">Charts <strong>815</strong> / 815 OOS</div>
-          <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>815</strong></div>
+          <div class="chip" title="Externe PNG unter docs/charts/ — index.html bleibt unter 100 MiB">Charts <strong>823</strong> / 823 OOS</div>
+          <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>823</strong></div>
           <div class="chip" title="Letzter Handelstag der THRESHOLD-Stichprobe bei der Kalibrierung von best_threshold">Threshold-Kalibrierung: Stichprobe bis <strong>2024-10-21</strong></div>
-          <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>2026-06-15</strong></div>
-          <div class="chip">Run <strong>2026-06-16 08:47</strong></div>
+          <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>2026-06-16</strong></div>
+          <div class="chip">Run <strong>2026-06-17 08:32</strong></div>
         </div>
       </div>
 
