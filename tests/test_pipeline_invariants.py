@@ -147,6 +147,45 @@ def test_ticker_ohlc_synthesizes_high_low_when_missing():
     assert list(ohlc2.columns) == ["Open", "Close", "High", "Low"]
 
 
+def test_read_signals_for_latest_day_filters_daily_csv(tmp_path: Path, monkeypatch):
+    import pandas as pd
+
+    from scripts import website_analysis_common as wac
+
+    daily = tmp_path / "master_daily_update.csv"
+    pd.DataFrame(
+        {
+            "Date": ["2026-06-15", "2026-06-16", "2026-06-16"],
+            "ticker": ["A", "B", "C"],
+            "prob": [0.9, 0.8, 0.7],
+            "threshold_used": [0.5, 0.5, 0.5],
+        }
+    ).to_csv(daily, index=False)
+    monkeypatch.setattr(wac, "DAILY_CSV", daily)
+    monkeypatch.setattr(wac, "COMPLETE_CSV", tmp_path / "missing_complete.csv")
+    monkeypatch.setattr(wac, "HOLDOUT_CSV", tmp_path / "missing_holdout.csv")
+
+    latest, sub = wac.read_signals_for_latest_day()
+    assert latest == "2026-06-16"
+    assert len(sub) == 2
+    assert set(sub["ticker"]) == {"B", "C"}
+
+
+def test_llm_analysis_is_stale_detects_older_meta(tmp_path: Path, monkeypatch):
+    from scripts import website_analysis_common as wac
+
+    daily = tmp_path / "master_daily_update.csv"
+    daily.write_text("Date,ticker\n2026-06-16,X\n", encoding="utf-8")
+    meta = tmp_path / "analysis_llm_last_run_meta.json"
+    meta.write_text('{"signaltag_csv": "2026-06-15"}\n', encoding="utf-8")
+    monkeypatch.setattr(wac, "DAILY_CSV", daily)
+    monkeypatch.setattr(wac, "OUT_RUN_META", meta)
+
+    assert wac.llm_analysis_is_stale() is True
+    assert wac.llm_analysis_is_stale("2026-06-16") is True
+    assert wac.llm_analysis_is_stale("2026-06-15") is True
+
+
 def test_save_base_feature_shap_report_writes_json_and_csv(tmp_path: Path):
     from lib.base_feature_shap_export import (
         build_base_feature_shap_payload,

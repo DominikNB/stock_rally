@@ -175,6 +175,17 @@ def _chart_file_slug(ticker: str, sig_date_str: str) -> str:
     return f"{safe_t}_{safe_d}"
 
 
+def _existing_chart_paths_on_disk(
+    docs_dir: Path, ticker: str, sig_date_str: str
+) -> tuple[str, str] | None:
+    slug = _chart_file_slug(ticker, sig_date_str)
+    thumb = docs_dir / "charts" / "thumb" / f"{slug}.png"
+    full = docs_dir / "charts" / "full" / f"{slug}.png"
+    if thumb.is_file() and full.is_file():
+        return f"charts/thumb/{slug}.png", f"charts/full/{slug}.png"
+    return None
+
+
 def _persist_chart_files(
     fig: Any,
     *,
@@ -310,283 +321,313 @@ def _run_phase17(c: Any) -> None:
     else:
         print("[Gemini] Kein GEMINI_API_KEY — Smoke-Test übersprungen.", flush=True)
 
-    print("Preparing full-history feature matrix …")
-    if c.df_features is None or len(c.df_features) == 0:
-        print(
-            "  FEHLER Phase17: c.df_features ist leer — Full-History-Scoring und HTML werden übersprungen.",
-            flush=True,
-        )
-        return
-    df_s = merge_news_shard_from_best_params(c.df_features, c.best_params)
-    if len(df_s) == 0:
-        print(
-            "  FEHLER Phase17: df_features nach News-Merge leer — Abbruch Phase17.",
-            flush=True,
-        )
-        return
-    _sent_pad = float(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
-    _miss_fc = [x for x in c.FEAT_COLS if x not in df_s.columns]
-    if _miss_fc:
-        _head = ", ".join(_miss_fc[:5])
-        _more = f" (+{len(_miss_fc) - 5} weitere)" if len(_miss_fc) > 5 else ""
-        print(
-            f"[Phase17] {len(_miss_fc)} FEAT_COLS-Spalte(n) fehlen nach News-Merge — "
-            f"mit Sentinel {_sent_pad:g} auffüllen (z. B. {_head}{_more}).",
-            flush=True,
-        )
-        for _c in _miss_fc:
-            df_s[_c] = np.float32(_sent_pad)
-    n_rows = len(df_s)
-    feat_arr = _feat_matrix_float32(df_s, c.FEAT_COLS)
-    _nan_cells, _inf_cells, _bad_rows = _log_bad_feat_cells_from_array(
-        feat_arr, c.FEAT_COLS, n_rows
-    )
-    if _nan_cells or _inf_cells:
-        _nan_s = getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8)
-        print(f"  Für Phase17-Scoring werden diese Werte auf Sentinel {_nan_s} gesetzt.", flush=True)
-    _nan_sentinel = np.float32(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
-    feat_arr = np.nan_to_num(
-        feat_arr,
-        nan=_nan_sentinel,
-        posinf=_nan_sentinel,
-        neginf=_nan_sentinel,
-        copy=False,
-    ).astype(np.float32, copy=False)
-    _keep_cols = _phase17_filter_frame_columns(c, df_s)
-    df_s = _phase17_drop_heavy_columns(df_s, c.FEAT_COLS, _keep_cols)
-    if hasattr(c, "df_features"):
-        c.df_features = None
-    gc.collect()
-    print(
-        f'  {len(df_s):,} Zeilen, {df_s["ticker"].nunique()} Ticker, '
-        f'{len(df_s.columns)} Spalten (nach FEAT_COLS-Drop) — building meta features …',
-        flush=True,
-    )
-
-    probs_all = _phase17_meta_predict_proba_batched(c, feat_arr)
-    del feat_arr
-    gc.collect()
-    _cal = getattr(c, "meta_proba_calibrator", None)
-    if isinstance(_cal, dict):
-        _m = str(_cal.get("method", "")).strip().lower()
-        _mdl = _cal.get("model")
-        try:
-            p = np.clip(np.asarray(probs_all, dtype=np.float64), 1e-6, 1.0 - 1e-6)
-            if _m == "sigmoid" and _mdl is not None:
-                lg = np.log(p / (1.0 - p)).reshape(-1, 1)
-                probs_all = _mdl.predict_proba(lg)[:, 1]
-            elif _m == "isotonic" and _mdl is not None:
-                probs_all = np.asarray(_mdl.predict(p), dtype=np.float64)
-        except Exception as _e_cal:
-            print(f"Warnung: Meta-Proba-Kalibrierung im Scoring fehlgeschlagen ({_e_cal!r}).", flush=True)
-    df_s["prob"] = probs_all
-    print("  Scoring done.", flush=True)
-    _score_cols = [c for c in (*_keep_cols, "prob") if c in df_s.columns]
-
-    _rows_for_signal_calendar_day = c._rows_for_signal_calendar_day
-    best_threshold = c.best_threshold
-    COMPANY_NAMES = c.COMPANY_NAMES
-    TICKER_TO_SECTOR = c.TICKER_TO_SECTOR
-    df_final = c.df_final
-
-    _tickers_sorted = sorted(
-        {
-            s
-            for s in df_s["ticker"].dropna().astype(str).str.strip().unique()
-            if s and s.lower() != "nan" and s not in ("0.0", "0")
-        }
-    )
-    if not _tickers_sorted:
-        _raw = sorted(df_s["ticker"].dropna().astype(str).str.strip().unique())
-        print(
-            "  WARNUNG Phase17: Keine gültigen Ticker nach Filter (0.0/0 ausgeschlossen). "
-            f"Roh-Unique (max. 15): {_raw[:15]} — Ticker-Spalte in Features prüfen.",
-            flush=True,
-        )
-        _tickers_sorted = [x for x in _raw if x and x.lower() != "nan"]
-    _nt = len(_tickers_sorted)
-    print(
-        "  Branchenklassifikation (Yahoo sector + industry via yfinance) für Website & Holdout-CSV …",
-        flush=True,
-    )
-    from lib.stock_rally_v10.equity_classification import (
-        CLASSIFICATION_COLUMN_KEYS,
-        build_classification_cache,
-    )
-
-    _class_cache = build_classification_cache(_tickers_sorted)
-    _rw = getattr(c, "rsi_w", None)
-    if _rw is None:
-        _rw = int(c.SEED_PARAMS.get("rsi_window", 14))
-    else:
-        _rw = int(_rw)
-    _fkw: dict[str, Any] = {
-        "consecutive_days": c.CONSECUTIVE_DAYS,
-        "signal_cooldown_days": c.SIGNAL_COOLDOWN_DAYS,
-        "rsi_window": _rw,
-        "signal_skip_near_peak": bool(c.SIGNAL_SKIP_NEAR_PEAK),
-        "peak_lookback_days": int(c.PEAK_LOOKBACK_DAYS),
-        "peak_min_dist_from_high_pct": float(c.PEAK_MIN_DIST_FROM_HIGH_PCT),
-        "signal_max_rsi": getattr(c, "SIGNAL_MAX_RSI", None),
-        "signal_max_vol_stress_z": getattr(c, "SIGNAL_MAX_VOL_STRESS_Z", None),
-        "signal_min_blue_sky_volume_z": getattr(c, "SIGNAL_MIN_BLUE_SKY_VOLUME_Z", None),
-        "mult_final_threshold_1": getattr(c, "MULT_FINAL_THRESHOLD_1", 1.0),
-        "mult_final_threshold_2": getattr(c, "MULT_FINAL_THRESHOLD_2", 1.0),
-        "mult_final_threshold_3": getattr(c, "MULT_FINAL_THRESHOLD_3", 1.0),
-        "dyn_vvix_trigger": getattr(c, "DYN_VVIX_TRIGGER", 8.2),
-        "dyn_rsi_trigger": getattr(c, "DYN_RSI_TRIGGER", 75.0),
-        "dyn_bb_pband_trigger": getattr(c, "DYN_BB_PBAND_TRIGGER", 1.02),
-    }
-    _ts_norm = df_s["ticker"].astype(str).str.strip()
-    _tasks = [
-        (t, df_s.loc[_ts_norm == str(t), _score_cols].sort_values("Date"))
-        for t in _tickers_sorted
-    ]
-    _n_jobs = int(getattr(c, "PHASE17_SIGNAL_FILTER_JOBS", -1))
-    _pbatch = int(getattr(c, "PHASE17_SIGNAL_FILTER_PROGRESS_BATCH", 0) or 0)
-    _step = _pbatch if _pbatch > 0 else max(1, _nt // 10)
-    if _n_jobs != 1 and len(_tasks) >= 4:
-        print(
-            f"  Signale filtern: {_nt} Ticker parallel (joblib loky, n_jobs={_n_jobs}, "
-            f"Fortschritt alle {_step}) …",
-            flush=True,
-        )
-        _pairs: list[tuple[str, np.ndarray]] = []
-        for i in range(0, len(_tasks), _step):
-            batch = _tasks[i : i + _step]
-            chunk = Parallel(n_jobs=_n_jobs, backend="loky", verbose=0)(
-                delayed(_phase17_apply_signals_one)(t, sub, float(best_threshold), _fkw)
-                for t, sub in batch
-            )
-            _pairs.extend(chunk)
-            done = min(i + len(batch), len(_tasks))
-            print(f"    … {done}/{_nt} Ticker (Signal-Filter)", flush=True)
-    else:
-        print(
-            f"  Signale filtern: {_nt} Ticker seriell "
-            f"(PHASE17_SIGNAL_FILTER_JOBS=1 oder <4 Ticker), Fortschritt alle {_step} …",
-            flush=True,
-        )
-        _pairs = []
-        for i in range(0, len(_tasks), _step):
-            batch = _tasks[i : i + _step]
-            for t, sub in batch:
-                _pairs.append(_phase17_apply_signals_one(t, sub, float(best_threshold), _fkw))
-            done = min(i + len(batch), len(_tasks))
-            print(f"    … {done}/{_nt} Ticker (Signal-Filter)", flush=True)
-
-    all_hist_signals = []
-    for ticker, sig_dates in _pairs:
-        sub = df_s.loc[_ts_norm == str(ticker), _score_cols].sort_values("Date")
-        for d in sig_dates:
-            match = _rows_for_signal_calendar_day(sub, d)
-            if match.empty:
-                continue
-            _cl = _class_cache.get(ticker) or {}
-            _cls = {k: _cl.get(k, "") for k in CLASSIFICATION_COLUMN_KEYS}
-            all_hist_signals.append(
-                {
-                    "ticker": ticker,
-                    "company": COMPANY_NAMES.get(ticker, ticker),
-                    "sector": TICKER_TO_SECTOR.get(ticker, "—"),
-                    **_cls,
-                    "date": str(d)[:10],
-                    "prob": float(match["prob"].values[0]),
-                }
-            )
-
-    holdout_keys = set(
-        zip(df_final["ticker"], pd.to_datetime(df_final["Date"]).dt.strftime("%Y-%m-%d"))
-    )
-    signals_holdout_final = [s for s in all_hist_signals if (s["ticker"], s["date"]) in holdout_keys]
-    _sort_website_signals_newest_first(signals_holdout_final)
-    _sort_website_signals_newest_first(all_hist_signals)
-    print(f"\n{len(all_hist_signals)} historical signals across all tickers.")
-    print(f"{len(signals_holdout_final)} signals in FINAL holdout (unbiased / OOS analysis).")
-
-    Path("data").mkdir(parents=True, exist_ok=True)
-    _ho_rows = [
-        {
-            "ticker": s["ticker"],
-            "Date": s["date"],
-            "prob": s["prob"],
-            "threshold_used": float(best_threshold),
-            "company": s["company"],
-            "sector": s["sector"],
-            **{k: s.get(k, "") for k in CLASSIFICATION_COLUMN_KEYS},
-        }
-        for s in signals_holdout_final
-    ]
-    if str(Path.cwd()) not in sys.path:
-        sys.path.insert(0, str(Path.cwd()))
-    from holdout.build_holdout_signals_master import main as _build_holdout_master
-
-    if _ho_rows:
-        _exported_ho = _build_holdout_master(holdout_df=pd.DataFrame(_ho_rows))
-        if _exported_ho is not None and len(_exported_ho) > 0:
-            _cls_keys = list(CLASSIFICATION_COLUMN_KEYS)
-            from lib.signal_context_tier import attach_signal_context_tier
-
-            _ctx_cols = (
-                "regime_vix_level",
-                "macro_event_within_2bd",
-            )
-            signals_holdout_final = []
-            for _, _r in _exported_ho.iterrows():
-                _sig = {
-                    "ticker": str(_r["ticker"]),
-                    "company": str(_r.get("company", _r["ticker"])),
-                    "sector": str(_r.get("sector", "—")),
-                    **{k: str(_r.get(k, "")) for k in _cls_keys},
-                    "date": str(_r["Date"])[:10],
-                    "prob": float(_r["prob"]),
-                }
-                for _cc in _ctx_cols:
-                    if _cc not in _r.index:
-                        continue
-                    _v = _r.get(_cc)
-                    if _cc == "macro_event_within_2bd":
-                        if _v is not None and not (isinstance(_v, float) and _v != _v):
-                            if isinstance(_v, (bool, np.bool_)):
-                                _sig[_cc] = bool(_v)
-                            elif isinstance(_v, (int, float)):
-                                _sig[_cc] = bool(int(_v))
-                            else:
-                                _sig[_cc] = str(_v).strip().lower() in {"true", "1", "yes"}
-                    elif _v is not None and not (isinstance(_v, float) and _v != _v):
-                        _sig[_cc] = float(_v)
-                attach_signal_context_tier(_sig)
-                signals_holdout_final.append(_sig)
-            _sort_website_signals_newest_first(signals_holdout_final)
+    _signals_override = getattr(c, "PHASE17_WEBSITE_SIGNALS_OVERRIDE", None)
+    if _signals_override is not None:
+        if c.df_features is None or len(c.df_features) == 0:
             print(
-                f"wrote data/master_complete.csv & master_daily_update.csv (LLM-Spalten) "
-                f"({len(_exported_ho)} holdout rows)"
-            )
-        else:
-            signals_holdout_final = []
-            print(
-                "Holdout-CSV: 0 Zeilen nach build_holdout_signals_master.",
+                "  FEHLER Phase17: df_features leer — Override-Signale brauchen Kursdaten für Charts.",
                 flush=True,
             )
-    else:
+            return
+        best_threshold = float(c.best_threshold)
+        website_signals = [dict(s) for s in _signals_override]
+        signals_holdout_final = list(website_signals)
+        all_hist_signals = list(website_signals)
+        _sort_website_signals_newest_first(website_signals)
+        _sort_website_signals_newest_first(signals_holdout_final)
         print(
-            "Holdout-CSV übersprungen: 0 Signale im FINAL-Zeitfenster (Schwelle + Filter + Datenlage). "
-            "Kein KeyError mehr — master_complete wird nicht überschrieben.",
+            f"Phase17: WEBSITE_SIGNALS_OVERRIDE — {len(website_signals)} Signale "
+            f"(kein Meta-Rescoring; Charts/HTML aus bestehender Liste).",
+            flush=True,
+        )
+        print(f"{len(all_hist_signals)} historical signals (override, keine Neuberechnung).")
+        print(f"{len(signals_holdout_final)} signals in FINAL holdout (override).")
+        df_s = c.df_features
+        print(
+            f"Website/OOS-Export: {len(website_signals)} Signale (override, kein Rescoring).",
             flush=True,
         )
 
-    # Website + öffentliches signals.json: nur echte OOS — keine Signale aus TRAIN/THRESHOLD-Kalender.
-    website_signals = list(signals_holdout_final)
-    _sort_website_signals_newest_first(website_signals)
-    print(
-        f"Website/OOS-Export: {len(website_signals)} Signale "
-        f"(intern für Diagnose: {len(all_hist_signals)} über alle Zeiten mit Schwelle+Filter).",
-        flush=True,
-    )
+    if _signals_override is None:
+        print("Preparing full-history feature matrix …")
+        if c.df_features is None or len(c.df_features) == 0:
+            print(
+                "  FEHLER Phase17: c.df_features ist leer — Full-History-Scoring und HTML werden übersprungen.",
+                flush=True,
+            )
+            return
+        df_s = merge_news_shard_from_best_params(c.df_features, c.best_params)
+        if len(df_s) == 0:
+            print(
+                "  FEHLER Phase17: df_features nach News-Merge leer — Abbruch Phase17.",
+                flush=True,
+            )
+            return
+        _sent_pad = float(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+        _miss_fc = [x for x in c.FEAT_COLS if x not in df_s.columns]
+        if _miss_fc:
+            _head = ", ".join(_miss_fc[:5])
+            _more = f" (+{len(_miss_fc) - 5} weitere)" if len(_miss_fc) > 5 else ""
+            print(
+                f"[Phase17] {len(_miss_fc)} FEAT_COLS-Spalte(n) fehlen nach News-Merge — "
+                f"mit Sentinel {_sent_pad:g} auffüllen (z. B. {_head}{_more}).",
+                flush=True,
+            )
+            for _c in _miss_fc:
+                df_s[_c] = np.float32(_sent_pad)
+        n_rows = len(df_s)
+        feat_arr = _feat_matrix_float32(df_s, c.FEAT_COLS)
+        _nan_cells, _inf_cells, _bad_rows = _log_bad_feat_cells_from_array(
+            feat_arr, c.FEAT_COLS, n_rows
+        )
+        if _nan_cells or _inf_cells:
+            _nan_s = getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8)
+            print(f"  Für Phase17-Scoring werden diese Werte auf Sentinel {_nan_s} gesetzt.", flush=True)
+        _nan_sentinel = np.float32(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))
+        feat_arr = np.nan_to_num(
+            feat_arr,
+            nan=_nan_sentinel,
+            posinf=_nan_sentinel,
+            neginf=_nan_sentinel,
+            copy=False,
+        ).astype(np.float32, copy=False)
+        _keep_cols = _phase17_filter_frame_columns(c, df_s)
+        df_s = _phase17_drop_heavy_columns(df_s, c.FEAT_COLS, _keep_cols)
+        if hasattr(c, "df_features"):
+            c.df_features = None
+        gc.collect()
+        print(
+            f'  {len(df_s):,} Zeilen, {df_s["ticker"].nunique()} Ticker, '
+            f'{len(df_s.columns)} Spalten (nach FEAT_COLS-Drop) — building meta features …',
+            flush=True,
+        )
+
+        probs_all = _phase17_meta_predict_proba_batched(c, feat_arr)
+        del feat_arr
+        gc.collect()
+        _cal = getattr(c, "meta_proba_calibrator", None)
+        if isinstance(_cal, dict):
+            _m = str(_cal.get("method", "")).strip().lower()
+            _mdl = _cal.get("model")
+            try:
+                p = np.clip(np.asarray(probs_all, dtype=np.float64), 1e-6, 1.0 - 1e-6)
+                if _m == "sigmoid" and _mdl is not None:
+                    lg = np.log(p / (1.0 - p)).reshape(-1, 1)
+                    probs_all = _mdl.predict_proba(lg)[:, 1]
+                elif _m == "isotonic" and _mdl is not None:
+                    probs_all = np.asarray(_mdl.predict(p), dtype=np.float64)
+            except Exception as _e_cal:
+                print(f"Warnung: Meta-Proba-Kalibrierung im Scoring fehlgeschlagen ({_e_cal!r}).", flush=True)
+        df_s["prob"] = probs_all
+        print("  Scoring done.", flush=True)
+        _score_cols = [c for c in (*_keep_cols, "prob") if c in df_s.columns]
+
+        _rows_for_signal_calendar_day = c._rows_for_signal_calendar_day
+        best_threshold = c.best_threshold
+        COMPANY_NAMES = c.COMPANY_NAMES
+        TICKER_TO_SECTOR = c.TICKER_TO_SECTOR
+        df_final = c.df_final
+
+        _tickers_sorted = sorted(
+            {
+                s
+                for s in df_s["ticker"].dropna().astype(str).str.strip().unique()
+                if s and s.lower() != "nan" and s not in ("0.0", "0")
+            }
+        )
+        if not _tickers_sorted:
+            _raw = sorted(df_s["ticker"].dropna().astype(str).str.strip().unique())
+            print(
+                "  WARNUNG Phase17: Keine gültigen Ticker nach Filter (0.0/0 ausgeschlossen). "
+                f"Roh-Unique (max. 15): {_raw[:15]} — Ticker-Spalte in Features prüfen.",
+                flush=True,
+            )
+            _tickers_sorted = [x for x in _raw if x and x.lower() != "nan"]
+        _nt = len(_tickers_sorted)
+        print(
+            "  Branchenklassifikation (Yahoo sector + industry via yfinance) für Website & Holdout-CSV …",
+            flush=True,
+        )
+        from lib.stock_rally_v10.equity_classification import (
+            CLASSIFICATION_COLUMN_KEYS,
+            build_classification_cache,
+        )
+
+        _class_cache = build_classification_cache(_tickers_sorted)
+        _rw = getattr(c, "rsi_w", None)
+        if _rw is None:
+            _rw = int(c.SEED_PARAMS.get("rsi_window", 14))
+        else:
+            _rw = int(_rw)
+        _fkw: dict[str, Any] = {
+            "consecutive_days": c.CONSECUTIVE_DAYS,
+            "signal_cooldown_days": c.SIGNAL_COOLDOWN_DAYS,
+            "rsi_window": _rw,
+            "signal_skip_near_peak": bool(c.SIGNAL_SKIP_NEAR_PEAK),
+            "peak_lookback_days": int(c.PEAK_LOOKBACK_DAYS),
+            "peak_min_dist_from_high_pct": float(c.PEAK_MIN_DIST_FROM_HIGH_PCT),
+            "signal_max_rsi": getattr(c, "SIGNAL_MAX_RSI", None),
+            "signal_max_vol_stress_z": getattr(c, "SIGNAL_MAX_VOL_STRESS_Z", None),
+            "signal_min_blue_sky_volume_z": getattr(c, "SIGNAL_MIN_BLUE_SKY_VOLUME_Z", None),
+            "mult_final_threshold_1": getattr(c, "MULT_FINAL_THRESHOLD_1", 1.0),
+            "mult_final_threshold_2": getattr(c, "MULT_FINAL_THRESHOLD_2", 1.0),
+            "mult_final_threshold_3": getattr(c, "MULT_FINAL_THRESHOLD_3", 1.0),
+            "dyn_vvix_trigger": getattr(c, "DYN_VVIX_TRIGGER", 8.2),
+            "dyn_rsi_trigger": getattr(c, "DYN_RSI_TRIGGER", 75.0),
+            "dyn_bb_pband_trigger": getattr(c, "DYN_BB_PBAND_TRIGGER", 1.02),
+        }
+        _ts_norm = df_s["ticker"].astype(str).str.strip()
+        _tasks = [
+            (t, df_s.loc[_ts_norm == str(t), _score_cols].sort_values("Date"))
+            for t in _tickers_sorted
+        ]
+        _n_jobs = int(getattr(c, "PHASE17_SIGNAL_FILTER_JOBS", -1))
+        _pbatch = int(getattr(c, "PHASE17_SIGNAL_FILTER_PROGRESS_BATCH", 0) or 0)
+        _step = _pbatch if _pbatch > 0 else max(1, _nt // 10)
+        if _n_jobs != 1 and len(_tasks) >= 4:
+            print(
+                f"  Signale filtern: {_nt} Ticker parallel (joblib loky, n_jobs={_n_jobs}, "
+                f"Fortschritt alle {_step}) …",
+                flush=True,
+            )
+            _pairs: list[tuple[str, np.ndarray]] = []
+            for i in range(0, len(_tasks), _step):
+                batch = _tasks[i : i + _step]
+                chunk = Parallel(n_jobs=_n_jobs, backend="loky", verbose=0)(
+                    delayed(_phase17_apply_signals_one)(t, sub, float(best_threshold), _fkw)
+                    for t, sub in batch
+                )
+                _pairs.extend(chunk)
+                done = min(i + len(batch), len(_tasks))
+                print(f"    … {done}/{_nt} Ticker (Signal-Filter)", flush=True)
+        else:
+            print(
+                f"  Signale filtern: {_nt} Ticker seriell "
+                f"(PHASE17_SIGNAL_FILTER_JOBS=1 oder <4 Ticker), Fortschritt alle {_step} …",
+                flush=True,
+            )
+            _pairs = []
+            for i in range(0, len(_tasks), _step):
+                batch = _tasks[i : i + _step]
+                for t, sub in batch:
+                    _pairs.append(_phase17_apply_signals_one(t, sub, float(best_threshold), _fkw))
+                done = min(i + len(batch), len(_tasks))
+                print(f"    … {done}/{_nt} Ticker (Signal-Filter)", flush=True)
+
+        all_hist_signals = []
+        for ticker, sig_dates in _pairs:
+            sub = df_s.loc[_ts_norm == str(ticker), _score_cols].sort_values("Date")
+            for d in sig_dates:
+                match = _rows_for_signal_calendar_day(sub, d)
+                if match.empty:
+                    continue
+                _cl = _class_cache.get(ticker) or {}
+                _cls = {k: _cl.get(k, "") for k in CLASSIFICATION_COLUMN_KEYS}
+                all_hist_signals.append(
+                    {
+                        "ticker": ticker,
+                        "company": COMPANY_NAMES.get(ticker, ticker),
+                        "sector": TICKER_TO_SECTOR.get(ticker, "—"),
+                        **_cls,
+                        "date": str(d)[:10],
+                        "prob": float(match["prob"].values[0]),
+                    }
+                )
+
+        holdout_keys = set(
+            zip(df_final["ticker"], pd.to_datetime(df_final["Date"]).dt.strftime("%Y-%m-%d"))
+        )
+        signals_holdout_final = [s for s in all_hist_signals if (s["ticker"], s["date"]) in holdout_keys]
+        _sort_website_signals_newest_first(signals_holdout_final)
+        _sort_website_signals_newest_first(all_hist_signals)
+        print(f"\n{len(all_hist_signals)} historical signals across all tickers.")
+        print(f"{len(signals_holdout_final)} signals in FINAL holdout (unbiased / OOS analysis).")
+
+        Path("data").mkdir(parents=True, exist_ok=True)
+        _ho_rows = [
+            {
+                "ticker": s["ticker"],
+                "Date": s["date"],
+                "prob": s["prob"],
+                "threshold_used": float(best_threshold),
+                "company": s["company"],
+                "sector": s["sector"],
+                **{k: s.get(k, "") for k in CLASSIFICATION_COLUMN_KEYS},
+            }
+            for s in signals_holdout_final
+        ]
+        if str(Path.cwd()) not in sys.path:
+            sys.path.insert(0, str(Path.cwd()))
+        from holdout.build_holdout_signals_master import main as _build_holdout_master
+
+        if _ho_rows:
+            _exported_ho = _build_holdout_master(holdout_df=pd.DataFrame(_ho_rows))
+            if _exported_ho is not None and len(_exported_ho) > 0:
+                _cls_keys = list(CLASSIFICATION_COLUMN_KEYS)
+                from lib.signal_context_tier import attach_signal_context_tier
+
+                _ctx_cols = (
+                    "regime_vix_level",
+                    "macro_event_within_2bd",
+                )
+                signals_holdout_final = []
+                for _, _r in _exported_ho.iterrows():
+                    _sig = {
+                        "ticker": str(_r["ticker"]),
+                        "company": str(_r.get("company", _r["ticker"])),
+                        "sector": str(_r.get("sector", "—")),
+                        **{k: str(_r.get(k, "")) for k in _cls_keys},
+                        "date": str(_r["Date"])[:10],
+                        "prob": float(_r["prob"]),
+                    }
+                    for _cc in _ctx_cols:
+                        if _cc not in _r.index:
+                            continue
+                        _v = _r.get(_cc)
+                        if _cc == "macro_event_within_2bd":
+                            if _v is not None and not (isinstance(_v, float) and _v != _v):
+                                if isinstance(_v, (bool, np.bool_)):
+                                    _sig[_cc] = bool(_v)
+                                elif isinstance(_v, (int, float)):
+                                    _sig[_cc] = bool(int(_v))
+                                else:
+                                    _sig[_cc] = str(_v).strip().lower() in {"true", "1", "yes"}
+                        elif _v is not None and not (isinstance(_v, float) and _v != _v):
+                            _sig[_cc] = float(_v)
+                    attach_signal_context_tier(_sig)
+                    signals_holdout_final.append(_sig)
+                _sort_website_signals_newest_first(signals_holdout_final)
+                print(
+                    f"wrote data/master_complete.csv & master_daily_update.csv (LLM-Spalten) "
+                    f"({len(_exported_ho)} holdout rows)"
+                )
+            else:
+                signals_holdout_final = []
+                print(
+                    "Holdout-CSV: 0 Zeilen nach build_holdout_signals_master.",
+                    flush=True,
+                )
+        else:
+            print(
+                "Holdout-CSV übersprungen: 0 Signale im FINAL-Zeitfenster (Schwelle + Filter + Datenlage). "
+                "Kein KeyError mehr — master_complete wird nicht überschrieben.",
+                flush=True,
+            )
+
+        # Website + öffentliches signals.json: nur echte OOS — keine Signale aus TRAIN/THRESHOLD-Kalender.
+        website_signals = list(signals_holdout_final)
+        _sort_website_signals_newest_first(website_signals)
+        print(
+            f"Website/OOS-Export: {len(website_signals)} Signale "
+            f"(intern für Diagnose: {len(all_hist_signals)} über alle Zeiten mit Schwelle+Filter).",
+            flush=True,
+        )
 
     recent_cutoff = (pd.Timestamp(c.END_DATE) - pd.Timedelta(days=30)).strftime("%Y-%m-%d")
     recent_signals = [s for s in website_signals if s["date"] >= recent_cutoff]
     print(f"{len(recent_signals)} OOS-Signale in den letzten 30 Tagen (Website).")
+
+    COMPANY_NAMES = c.COMPANY_NAMES
 
     pr_b64 = ""
     if not getattr(c, "SCORING_ONLY", False):
@@ -1020,10 +1061,18 @@ def _run_phase17(c: Any) -> None:
     _analysis_llm_section = ""
     _script_gemini = Path("scripts") / "run_website_analysis_gemini.py"
     _gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    _matrix_last_date = str(pd.to_datetime(df_s["Date"]).max().date())
+    _website_max_sig_date = (
+        max((str(s.get("date", ""))[:10] for s in website_signals if s.get("date")), default="")
+        if website_signals
+        else ""
+    )
+    _matrix_last_date = _website_max_sig_date or str(pd.to_datetime(df_s["Date"]).max().date())
     if _gemini_key and _script_gemini.is_file():
         try:
-            print("Gemini: KI-Analyse (CSV-Upload + Google Search) …", flush=True)
+            print(
+                f"Gemini: KI-Analyse (CSV-Upload + Google Search, Signaltag {_matrix_last_date}) …",
+                flush=True,
+            )
             _env_llm = os.environ.copy()
             _env_llm["ANALYSIS_EXPECT_SIGNAL_DATE"] = _matrix_last_date
             _r = subprocess.run(
@@ -1037,8 +1086,24 @@ def _run_phase17(c: Any) -> None:
             if _r.returncode != 0:
                 print("LLM-Analyse Fehler:", (_r.stderr or _r.stdout or "")[:2500], flush=True)
             _hf = Path("docs") / "analysis_llm_last.html"
-            if _hf.is_file():
+            _use_cached_llm = False
+            if _r.returncode == 0 and _hf.is_file():
+                _use_cached_llm = True
+            elif _hf.is_file():
+                try:
+                    from scripts.website_analysis_common import llm_analysis_is_stale
+
+                    _use_cached_llm = not llm_analysis_is_stale(_matrix_last_date)
+                except Exception:
+                    _use_cached_llm = False
+            if _use_cached_llm and _hf.is_file():
                 _analysis_llm_section = _hf.read_text(encoding="utf-8")
+            elif _hf.is_file():
+                print(
+                    f"Hinweis: docs/analysis_llm_last.html passt nicht zu Signaltag {_matrix_last_date} "
+                    "— wird nach finalem master_daily_update neu erzeugt.",
+                    flush=True,
+                )
             else:
                 print(
                     "Hinweis: docs/analysis_llm_last.html fehlt nach Gemini-Lauf. Ausgabe:",
@@ -1216,7 +1281,13 @@ def _run_phase17(c: Any) -> None:
         for s in website_signals[:_chart_k]:
             key = (s["ticker"], s["date"])
             if key not in chart_cache:
-                ch_out = _make_chart(s["ticker"], s["date"])
+                ch_out = (
+                    _existing_chart_paths_on_disk(docs_dir, s["ticker"], s["date"])
+                    if _charts_external
+                    else None
+                )
+                if ch_out is None:
+                    ch_out = _make_chart(s["ticker"], s["date"])
                 if ch_out:
                     chart_cache[key] = ch_out
         if _charts_external and chart_cache:
@@ -1503,6 +1574,45 @@ def _run_phase17(c: Any) -> None:
                 f"Warnung: master_complete aus signals.json fehlgeschlagen ({_e_mj}).",
                 flush=True,
             )
+    if website_signals and _gemini_key and _script_gemini.is_file():
+        try:
+            from scripts.website_analysis_common import (
+                llm_analysis_is_stale,
+                master_daily_latest_signal_date,
+                patch_index_html_from_llm_analysis,
+            )
+
+            _csv_latest = master_daily_latest_signal_date()
+            _llm_target = _csv_latest or _matrix_last_date
+            if _llm_target and llm_analysis_is_stale(_llm_target):
+                print(
+                    f"Gemini: KI-Analyse veraltet (meta ≠ CSV {_llm_target}) — "
+                    "nach master_daily_update neu generieren …",
+                    flush=True,
+                )
+                _env_llm2 = os.environ.copy()
+                _env_llm2["ANALYSIS_EXPECT_SIGNAL_DATE"] = _llm_target
+                _r_llm2 = subprocess.run(
+                    [sys.executable, str(_script_gemini)],
+                    cwd=str(Path.cwd()),
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    env=_env_llm2,
+                )
+                if _r_llm2.returncode != 0:
+                    print(
+                        "LLM-Nachsync Fehler:",
+                        (_r_llm2.stderr or _r_llm2.stdout or "")[:2500],
+                        flush=True,
+                    )
+                elif patch_index_html_from_llm_analysis():
+                    print(
+                        "Website: index.html KI-Block an aktuellen Signaltag angepasst.",
+                        flush=True,
+                    )
+        except Exception as _e_llm_sync:
+            print(f"Warnung: KI-Signaltag-Sync fehlgeschlagen ({_e_llm_sync}).", flush=True)
     print("\nOpen docs/index.html in a browser to preview.")
     _dl = getattr(c, "DATA_LOAD_REPORT", None)
     if isinstance(_dl, dict):

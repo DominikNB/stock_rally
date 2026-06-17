@@ -669,6 +669,9 @@ def holdout_rows_from_signals_json(path: Path | None = None) -> pd.DataFrame:
                 break
     if not signals:
         return pd.DataFrame(columns=list(_MIN_META_COLS) + list(_CLASSIFICATION_META_COLS))
+    _default_thr = np.nan
+    if isinstance(payload, dict):
+        _default_thr = payload.get("threshold", np.nan)
     rows: list[dict] = []
     for s in signals:
         rows.append(
@@ -676,7 +679,7 @@ def holdout_rows_from_signals_json(path: Path | None = None) -> pd.DataFrame:
                 "ticker": str(s.get("ticker", "")).strip(),
                 "Date": str(s.get("date", s.get("Date", "")))[:10],
                 "prob": s.get("prob", np.nan),
-                "threshold_used": s.get("threshold_used", np.nan),
+                "threshold_used": s.get("threshold_used", _default_thr),
                 "company": s.get("company", s.get("ticker", "")),
                 "sector": s.get("sector", "—"),
                 **{k: s.get(k, "") for k in _CLASSIFICATION_META_COLS},

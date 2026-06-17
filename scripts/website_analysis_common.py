@@ -3,6 +3,7 @@ Gemeinsame Pfade und CSV-Lese-Logik für Website-KI-Analysen (Gemini).
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -17,7 +18,44 @@ COMPLETE_CSV = ROOT / "data" / "master_complete.csv"
 HOLDOUT_CSV = ROOT / "data" / "holdout_signals.csv"
 OUT_TXT = DOCS / "analysis_llm_last.txt"
 OUT_HTML = DOCS / "analysis_llm_last.html"
+OUT_RUN_META = DOCS / "analysis_llm_last_run_meta.json"
 INDEX_HTML = DOCS / "index.html"
+
+
+def master_daily_latest_signal_date() -> str | None:
+    """YYYY-MM-DD des jüngsten Signaltags in master_daily_update.csv."""
+    import pandas as pd
+
+    if not DAILY_CSV.is_file():
+        return None
+    df = pd.read_csv(DAILY_CSV)
+    if df.empty or "Date" not in df.columns:
+        return None
+    return pd.to_datetime(df["Date"]).max().strftime("%Y-%m-%d")
+
+
+def llm_analysis_signaltag() -> str | None:
+    if not OUT_RUN_META.is_file():
+        return None
+    try:
+        meta = json.loads(OUT_RUN_META.read_text(encoding="utf-8"))
+        return str(meta.get("signaltag_csv") or "")[:10] or None
+    except Exception:
+        return None
+
+
+def llm_analysis_is_stale(expected_signal_date: str | None = None) -> bool:
+    """True wenn KI-Metadaten älter sind als der aktuelle Daily-CSV-Stand."""
+    csv_d = master_daily_latest_signal_date()
+    llm_d = llm_analysis_signaltag()
+    target = (expected_signal_date or csv_d or "").strip()[:10]
+    if not csv_d:
+        return False
+    if not llm_d:
+        return True
+    if target and llm_d != target:
+        return True
+    return llm_d < csv_d
 
 
 def ensure_daily_csv_red_context_columns() -> None:
@@ -80,7 +118,7 @@ def read_signals_for_latest_day():
             return "—", pd.DataFrame()
         df["Date"] = pd.to_datetime(df["Date"]).dt.strftime("%Y-%m-%d")
         latest = df["Date"].max()
-        sub = df.copy()
+        sub = df[df["Date"] == latest].copy()
     elif COMPLETE_CSV.is_file():
         df = pd.read_csv(COMPLETE_CSV)
         if df.empty:
@@ -118,10 +156,10 @@ def read_signals_for_latest_day():
     sub = sub.reindex(columns=ordered_llm_daily_columns(CLASSIFICATION_COLUMN_KEYS))
 
     if "prob" in sub.columns and "threshold_used" in sub.columns:
-        sub = sub[
-            pd.to_numeric(sub["prob"], errors="coerce")
-            >= pd.to_numeric(sub["threshold_used"], errors="coerce")
-        ]
+        _prob = pd.to_numeric(sub["prob"], errors="coerce")
+        _thr = pd.to_numeric(sub["threshold_used"], errors="coerce")
+        if _thr.notna().any():
+            sub = sub[_prob >= _thr]
     max_rows = int(os.environ.get("ANALYSIS_MAX_TICKER_ROWS", "40"))
     if len(sub) > max_rows:
         sub = (
