@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-18 08:39",
+  "generated": "2026-06-19 07:23",
   "threshold": 0.7999999999999999,
   "signals": [
     {
@@ -13730,7 +13730,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software infrastructure",
       "date": "2025-02-11",
-      "prob": 0.8609482995386477,
+      "prob": 0.8603469246497168,
       "regime_vix_level": 16.020000457763672,
       "macro_event_within_2bd": false,
       "context_tier": "yellow",
@@ -15619,25 +15619,6 @@
       "context_hint_de": "Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.",
       "vix_regime_ampel": "red",
       "context_tier_html": "<span class=\"context-tier context-tier--red\" title=\"Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Makro-Risiko</span>"
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-10-31",
-      "prob": 0.5851496912525597,
-      "regime_vix_level": 23.15999984741211,
-      "macro_event_within_2bd": false,
-      "context_tier": "green",
-      "context_label_de": "Kontext gut",
-      "context_hint_de": "Kein Makro-Event in \u00b12 Handelstagen und VIX \u2265 20 (am Signaltag: 23.2) \u2014 historisch st\u00e4rkstes OOS-Regime.",
-      "vix_regime_ampel": "green",
-      "context_tier_html": "<span class=\"context-tier context-tier--green\" title=\"Kein Makro-Event in \u00b12 Handelstagen und VIX \u2265 20 (am Signaltag: 23.2) \u2014 historisch st\u00e4rkstes OOS-Regime.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Kontext gut</span>"
     }
   ],
   "signals_holdout_final": [
@@ -29369,7 +29350,7 @@
       "gics_sector_key": "technology",
       "gics_industry_key": "software infrastructure",
       "date": "2025-02-11",
-      "prob": 0.8609482995386477,
+      "prob": 0.8603469246497168,
       "regime_vix_level": 16.020000457763672,
       "macro_event_within_2bd": false,
       "context_tier": "yellow",
@@ -31258,32 +31239,13 @@
       "context_hint_de": "Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.",
       "vix_regime_ampel": "red",
       "context_tier_html": "<span class=\"context-tier context-tier--red\" title=\"Makro-Termin (z. B. FOMC, CPI) innerhalb von \u00b12 Handelstagen \u2014 historisch schw\u00e4chere OOS-Renditen. Modell-Signal bleibt g\u00fcltig.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Makro-Risiko</span>"
-    },
-    {
-      "ticker": "EVT.DE",
-      "company": "Evotec",
-      "sector": "healthcare",
-      "classification_standard": "ICB_or_GICS_Yahoo",
-      "gics_sector": "Healthcare",
-      "gics_industry": "Drug Manufacturers - Specialty & Generic",
-      "gics_sector_key": "healthcare",
-      "gics_industry_key": "drug manufacturers specialty generic",
-      "date": "2024-10-31",
-      "prob": 0.5851496912525597,
-      "regime_vix_level": 23.15999984741211,
-      "macro_event_within_2bd": false,
-      "context_tier": "green",
-      "context_label_de": "Kontext gut",
-      "context_hint_de": "Kein Makro-Event in \u00b12 Handelstagen und VIX \u2265 20 (am Signaltag: 23.2) \u2014 historisch st\u00e4rkstes OOS-Regime.",
-      "vix_regime_ampel": "green",
-      "context_tier_html": "<span class=\"context-tier context-tier--green\" title=\"Kein Makro-Event in \u00b12 Handelstagen und VIX \u2265 20 (am Signaltag: 23.2) \u2014 historisch st\u00e4rkstes OOS-Regime.\"><span class=\"context-tier-dot\" aria-hidden=\"true\"></span>Kontext gut</span>"
     }
   ],
   "signals_all_timeline_including_in_sample_count": 4869,
-  "signals_html_chart_slots": 823,
-  "signals_with_chart_files": 823,
+  "signals_html_chart_slots": 822,
+  "signals_with_chart_files": 822,
   "chart_storage": "external",
-  "index_html_bytes_utf8": 1491950,
+  "index_html_bytes_utf8": 1471182,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS. Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); index.html unter DOCS_INDEX_HTML_MAX_BYTES."
 }
