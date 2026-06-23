@@ -93,12 +93,14 @@ Die **exakten** Grenzen des **aktuellen** Laufs (Signaltag laut CSV, Ende Hauptf
    • **sector_ret_1d**, **sector_ret_2d**, **sector_ret_3d** — Entsprechend für den **Sektor-Benchmark**; **NaN**, wenn kein Sektor-Mapping. Vergleich mit **ret_1d_signal_day** und ggf. **ret_2d/3d der Aktie** (aus Kursverlauf oder indirekt über **momentum_** / Kontext) — **keine** Vermutung „Sektor stark“ ohne Zahl.  
    • **news_sentiment** — Reserviert für eine **externe** Sentiment-Pipeline; in der CSV typischerweise **leer (NaN)** — **nicht** raten oder selbst füllen.
 
-   **VIX-Ampel & Rot-Kontext (Anzeige + LLM — kein Filter, kein zweites Scoring):**  
-   • **vix_regime_ampel** — **green** / **yellow** / **red** aus **regime_vix_level** (Schwellen im Code: rot &lt; 20, gelb 20–25, grün ≥ 25).  
-   • **red_context_llm** — **Ein Absatz pro Zeile**: verdichtet die drei **Rot-Zusatz-Hinweise** (VIX vs. 20d-Mittel, VIX3M/VIX, Sektor-Crowding) **mit den zugrunde liegenden CSV-Zahlen** und einer **Einordnung**, wie sie mit News, Alpha/Beta und Liquidität **zusammen** zu gewichten sind.  
-   • **Bei Ampel ≠ rot:** Spalte erklärt, dass die Rot-Chips **entfallen** — **nicht** nach Chip-Farben argumentieren.  
-   • **Bei rot — verbindlich für die Analyse:** Den Inhalt von **red_context_llm** in **Makro-Intro**, **Der Daten-Check**, **Vergleich der Signale** und **Fazit** **einweben** (Widersprüche benennen, z. B. starke Story aber ungünstiger Rot-Kontext).  
-   • **Verboten:** dem Nutzer nur „Chip 1/2/3 grün“ oder eine **reine Chip-Liste** zu liefern — die Chips sind **Kontext-Hilfen**, die du mit **belegten** News und den übrigen CSV-Kennzahlen **abwägst**, nicht separat abschließt.
+   **Kontext-Ampel (Anzeige + LLM — identisch zur Website, kein Filter):**  
+   • **vix_regime_ampel** = **context_tier** — **green** / **yellow** / **red**:  
+     **grün** = kein Makro-Event in ±2 Handelstagen **und** VIX ≥ 20;  
+     **rot** = Makro-Event (FOMC, CPI, …) in ±2 Handelstagen;  
+     **gelb** = Standard-Modellsignal (z. B. VIX &lt; 20 **ohne** Makro-Event — **nicht** „Warnung rot“).  
+   • **red_context_llm** — Prosa zur **Kontext-Ampel** (Spalten **context_label_de**, **context_hint_de**).  
+   • **Bei gelb/grün:** **nicht** als Makro-„rot“ oder veraltete „VIX unter 20 = rot“-Skala darstellen.  
+   • **Bei rot (Makro):** **red_context_llm** in **Makro-Intro**, **Daten-Check**, **Vergleich** und **Fazit** **einweben**.
 
    **Kurzreferenz Daten (Kompakt für schnellen Abgleich — Details siehe oben):**  
    • **Cluster / Sektor:** signals_same_day, sector_share_same_day, sector_hhi_same_day (Konzentration der Sektoren).  
@@ -196,7 +198,7 @@ Ergänze die vier Basisabfragen um **weitere, zum jeweiligen Titel passende** Su
 
 8. **Dann abgleichen:** Passen Cluster-, Korrelations-, Liquiditäts-, RS-, Gap-, Markt-/Sektor-Renditen, Short-/Institutions- und Earnings-Infos aus der CSV zu dieser Story — oder widersprechen sie sich?
 
-8b. **Rot-Kontext einweben (wenn vix_regime_ampel=red):** **red_context_llm** lesen und **mit** News, Alpha/Beta, Crowding (**sector_hhi_same_day**, **signals_same_sector_same_day**), **regime_vix_*** und Liquidität **in einem Gedanken** verknüpfen — z. B. „Story stark, aber Termstruktur angespannt und viel Sektor-Crowding → vorsichtiger“. **Nicht** als separaten Chip-Absatz oder Farbliste; bei **Widerspruch** Story vs. Rot-Kontext **explizit** benennen.
+8b. **Kontext-Ampel einweben:** **red_context_llm** und **vix_regime_ampel** lesen — **dieselbe** Ampel wie auf der Website. Bei **gelb** (Standard, oft VIX &lt; 20): **nicht** als „rote Warnung“ formulieren. Bei **rot** (Makro-Event): Vorsicht in Makro/Daten-Check/Fazit. Bei **grün**: günstigeres Regime kurz anerkennen.
 
 9. **Technik nur bei Bedarf:** Knapp erwähnen, wenn es die Einordnung schärft; sonst weglassen.
 
@@ -229,7 +231,7 @@ Output (für die Website):
   **Ticker (Name): [News-Rating: Positiv / Neutral / Spekulativ]**  
   - **Die Story:** Zuerst **unternehmensspezifisch** (mit **Quelle & Datum**); falls dort nichts Belegbares: den **vorgeschriebenen** Standard-Satz. **Immer** ergänzen: **Branchen-/Geschäftsbereich** — **belegbare** Sektormeldungen **mit Quelle & Datum**, oder der **vorgeschriebene** Satz, dass auch dort **keine** belastbare Meldung im Fenster gefunden wurde. **Rein technisch / datengetrieben** nur, wenn **weder** Firmen- **noch** Branchen-News belegbar sind (beide Ebenen ausdrücklich abgeschlossen). **Alles in diesem Unterpunkt = Hauptfenster (bis Signaltag 24:00 Europe/Berlin).**  
   - **Seit Signaltag 24:00 (Zusatzfenster):** **Pflicht-Unterpunkt.** Kurz **unternehmensspezifisch** und **Branche** (mit Quelle & Zeit), oder **„Keine belastbaren Meldungen im Zusatzfenster.“** Wenn etwas **die Einordnung verschärft oder widerspricht** (z. B. neue ad hoc), **hervorheben**.  
-  - **Der Daten-Check:** Verknüpfung von Story mit Liquidität, **ret_1d_signal_day** vs. **market_ret_1d** / **sector_ret_1d** (und bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**), RS (ret_vs_*), Gap, volume_zscore_20d, Short Interest / Inst., Earnings — **Alpha vs. Beta** kurz benennen. **Bei vix_regime_ampel=red:** Inhalt aus **red_context_llm** hier **mit** den genannten Kennzahlen **abwägen** (ein zusammenhängender Absatz, keine Chip-Aufzählung). **Hinweis:** CSV nur bis Signaltag; Zusatzfenster-News **nicht** als neue Zahl in der Tabelle ausgeben.  
+  - **Der Daten-Check:** Verknüpfung von Story mit Liquidität, **ret_1d_signal_day** vs. **market_ret_1d** / **sector_ret_1d** (und bei Bedarf **market_ret_2d/3d**, **sector_ret_2d/3d**), RS (ret_vs_*), Gap, volume_zscore_20d, Short Interest / Inst., Earnings — **Alpha vs. Beta** kurz benennen. **Kontext-Ampel:** **red_context_llm** / **vix_regime_ampel** **exakt** wie CSV (gelb ≠ rot). **Bei rot (Makro):** Inhalt aus **red_context_llm** mit den Kennzahlen **abwägen**. **Hinweis:** CSV nur bis Signaltag; Zusatzfenster-News **nicht** als neue Zahl in der Tabelle ausgeben.  
   - **Risiko-Faktor:** Konkrete Warnung (z. B. **Earnings/Binary Event** — nur wenn **bdays_to_next_earnings** **≤ return_window**; sonst Earnings hier **nicht** überbewerten, **spekulativer Squeeze**, **geringes Volumen trotz Narrativ**, **neue Meldung im Zusatzfenster**).
 
 • Danach **„Vergleich der Signale“** (Überschrift ##): **flüssige Prosa**, kein Tabellenformat — der Nutzer soll **nicht** selbst Zeilen oder Karten vergleichen müssen. Hier die **gegenseitige Einordnung** aller Treffer (Mitläufer vs. Alpha, Sektor-Crowding, stärkste/schwächste Story, Risiken im Zusatzfenster).

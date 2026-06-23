@@ -185,9 +185,16 @@ def _ampel_label_de(level: str) -> str:
 
 def red_context_llm_fields_from_row(row: Mapping[str, Any]) -> dict[str, str]:
     """
-    Flache Felder für CSV/Gemini: Ampel + ein Absatz, der Chip-Logik mit Zahlen
-    verdichtet (keine reine Chip-Liste — zum Einweben in die Analyse).
+    Flache Felder für CSV/Gemini — **Kontext-Ampel** wie auf der Website
+    (``lib.signal_context_tier``, nicht VIX-unter-20).
     """
+    from lib.signal_context_tier import context_tier_llm_fields_from_row
+
+    return context_tier_llm_fields_from_row(row)
+
+
+def _red_context_llm_fields_legacy_vix_red(row: Mapping[str, Any]) -> dict[str, str]:
+    """Legacy: Rot-Chips nur bei alter VIX-Ampel rot (VIX < 20) — nicht mehr für LLM-Export."""
     from lib.vix_regime_ampel import ampel_fields_from_vix
 
     vix = _f(row.get("regime_vix_level"))

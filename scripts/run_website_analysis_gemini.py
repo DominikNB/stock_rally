@@ -304,7 +304,7 @@ def main() -> None:
         _red_hint = ""
         if _n_red:
             _red_hint = (
-                f"VIX-Ampel rot bei {_n_red} Treffer(n): Spalte **red_context_llm** pro Zeile lesen und "
+                f"Kontext-Ampel rot (Makro) bei {_n_red} Treffer(n): Spalte **red_context_llm** pro Zeile lesen und "
                 "in Makro, Daten-Check, Vergleich und Fazit **mit** News/RS/Liquidität **verweben** — "
                 "**keine** Chip-Farbliste für den Nutzer.\n"
             )

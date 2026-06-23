@@ -4,8 +4,8 @@
   "hauptfenster_end_europe_berlin_inclusive": "2026-06-22 24:00 Europe/Berlin (identisch mit Beginn Folgetag 00:00)",
   "hauptfenster_end_instant_europe_berlin": "2026-06-23T00:00:00+02:00",
   "zusatzfenster_start_europe_berlin": "2026-06-23T00:00:00+02:00",
-  "zusatzfenster_end_europe_berlin_inclusive": "2026-06-23T10:11:24+02:00",
+  "zusatzfenster_end_europe_berlin_inclusive": "2026-06-23T10:29:28+02:00",
   "zusatzfenster_active": true,
-  "scoring_run_utc": "2026-06-23T08:11:24+00:00",
+  "scoring_run_utc": "2026-06-23T08:29:28+00:00",
   "analysis_lag_one_session": true
 }

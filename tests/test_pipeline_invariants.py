@@ -48,6 +48,21 @@ def test_fill_news_sentiment_from_macro():
     assert out["news_sentiment"].iloc[0] == pytest.approx(0.12)
 
 
+def test_context_tier_llm_matches_website_for_low_vix_no_macro():
+    from lib.signal_context_tier import attach_context_tier_llm_columns, context_tier_llm_fields_from_row
+
+    row = {
+        "regime_vix_level": 17.28,
+        "macro_event_within_2bd": False,
+    }
+    fields = context_tier_llm_fields_from_row(row)
+    assert fields["vix_regime_ampel"] == "yellow"
+    assert fields["context_tier"] == "yellow"
+    assert "rot" not in fields["red_context_llm"].lower().split("gelb")[0]
+    df = attach_context_tier_llm_columns(pd.DataFrame([row]))
+    assert str(df["vix_regime_ampel"].iloc[0]) == "yellow"
+
+
 def test_red_regime_llm_matches_website_badge():
     from lib.red_regime_summary import attach_red_regime_llm_columns, attach_red_regime_summary
 

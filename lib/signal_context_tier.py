@@ -107,6 +107,62 @@ def classify_signal_context_tier(signal: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def context_tier_llm_fields_from_row(row: Mapping[str, Any]) -> dict[str, str]:
+    """
+    LLM/CSV-Felder — **dieselbe** Ampel-Logik wie ``attach_signal_context_tier`` (Website).
+    ``vix_regime_ampel`` = context_tier (Kompatibilitätsname für Prompt/Filter).
+    """
+    c = classify_signal_context_tier(row)
+    tier = str(c["level"])
+    label = str(c["label_de"])
+    hint = str(c.get("hint_de") or "")
+    vix = _parse_vix(row.get("regime_vix_level"))
+    vix_s = f"{vix:.1f}" if vix is not None else "n/a"
+
+    if tier == "red":
+        llm = (
+            f"Kontext-Ampel rot ({label}): {hint} "
+            "Historisch schwächere OOS-Renditen bei Makro-Nähe — das Modell-Signal bleibt gültig; "
+            "in Makro-Intro, Daten-Check und Fazit mit einweben (Vorsicht bei Terminen/Binary Events)."
+        )
+    elif tier == "green":
+        llm = (
+            f"Kontext-Ampel grün ({label}): {hint} "
+            "Günstigeres historisches OOS-Regime — kein Makro-Warnhinweis."
+        )
+    else:
+        llm = (
+            f"Kontext-Ampel gelb ({label}): {hint} "
+            f"(regime_vix_level={vix_s}). "
+            "Gelb = Standard-Modellsignal — **nicht** „rot“ (Makro-Warnung). "
+            "Keine veraltete „VIX unter 20 = rot“-Einordnung; keine Rot-Chip-Logik. "
+            "Einordnung über News, RS, Liquidität und Makro."
+        )
+
+    return {
+        "context_tier": tier,
+        "context_label_de": label,
+        "context_hint_de": hint,
+        "vix_regime_ampel": tier,
+        "red_context_llm": llm,
+    }
+
+
+def attach_context_tier_llm_columns(df: "pd.DataFrame") -> "pd.DataFrame":
+    """Setzt Kontext-Ampel + red_context_llm (Website-identisch) auf Signal-DataFrame."""
+    import pandas as pd
+
+    o = df.copy()
+    fields = [context_tier_llm_fields_from_row(r) for _, r in o.iterrows()]
+    if not fields:
+        for col in ("context_tier", "context_label_de", "context_hint_de", "vix_regime_ampel", "red_context_llm"):
+            o[col] = ""
+        return o
+    for col in ("context_tier", "context_label_de", "context_hint_de", "vix_regime_ampel", "red_context_llm"):
+        o[col] = [f.get(col, "") for f in fields]
+    return o
+
+
 def attach_signal_context_tier(signal: dict[str, Any]) -> dict[str, Any]:
     """Setzt Kontext-Felder; entfernt alte Rot-/VIX-Badge-Felder aus dem Export."""
     c = classify_signal_context_tier(signal)

@@ -216,17 +216,17 @@ def llm_analysis_is_stale(expected_signal_date: str | None = None) -> bool:
 
 
 def ensure_daily_csv_red_context_columns() -> None:
-    """Ergänzt master_daily_update.csv um vix_regime_ampel / red_context_llm falls fehlend."""
+    """Aktualisiert master_daily_update.csv: Kontext-Ampel + red_context_llm (Website-identisch)."""
     import pandas as pd
 
     if not DAILY_CSV.is_file():
         return
     df = pd.read_csv(DAILY_CSV)
-    if df.empty or "red_context_llm" in df.columns:
+    if df.empty:
         return
-    from lib.vix_red_context_chips import attach_red_context_llm_columns
+    from lib.signal_context_tier import attach_context_tier_llm_columns
 
-    attach_red_context_llm_columns(df).to_csv(DAILY_CSV, index=False)
+    attach_context_tier_llm_columns(df).to_csv(DAILY_CSV, index=False)
 
 
 def patch_index_html_from_llm_analysis() -> bool:
