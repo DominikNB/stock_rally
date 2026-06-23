@@ -237,6 +237,45 @@ def test_read_signals_returns_yesterday_when_one_session_lag(tmp_path: Path, mon
     assert sub.iloc[0]["ticker"] == "NDX1.DE"
 
 
+def test_analysis_scoring_run_end_reads_env(monkeypatch):
+    from scripts import website_analysis_common as wac
+
+    monkeypatch.setenv("ANALYSIS_SCORING_RUN_END", "2026-06-23T08:15:00+02:00")
+    end = wac.analysis_scoring_run_end()
+    assert end.tzinfo is not None
+    assert end.year == 2026 and end.month == 6 and end.day == 23
+    assert end.hour == 8 and end.minute == 15
+
+
+def test_steering_block_zusatzfenster_until_scoring_run():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from scripts import website_analysis_common as wac
+
+    scoring_end = datetime(2026, 6, 23, 9, 30, tzinfo=ZoneInfo("Europe/Berlin"))
+    block, meta = wac.build_llm_steering_block(
+        "2026-06-22",
+        scoring_day="2026-06-23",
+        scoring_end=scoring_end,
+    )
+    assert meta["zusatzfenster_active"] is True
+    assert meta["scoring_day"] == "2026-06-23"
+    assert "2026-06-23T09:30:00" in meta["zusatzfenster_end_europe_berlin_inclusive"]
+    assert "Zusatzfenster Nachrichten" in block
+    assert "Bewertungsregel" in block
+    assert "abschließende Fazit" in block
+
+
+def test_scoring_mandate_requires_integrated_fazit():
+    from scripts import website_analysis_common as wac
+
+    meta = {"zusatzfenster_active": True, "zusatzfenster_end_europe_berlin_inclusive": "2026-06-23T09:00:00+02:00"}
+    text = wac.build_scoring_news_mandate_block("2026-06-22", "2026-06-23", meta)
+    assert "Fazit" in text
+    assert "zusammen" in text.lower() or "gesamt" in text.lower()
+
+
 def test_save_base_feature_shap_report_writes_json_and_csv(tmp_path: Path):
     from lib.base_feature_shap_export import (
         build_base_feature_shap_payload,

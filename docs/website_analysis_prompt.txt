@@ -209,7 +209,7 @@ Ergänze die vier Basisabfragen um **weitere, zum jeweiligen Titel passende** Su
    Der Leser soll aus diesem Abschnitt **ohne Nachrechnen** verstehen, wie die Treffer **zueinander** stehen.
 
 11. **Synthese**  
-   Kurz zusammenfassen, wo **Makro**, **Nachrichtenlage** (**Hauptfenster**), **Zusatzfenster** (falls relevant), Liquidität und relative Stärke **über alle Kandidaten** zusammenpassen. **Zusatzfenster** mitdenken, wenn dort belastbare Fakten lagen.
+   Kurz zusammenfassen, wo **Makro**, **Nachrichtenlage** (**Hauptfenster**), **Zusatzfenster** (falls aktiv), Liquidität und relative Stärke **über alle Kandidaten** zusammenpassen. **Zusatzfenster immer mitdenken** — auch wenn dort nichts Neues lag (dann explizit: „Bild unverändert“).
 
 12. **Rahmen**  
    • **Rally-These:** Orientierung an **return_window** (Handelstage) aus der **Rally-Zieldefinition** im Kopf — das ist der vom Modell optimierte Horizont; **nicht** pauschal eine längere Swing-Spanne unterstellen.  
@@ -238,7 +238,8 @@ Output (für die Website):
 
 • **Pflicht — abschließendes Fazit (letzter Abschnitt, klar erkennbar):**  
   **Eine** verständliche Schlussfolgerung für den Nutzer: **Welche** Aktie (Ticker + Name) kommt für einen **kurzfristigen** Impuls am ehesten infrage — **oder** bewusst **keine** („heute nichts kaufen“).  
-  Begründung in **2–4 Sätzen** in Alltagssprache (News + Daten-Check + Vergleich oben), **nicht** nach **prob** oder Modell-Score.  
+  Begründung in **2–4 Sätzen** in Alltagssprache, **nicht** nach **prob** oder Modell-Score.  
+  **Pflicht — Gesamtbewertung bis Scoring-Lauf:** Das Fazit muss **alle** verfügbaren Informationen **zusammen** auswerten — Nachrichten und Makro **bis Signaltag 24:00**, alles **seitdem bis zum Scoring-Lauf**, Daten-Check und Vergleich. **Eine zusammenhängende Prosa** für den Leser zum Scoring-Zeitpunkt. **Verboten im Fazit:** „Hauptfenster“, „Zusatzfenster“, „seit Signaltag“, „im Zusatzfenster“, zeitliche Fenster-Labels oder die explizite Gegenüberstellung alter vs. neuer News — stattdessen **integriert** formulieren (z. B. „trotz starker Kursreaktion am Handelstag fehlt eine belastbare News-Story; bis zum Scoring-Lauf hat sich daran nichts geändert“).  
   Optional: **zweiter Platz** oder „nur beobachten“ — nur wenn hilfreich, ohne zu verwirren.  
   Kein Textende ohne diese Klärung.
 

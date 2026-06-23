@@ -21,9 +21,7 @@ import os
 import sys
 import tempfile
 import time
-from datetime import date, datetime, time as dt_time, timedelta, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 _SCRIPTS = Path(__file__).resolve().parent
@@ -46,14 +44,16 @@ from website_analysis_common import (
     OUT_TXT,
     PROMPT_FILE,
     analysis_expect_signal_date,
+    analysis_scoring_run_end,
     analysis_text_to_html,
+    build_llm_steering_block,
+    build_scoring_news_mandate_block,
     ensure_daily_csv_red_context_columns,
     master_daily_latest_signal_date,
     patch_index_html_from_llm_analysis,
     read_signals_for_latest_day,
 )
 
-_LLM_TZ = ZoneInfo("Europe/Berlin")
 OUT_RUN_META = DOCS / "analysis_llm_last_run_meta.json"
 _CHECK_NUMERIC_COLS = (
     "adv_20d_local",
@@ -66,40 +66,6 @@ _CHECK_NUMERIC_COLS = (
     "market_ret_1d",
     "sector_ret_1d",
 )
-
-
-def _build_llm_steering_block(latest: str) -> tuple[str, dict]:
-    """
-    Zeitgrenzen für Hauptfenster (bis Signaltag 24:00 Europe/Berlin) und Zusatzfenster
-    (bis Scoring-Lauf). ``latest`` ist YYYY-MM-DD (Signaltag laut CSV).
-    """
-    sig_d = date.fromisoformat(latest)
-    gap_start = datetime.combine(sig_d + timedelta(days=1), dt_time.min, tzinfo=_LLM_TZ)
-    scoring_berlin = datetime.now(_LLM_TZ)
-    scoring_utc = datetime.now(timezone.utc)
-    meta = {
-        "signaltag_csv": latest,
-        "hauptfenster_end_europe_berlin_inclusive": (
-            f"{latest} 24:00 Europe/Berlin (identisch mit Beginn Folgetag 00:00)"
-        ),
-        "hauptfenster_end_instant_europe_berlin": gap_start.isoformat(),
-        "zusatzfenster_start_europe_berlin": gap_start.isoformat(),
-        "zusatzfenster_end_europe_berlin_inclusive": scoring_berlin.isoformat(),
-        "scoring_run_utc": scoring_utc.isoformat(),
-    }
-    block = (
-        "=== Steuerblock (Zeitgrenzen, von der Pipeline gesetzt) ===\n"
-        f"Signaltag (Datum laut CSV, Kurs- und Merkmalsstand): {latest}\n"
-        f"Hauptfenster Nachrichten: Meldungen nur, wenn Einordnung/Zeitstempel bis einschließlich "
-        f"{latest} 24:00 Uhr Europe/Berlin — gleichbedeutend: strikt vor "
-        f"{gap_start.isoformat()} (Europe/Berlin).\n"
-        f"Zusatzfenster Nachrichten: von {gap_start.isoformat()} (einschließlich) "
-        f"bis {scoring_berlin.isoformat()} (einschließlich) Europe/Berlin — "
-        "gleiche Themenfelder wie Hauptfenster (siehe Prompt); CSV-Werte unverändert nur bis Signaltag.\n"
-        f"Scoring-Ausführung UTC: {scoring_utc.isoformat()}\n"
-        "=== Ende Steuerblock ===\n\n"
-    )
-    return block, meta
 
 
 def _build_data_availability_block(sub) -> str:
@@ -299,10 +265,14 @@ def main() -> None:
         )
         _wait_file_ready(client, uploaded.name)
 
-        _steering, _run_meta = _build_llm_steering_block(latest)
-        _run_meta["scoring_day"] = expect_day
+        _steering, _run_meta = build_llm_steering_block(
+            latest,
+            scoring_day=expect_day,
+            scoring_end=analysis_scoring_run_end(),
+        )
         if latest != expect_day:
             _run_meta["analysis_lag_one_session"] = True
+        _news_mandate = build_scoring_news_mandate_block(latest, expect_day, _run_meta)
         _avail = _build_data_availability_block(sub)
         print(
             f"Gemini Steuerblock: Zusatzfenster {_run_meta['zusatzfenster_start_europe_berlin']} "
@@ -344,10 +314,14 @@ def main() -> None:
             f"Alle Ticker dieses Signaltags: {', '.join(_tickers)}\n"
             f"Nach Sektor/Cluster:\n{_sector_lines}\n\n"
             f"{_red_hint}"
+            f"{_news_mandate}"
             f"{_steering}"
             f"{_avail}"
             "Die angehängte CSV enthält die Tabellenzeilen zu diesen Treffern. "
-            "Recherchiere im Web zu News, Makro und Kontext (Pflicht laut Prompt). "
+            "Recherchiere im Web (Google Search, Pflicht) zu News, Makro und Kontext bis einschließlich "
+            "Scoring-Lauf — Hauptfenster und Zusatzfenster laut Steuerblock. "
+            "Das **Fazit** wertet **alle** Informationen bis zum Scoring-Lauf **zusammen** aus "
+            "(eine Prosa, keine Trennung Haupt-/Zusatzfenster). "
             "Vergleiche die Treffer **untereinander in Prosa** (Abschnitt „Vergleich der Signale“) — "
             "der Nutzer soll keine Tabellen selbst abgleichen. "
             "Nutze CSV-Spalten inkl. vix_regime_ampel / red_context_llm wie im Prompt.\n\n"
@@ -362,6 +336,11 @@ def main() -> None:
         cfg_plain = types.GenerateContentConfig()
 
         use_search = os.environ.get("GEMINI_NO_SEARCH", "").strip().lower() not in (
+            "1",
+            "true",
+            "yes",
+        )
+        allow_no_search = os.environ.get("GEMINI_ALLOW_NO_SEARCH_FALLBACK", "").strip().lower() in (
             "1",
             "true",
             "yes",
@@ -397,7 +376,7 @@ def main() -> None:
             if use_search:
                 print(
                     f"Gemini mit Google Search fehlgeschlagen ({type(first_exc).__name__}: {first_exc}). "
-                    "Erneuter Versuch ohne Google Search …",
+                    "Erneuter Versuch mit Google Search …",
                     file=sys.stderr,
                     flush=True,
                 )
@@ -406,19 +385,34 @@ def main() -> None:
                         client,
                         model=model_name,
                         contents=contents,
+                        config=cfg_search,
+                        label="Google Search Wiederholung nach Fehler",
+                    )
+                except Exception as retry_exc:
+                    if not allow_no_search:
+                        import traceback
+
+                        traceback.print_exc()
+                        print(
+                            f"Erster Fehler (mit Search): {first_exc!r}; "
+                            f"Wiederholung: {retry_exc!r}",
+                            file=sys.stderr,
+                        )
+                        raise
+                    print(
+                        f"Google Search erneut fehlgeschlagen ({retry_exc}). "
+                        "Fallback ohne Google Search (GEMINI_ALLOW_NO_SEARCH_FALLBACK).",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    response = _generate_content_retry(
+                        client,
+                        model=model_name,
+                        contents=contents,
                         config=cfg_plain,
                         label="Fallback ohne Google Search",
                     )
                     _search_fallback_used = True
-                except Exception:
-                    import traceback
-
-                    traceback.print_exc()
-                    print(
-                        f"Erster Fehler (mit Search): {first_exc!r}",
-                        file=sys.stderr,
-                    )
-                    raise
             else:
                 import traceback
 
@@ -432,7 +426,23 @@ def main() -> None:
         if not answer and use_search and not _search_fallback_used:
             print(
                 "Gemini: keine Text-Antwort mit Google Search (ev. Safety-Block) — "
-                "erneuter Versuch ohne Google Search …",
+                "erneuter Versuch mit Google Search …",
+                file=sys.stderr,
+                flush=True,
+            )
+            response = _generate_content_retry(
+                client,
+                model=model_name,
+                contents=contents,
+                config=cfg_search,
+                label="Google Search Wiederholung",
+            )
+            answer = _response_text(response)
+        if not answer and use_search and not _search_fallback_used and allow_no_search:
+            print(
+                "Gemini: keine Text-Antwort mit Google Search — "
+                "Fallback ohne Google Search (GEMINI_ALLOW_NO_SEARCH_FALLBACK). "
+                "Zusatzfenster-Nachrichten können unvollständig sein.",
                 file=sys.stderr,
                 flush=True,
             )
@@ -446,12 +456,17 @@ def main() -> None:
             answer = _response_text(response)
             _search_fallback_used = True
         if not answer:
-            print("Gemini: keine Text-Antwort (ev. Safety-Block).", file=sys.stderr)
+            print(
+                "Gemini: keine Text-Antwort — Google Search ist für Nachrichten bis zum "
+                "Scoring-Lauf erforderlich (kein Fallback ohne Search).",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         DOCS.mkdir(parents=True, exist_ok=True)
         OUT_TXT.write_text(answer, encoding="utf-8")
         if _search_fallback_used:
+            _run_meta["search_fallback_used"] = True
             provider = (
                 "Generiert per Gemini (File-Upload; Google Search fehlgeschlagen — "
                 "Analyse ohne Web-Grounding)"

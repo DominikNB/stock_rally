@@ -16,6 +16,7 @@ import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from joblib import Parallel, delayed
 
@@ -1068,6 +1069,7 @@ def _run_phase17(c: Any) -> None:
     )
     _matrix_last_date = _website_max_sig_date or str(pd.to_datetime(df_s["Date"]).max().date())
     _scoring_today = str(pd.Timestamp(c.END_DATE).date())
+    _scoring_run_end = datetime.now(ZoneInfo("Europe/Berlin")).isoformat()
     if _gemini_key and _script_gemini.is_file():
         try:
             print(
@@ -1077,6 +1079,7 @@ def _run_phase17(c: Any) -> None:
             )
             _env_llm = os.environ.copy()
             _env_llm["ANALYSIS_EXPECT_SIGNAL_DATE"] = _scoring_today
+            _env_llm["ANALYSIS_SCORING_RUN_END"] = _scoring_run_end
             _r = subprocess.run(
                 [sys.executable, str(_script_gemini)],
                 cwd=str(Path.cwd()),
@@ -1591,6 +1594,9 @@ def _run_phase17(c: Any) -> None:
                 )
                 _env_llm2 = os.environ.copy()
                 _env_llm2["ANALYSIS_EXPECT_SIGNAL_DATE"] = _scoring_today
+                _env_llm2["ANALYSIS_SCORING_RUN_END"] = datetime.now(
+                    ZoneInfo("Europe/Berlin")
+                ).isoformat()
                 _r_llm2 = subprocess.run(
                     [sys.executable, str(_script_gemini)],
                     cwd=str(Path.cwd()),

@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import date, datetime, time as dt_time, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -37,6 +37,110 @@ def analysis_expect_signal_date() -> str:
         except Exception:
             pass
     return datetime.now(_LLM_TZ).date().isoformat()
+
+
+def analysis_scoring_run_end() -> datetime:
+    """Wall-Clock-Ende des Zusatzfensters: Env ANALYSIS_SCORING_RUN_END oder jetzt (Europe/Berlin)."""
+    raw = os.environ.get("ANALYSIS_SCORING_RUN_END", "").strip()
+    if raw:
+        try:
+            import pandas as pd
+
+            ts = pd.Timestamp(raw)
+            if ts.tzinfo is None:
+                ts = ts.tz_localize(_LLM_TZ)
+            else:
+                ts = ts.tz_convert(_LLM_TZ)
+            return ts.to_pydatetime()
+        except Exception:
+            pass
+    return datetime.now(_LLM_TZ)
+
+
+def build_llm_steering_block(
+    latest: str,
+    *,
+    scoring_day: str,
+    scoring_end: datetime | None = None,
+) -> tuple[str, dict]:
+    """
+    Zeitgrenzen für Hauptfenster (bis Signaltag 24:00 Europe/Berlin) und Zusatzfenster
+    (bis Scoring-Lauf). ``latest`` ist YYYY-MM-DD (Signaltag laut CSV).
+    """
+    sig_d = date.fromisoformat(latest)
+    gap_start = datetime.combine(sig_d + timedelta(days=1), dt_time.min, tzinfo=_LLM_TZ)
+    scoring_berlin = scoring_end or datetime.now(_LLM_TZ)
+    if scoring_berlin.tzinfo is None:
+        scoring_berlin = scoring_berlin.replace(tzinfo=_LLM_TZ)
+    else:
+        scoring_berlin = scoring_berlin.astimezone(_LLM_TZ)
+    scoring_utc = scoring_berlin.astimezone(timezone.utc)
+    zusatz_active = scoring_berlin >= gap_start
+    meta = {
+        "signaltag_csv": latest,
+        "scoring_day": scoring_day,
+        "hauptfenster_end_europe_berlin_inclusive": (
+            f"{latest} 24:00 Europe/Berlin (identisch mit Beginn Folgetag 00:00)"
+        ),
+        "hauptfenster_end_instant_europe_berlin": gap_start.isoformat(),
+        "zusatzfenster_start_europe_berlin": gap_start.isoformat(),
+        "zusatzfenster_end_europe_berlin_inclusive": scoring_berlin.isoformat(),
+        "zusatzfenster_active": zusatz_active,
+        "scoring_run_utc": scoring_utc.isoformat(),
+    }
+    _zusatz_line = (
+        f"Zusatzfenster Nachrichten: von {gap_start.isoformat()} (einschließlich) "
+        f"bis {scoring_berlin.isoformat()} (einschließlich) Europe/Berlin — "
+        "gleiche Themenfelder wie Hauptfenster (siehe Prompt); CSV-Werte unverändert nur bis Signaltag.\n"
+        if zusatz_active
+        else (
+            f"Zusatzfenster: noch nicht aktiv (Scoring {scoring_berlin.isoformat()} liegt vor "
+            f"{gap_start.isoformat()}). Nur Hauptfenster recherchieren.\n"
+        )
+    )
+    block = (
+        "=== Steuerblock (Zeitgrenzen, von der Pipeline gesetzt) ===\n"
+        f"Scoring-Tag (Kalender des Laufs): {scoring_day}\n"
+        f"Signaltag (Datum laut CSV, Kurs- und Merkmalsstand): {latest}\n"
+        f"Hauptfenster Nachrichten: Meldungen nur, wenn Einordnung/Zeitstempel bis einschließlich "
+        f"{latest} 24:00 Uhr Europe/Berlin — gleichbedeutend: strikt vor "
+        f"{gap_start.isoformat()} (Europe/Berlin).\n"
+        f"{_zusatz_line}"
+        "Bewertungsregel: Fazit, Risiko und Strategie müssen Hauptfenster **und** (falls aktiv) "
+        "Zusatzfenster **zusammen** einbeziehen — Neuigkeiten bis zum Scoring-Lauf können die "
+        "Signal-Einordnung verschärfen, bestätigen oder widerlegen. "
+        "Das **abschließende Fazit** fasst **alles zusammen** in **einer** Prosa zum Scoring-Zeitpunkt — "
+        "**ohne** Wörter wie Hauptfenster, Zusatzfenster oder „seit Signaltag“.\n"
+        f"Scoring-Ausführung (Ende Zusatzfenster): {scoring_berlin.isoformat()} Europe/Berlin "
+        f"({scoring_utc.isoformat()} UTC)\n"
+        "=== Ende Steuerblock ===\n\n"
+    )
+    return block, meta
+
+
+def build_scoring_news_mandate_block(latest: str, scoring_day: str, run_meta: dict) -> str:
+    """Kurzer Pflicht-Hinweis für Web-Recherche bis zum Scoring-Lauf."""
+    _lag = ""
+    if latest != scoring_day:
+        _lag = (
+            f"Hinweis: Signaltag ({latest}) liegt vor dem Scoring-Tag ({scoring_day}). "
+            "Die Signalbewertung muss trotzdem die **Nachrichtenlage bis zum Scoring-Lauf** "
+            f"({run_meta.get('zusatzfenster_end_europe_berlin_inclusive', '?')}) einbeziehen.\n"
+        )
+    if run_meta.get("zusatzfenster_active"):
+        _zusatz = (
+            "Pflicht: Google Search für **Hauptfenster** und **Zusatzfenster** (Steuerblock). "
+            "Pro Ticker Abschnitt „Seit Signaltag 24:00 (Zusatzfenster)“; gesondert "
+            "„Makro & Markt (Zusatzfenster)“. "
+            "Das **Fazit** fasst News, Makro und Daten **bis zum Scoring-Lauf gesamt** zusammen "
+            "(eine Prosa — keine Aufteilung nach Zeitfenstern). "
+            "Keine erfundenen Meldungen — nur belegbare Quellen.\n"
+        )
+    else:
+        _zusatz = (
+            "Zusatzfenster ist noch nicht aktiv — nur Hauptfenster per Google Search recherchieren.\n"
+        )
+    return _lag + _zusatz + "\n"
 
 
 def master_daily_latest_signal_date() -> str | None:

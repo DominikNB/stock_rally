@@ -1,10 +1,11 @@
 {
   "signaltag_csv": "2026-06-22",
+  "scoring_day": "2026-06-23",
   "hauptfenster_end_europe_berlin_inclusive": "2026-06-22 24:00 Europe/Berlin (identisch mit Beginn Folgetag 00:00)",
   "hauptfenster_end_instant_europe_berlin": "2026-06-23T00:00:00+02:00",
   "zusatzfenster_start_europe_berlin": "2026-06-23T00:00:00+02:00",
-  "zusatzfenster_end_europe_berlin_inclusive": "2026-06-23T09:07:01.525666+02:00",
-  "scoring_run_utc": "2026-06-23T07:07:01.525699+00:00",
-  "scoring_day": "2026-06-23",
+  "zusatzfenster_end_europe_berlin_inclusive": "2026-06-23T09:28:28+02:00",
+  "zusatzfenster_active": true,
+  "scoring_run_utc": "2026-06-23T07:28:28+00:00",
   "analysis_lag_one_session": true
 }
