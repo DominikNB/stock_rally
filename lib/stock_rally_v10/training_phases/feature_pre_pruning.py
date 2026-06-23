@@ -17,7 +17,10 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_selection import mutual_info_classif
 
-from lib.stock_rally_v10.extended_base_features import append_macro_regime_vol_numeric_cols
+from lib.stock_rally_v10.extended_base_features import (
+    append_macro_regime_vol_numeric_cols,
+    append_training_cross_section_cols,
+)
 from lib.stock_rally_v10.features import (
     clear_news_shard_frame_cache,
     merge_news_shard_from_best_params,
@@ -525,7 +528,10 @@ def build_reference_feat_cols(
             "news_add_sign_confirmation", sp.get("news_add_sign_confirmation")
         ),
     )
-    return append_macro_regime_vol_numeric_cols(cols, df_train)
+    return append_training_cross_section_cols(
+        append_macro_regime_vol_numeric_cols(cols, df_train),
+        df_train,
+    )
 
 
 def try_load_statistical_pre_prune_artifact(cfg_mod: Any) -> dict[str, Any] | None:

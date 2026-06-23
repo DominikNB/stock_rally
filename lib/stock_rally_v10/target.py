@@ -9,6 +9,56 @@ import pandas as pd
 from lib.stock_rally_v10 import config as cfg
 
 
+def _compute_atr_pct_series(
+    high: np.ndarray,
+    low: np.ndarray,
+    close: np.ndarray,
+    *,
+    window: int,
+) -> np.ndarray:
+    """ATR/Close (Anteil) pro Bar — nur Vergangenheit inkl. aktuellem Bar (rolling)."""
+    n = len(close)
+    if n == 0:
+        return np.array([], dtype=np.float64)
+    tr = np.full(n, np.nan, dtype=np.float64)
+    for i in range(1, n):
+        hl = float(high[i]) - float(low[i])
+        hc = abs(float(high[i]) - float(close[i - 1]))
+        lc = abs(float(low[i]) - float(close[i - 1]))
+        tr[i] = max(hl, hc, lc)
+    if n == 1:
+        tr[0] = float(high[0]) - float(low[0]) if np.isfinite(high[0]) and np.isfinite(low[0]) else np.nan
+    min_p = max(2, int(window) // 2)
+    atr = pd.Series(tr).rolling(int(window), min_periods=min_p).mean()
+    close_s = pd.Series(close, dtype=np.float64).replace(0.0, np.nan)
+    return (atr / close_s).to_numpy(dtype=np.float64, copy=False)
+
+
+def _rally_threshold_at(
+    signal_idx: int,
+    *,
+    rt_fixed: float,
+    threshold_mode: str,
+    atr_pct: np.ndarray | None,
+    atr_k: float,
+) -> float:
+    rt_fixed = float(rt_fixed)
+    mode = str(threshold_mode).strip().lower()
+    if mode == "atr_multiple":
+        mode = "hybrid_ceiling"
+    if mode not in {"hybrid_floor", "hybrid_ceiling"} or atr_pct is None:
+        return rt_fixed
+    if signal_idx < 0 or signal_idx >= len(atr_pct):
+        return rt_fixed
+    ap = float(atr_pct[signal_idx])
+    if not np.isfinite(ap) or ap <= 0.0:
+        return rt_fixed
+    atr_thr = float(atr_k) * ap
+    if mode == "hybrid_floor":
+        return max(rt_fixed, atr_thr)
+    return min(rt_fixed, atr_thr)
+
+
 def _segment_meets_constraints(
     open_arr: np.ndarray,
     close_arr: np.ndarray,
@@ -149,6 +199,8 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
     """
     w_lo, w_hi, rt, split, ld, ed, tail_ex = cfg.fixed_y_rule_params()
     label_mode = cfg.fixed_y_label_mode()
+    threshold_mode = cfg.fixed_y_rally_threshold_mode()
+    atr_window, atr_k = cfg.fixed_y_atr_params()
     strict_daily_up = bool(cfg.fixed_y_require_strict_daily_up_in_rally())
     max_dip = float(cfg.fixed_y_max_dip_below_entry_fraction())
     max_dip = max(0.0, min(float(max_dip), 1.0))
@@ -159,7 +211,17 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
         open_ = pd.to_numeric(df_ticker["open"], errors="coerce").to_numpy(dtype=np.float64, copy=False)
     else:
         open_ = close.copy()
+    if "high" in df_ticker.columns and "low" in df_ticker.columns:
+        high_ = pd.to_numeric(df_ticker["high"], errors="coerce").to_numpy(dtype=np.float64, copy=False)
+        low_ = pd.to_numeric(df_ticker["low"], errors="coerce").to_numpy(dtype=np.float64, copy=False)
+    else:
+        high_ = close.copy()
+        low_ = close.copy()
     n = len(close)
+
+    atr_pct: np.ndarray | None = None
+    if threshold_mode in {"hybrid_floor", "hybrid_ceiling", "atr_multiple"}:
+        atr_pct = _compute_atr_pct_series(high_, low_, close, window=atr_window)
 
     rally = np.zeros(n, dtype=np.int8)
     # Jedes qualifizierende Haltefenster [entry, exit] (ein w aus w_lo..w_hi) — für rally_plus_entry
@@ -170,6 +232,13 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
         entry_idx = signal_idx + 1
         if entry_idx >= n:
             continue
+        rt_sig = _rally_threshold_at(
+            signal_idx,
+            rt_fixed=rt,
+            threshold_mode=threshold_mode,
+            atr_pct=atr_pct,
+            atr_k=atr_k,
+        )
         has_valid_window = False
         for w in range(w_lo, w_hi + 1):
             exit_idx = entry_idx + int(w)
@@ -180,7 +249,7 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
             if not np.isfinite(o) or not np.isfinite(c) or o == 0.0:
                 continue
             ret_trade = c / o - 1.0
-            if ret_trade < rt:
+            if ret_trade < rt_sig:
                 continue
             # Zulässiger Mindest-Schlusskurs: Entry-Open * (1 - max_dip). max_dip=0: streng wie früher
             # (kein Close unter o); max_dip=0.01: bis 1% unter o erlaubt; max_dip=1.0: keine untere Dipschranke.
@@ -227,12 +296,19 @@ def _create_target_one_ticker_fixed_bands(df_ticker):
         while j < n and rally[j] == 1:
             j += 1
         end = j - 1
+        seg_rt = _rally_threshold_at(
+            max(0, start - 1),
+            rt_fixed=rt,
+            threshold_mode=threshold_mode,
+            atr_pct=atr_pct,
+            atr_k=atr_k,
+        )
         if not _segment_meets_constraints(
             open_,
             close,
             start,
             end,
-            min_return=rt,
+            min_return=seg_rt,
             min_len=max(1, int(w_lo) + 1),
             require_strict_daily_up=strict_daily_up,
         ):
@@ -439,6 +515,17 @@ def create_target(df, *, quiet: bool = False):
                 _sig_pre = int(getattr(cfg, "FIXED_Y_RALLY_SIGNAL_ENTRY_DAYS", 2))
                 _head_f = float(getattr(cfg, "FIXED_Y_RALLY_PLUS_TARGET_SEGMENT_HEAD_FRACTION", 0.1))
                 _ovm = str(getattr(cfg, "FIXED_Y_RALLY_PLUS_TARGET_OVERLAP_MODE", "greedy_first")).strip().lower()
+                _thr_mode = cfg.fixed_y_rally_threshold_mode()
+                _atr_w, _atr_k = cfg.fixed_y_atr_params()
+                _thr_txt = (
+                    f"hybrid_floor max(k×ATR, {_rt:.2%}) k={_atr_k} window={_atr_w}"
+                    if _thr_mode == "hybrid_floor"
+                    else (
+                        f"hybrid_ceiling min(k×ATR, {_rt:.2%}) k={_atr_k} window={_atr_w}"
+                        if _thr_mode == "hybrid_ceiling"
+                        else f"{_rt:.2%} fixed"
+                    )
+                )
                 _extra = (
                     f" rally_signal_pre_days={_sig_pre} rally_plus_head_frac={_head_f:.2f} overlap={_ovm}"
                     if _label_mode == "rally_plus_entry"
@@ -446,7 +533,7 @@ def create_target(df, *, quiet: bool = False):
                 )
                 print(
                     f"  Feste Band-Regel: Fenster w in [{_w_lo}, {_w_hi}] Handelstage, "
-                    f"kum. Rendite >= {_rt:.2%}, Segment-Split {_sp}d, "
+                    f"Rally-Schwelle {_thr_txt}, Segment-Split {_sp}d, "
                     f"label_mode={_label_mode} lead={_ld} entry={_ed} tail_excl={_tex} strict_up={_strict} "
                     f"max_dip_below_entry={_md:.4f} long_mode={_long_mode} long_entry={_long_ed}{_extra} (cfg.FIXED_Y_*)",
                     flush=True,

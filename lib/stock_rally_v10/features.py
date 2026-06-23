@@ -1266,6 +1266,16 @@ def assemble_features(df, sentiment_df=None, meta_only=False):
             )
             save_macro_augment_cache(df, _cols_before_macro, cfg_mod=cfg)
 
+    from lib.stock_rally_v10.cross_section_features import TRAINING_CROSS_SECTION_COLS
+    from lib.stock_rally_v10.extended_base_features import augment_df_cross_section
+
+    _need_cross_section = not meta_only or any(
+        str(c) in TRAINING_CROSS_SECTION_COLS
+        for c in (getattr(cfg, "FEAT_COLS", []) or [])
+    )
+    if _need_cross_section:
+        df = augment_df_cross_section(df)
+
     if _need_macro_regime:
         print(
             f"assemble_features: nach Macro — weiter mit dropna-Vorbereitung "

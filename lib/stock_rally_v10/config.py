@@ -186,6 +186,30 @@ def fixed_y_label_mode() -> str:
     return mode
 
 
+def fixed_y_rally_threshold_mode() -> str:
+    """Schwellen-Modus: ``fixed``, ``hybrid_ceiling`` oder ``hybrid_floor``."""
+    m = sys.modules[__name__]
+    mode = str(getattr(m, "FIXED_Y_RALLY_THRESHOLD_MODE", "fixed")).strip().lower()
+    if mode == "atr_multiple":
+        mode = "hybrid_ceiling"
+    if mode not in {"fixed", "hybrid_floor", "hybrid_ceiling"}:
+        mode = "fixed"
+    return mode
+
+
+def fixed_y_uses_atr_threshold() -> bool:
+    """True wenn ATR in die Rally-Schwelle einfließt (``hybrid_ceiling`` / ``hybrid_floor``)."""
+    return fixed_y_rally_threshold_mode() in {"hybrid_floor", "hybrid_ceiling"}
+
+
+def fixed_y_atr_params() -> tuple[int, float]:
+    """(atr_window, atr_k) für ATR-Hybrid-Modi."""
+    m = sys.modules[__name__]
+    w = max(2, int(getattr(m, "FIXED_Y_ATR_WINDOW", 14)))
+    k = float(getattr(m, "FIXED_Y_ATR_K", 1.5))
+    return w, k
+
+
 def describe_target_rule_fixed_bands() -> str:
     """Feste Band-Regel (OPT_OPTIMIZE_Y_TARGETS=False); Zahlen = ``fixed_y_rule_params()`` wie in der Pipeline."""
     w_lo, w_hi, rt, split, ld, ed, tail_ex = fixed_y_rule_params()

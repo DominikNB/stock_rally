@@ -1,12 +1,14 @@
 # Systemreferenz: stock_rally — Architektur, Datenfluss und Rekonstruktion
 
+> **Alles in einer Datei:** [`STOCK_RALLY_DOKUMENTATION.md`](STOCK_RALLY_DOKUMENTATION.md) (Teil II) · Neu bauen: `python scripts/_gen_full_documentation_md.py`
+
 Dieses Dokument beschreibt das Projekt **stock_rally** so präzise, dass die Logik aus dem Text allein wieder implementierbar ist. Maßgeblich sind der Stand des Repos (Python-Module unter `lib/`, `holdout/`, `scripts/`) und das Notebook `stock_rally_v10.ipynb`.
 
 ## Inhaltsverzeichnis
 
 | § | Thema |
 |---|--------|
-| — | [**Pipeline-Übersicht**](PIPELINE_OVERVIEW.md) (Phasen, Signale, Features, Top-100-SHAP) |
+| — | [**Pipeline-Übersicht**](PIPELINE_OVERVIEW.md) (Phasen, Signale, Features, Top-100-SHAP, **Verbesserungsvorschläge §15**) |
 | [1](#1-zweck-des-systems) | Zweck des Systems |
 | [2](#2-verzeichnisstruktur-funktional) | Verzeichnisstruktur (funktional) |
 | [3](#3-konfiguration-und-umgebung) | Konfiguration und Umgebung |
@@ -15,6 +17,7 @@ Dieses Dokument beschreibt das Projekt **stock_rally** so präzise, dass die Log
 | [6](#6-signal-logik-im-notebook-rekonstruktion) | Signal-Logik im Notebook |
 | [7](#7-holdout-pipeline-holdoutbuild_holdout_signals_masterpy) | Holdout-Pipeline (`holdout/build_holdout_signals_master.py`) |
 | [8](#8-libsignal_extra_filterspy) | `lib/signal_extra_filters.py` |
+| [8b](#8b-libsignal_context_tierpy--website-ampel) | `lib/signal_context_tier.py` & Website-Ampel |
 | [9](#9-libwebsite_rally_promptpy) | `lib/website_rally_prompt.py` |
 | [10](#10-website--gemini) | Website & Gemini |
 | [11](#11-scriptsanalyze_signals_forwardpy) | `scripts/analyze_signals_forward.py` |
@@ -39,10 +42,12 @@ Dieses Dokument beschreibt das Projekt **stock_rally** so präzise, dass die Log
 
 | Pfad | Rolle |
 |------|--------|
-| `stock_rally_v10.ipynb` | Zentrale Orchestrierung: Daten, Features, Training, Scoring, HTML-Export |
-| `lib/` | Wiederverwendbare Bibliothek (`scoring_persist`, `signal_extra_filters`, `website_rally_prompt`) |
+| `lib/stock_rally_v10/pipeline_runner.py` | **Primärer Einstieg** V10: Daten → Training → Export (Phasen 12–17); ersetzt Notebook für Produktionsläufe |
+| `stock_rally_v10.ipynb` | Historische Orchestrierung / Entwicklung (Zellen analog zu `pipeline_runner`) |
+| `lib/` | Wiederverwendbare Bibliothek (`scoring_persist`, `signal_extra_filters`, `signal_context_tier`, `website_ampel_filter`, `website_rally_prompt`) |
+| `lib/stock_rally_v10/` | V10-Kern: `config`, `data_and_split`, `features`, `training_phases/` |
 | `holdout/` | CLI-Pipeline für Holdout-CSVs (Master-CSV, Forward-Renditen, Filter) |
-| `scripts/` | Website-Gemini (`run_website_analysis_gemini.py`), `website_analysis_common.py`, `analyze_signals_forward.py`, `append_git_push.py` |
+| `scripts/` | Gemini (`run_website_analysis_gemini.py`), Website-Regen (`regen_website_*.py`), `analyze_signals_forward.py`, `append_git_push.py`, Doku-Generator (`_gen_pipeline_overview_md.py`) |
 | `config/` | `load_env.py` (`.env` / `config/secrets.env`), `env.example` |
 | `data/` | CSV-Ein-/Ausgaben (git-ignoriert außer wo explizit eingecheckt) |
 | `docs/` | Statische Website + `website_analysis_prompt.txt`, `analysis_llm_last.*` |
@@ -255,6 +260,7 @@ Rückgabe: `(rally, target)` als `int8`-Arrays.
 
 - `master_complete.csv` = volle Tabelle.
 - `master_daily_update.csv` = nur Zeilen mit **max(Date)**; feste LLM-Spaltenliste (ohne Forward-Renditen und ohne Trainingslabels).
+- `data/holdout_oos_performance.json` = aggregierte OOS-Kennzahlen (Mittel/Win-Rate pro Horizont, Kontext-Segmente, Jahre) — wird am Ende von `main()` geschrieben; siehe [`STOCK_RALLY_DOKUMENTATION.md`](STOCK_RALLY_DOKUMENTATION.md) Teil I §16.
 
 ---
 
@@ -289,6 +295,33 @@ Berechnet **nur aus Signal-Tabelle + yfinance-Rohmatrix** erklärende Spalten (L
 13. `_add_short_horizon_macro_regime_columns`: `regime_vix_level`, `regime_vix_ret_1d/5d`, `regime_vix_z_20d`, `regime_spy_realvol_5d_ann`, `regime_tnx_ret_5d`.
 
 **Ausgabe**: erweiterter DataFrame (linksbündig auf `sig`); abschließend `ensure_llm_signal_columns`.
+
+**Hinweis (2026-06):** Viele Spalten aus diesem Modul (`prob_zscore_same_day`, `ret_vs_spy_*`, `macro_event_within_2bd`, `beta_mkt_60d`, …) landen in **Holdout/LLM-CSV**, sind aber **nicht** Teil von `FEAT_COLS` beim Meta-Training — siehe [`PIPELINE_OVERVIEW.md` §15](PIPELINE_OVERVIEW.md#15-verbesserungsvorschläge-holdout--pipeline) (B1).
+
+---
+
+## 8b. `lib/signal_context_tier.py` & Website-Ampel
+
+### 8b.1 `classify_signal_context_tier(signal)`
+
+OOS-Kontext-Ampel für die statische Website (filtert **keine** Modell-Signale):
+
+| Stufe | Logik |
+|-------|--------|
+| **rot** | `macro_event_within_2bd == True` |
+| **grün** | kein Makro-Event und `regime_vix_level >= SIGNAL_CONTEXT_VIX_GREEN_MIN` (Default 20, `config_settings.py`) |
+| **gelb** | sonst |
+
+Rückgabe u. a.: `context_tier`, `context_tier_label_de`, `context_tier_tooltip`, `context_tier_html`. Legacy-Felder (`red_summary_*`, `vix_regime_*`) werden beim Export entfernt.
+
+### 8b.2 `lib/website_ampel_filter.py`
+
+- CSS/JS für Filter-Leiste in `docs/index.html` (Alle / Rot / Gelb / Grün).
+- Nutzer-Legende zur Einordnung der Ampel vs. Modell-Signal.
+
+### 8b.3 Einbindung in Phase 17
+
+`training_phases/daily_scoring_html.py` reichert jedes Signal mit Kontext-Tier an, bevor `signals.json` geschrieben wird. Optional: `PHASE17_WEBSITE_SIGNALS_OVERRIDE` lädt eine externe Signalliste (Notfall-Wiederherstellung ohne Live-Rescoring).
 
 ---
 
@@ -339,10 +372,18 @@ Berechnet **nur aus Signal-Tabelle + yfinance-Rohmatrix** erklärende Spalten (L
 
 ## 13. Statische Website (`docs/`)
 
-- **`index.html`**: Wird in **Notebook Cell 17** generiert (Signale, Chips, eingebettete Charts als Base64, Sidebar für KI-HTML, Einbindung `analysis_llm_last.html` per Platzhalter-Ersetzung).  
-- **`signals.json`**: `generated`, `threshold`, `signals`, `signals_holdout_final`, `note`.  
-- **`website_analysis_prompt.txt`**: Statischer deutschen Prompt für Gemini; Spalten müssen zu CSV passen (`signal_extra_filters` + `ensure_llm_signal_columns`).  
+- **`index.html`**: Wird in **Phase 17** (`daily_scoring_html.py`) oder Notebook Cell 17 generiert — Signale, Kontext-Ampel-Filter, Charts (PNG unter `docs/charts/` oder eingebettet), Sidebar für KI-HTML, Einbindung `analysis_llm_last.html`.
+- **`signals.json`**: `generated`, `threshold`, `signals`, `signals_holdout_final`, `note`; pro Signal u. a. `context_tier`, `context_tier_html`.
+- **`website_analysis_prompt.txt`**: Statischer deutscher Prompt für Gemini; Spalten müssen zu CSV passen (`signal_extra_filters` + `ensure_llm_signal_columns`).
 - **`manifest.json`**: PWA-Manifest.
+
+**Hilfsskripte (2026-06):**
+
+| Skript | Zweck |
+|--------|--------|
+| `scripts/regen_website_html_only.py` | HTML aus bestehendem `signals.json`, Charts von Disk |
+| `scripts/regen_website_restore_good_signals.py` | Signale aus Git-Commit, Tier-Anreicherung, voller Website-Export |
+| `scripts/run_phase17_website_only.py` | Isolierter Phase-17-Lauf |
 
 ---
 
@@ -350,10 +391,10 @@ Berechnet **nur aus Signal-Tabelle + yfinance-Rohmatrix** erklärende Spalten (L
 
 ```mermaid
 flowchart TB
-  subgraph nb[Notebook]
-    A[Daten + Features] --> B[Training Cell 13-14]
+  subgraph runner[pipeline_runner.py]
+    A[Daten + Features] --> B[Training Phasen 12-13]
     B --> C[scoring_artifacts.joblib]
-    A --> D[Cell 17 Scoring]
+    A --> D[Phase 17 Scoring]
     C --> D
     D --> E[signals.json + index.html]
   end
@@ -382,4 +423,5 @@ flowchart TB
 
 ## 16. Versionshinweis
 
+- **Stand Juni 2026:** Primärer Laufweg ist `python -m lib.stock_rally_v10.pipeline_runner`; Notebook bleibt Referenz. Kontext-Ampel, Phase-17-Override und SCORING_ONLY/`RETRAIN_META_ONLY`-Fix sind in [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md) §4.6, §10 und §15 dokumentiert.
 - Konkrete Hyperparameter-Listen (Optuna-Räume, alle Feature-Namen) stehen **im Notebook** und in **`best_params`** im Artefakt; dieses Dokument beschreibt **Struktur und Algorithmen**, nicht jeden Tuning-Wert. Für eine 1:1-Replikation zusätzlich `models/scoring_artifacts.joblib` (nach Freigabe) und die jeweilige Notebook-Version heranziehen.

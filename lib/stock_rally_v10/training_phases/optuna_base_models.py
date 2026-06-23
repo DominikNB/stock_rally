@@ -27,7 +27,10 @@ from lib.stock_rally_v10.optuna_train import (
     intersect_feat_cols_with_prescreen_kept,
     intersect_feat_cols_with_statistical_prune,
 )
-from lib.stock_rally_v10.extended_base_features import append_macro_regime_vol_numeric_cols
+from lib.stock_rally_v10.extended_base_features import (
+    append_macro_regime_vol_numeric_cols,
+    append_training_cross_section_cols,
+)
 
 
 def _xgb_focal_logloss_metric(pr: np.ndarray, dtrain: xgb.DMatrix) -> tuple[str, float]:
@@ -451,7 +454,10 @@ def _run_phase12(c: Any) -> None:
             breakout_lookback_window=_brk_w,
             cfg_mod=c,
         )
-    FEAT_COLS = append_macro_regime_vol_numeric_cols(FEAT_COLS, df_train)
+    FEAT_COLS = append_training_cross_section_cols(
+        append_macro_regime_vol_numeric_cols(FEAT_COLS, df_train),
+        df_train,
+    )
     # build_news_model_cols kann mehr news_* nennen als der Shard/merge (Col-Screen, früher Return)
     # tatsächlich liefert — wie im Optuna-Trial-Pfad mit Sentinel auffüllen, sonst KeyError.
     _sent_pad = float(getattr(c, "FEATURE_NUMERIC_NAN_SENTINEL", -1e8))

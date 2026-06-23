@@ -118,9 +118,24 @@ def _log_loaded_config_snapshot() -> None:
             _sigd = getattr(cfg, "FIXED_Y_RALLY_SIGNAL_ENTRY_DAYS", None)
             _rphf = getattr(cfg, "FIXED_Y_RALLY_PLUS_TARGET_SEGMENT_HEAD_FRACTION", None)
             _rpov = getattr(cfg, "FIXED_Y_RALLY_PLUS_TARGET_OVERLAP_MODE", None)
+            _thr_mode = str(getattr(cfg, "FIXED_Y_RALLY_THRESHOLD_MODE", "fixed")).strip().lower()
+            if _thr_mode == "atr_multiple":
+                _thr_mode = "hybrid_ceiling"
+            if _thr_mode == "hybrid_floor":
+                _thr_part = (
+                    f"thr_mode=hybrid_floor k={getattr(cfg, 'FIXED_Y_ATR_K', None)} "
+                    f"atr_w={getattr(cfg, 'FIXED_Y_ATR_WINDOW', None)} floor_rt={_rt!r}"
+                )
+            elif _thr_mode == "hybrid_ceiling":
+                _thr_part = (
+                    f"thr_mode=hybrid_ceiling k={getattr(cfg, 'FIXED_Y_ATR_K', None)} "
+                    f"atr_w={getattr(cfg, 'FIXED_Y_ATR_WINDOW', None)} cap_rt={_rt!r}"
+                )
+            else:
+                _thr_part = f"rt={_rt!r}"
             _y_line = (
                 f"Y: fixed band [{getattr(cfg, 'FIXED_Y_WINDOW_MIN', '?')},"
-                f"{getattr(cfg, 'FIXED_Y_WINDOW_MAX', '?')}] rt={_rt!r} "
+                f"{getattr(cfg, 'FIXED_Y_WINDOW_MAX', '?')}] {_thr_part} "
                 f"split={getattr(cfg, 'FIXED_Y_SEGMENT_SPLIT', None)} "
                 f"lead={getattr(cfg, 'FIXED_Y_LEAD_DAYS', None)} "
                 f"entry={getattr(cfg, 'FIXED_Y_ENTRY_DAYS', None)} "

@@ -1,8 +1,10 @@
 # V11 Roadmap — Antwort auf Pipeline-Kritik (Stand V10)
 
+> **Alles in einer Datei:** [`STOCK_RALLY_DOKUMENTATION.md`](STOCK_RALLY_DOKUMENTATION.md) (Teil III) · Neu bauen: `python scripts/_gen_full_documentation_md.py`
+
 Dieses Dokument ordnet externe/ interne Kritikpunkte am V10-Stack ein, korrigiert Fakten am **Ist-Code** und leitet konkrete V11-Arbeitspakete ab.
 
-Verwandt: [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md), [`SYSTEM_REFERENZ.md`](SYSTEM_REFERENZ.md).
+Verwandt: [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md) (inkl. **§15 Verbesserungsvorschläge**), [`SYSTEM_REFERENZ.md`](SYSTEM_REFERENZ.md).
 
 ---
 
@@ -52,7 +54,16 @@ In `meta_learner.py` nutzt **`meta_objective`** pro Trial u. a.:
 | C | Meta-**Fit** erst **nach** Trial-Auswahl oder mit **nested** Threshold pro Fold (nicht nur Post-hoc Phase 5) |
 | D | Optional: Filter als **explizite Meta-Features** (`rsi_above_kill`, `dist_to_high_pct`, …) statt nur Post-Processing — nur wenn A/B nicht reichen |
 
-**Tests:** `tests/test_pipeline_invariants.py` um „Threshold + Filter auf THRESHOLD reproduzierbar aus Artefakt“ erweitern.
+**Tests:** `tests/test_pipeline_invariants.py` um „Threshold + Filter auf THRESHOLD reproduzierbar aus Artefakt“ erweitern; bereits abgedeckt: `SCORING_ONLY` ignoriert `RETRAIN_META_ONLY` bei `assemble_features`.
+
+**Siehe auch:** Priorisierte Backlog-Liste in [`PIPELINE_OVERVIEW.md` §15](PIPELINE_OVERVIEW.md#15-verbesserungsvorschläge-holdout--pipeline) (Top-Prioritäten #1 Cross-Section-Features, #2 ATR-Target; Stufen A/B/C).
+
+### V11-Ergänzung: Label & Cross-Section
+
+| Stufe | Maßnahme |
+|-------|----------|
+| **Quick** | `macro_event_within_2bd`, `ret_vs_spy_5d` in `FEAT_COLS` (Code in `signal_extra_filters.py` portieren) |
+| **Mittel** | ATR-normalisiertes Rally-Target — erfordert neuen V11-Branch + volles Retraining |
 
 ---
 

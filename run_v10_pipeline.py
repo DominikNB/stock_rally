@@ -15,26 +15,3 @@ from lib.stock_rally_v10.pipeline_runner import run_pipeline_default
 
 if __name__ == "__main__":
     run_pipeline_default()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-*''''''''''''#, nhzujijnhg vnhj vgc v

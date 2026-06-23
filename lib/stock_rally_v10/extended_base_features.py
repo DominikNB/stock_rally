@@ -4,6 +4,11 @@ from __future__ import annotations
 import pandas as pd
 
 from lib.stock_rally_v10 import config as cfg
+from lib.stock_rally_v10.cross_section_features import (
+    TRAINING_CROSS_SECTION_COLS,
+    append_training_cross_section_cols,
+    augment_df_cross_section_features,
+)
 from lib.stock_rally_v10.macro_vol_enrich import (
     TRAINING_MACRO_VOL_COLS,
     enrich_macro_volatility_features,
@@ -25,6 +30,15 @@ def augment_df_macro_regime_and_vol(df: pd.DataFrame) -> pd.DataFrame:
         flush=True,
     )
     return enrich_macro_volatility_features(out, cfg_mod=cfg)
+
+
+def augment_df_cross_section(out: pd.DataFrame) -> pd.DataFrame:
+    """Cross-Section (Makro-Kalender, ret vs. SPY) — nach Regime/Macro-Vol."""
+    print(
+        "assemble_features: Cross-Section (macro_event, ret_vs_spy) …",
+        flush=True,
+    )
+    return augment_df_cross_section_features(out)
 
 
 def append_macro_regime_vol_numeric_cols(
@@ -52,3 +66,13 @@ def append_macro_regime_vol_numeric_cols(
             flush=True,
         )
     return out
+
+
+__all__ = [
+    "TRAINING_MACRO_VOL_COLS",
+    "TRAINING_CROSS_SECTION_COLS",
+    "append_macro_regime_vol_numeric_cols",
+    "append_training_cross_section_cols",
+    "augment_df_cross_section",
+    "augment_df_macro_regime_and_vol",
+]

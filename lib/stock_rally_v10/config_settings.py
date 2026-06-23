@@ -124,6 +124,13 @@ CS_TARGET_GROUPBY = "calendar_day"  # "calendar_day" | "sector_day"
 FIXED_Y_WINDOW_MIN = 2
 FIXED_Y_WINDOW_MAX = 8
 FIXED_Y_RALLY_THRESHOLD = 0.045
+# "fixed": immer FIXED_Y_RALLY_THRESHOLD (4,5 % für alle — ursprüngliches Verhalten).
+# "hybrid_ceiling": min(k × ATR/close, FIXED_Y_RALLY_THRESHOLD) — ruhige Titel niedrigere Hürde,
+#   volatile Titel weiter max. 4,5 %. (Legacy-Alias "atr_multiple" → hybrid_ceiling.)
+# "hybrid_floor": max(k × ATR/close, FIXED_Y_RALLY_THRESHOLD) — volatile strenger als 4,5 %.
+FIXED_Y_RALLY_THRESHOLD_MODE = "fixed"  # "fixed" | "hybrid_ceiling" | "hybrid_floor"
+FIXED_Y_ATR_WINDOW = 14
+FIXED_Y_ATR_K = 1.5
 FIXED_Y_LABEL_MODE = "rally_plus_entry"  # "segment_based" | "entry_direct" | "rally_plus_entry"
 FIXED_Y_SEGMENT_SPLIT = 4
 FIXED_Y_LEAD_DAYS = 2
@@ -311,7 +318,7 @@ SEED_PARAMS = dict(
     sma_window=50,
     news_mom_w=3,
     news_vol_ma=20,
-    news_tone_roll=1,
+    news_tone_roll=3,  # muss in NEWS_TONE_ROLL_WINDOWS + Shard-Manifest liegen (nicht 1)
     news_extra_zscore_w=20,
     news_extra_tone_accel=True,
     news_extra_macro_sec_diff=True,
@@ -445,7 +452,7 @@ MACRO_AUGMENT_CACHE_DIR = os.path.join(os.getcwd(), "data", "macro_augment_cache
 # ── Phase 11: Statistisches Pre-Pruning (nur df_train / BASE, vor Phase 12) ───
 STATISTICAL_PRE_PRUNE_ENABLED = True
 # True: vorhandenes ``statistical_pre_prune_v1.json`` laden (kein 18×-MI-Rebuild nach Absturz/Fix).
-STATISTICAL_PRE_PRUNE_REUSE_ARTIFACT = True
+STATISTICAL_PRE_PRUNE_REUSE_ARTIFACT = False
 STATISTICAL_PRE_PRUNE_MAX_SENTINEL_FRAC = 0.98  # Drop wenn ≥98 % Sentinel/NaN
 STATISTICAL_PRE_PRUNE_MI_TOP_K = 150
 STATISTICAL_PRE_PRUNE_MI_MAX_ROWS = None  # None = Auto-Cap über MI_MATRIX_BUDGET_MB (siehe unten)
@@ -458,6 +465,9 @@ STATISTICAL_PRE_PRUNE_WHITELIST_EXACT = (
     "sector_id",
     "gics_sector_id",
     "gics_industry_id",
+    "macro_event_within_2bd",
+    "ret_vs_spy_5d",
+    "ret_vs_spy_20d",
 )
 OPTUNA_INTERSECT_FEAT_COLS_WITH_STATISTICAL_PRUNE = True
 # Phase 11: pro News-Shard-Tag (Manifest) Sparsity+MI → ``survivors_by_tag`` für Optuna.

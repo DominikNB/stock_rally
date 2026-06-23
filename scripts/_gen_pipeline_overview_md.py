@@ -50,7 +50,7 @@ def _build_base_shap_section(p: dict, table: str, topk_lines: str) -> str:
 | Min. Keep | {adf.get('min_keep', '?')} |
 
 """
-    return f"""### 15.1 Base-Optuna-Gewinner (aus SHAP-Report)
+    return f"""### 17.1 Base-Optuna-Gewinner (aus SHAP-Report)
 
 | Parameter | Wert |
 |-----------|------|
@@ -64,11 +64,11 @@ def _build_base_shap_section(p: dict, table: str, topk_lines: str) -> str:
 | Features mit \\|SHAP\\| ≈ 0 | {p.get('shap_zeroish_count', '?')} |
 
 {adf_block}
-### 15.2 `topk_names_raw` (Meta-Roh-Features, Reihenfolge)
+### 17.2 `topk_names_raw` (Meta-Roh-Features, Reihenfolge)
 
 {topk_lines}
 
-### 15.3 Top 100 Base-SHAP
+### 17.3 Top 100 Base-SHAP
 
 **Quelle:** `models/base_feature_shap_report.json` · **Metrik:** mean |SHAP| · **Modell:** XGB-1 nach Phase 12 (finale SHAP auf geprüfter Liste).
 
@@ -100,7 +100,7 @@ def _build_meta_shap_section(mp: dict, meta_table: str) -> str:
             break
 
     return f"""
-### 15.4 Meta-Learner SHAP (Phase 13)
+### 17.4 Meta-Learner SHAP (Phase 13)
 
 **Quelle:** `data/meta_feature_shap_report.json` · **Metrik:** mean |SHAP| auf **gesamtem META** (`df_test`) ·
 **Modell:** Meta-XGB nach Optuna + finalem Fit.
@@ -142,7 +142,7 @@ def main() -> None:
 
     meta_extra = ""
     meta_section = """
-### 15.4 Meta-Learner SHAP
+### 17.4 Meta-Learner SHAP
 
 *Noch nicht vorhanden — entsteht nach Phase 13 als `data/meta_feature_shap_report.json`.*
 """
@@ -156,20 +156,37 @@ def main() -> None:
         meta_section = _build_meta_shap_section(mp, meta_table)
 
     static = STATIC.read_text(encoding="utf-8")
-    marker = "<!-- SHAP_APPENDIX_START -->"
-    if marker not in static:
-        raise SystemExit(f"Marker {marker!r} not found in {STATIC}")
+    perf_marker = "<!-- PERFORMANCE_SNAPSHOT_START -->"
+    shap_marker = "<!-- SHAP_APPENDIX_START -->"
+    if perf_marker not in static:
+        raise SystemExit(f"Marker {perf_marker!r} not found in {STATIC}")
+    if shap_marker not in static:
+        raise SystemExit(f"Marker {shap_marker!r} not found in {STATIC}")
 
-    before, _ = static.split(marker, 1)
+    before_perf, _rest = static.split(perf_marker, 1)
+    before_shap, _ = _rest.split(shap_marker, 1)
+
+    perf_block = ""
+    try:
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
+        from holdout.oos_performance import build_performance_report, performance_markdown_table
+
+        perf_block = "\n" + performance_markdown_table(build_performance_report(ROOT)) + "\n"
+    except Exception as exc:
+        perf_block = f"\n*Performance-Snapshot nicht geladen: `{exc}`*\n"
+
     appendix = _build_base_shap_section(p, table, topk_lines) + meta_section
 
     footer = """
 ---
 
-## 16. Dateien & Befehle
+## 18. Dateien & Befehle
 
 | Pfad | Inhalt |
 |------|--------|
+| `data/holdout_oos_performance.json` | OOS-Performance-Summary (nach Holdout-Build) |
+| `data/master_complete.csv` | Volle Holdout-Tabelle inkl. Forward-Renditen |
 | `models/base_feature_shap_report.json` | Volle Base-SHAP (JSON) |
 | `models/base_feature_shap_report.csv` | Volle Base-SHAP (CSV) |
 | `data/base_feature_shap_report.json` | Spiegel nach `data/` |
@@ -182,8 +199,11 @@ def main() -> None:
 # Pipeline (Projektroot)
 python -m lib.stock_rally_v10.pipeline_runner
 
-# Gesamtdokument neu bauen (statisch + SHAP-Anhang)
+# Gesamtdokument neu bauen (statisch + Performance + SHAP)
 python scripts/_gen_pipeline_overview_md.py
+
+# Alles in eine Datei (Pipeline + Systemreferenz + V11 + SHAP)
+python scripts/_gen_full_documentation_md.py
 
 # Nur SHAP-Tabellen-Fragmente
 python scripts/_gen_shap_table_md.py data/_shap_top100_table.md
@@ -192,10 +212,20 @@ python scripts/_gen_shap_meta_table_md.py data/_shap_meta_table.md
 
 ---
 
-*Abschnitt 15 (SHAP) wird aus Reports generiert. Abschnitte 1–14: `docs/_pipeline_overview_static.md`.*
+*Abschnitte 1–15 + §16.1–16.2: `docs/_pipeline_overview_static.md` · §16.3 Performance + §17 SHAP: generiert · §18: Befehlsreferenz.*
 """
 
-    doc = before + marker + "\n\n" + _build_header(p, meta_extra) + appendix + footer
+    doc = (
+        before_perf
+        + perf_marker
+        + perf_block
+        + before_shap
+        + shap_marker
+        + "\n\n"
+        + _build_header(p, meta_extra)
+        + appendix
+        + footer
+    )
     OUT.write_text(doc, encoding="utf-8")
     print(f"Wrote {OUT} ({OUT.stat().st_size:,} bytes)")
 

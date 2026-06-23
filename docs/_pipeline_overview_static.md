@@ -2,6 +2,8 @@
 
 Dieses Dokument beschreibt **Schritt für Schritt**, was die Pipeline tut, welche Daten wo landen, wie Modelle trainiert werden und wie ein exportiertes Signal entsteht. Es ergänzt die technische Referenz [`SYSTEM_REFERENZ.md`](SYSTEM_REFERENZ.md) und die V11-Roadmap [`V11_ROADMAP.md`](V11_ROADMAP.md).
 
+> **Alles in einer Datei:** [`STOCK_RALLY_DOKUMENTATION.md`](STOCK_RALLY_DOKUMENTATION.md) · Neu bauen: `python scripts/_gen_full_documentation_md.py`
+
 **Zielgruppe:** Du willst einen Lauf nachvollziehen, Parameter setzen oder einen Reviewer-Kommentar (z. B. „Meta nur 2000 Zeilen?“) gegen den Code prüfen.
 
 ---
@@ -22,7 +24,9 @@ Dieses Dokument beschreibt **Schritt für Schritt**, was die Pipeline tut, welch
 12. [Artefakte & Persistenz](#12-artefakte--persistenz)
 13. [Laufmodi-Matrix](#13-laufmodi-matrix)
 14. [FAQ / typische Missverständnisse](#14-faq--typische-missverständnisse)
-15. [Anhang: SHAP-Ranglisten](#15-anhang-shap-ranglisten) *(dynamisch ergänzt)*
+15. [Verbesserungsvorschläge (Holdout & Pipeline)](#15-verbesserungsvorschläge-holdout--pipeline)
+16. [OOS-Performance (Holdout)](#16-oos-performance-holdout)
+17. [Anhang: SHAP-Ranglisten](#17-anhang-shap-ranglisten) *(dynamisch ergänzt)*
 
 ---
 
@@ -153,9 +157,11 @@ flowchart TD
 - `cfg.FEAT_COLS` existiert nach Phase 12 final; vorher volles Raster aus `build_feature_cols`-Grids.
 - Fehlende News: `FEATURE_NUMERIC_NAN_SENTINEL` (-1e8) + optional `news_missing`.
 
-### 4.6 RETRAIN_META_ONLY beim Daten-Schritt
+### 4.6 RETRAIN_META_ONLY vs. SCORING_ONLY beim Daten-Schritt
 
-Wenn `RETRAIN_META_ONLY=True`, kann der News-/Feature-Build **leichtgewichtig** sein (`meta_only=True` in `assemble_features`) — volle News-Shards sind für Meta-Scoring dennoch nötig, wenn News-Features in `topk_names` stehen.
+Wenn `RETRAIN_META_ONLY=True` **und** `SCORING_ONLY=False`, kann der News-/Feature-Build **leichtgewichtig** sein (`meta_only=True` in `assemble_features`) — volle News-Shards sind für Meta-Scoring dennoch nötig, wenn News-Features in `topk_names` stehen.
+
+**Wichtig (Fix 2026-06):** Bei `SCORING_ONLY=True` wird `RETRAIN_META_ONLY` für `assemble_features` **ignoriert** (`meta_only_features_for_assemble` in `data_and_split.py`). Sonst fehlen News-Spalten im Live-Scoring → NaN/Sentinel `-1e8` → Meta-Probas kollabieren → nur noch ~45 statt ~480 Signale. Test: `tests/test_pipeline_invariants.py`.
 
 ---
 
@@ -416,9 +422,42 @@ Optional: `META_PROBA_CALIBRATION_METHOD = sigmoid` (Platt) — Kalibrierung vor
 | **14** | `regime.py` | Regime-/Benchmark-Report (Analyse, kein Training) |
 | **15** | `threshold_pr_filters.py` | PR-Kurven, Filter-Diagnostik auf THRESHOLD/META — **ändert** `best_threshold` typisch nicht |
 | **16** | `holdout.py` | Holdout-Plots vs. `target` |
-| **17** | `daily_scoring_html.py` | `docs/signals.json`, `docs/index.html`, Charts; Signale aus **FINAL** |
+| **17** | `daily_scoring_html.py` | `docs/signals.json`, `docs/index.html`, Charts; Signale aus **FINAL** (oder Override) |
 
-**VIX-Ampel:** Nur Website-Anzeige (`VIX_AMPEL_*`), filtert keine Signale.
+### 10.1 Phase 17 — Ablauf & Ausgaben
+
+1. **Scoring** auf `df_final` (Meta-Probas, Filterkette wie Training).
+2. **Holdout-Master:** `build_holdout_signals_master()` → `data/holdout_signals.csv`, Anreicherung via `signal_extra_filters`.
+3. **Website-Export:** JSON + HTML + PNG-Charts unter `docs/charts/`.
+4. **Abschluss (aktuell):** `rebuild_master_from_signals_json()` — baut Master-CSV erneut aus `signals.json` (Yahoo-Download + Filter **zweites Mal**, ~10–15 min; siehe §15).
+
+**Laufzeit `SCORING_ONLY`:** typisch **35–45 min** (nicht „nur HTML“): News-Gap-Fill (BigQuery/GDELT), volle Feature-Matrix, Meta-Scoring in Batches, doppelter Holdout-Rebuild, Chart-Generierung.
+
+### 10.2 Kontext-Ampel (grün / gelb / rot)
+
+**Module:** `lib/signal_context_tier.py` (Klassifikation), `lib/website_ampel_filter.py` (Filter-UI in `index.html`).
+
+Die Ampel **filtert keine Signale aus dem Modell** — sie markiert OOS-Kontext für die Website und LLM-Spalten:
+
+| Stufe | Bedingung | Anzeige |
+|-------|-----------|---------|
+| **Rot** | `macro_event_within_2bd = True` (FOMC/CPI/NFP ±2 Handelstage) | Makro-Risiko |
+| **Grün** | kein Makro-Event **und** `regime_vix_level ≥ SIGNAL_CONTEXT_VIX_GREEN_MIN` (Default 20) | Erhöhtes Vol-Regime |
+| **Gelb** | sonst | Standard |
+
+Felder in `signals.json`: `context_tier`, `context_tier_label_de`, `context_tier_html`. Legacy-Keys (`red_summary_*`, `vix_regime_*`) werden beim Export entfernt.
+
+### 10.3 Phase-17-Override & Hilfsskripte
+
+| Mechanismus | Zweck |
+|-------------|--------|
+| `PHASE17_WEBSITE_SIGNALS_OVERRIDE` | Signalliste aus Datei/Git-Commit statt Live-Rescoring (Notfall-Wiederherstellung) |
+| `_existing_chart_paths_on_disk()` | Vorhandene PNGs unter `docs/charts/` wiederverwenden (HTML-Regen ohne Neurender) |
+| `scripts/regen_website_restore_good_signals.py` | Signale aus Git-Commit laden, Kontext-Tier anreichern, Charts/HTML |
+| `scripts/regen_website_html_only.py` | Nur HTML aus bestehendem `signals.json` (~5 min) |
+| `scripts/run_phase17_website_only.py` | Phase 17 isoliert (`SCORING_ONLY=True`, `RETRAIN_META_ONLY=False`) |
+
+**Bugfix 2026-06:** Im Override-Pfad muss `COMPANY_NAMES = c.COMPANY_NAMES` gesetzt sein, sonst schlagen Chart-Slots fehl (`Charts 0 / N` in HTML).
 
 ---
 
@@ -472,7 +511,7 @@ Weitere Dateien:
 |------|----------------|---------------------|------------|----------|----------|
 | Voller ADF-Lauf | **False** | False | True | läuft | läuft |
 | Nur Meta (altes Artefakt, volle FEAT_COLS) | False | True | False | skip | läuft — **nur wenn Artefakt passt** |
-| Nur Scoring/Website | True | — | — | skip | skip |
+| Nur Scoring/Website | True | *(ignoriert)* | — | skip | skip |
 | Meta-Resume nach Crash | False | True/False | — | skip wenn Base da | True + `SKIP_META_OPTUNA` |
 
 **Empfohlener ADF-Lauf:**
@@ -512,9 +551,122 @@ Historischer Name. **`df_test` = META-Trainingskalender.** Echter OOS-Test = **`
 
 Meta-Stack enthält immer alle 10 Probas; SHAP zeigt, dass Meta sie kaum nutzt — Modell bleibt trotzdem im Ensemble.
 
+### „SCORING_ONLY liefert plötzlich nur ~45 Signale?“
+
+Häufige Ursachen: (1) `RETRAIN_META_ONLY=True` zusammen mit `SCORING_ONLY` **vor** dem Fix in §4.6 — volle Feature-Matrix fehlte; (2) Live-Rescoring mit NaN in `FEAT_COLS` → Sentinel `-1e8`; (3) falscher News-Tag vs. Artefakt. Gegenprobe: Signalanzahl in Logs vs. `len(signals.json["signals"])`.
+
+### „BigQuery lädt nur einen fehlenden Tag (z. B. Freitag), obwohl heute Sonntag ist?“
+
+News-Gaps nutzen **`pd.bdate_range`** (Handelstage). Wenn der Cache bis Freitag reicht, fehlt nur der nächste Werktag — Wochenenden werden übersprungen. `END_DATE` kann trotzdem Kalendertag „heute“ sein.
+
+### „Pipeline fühlt sich wie eine Endlosschleife an?“
+
+Linear, aber wiederholte Logs: Meta-Scoring (18×8 Modelle), joblib-Worker (`Configuration loaded` mehrfach), **doppelter** Holdout-Rebuild am Ende von Phase 17. Kein Deadlock — siehe §10.1.
+
 ---
 
-## 15. Anhang: SHAP-Ranglisten
+## 15. Verbesserungsvorschläge (Holdout & Pipeline)
+
+*Stand: Juni 2026 — aus Code-Review, OOS-Diagnostik (§16) und Laufzeit-Analyse. Details in [`V11_ROADMAP.md`](V11_ROADMAP.md).*
+
+### Top-Prioritäten (empfohlen)
+
+#### 1. Quick-Win: Cross-Sectional Features in-sample ziehen — **höchste Priorität**
+
+| | |
+|---|---|
+| **Warum** | OOS-Metriken (§16.3) zeigen das Problem schwarz auf weiß: Bei Makro-Events (FOMC/CPI/NFP ±2 Handelstage) bricht die Win-Rate auf **`ret_mean_5` ~38,5 %** ein (vs. ~63 % ohne Makro-Event). Das Modell läuft blind in die Kreissäge — **`macro_event_within_2bd`** und relative Stärke (**`ret_vs_spy_5d`**, ggf. `ret_vs_sector_5d`) fehlen zum Prognosezeitpunkt in **`FEAT_COLS`**. |
+| **Aufwand** | **Gering.** Logik existiert in `lib/signal_extra_filters.py` (Holdout/LLM). Aufgabe: Berechnung **vor** dem Trainings-Split in `assemble_features` / Makro-Enrichment verschieben, point-in-time ohne Leakage (nur Informationen, die am Signaltag bekannt sind), Spalten in `FEAT_COLS` aufnehmen; danach Meta-Retrain. |
+| **Impact** | **Sehr hoch.** Meta kann lernen, an Makro-Tagen Probas aktiv zu dämpfen; relative Stärke vs. SPY/Sektor ergänzt reine Ticker-Technik. Ersetzt/ergänzt die reine Website-Ampel (§10.2), die erst *nach* dem Scoring sichtbar ist. |
+| **Erste Spalten** | `macro_event_within_2bd`, `ret_vs_spy_5d` (optional: `ret_vs_spy_20d`, `prob_zscore_same_day` — erst nach Makro/RSY) |
+| **Code-Pfade** | `lib/signal_extra_filters.py` → extrahieren nach `lib/stock_rally_v10/features.py` oder `macro_vol_enrich.py`; Whitelist in `config.py` / Phase-12-SHAP |
+
+#### 2. Methodischer Hebel: ATR-normalisiertes Target — **mittlere Priorität**
+
+| | |
+|---|---|
+| **Warum** | Feste **4,5 %-Hürde** (`FIXED_Y_RALLY_THRESHOLD`) bestraft defensive Titel und bevorzugt reine Volatilität. ATR-basiertes Target (Rally ≥ *k* × ATR) normalisiert das Spielfeld sektorübergreifend. |
+| **Aufwand** | **Mittel bis hoch.** `create_target` / `_create_target_one_ticker_fixed_bands` anpassen, ggf. neuer `FIXED_Y_LABEL_MODE`. **Harter Reset:** alle Baselines, SHAP-Reports, Optuna-Checkpoints und `scoring_artifacts.joblib` sind obsolet — voller Phase-12+13-Lauf nötig. |
+| **Impact** | **Langfristig** zentral für robustes, sektorübergreifendes System; kurzfristig einen Iterationsschritt zurück in der Pipeline. Erst nach Quick-Win #1 oder parallel auf separatem Branch. |
+| **Abhängigkeit** | Holdout-Label in `build_holdout_signals_master` muss dieselbe Regel wie Training nutzen (`best_params` / `fixed_y_label_mode`). |
+
+### Stufe A — Pipeline-Robustheit & schnelle Wins
+
+| # | Thema | Problem | Vorschlag |
+|---|--------|---------|-----------|
+| A1 | **Doppelter Holdout-Rebuild** | Phase 17 ruft `build_holdout_signals_master` und danach `rebuild_master_from_signals_json` mit gleicher Signalliste auf | Ein Pfad: Master einmal bauen oder Rebuild nur wenn JSON sich geändert hat |
+| A2 | **Live-Scoring NaN-Guard** | Fehlende `FEAT_COLS` → `-1e8` → kollabierte Probas | Harte Validierung vor Meta-Predict: fehlende Spalten abbrechen/warnen, nicht silent sentinel |
+| A3 | **News-Tag-Härtung** | `best_params`-Tag vs. `topk_names` / Shards | `NEWS_TAG` ins Artefakt + Assert beim Load (teilweise via `news_tag_sync`) |
+| A4 | **Earnings-Kalender** | `next_earnings_date` in Holdout/LLM ~100 % leer (yfinance unzuverlässig) | Externer Kalender (NASDAQ/FMP) in `signal_extra_filters` |
+| A5 | **SCORING_ONLY-Erwartung** | Nutzer erwarten Minuten-Lauf | Banner/Log: geschätzte Dauer + welche Schritte laufen |
+
+### Stufe B — Modell & Signalqualität
+
+| # | Thema | Problem | Vorschlag |
+|---|--------|---------|-----------|
+| B1 | **Cross-Section-Features** | siehe **Top-Priorität #1** — `macro_event_within_2bd`, `ret_vs_spy_*` nur post-hoc in Holdout | In `assemble_features` + `FEAT_COLS`, dann Meta-Retrain |
+| B2 | **ATR-Target** | siehe **Top-Priorität #2** — feste 4,5 %-Schwelle volatilitätsverzerrt | Neuer Label-Modus + voller Retrain-Reset |
+| B3 | **Objective vs. Rendite** | `META_OBJECTIVE_MODE=tp_precision` optimiert Klassifikation, nicht Forward-Return | Joint Objective auf THRESHOLD (siehe V11 §1) |
+| B4 | **Threshold-Trennung** | Meta-Fit auf META, Schwelle auf THRESHOLD — bewusst, aber suboptimal | Nested Threshold pro CV-Fold oder gemeinsame Optuna |
+| B5 | **Kontext-Ampel → Aktion** | Rot/Gelb nur UI (OOS-Daten in §16 belegen Makro-Risiko) | Optional: Positionsgröße / Warnung; Modell-seitig via #1 |
+| B6 | **Ticker-News** | Nur GDELT Makro/Sektor | GDELT- oder Finnhub-Ticker-Sentiment als Feature-Shard |
+
+### Stufe C — Daten & Architektur (V11+)
+
+| # | Thema | Vorschlag |
+|---|--------|-----------|
+| C1 | Options-IV / Put-Call | CBOE oder Polygon als Regime-Feature |
+| C2 | Fundamentals | Quarterly Snapshots (Margin, Rev-Growth) point-in-time |
+| C3 | CFTC CoT | Positionierung Commodities/FX |
+| C4 | Fear & Greed | CNN-Scraper robuster machen oder Alternative |
+| C5 | End-to-End-Optimierung | Ein Kalender, ein Objective — [`V11_ROADMAP.md`](V11_ROADMAP.md) §1 |
+
+### Bekannte technische Schulden
+
+- Notebook-Zelle 17 und `pipeline_runner.py` Phase 17 teilen Logik — Doku und Entry-Points parallel pflegen.
+- `scripts/_scratch_*.py` sind experimentell, nicht Teil der produktiven Pipeline.
+- Website-Charts als Base64 in HTML → große `index.html`; externe PNG-Pfade sind robuster (teilweise umgesetzt).
+
+---
+
+## 16. OOS-Performance (Holdout)
+
+Nach **Phase 17** / `build_holdout_signals_master` werden pro Lauf **Forward-Renditen** und Aggregat-Kennzahlen persistiert. Maßgeblich für „funktioniert das Modell wirtschaftlich?“ ist der **FINAL**-Kalender (OOS), nicht META-CV oder THRESHOLD.
+
+### 16.1 Gespeicherte Run-Artefakte
+
+| Pfad | Inhalt |
+|------|--------|
+| `data/master_complete.csv` | **Primärquelle:** alle OOS-Signale × Meta-Spalten × `ret_2d`…`ret_10d` × `ret_mean_5` × LLM-Zusatzspalten |
+| `data/master_daily_update.csv` | Nur **neuester Signaltag** (schlanke LLM-Spalten, keine Forward-Historie) |
+| `data/holdout_oos_performance.json` | **Aggregat-Summary** (Mittel, Win-Rate, Kontext-Segmente, Jahre) — wird am Ende von `build_holdout_signals_master` geschrieben |
+| `docs/signals.json` | OOS-Signalliste, `threshold`, `generated` (Zeitstempel Lauf) |
+| `models/scoring_artifacts.joblib` | `best_threshold`, `meta_optuna_best_value`, Kalender-Ende Threshold-Kalibrierung |
+| `data/model_snapshots/` | Optional manuell (`scripts/save_pre_optimization_snapshot.py`, `create_post_snapshot_and_compare.py`) |
+
+**Timing-Logik Forward-Renditen:** Einstieg am **nächsten Handelstag-Open** nach Signaltag; Horizonte 2/4/6/8/10 Handelstage (`holdout/build_holdout_signals_master.py`). `ret_mean_5` = Mittel der fünf Horizont-Renditen (nur wenn alle fünf endlich).
+
+### 16.2 Kennzahlen lesen
+
+| Metrik | Bedeutung |
+|--------|-----------|
+| `ret_mean_5` | **Haupt-KPI** für OOS-Rendite (Mittel über 5 Horizonte) |
+| `ret_4d` / `ret_10d` | Einzelhorizonte (Meta-Optuna nutzt ggf. andere Horizonte — siehe `META_SIGNAL_RETURN_HORIZONS`) |
+| Win-Rate | Anteil Signale mit Rendite > 0 |
+| `train_target=1` | Label-Treffer im Holdout-Export (**nicht** identisch mit Forward-Return — Legacy-Band-Label) |
+| Kontext-Segmente | `macro_event_within_2bd`, `regime_vix_level` — Ampel-Diagnostik (§10.2); **Rot ~38,5 % Win-Rate** → siehe §15 Top-Priorität #1 |
+
+**Wichtig:** Signale der **letzten ~10 Handelstage** haben oft noch **kein** `ret_mean_5` (Forward-Fenster unvollständig) — deshalb `n_signals_total` > `n_signals_with_ret_mean_5`.
+
+### 16.3 Aktueller Stand (automatisch aus letztem Lauf)
+
+*Der folgende Block wird beim Build aus `data/holdout_oos_performance.json` bzw. `master_complete.csv` ergänzt (`python scripts/_gen_pipeline_overview_md.py`).*
+
+<!-- PERFORMANCE_SNAPSHOT_START -->
+
+---
+
+## 17. Anhang: SHAP-Ranglisten
 
 *Der folgende Abschnitt wird beim Build aus den JSON-Reports ergänzt (`python scripts/_gen_pipeline_overview_md.py`).*
 
