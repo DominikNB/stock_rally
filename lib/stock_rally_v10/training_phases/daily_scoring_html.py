@@ -1067,14 +1067,16 @@ def _run_phase17(c: Any) -> None:
         else ""
     )
     _matrix_last_date = _website_max_sig_date or str(pd.to_datetime(df_s["Date"]).max().date())
+    _scoring_today = str(pd.Timestamp(c.END_DATE).date())
     if _gemini_key and _script_gemini.is_file():
         try:
             print(
-                f"Gemini: KI-Analyse (CSV-Upload + Google Search, Signaltag {_matrix_last_date}) …",
+                f"Gemini: KI-Analyse (Scoring-Tag {_scoring_today}, "
+                f"letzter Signaltag {_matrix_last_date}) …",
                 flush=True,
             )
             _env_llm = os.environ.copy()
-            _env_llm["ANALYSIS_EXPECT_SIGNAL_DATE"] = _matrix_last_date
+            _env_llm["ANALYSIS_EXPECT_SIGNAL_DATE"] = _scoring_today
             _r = subprocess.run(
                 [sys.executable, str(_script_gemini)],
                 cwd=str(Path.cwd()),
@@ -1093,14 +1095,14 @@ def _run_phase17(c: Any) -> None:
                 try:
                     from scripts.website_analysis_common import llm_analysis_is_stale
 
-                    _use_cached_llm = not llm_analysis_is_stale(_matrix_last_date)
+                    _use_cached_llm = not llm_analysis_is_stale(_scoring_today)
                 except Exception:
                     _use_cached_llm = False
             if _use_cached_llm and _hf.is_file():
                 _analysis_llm_section = _hf.read_text(encoding="utf-8")
             elif _hf.is_file():
                 print(
-                    f"Hinweis: docs/analysis_llm_last.html passt nicht zu Signaltag {_matrix_last_date} "
+                    f"Hinweis: docs/analysis_llm_last.html passt nicht zu Scoring-Tag {_scoring_today} "
                     "— wird nach finalem master_daily_update neu erzeugt.",
                     flush=True,
                 )
@@ -1414,8 +1416,8 @@ def _run_phase17(c: Any) -> None:
       <div class="section analysis-llm-section">
         <h2>KI-Analyse — aktuelle Signale</h2>
         <p class="section-lead">
-          Gemini-Einordnung der <strong>neuesten Meta-Hits</strong> (Datenstand letzter Signaltag in der Matrix:
-          <strong>{_matrix_last_date}</strong>). Keine Anlageberatung.
+          Gemini-Einordnung für den Scoring-Tag <strong>{_scoring_today}</strong>
+          (Merkmalsmatrix bis <strong>{_matrix_last_date}</strong>). Keine Anlageberatung.
         </p>
         __ANALYSIS_LLM_SECTION__
       </div>
@@ -1578,20 +1580,17 @@ def _run_phase17(c: Any) -> None:
         try:
             from scripts.website_analysis_common import (
                 llm_analysis_is_stale,
-                master_daily_latest_signal_date,
                 patch_index_html_from_llm_analysis,
             )
 
-            _csv_latest = master_daily_latest_signal_date()
-            _llm_target = _csv_latest or _matrix_last_date
-            if _llm_target and llm_analysis_is_stale(_llm_target):
+            if _scoring_today and llm_analysis_is_stale(_scoring_today):
                 print(
-                    f"Gemini: KI-Analyse veraltet (meta ≠ CSV {_llm_target}) — "
+                    f"Gemini: KI-Analyse veraltet (meta ≠ Scoring-Tag {_scoring_today}) — "
                     "nach master_daily_update neu generieren …",
                     flush=True,
                 )
                 _env_llm2 = os.environ.copy()
-                _env_llm2["ANALYSIS_EXPECT_SIGNAL_DATE"] = _llm_target
+                _env_llm2["ANALYSIS_EXPECT_SIGNAL_DATE"] = _scoring_today
                 _r_llm2 = subprocess.run(
                     [sys.executable, str(_script_gemini)],
                     cwd=str(Path.cwd()),

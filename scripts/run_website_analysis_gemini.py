@@ -41,11 +41,14 @@ from lib.website_rally_prompt import load_rally_prompt_injection
 
 from website_analysis_common import (
     DOCS,
+    NO_SIGNALS_TODAY_MSG,
     OUT_HTML,
     OUT_TXT,
     PROMPT_FILE,
+    analysis_expect_signal_date,
     analysis_text_to_html,
     ensure_daily_csv_red_context_columns,
+    master_daily_latest_signal_date,
     patch_index_html_from_llm_analysis,
     read_signals_for_latest_day,
 )
@@ -239,24 +242,41 @@ def main() -> None:
     prompt_static = PROMPT_FILE.read_text(encoding="utf-8")
     rally_block = load_rally_prompt_injection(ROOT).rstrip()
     prompt_base = rally_block + "\n\n---\n\n" + prompt_static
+    expect_day = analysis_expect_signal_date()
     latest, sub = read_signals_for_latest_day()
     if sub.empty:
         DOCS.mkdir(parents=True, exist_ok=True)
-        msg_plain = "Für heute liegen keine Signale vor."
+        msg_plain = NO_SIGNALS_TODAY_MSG
+        csv_latest = master_daily_latest_signal_date() or (latest if latest != "—" else None)
         provider = (
-            f"Kein Gemini-Aufruf — 0 Treffer am aktuellsten Signaltag in den Daten "
-            f"({latest}; Meta ≥ Schwelle bzw. leere CSV)."
+            f"Kein Gemini-Aufruf — keine Meta-Hits für den Scoring-Tag {expect_day} "
+            f"(letzter Signaltag in CSV: {csv_latest or '—'})."
         )
         OUT_TXT.write_text(msg_plain + "\n", encoding="utf-8")
         OUT_HTML.write_text(
             analysis_text_to_html(msg_plain, provider),
             encoding="utf-8",
         )
+        _run_meta = {
+            "signaltag_csv": expect_day,
+            "scoring_day": expect_day,
+            "no_signals_for_scoring_day": True,
+            "latest_signal_date_in_csv": csv_latest,
+        }
+        try:
+            OUT_RUN_META.write_text(
+                json.dumps(_run_meta, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
         print(
-            f"Keine Signale für LLM-Auswertung (Signaltag in CSV: {latest}). "
-            f"Geschrieben: {OUT_TXT}, {OUT_HTML}",
+            f"Keine Signale für LLM-Auswertung (Scoring-Tag {expect_day}; "
+            f"letzter CSV-Signaltag: {latest}). "
+            f"Geschrieben: {OUT_TXT}, {OUT_HTML}, {OUT_RUN_META}",
             flush=True,
         )
+        patch_index_html_from_llm_analysis()
         return
 
     tmp_path: str | None = None
@@ -280,6 +300,9 @@ def main() -> None:
         _wait_file_ready(client, uploaded.name)
 
         _steering, _run_meta = _build_llm_steering_block(latest)
+        _run_meta["scoring_day"] = expect_day
+        if latest != expect_day:
+            _run_meta["analysis_lag_one_session"] = True
         _avail = _build_data_availability_block(sub)
         print(
             f"Gemini Steuerblock: Zusatzfenster {_run_meta['zusatzfenster_start_europe_berlin']} "
@@ -406,6 +429,22 @@ def main() -> None:
             print("Gemini: leere Antwort (candidates).", file=sys.stderr)
             sys.exit(1)
         answer = _response_text(response)
+        if not answer and use_search and not _search_fallback_used:
+            print(
+                "Gemini: keine Text-Antwort mit Google Search (ev. Safety-Block) — "
+                "erneuter Versuch ohne Google Search …",
+                file=sys.stderr,
+                flush=True,
+            )
+            response = _generate_content_retry(
+                client,
+                model=model_name,
+                contents=contents,
+                config=cfg_plain,
+                label="Fallback ohne Google Search (leere Search-Antwort)",
+            )
+            answer = _response_text(response)
+            _search_fallback_used = True
         if not answer:
             print("Gemini: keine Text-Antwort (ev. Safety-Block).", file=sys.stderr)
             sys.exit(1)

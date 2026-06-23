@@ -6,7 +6,9 @@ from __future__ import annotations
 import json
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -20,6 +22,21 @@ OUT_TXT = DOCS / "analysis_llm_last.txt"
 OUT_HTML = DOCS / "analysis_llm_last.html"
 OUT_RUN_META = DOCS / "analysis_llm_last_run_meta.json"
 INDEX_HTML = DOCS / "index.html"
+_LLM_TZ = ZoneInfo("Europe/Berlin")
+NO_SIGNALS_TODAY_MSG = "Für heute keine Signale."
+
+
+def analysis_expect_signal_date() -> str:
+    """Scoring-Tag für die KI-Analyse: Env ANALYSIS_EXPECT_SIGNAL_DATE oder heute (Europe/Berlin)."""
+    raw = os.environ.get("ANALYSIS_EXPECT_SIGNAL_DATE", "").strip()
+    if raw:
+        try:
+            import pandas as pd
+
+            return pd.to_datetime(raw).strftime("%Y-%m-%d")
+        except Exception:
+            pass
+    return datetime.now(_LLM_TZ).date().isoformat()
 
 
 def master_daily_latest_signal_date() -> str | None:
@@ -34,6 +51,35 @@ def master_daily_latest_signal_date() -> str | None:
     return pd.to_datetime(df["Date"]).max().strftime("%Y-%m-%d")
 
 
+def _business_days_after(start: str, end: str) -> int:
+    """Handelstage (Mo–Fr) strikt nach ``start`` bis einschließlich ``end``."""
+    import pandas as pd
+
+    s = pd.Timestamp(start).normalize()
+    e = pd.Timestamp(end).normalize()
+    if e <= s:
+        return 0
+    return len(pd.bdate_range(s + pd.Timedelta(days=1), e))
+
+
+def llm_analysis_target_signaltag(scoring_day: str | None = None) -> str | None:
+    """
+    Signaltag für Gemini:
+    - Treffer am Scoring-Tag → Scoring-Tag
+    - Kein Treffer heute, jüngster CSV-Tag höchstens 1 Handelstag zurück → jüngster CSV-Tag
+    - Sonst None → Kurzmeldung „Für heute keine Signale.“
+    """
+    scoring = (scoring_day or analysis_expect_signal_date()).strip()[:10]
+    csv_d = master_daily_latest_signal_date()
+    if not csv_d:
+        return None
+    if csv_d >= scoring:
+        return scoring
+    if _business_days_after(csv_d, scoring) <= 1:
+        return csv_d
+    return None
+
+
 def llm_analysis_signaltag() -> str | None:
     if not OUT_RUN_META.is_file():
         return None
@@ -45,17 +91,24 @@ def llm_analysis_signaltag() -> str | None:
 
 
 def llm_analysis_is_stale(expected_signal_date: str | None = None) -> bool:
-    """True wenn KI-Metadaten älter sind als der aktuelle Daily-CSV-Stand."""
-    csv_d = master_daily_latest_signal_date()
+    """True wenn KI-Metadaten nicht zum aktuellen Scoring-/Signaltag passen."""
+    scoring = (expected_signal_date or analysis_expect_signal_date()).strip()[:10]
+    target = llm_analysis_target_signaltag(scoring)
     llm_d = llm_analysis_signaltag()
-    target = (expected_signal_date or csv_d or "").strip()[:10]
-    if not csv_d:
-        return False
+    try:
+        meta = json.loads(OUT_RUN_META.read_text(encoding="utf-8")) if OUT_RUN_META.is_file() else {}
+    except Exception:
+        meta = {}
+    meta_scoring = str(meta.get("scoring_day") or meta.get("signaltag_csv") or "")[:10]
+    if target is None:
+        if meta.get("no_signals_for_scoring_day") and meta_scoring == scoring:
+            return False
+        return True
+    if meta.get("no_signals_for_scoring_day"):
+        return True
     if not llm_d:
         return True
-    if target and llm_d != target:
-        return True
-    return llm_d < csv_d
+    return llm_d != target
 
 
 def ensure_daily_csv_red_context_columns() -> None:
@@ -140,15 +193,13 @@ def read_signals_for_latest_day():
         )
         sys.exit(1)
 
-    expected_latest = os.environ.get("ANALYSIS_EXPECT_SIGNAL_DATE", "").strip()
-    if expected_latest:
-        try:
-            _exp = pd.to_datetime(expected_latest).strftime("%Y-%m-%d")
-            if latest < _exp:
-                # Aktueller Datenstand ist neuer als letzter Signaltag: explizit "heute keine Signale".
-                return _exp, pd.DataFrame()
-        except Exception:
-            pass
+    _exp = analysis_expect_signal_date()
+    target = llm_analysis_target_signaltag(_exp)
+    if target is None:
+        return _exp, pd.DataFrame()
+    if target != latest:
+        sub = df[df["Date"] == target].copy()
+        latest = target
 
     from lib.signal_extra_filters import ordered_llm_daily_columns
     from lib.stock_rally_v10.equity_classification import CLASSIFICATION_COLUMN_KEYS

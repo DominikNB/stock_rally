@@ -164,6 +164,7 @@ def test_read_signals_for_latest_day_filters_daily_csv(tmp_path: Path, monkeypat
     monkeypatch.setattr(wac, "DAILY_CSV", daily)
     monkeypatch.setattr(wac, "COMPLETE_CSV", tmp_path / "missing_complete.csv")
     monkeypatch.setattr(wac, "HOLDOUT_CSV", tmp_path / "missing_holdout.csv")
+    monkeypatch.setenv("ANALYSIS_EXPECT_SIGNAL_DATE", "2026-06-16")
 
     latest, sub = wac.read_signals_for_latest_day()
     assert latest == "2026-06-16"
@@ -183,7 +184,57 @@ def test_llm_analysis_is_stale_detects_older_meta(tmp_path: Path, monkeypatch):
 
     assert wac.llm_analysis_is_stale() is True
     assert wac.llm_analysis_is_stale("2026-06-16") is True
-    assert wac.llm_analysis_is_stale("2026-06-15") is True
+    assert wac.llm_analysis_is_stale("2026-06-15") is False
+    assert wac.llm_analysis_is_stale("2026-06-18") is True
+
+
+def test_read_signals_empty_when_csv_latest_before_scoring_day(tmp_path: Path, monkeypatch):
+    import pandas as pd
+
+    from scripts import website_analysis_common as wac
+
+    daily = tmp_path / "master_daily_update.csv"
+    pd.DataFrame(
+        {
+            "Date": ["2026-06-16", "2026-06-16"],
+            "ticker": ["A", "B"],
+            "prob": [0.9, 0.8],
+            "threshold_used": [0.5, 0.5],
+        }
+    ).to_csv(daily, index=False)
+    monkeypatch.setattr(wac, "DAILY_CSV", daily)
+    monkeypatch.setattr(wac, "COMPLETE_CSV", tmp_path / "missing_complete.csv")
+    monkeypatch.setattr(wac, "HOLDOUT_CSV", tmp_path / "missing_holdout.csv")
+    monkeypatch.setenv("ANALYSIS_EXPECT_SIGNAL_DATE", "2026-06-18")
+
+    latest, sub = wac.read_signals_for_latest_day()
+    assert latest == "2026-06-18"
+    assert sub.empty
+
+
+def test_read_signals_returns_yesterday_when_one_session_lag(tmp_path: Path, monkeypatch):
+    import pandas as pd
+
+    from scripts import website_analysis_common as wac
+
+    daily = tmp_path / "master_daily_update.csv"
+    pd.DataFrame(
+        {
+            "Date": ["2026-06-22"],
+            "ticker": ["NDX1.DE"],
+            "prob": [0.9],
+            "threshold_used": [0.5],
+        }
+    ).to_csv(daily, index=False)
+    monkeypatch.setattr(wac, "DAILY_CSV", daily)
+    monkeypatch.setattr(wac, "COMPLETE_CSV", tmp_path / "missing_complete.csv")
+    monkeypatch.setattr(wac, "HOLDOUT_CSV", tmp_path / "missing_holdout.csv")
+    monkeypatch.setenv("ANALYSIS_EXPECT_SIGNAL_DATE", "2026-06-23")
+
+    latest, sub = wac.read_signals_for_latest_day()
+    assert latest == "2026-06-22"
+    assert len(sub) == 1
+    assert sub.iloc[0]["ticker"] == "NDX1.DE"
 
 
 def test_save_base_feature_shap_report_writes_json_and_csv(tmp_path: Path):

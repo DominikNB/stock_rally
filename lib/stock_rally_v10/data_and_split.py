@@ -194,6 +194,12 @@ def meta_only_features_for_assemble(*, scoring_only: bool, retrain_meta_only: bo
 def run_data_download_and_split() -> None:
     """Download → Target → Indikatoren → Features → Split (Zeit oder Legacy-Ticker)."""
     cfg.log_pipeline_mode_banner()
+    print(
+        f"Kalender-Lauf: END_DATE={getattr(cfg, 'END_DATE', '?')} "
+        f"(TRAIN_END_DATE={getattr(cfg, 'TRAIN_END_DATE', '?')}) — "
+        "wird für Download, Split und FINAL-OOS verwendet.",
+        flush=True,
+    )
     _retrain_meta_only = bool(getattr(cfg, "RETRAIN_META_ONLY", False))
     # ── 1. Load data ────────────────────────────────────────────────────────
     if getattr(cfg, "SCORING_ONLY", False) or _retrain_meta_only:

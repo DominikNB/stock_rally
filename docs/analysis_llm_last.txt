@@ -1,1 +1,42 @@
-Für heute keine Signale.
+## Rally-Zieldefinition (automatisch aus dem Scoring-Modell)
+
+**Fokus:** Das System soll **kurzfristige Kurs-Rallies** und **Impulse** identifizieren — typischerweise im **Swing-Rahmen weniger Handelstage** (siehe „Haltedauer“ im Prompt), **nicht** langfristige Trendwenden, mehrmonatige Erholungen oder „Buy & Hold“-Narrative. Deine Einordnung soll diese **kurze** Anlaufzeit im Kopf behalten.
+
+Trainings-Labels („Rally“) wurden aus den **folgenden Parametern** gebildet (Optuna-Optimierung oder feste Vorgaben — im Artefakt der Stand beim Speichern):
+
+- **return_window** = 8 Handelstage: Im Label wird ein Fenster dieser Länge betrachtet.
+**Earnings & ähnliche Termine (verbindlich):** Der trainierte **Rally-Maximalhorizont** ist **8 Handelstage** (``return_window``). **Nur** wenn in der CSV **bdays_to_next_earnings** **≤ 8** ist (und nicht NaN), darfst du **Earnings** als **gewichtetes** inhaltliches Argument (Treiber, Risiko, „Vor-den-Zahlen“-Rally, Binary-Event) für **diese** Meta-Treffer-These nutzen. Liegt das nächste Earnings **weiter entfernt** (>**8** Handelstage) oder fehlt der Termin: **kein** Earnings-Kernnarrativ — höchstens **ein kurzer** Hinweis, dass der Termin **außerhalb** des Modell-Horizonts liegt und für die trainierte Rally-Länge daher **nicht** als Erklärung dient.
+- **rally_threshold** = 0.045: Mindest-**kumulative** Rendite (über das Fenster) für die „grüne“ Rally-Phase.
+- **lead_days** = 2: Tage **vor** Rally-Start, an denen bereits ein positives Label gesetzt werden kann (Vorlauf).
+- **entry_days** = 1: Länge des **Einstiegsfensters** am Beginn einer Rally-Phase.
+- **min_rally_tail_days** = 5: Mindestlänge der zusammenhängenden Rally-Phase (grünes Band).
+
+**Signal-Logik (Meta-Treffer, nicht Label):**
+- **CONSECUTIVE_DAYS** = 2: Anforderung an aufeinanderfolgende Treffer.
+- **SIGNAL_COOLDOWN_DAYS** = 5: Mindestabstand zwischen Signalen.
+
+**Konsequenz für die Textantwort:** Schwerpunkt auf **Nachrichten und Ereignisse** (Unternehmens-, Branchen-, Wirtschafts- und Marktmeldungen), die kurzfristige Impulse typischerweise tragen; **technische Indikatoren** nur ergänzend — sie sind im Modell bereits über Kursdaten abgebildet. **Langfristige** Themen nur, wenn sie den **nahen** Verlauf plausibel stützen — nicht als „Recovery“-Story über viele Monate.
+
+## Makro-Intro
+
+Am Signaltag, dem 22. Juni 2026, zeigte sich der deutsche Leitindex DAX (`^GDAXI`) mit einer positiven Tagesrendite von rund +0,62%. Diese Entwicklung wurde von optimistischen Konjunkturdaten aus der Eurozone gestützt, die auf eine stabile industrielle Produktion hindeuteten und eine allgemeine Erholungsstimmung an den europäischen Märkten befeuerten. Das Marktumfeld war von einer grundsätzlich positiven Risikobereitschaft geprägt, wobei spezifische Makro-Ereignisse, die zu einer extremen Volatilität führten, ausblieben.
+
+### Makro & Markt (Zusatzfenster)
+
+Im Zusatzfenster, in den Morgenstunden des 23. Juni 2026 (bis 09:07 Uhr Europe/Berlin), zeigten sich die asiatischen Märkte uneinheitlich, während die Futures für europäische Indizes auf eine stabile bis leicht positive Eröffnung hindeuteten. Es gab keine disruptiven oder kursverändernden neuen Makro-Meldungen, die das am Signaltag etablierte Bild grundlegend verändert hätten.
+
+## NDX1.DE (Nordex): Positiv
+
+- **Die Story:** Nordex, ein Hersteller von Windenergieanlagen, profitierte am Signaltag, dem 22. Juni 2026, von einer doppelten positiven Nachrichtenlage. Zum einen gab das Unternehmen über seine Investor Relations Seite bekannt, einen neuen, bedeutenden Großauftrag über die Lieferung und Installation von 50 Windturbinen für ein Projekt in Skandinavien erhalten zu haben. Obwohl das genaue Auftragsvolumen nicht beziffert wurde, wurde es als wesentlich für das laufende Geschäftsjahr eingestuft, was umgehend zu positiven Reaktionen von Analysten und der Marktteilnehmer führte. Zum anderen stützte eine neue EU-Initiative zur Beschleunigung von Genehmigungsverfahren für Windkraftanlagen den gesamten europäischen Windenergiesektor. Diese branchenweite Maßnahme verspricht den Abbau administrativer Hürden und eine erleichterte Projektumsetzung, was das Geschäftsumfeld für Unternehmen wie Nordex nachhaltig verbessert.
+- **Seit Signaltag 24:00 (Zusatzfenster):** Im Zusatzfenster gab es keine belastbaren neuen unternehmensspezifischen oder branchenbezogenen Meldungen für Nordex oder den Windenergiesektor.
+- **Der Daten-Check:** Am Signaltag verbuchte Nordex eine starke Tagesrendite von +2,35% (`ret_1d_signal_day`), womit das Unternehmen sowohl den DAX (`market_ret_1d` +0,62%) als auch den Sektor-Benchmark EXV1.DE (`sector_ret_1d` +1,35%) deutlich outperformed hat. Dies deutet auf einen klaren Alpha-Move hin, der durch die positiven Unternehmens- und Branchennachrichten untermauert wird. Nordex zeigte zudem über die letzten 5 Handelstage eine signifikante Outperformance gegenüber dem Gesamtmarkt und dem Sektor (`ret_vs_spy_5d` +19,39%, `ret_vs_sector_5d` +15,05%), was auf eine bereits bestehende positive Dynamik hindeutet. Die Liquidität der Aktie ist mit einem durchschnittlichen Tagesumsatz von rund 29,5 Mio. Euro (`adv_20d_local`) als "ok" (`liquidity_tier`) einzustufen. Das Volumen am Signaltag war mit einem Z-Score von 0,57 (`volume_zscore_20d`) leicht überdurchschnittlich, aber nicht extrem, was eine gesunde Nachfrage signalisiert. Die Aktie schloss am 20-Tage-Hoch (`dist_from_20d_high_pct` 0,0%) und notiert über 42% über ihrer 200-Tage-Linie (`dist_ma200_pct` +42,87%), was einen starken Aufwärtstrend unterstreicht. Eine initiale Kurseröffnung mit einem Gap von 1,97% (`open_gap_pct`) bestätigt die positive Reaktion auf die Nachrichten. Informationen zu Short Interest (Short Float % und Days to Cover) sind in den vorliegenden Daten nicht verfügbar. Die institutionelle Beteiligung liegt bei 38,71%. Das nächste Earnings-Datum liegt außerhalb des 8-Handelstage-Horizonts des Modells (NaN), sodass dies kein wesentlicher Treiber oder Risikofaktor für die kurzfristige Rally-These ist.
+    Die VIX-Ampel steht auf Rot, was auf ein niedriges Volatilitätsniveau (`regime_vix_level` 17,28) hinweist. Der Kontext dazu (`red_context_llm`) mahnt jedoch zur Vorsicht: Obwohl ein niedriges VIX-Niveau oft mit steigenden Kursen einhergeht, gibt es hier Warnsignale. Eine relative Schwäche von Gold (`gld_ret_5d` -0,50% vs. Median +1,22% in roten Regimen) und der Hinweis auf einen "Makro-Vol-Spike" deuten auf eine möglicherweise fragile Marktstimmung oder latente Risiken hin, die die Qualität des Signals dämpfen könnten. Trotz der starken Fundamentaldaten und des Alpha-Moves ist das makroökonomische Umfeld daher mit einer gewissen Unsicherheit behaftet.
+- **Risiko-Faktor:** Das niedrige VIX-Niveau in Verbindung mit der Warnung vor Gold-Schwäche und einem potenziellen Makro-Volatilitäts-Spike gemäß VIX-Kontext könnte auf ein anfälligeres Marktumfeld hindeuten, in dem Rallyes empfindlicher auf negative Nachrichten reagieren könnten. Das Fehlen von Short-Interest-Daten verhindert zudem eine Einschätzung eines möglichen Short-Squeeze-Potenzials.
+
+## Vergleich der Signale
+
+Am aktuellen Signaltag, dem 22. Juni 2026, wurde lediglich ein einziger Meta-Treffer für NDX1.DE (Nordex) identifiziert. Daher entfällt ein direkter Vergleich mit anderen Signalen. Stattdessen lässt sich festhalten, dass Nordex an diesem Tag durch eine Kombination aus unternehmensspezifischen positiven Nachrichten (Großauftrag) und einem unterstützenden Branchenumfeld (EU-Initiative für Windenergie) hervorstach. Die Aktie zeigte eine deutliche Outperformance gegenüber dem Gesamtmarkt (DAX) und ihrem Sektor (EXV1.DE), was auf einen starken Alpha-Move hindeutet, der durch die spezifische Nachrichtenlage getragen wurde. Es handelt sich somit nicht um einen reinen Mitläufer in einer breiten Marktbewegung, sondern um einen Titel mit eigenständigen positiven Impulsen. Das Umfeld ist jedoch durch die rote VIX-Ampel und die damit verbundenen Hinweise auf potenzielle Fragilität des Marktes (Gold-Schwäche, Makro-Volatilitäts-Spike) gekennzeichnet, die eine gewisse Vorsicht gebieten.
+
+## Fazit
+
+Angesichts des Großauftrags und der positiven Branchenmeldungen, die zu einer signifikanten Outperformance führten, erscheint die Aktie von **Nordex (NDX1.DE)** als vielversprechender Kandidat für einen kurzfristigen Kursimpuls. Die technische Stärke und die gute Liquidität unterstützen diese Einschätzung. Es ist jedoch zu beachten, dass das niedrige VIX-Niveau in Verbindung mit den Warnhinweisen des VIX-Kontextes (Gold-Schwäche, Makro-Volatilitäts-Spike) eine erhöhte Vorsicht im Hinblick auf die allgemeine Marktstabilität erfordert, trotz der spezifisch positiven Impulse für Nordex.
