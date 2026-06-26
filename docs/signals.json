@@ -1,13 +1,13 @@
 {
-  "generated": "2026-06-26 13:00",
+  "generated": "2026-06-26 18:39",
   "threshold": 0.95,
   "signals": [],
   "signals_holdout_final": [],
-  "signals_all_timeline_including_in_sample_count": 0,
+  "signals_all_timeline_including_in_sample_count": 1,
   "signals_html_chart_slots": 0,
   "signals_with_chart_files": 0,
   "chart_storage": "external",
-  "index_html_bytes_utf8": 109825,
+  "index_html_bytes_utf8": 109629,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS. Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); index.html unter DOCS_INDEX_HTML_MAX_BYTES."
 }
