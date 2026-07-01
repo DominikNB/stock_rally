@@ -161,7 +161,8 @@
         .analysis-llm-body .analysis-code{font-family:ui-monospace,Consolas,monospace;font-size:.88em;background:#1a1a2e;color:#b0bec5;padding:2px 7px;border-radius:4px;border:1px solid #2d2d4e}
         .analysis-llm-body .analysis-bq{margin:10px 0;padding:10px 14px;border-left:3px solid #4fc3f7;background:#12121f;border-radius:0 6px 6px 0;color:#b0bec5}
         .analysis-llm-body .analysis-hr{border:none;border-top:1px solid #37474f;margin:16px 0}
-        .analysis-llm-missing h2{font-size:.95em;color:#ffb74d;margin-bottom:8px}
+        .analysis-llm-unavailable .empty{color:#90a4ae;font-size:.88em;line-height:1.55}
+        .analysis-llm-note{font-size:.78em;color:#78909c;margin:0 0 10px;line-height:1.45}
         @media(max-width:960px){.signals-grid{grid-template-columns:1fr}}
         @media(max-width:600px){header h1{font-size:.95em}}
       </style>
@@ -169,7 +170,7 @@
     <body>
     <header>
       <h1>&#128200; Stock Signals</h1>
-      <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: 2026-07-01 13:42</span>
+      <span class="ts" title="Zeitpunkt dieses Export-Laufs (nicht der Kursdatenstand)">Lauf: 2026-07-01 13:56</span>
     </header>
     <div class="page-wrap">
     
@@ -263,7 +264,8 @@
           Gemini-Einordnung für den Scoring-Tag <strong>2026-07-01</strong>
           (Merkmalsmatrix bis <strong>2026-06-26</strong>). Keine Anlageberatung.
         </p>
-        <div class="section analysis-llm-missing"><h2>KI-Antwort</h2><p class="empty"><strong>Lokal:</strong> <code>.env</code> mit <code>GEMINI_API_KEY</code> (Projektroot). Dann <code>python scripts/run_website_analysis_gemini.py</code> — es muss <code>docs/analysis_llm_last.html</code> erscheinen. Anschließend <strong>diese Zelle (17)</strong> erneut ausführen.</p><p class="empty"><strong>Daten:</strong> Vorher <code>data/master_daily_update.csv</code> erzeugen (holdout/build_holdout_signals_master, z. B. nach Holdout-Export).</p><p class="empty"><strong>GitHub Pages:</strong> Ohne Commit von <code>docs/analysis_llm_last.html</code> und neuem <code>docs/index.html</code> bleibt die Analyse auf der Website leer — API-Keys liegen nicht im Repo.</p>
+        <p class="prompt-lead analysis-llm-note">Kein Gemini-Aufruf — keine Meta-Hits fuer den Scoring-Tag 2026-07-01 (letzter Signaltag in CSV: 2026-06-26).; keine Anlageberatung.</p>
+        <div class="analysis-llm-body prose-analysis"><p>Am Scoring-Tag liegen keine neuen Meta-Treffer vor. Die zuletzt bewerteten Signale stammen vom letzten Handelstag in der Merkmalsmatrix.</p></div>
       </div>
 
       <div class="section signals-recent-section">
@@ -8292,7 +8294,7 @@
           <div class="chip" title="Nur Zeilen im FINAL-Kalender (nicht BASE/META/THRESHOLD); bei Pipeline-Regressor zusätzlich ohne dessen Train-Teil + Filter">Signale Website (OOS) <strong>571</strong></div>
           <div class="chip" title="Letzter Handelstag der THRESHOLD-Stichprobe bei der Kalibrierung von best_threshold">Threshold-Kalibrierung: Stichprobe bis <strong>2024-10-30</strong></div>
           <div class="chip" title="Letzter Handelstag der Merkmals-/Kursmatrix in diesem Scoring-Lauf (Volllauf über df_features)">Scoring &amp; Features bis <strong>2026-06-26</strong></div>
-          <div class="chip">Run <strong>2026-07-01 13:42</strong></div>
+          <div class="chip">Run <strong>2026-07-01 13:56</strong></div>
         </div>
       </div>
 

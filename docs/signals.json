@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-01 13:42",
+  "generated": "2026-07-01 13:56",
   "threshold": 0.75,
   "signals": [
     {
@@ -22849,7 +22849,7 @@
   "signals_html_chart_slots": 571,
   "signals_with_chart_files": 571,
   "chart_storage": "external",
-  "index_html_bytes_utf8": 1059532,
+  "index_html_bytes_utf8": 1059255,
   "index_html_max_bytes_config": 102760448,
   "note": "signals = signals_holdout_final: nur FINAL-Kalender-OOS. Charts als PNG unter docs/charts/ (Thumb in HTML, Vollbild per Link); index.html unter DOCS_INDEX_HTML_MAX_BYTES."
 }
