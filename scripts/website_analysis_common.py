@@ -194,6 +194,70 @@ def llm_analysis_signaltag() -> str | None:
         return None
 
 
+def extract_llm_body_html(full_html: str) -> str | None:
+    """Einzelner Body-Block aus analysis_llm_last.html (für Einbettung in index.html)."""
+    import re
+
+    m = re.search(
+        r'(<div class="analysis-llm-body prose-analysis">.*?</div>)',
+        full_html,
+        flags=re.DOTALL,
+    )
+    return m.group(1).strip() if m else None
+
+
+def extract_llm_lead_html(full_html: str) -> str | None:
+    import re
+
+    m = re.search(
+        r'<p class="prompt-lead">(.*?)</p>',
+        full_html,
+        flags=re.DOTALL,
+    )
+    return m.group(1).strip() if m else None
+
+
+def embeddable_llm_html_from_file(path: Path | None = None) -> str:
+    """Lead + Body aus gespeicherter KI-Antwort — ohne äußere section/analysis-llm-Hülle."""
+    p = path or OUT_HTML
+    if not p.is_file():
+        return ""
+    raw = p.read_text(encoding="utf-8")
+    body = extract_llm_body_html(raw)
+    if not body:
+        return ""
+    lead = extract_llm_lead_html(raw)
+    parts: list[str] = []
+    if lead:
+        parts.append(f'<p class="prompt-lead analysis-llm-note">{lead}</p>')
+    parts.append(body)
+    return "\n        ".join(parts)
+
+
+def public_llm_unavailable_html(
+    scoring_day: str,
+    matrix_last: str,
+    *,
+    gemini_configured: bool,
+) -> str:
+    import html as html_mod
+
+    sd = html_mod.escape(str(scoring_day))
+    ml = html_mod.escape(str(matrix_last))
+    if gemini_configured:
+        msg = (
+            f"Für den Scoring-Tag <strong>{sd}</strong> ist die KI-Einordnung "
+            f"noch nicht verfügbar (Merkmalsmatrix bis <strong>{ml}</strong>). "
+            "Sie wird beim nächsten erfolgreichen Analyse-Lauf ergänzt."
+        )
+    else:
+        msg = (
+            f"Für den Scoring-Tag <strong>{sd}</strong> liegt keine automatische "
+            f"KI-Einordnung vor (Merkmalsmatrix bis <strong>{ml}</strong>)."
+        )
+    return f'<div class="analysis-llm-unavailable"><p class="empty">{msg}</p></div>'
+
+
 def llm_analysis_is_stale(expected_signal_date: str | None = None) -> bool:
     """True wenn KI-Metadaten nicht zum aktuellen Scoring-/Signaltag passen."""
     scoring = (expected_signal_date or analysis_expect_signal_date()).strip()[:10]

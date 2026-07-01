@@ -1092,27 +1092,16 @@ def _run_phase17(c: Any) -> None:
             if _r.returncode != 0:
                 print("LLM-Analyse Fehler:", (_r.stderr or _r.stdout or "")[:2500], flush=True)
             _hf = Path("docs") / "analysis_llm_last.html"
-            _use_cached_llm = False
-            if _r.returncode == 0 and _hf.is_file():
-                _use_cached_llm = True
-            elif _hf.is_file():
+            if _hf.is_file():
                 try:
-                    from scripts.website_analysis_common import llm_analysis_is_stale
+                    from scripts.website_analysis_common import embeddable_llm_html_from_file
 
-                    _use_cached_llm = not llm_analysis_is_stale(_scoring_today)
-                except Exception:
-                    _use_cached_llm = False
-            if _use_cached_llm and _hf.is_file():
-                _analysis_llm_section = _hf.read_text(encoding="utf-8")
-            elif _hf.is_file():
+                    _analysis_llm_section = embeddable_llm_html_from_file(_hf)
+                except Exception as _e_embed:
+                    print(f"Hinweis: KI-HTML Einbettung fehlgeschlagen ({_e_embed}).", flush=True)
+            if not _analysis_llm_section.strip():
                 print(
-                    f"Hinweis: docs/analysis_llm_last.html passt nicht zu Scoring-Tag {_scoring_today} "
-                    "— wird nach finalem master_daily_update neu erzeugt.",
-                    flush=True,
-                )
-            else:
-                print(
-                    "Hinweis: docs/analysis_llm_last.html fehlt nach Gemini-Lauf. Ausgabe:",
+                    "Hinweis: docs/analysis_llm_last.html fehlt oder ohne Body nach Gemini-Lauf. Ausgabe:",
                     ((_r.stdout or "") + (_r.stderr or ""))[:3000],
                     flush=True,
                 )
@@ -1121,6 +1110,16 @@ def _run_phase17(c: Any) -> None:
     else:
         if not _gemini_key:
             print("Hinweis: GEMINI_API_KEY setzen — keine automatische KI-Analyse.", flush=True)
+
+    if not _analysis_llm_section.strip():
+        _hf = Path("docs") / "analysis_llm_last.html"
+        if _hf.is_file():
+            try:
+                from scripts.website_analysis_common import embeddable_llm_html_from_file
+
+                _analysis_llm_section = embeddable_llm_html_from_file(_hf)
+            except Exception:
+                pass
 
     _thr_cal = getattr(c, "threshold_calibration_end_date", None)
     if _thr_cal is None and getattr(c, "df_threshold", None) is not None:
@@ -1139,16 +1138,23 @@ def _run_phase17(c: Any) -> None:
     )
     _target_section = cfg.html_target_definition_section(c)
 
-    _anal_fallback = (
-        '<div class="section analysis-llm-missing"><h2>KI-Antwort</h2>'
-        '<p class="empty"><strong>Lokal:</strong> <code>.env</code> mit <code>GEMINI_API_KEY</code> (Projektroot). '
-        "Dann <code>python scripts/run_website_analysis_gemini.py</code> — es muss "
-        "<code>docs/analysis_llm_last.html</code> erscheinen. Anschließend <strong>diese Zelle (17)</strong> erneut ausführen.</p>"
-        '<p class="empty"><strong>Daten:</strong> Vorher <code>data/master_daily_update.csv</code> erzeugen (holdout/build_holdout_signals_master, z. B. nach Holdout-Export).</p>'
-        '<p class="empty"><strong>GitHub Pages:</strong> Ohne Commit von <code>docs/analysis_llm_last.html</code> und neuem '
-        "<code>docs/index.html</code> bleibt die Analyse auf der Website leer — API-Keys liegen nicht im Repo.</p>"
-        "</div>"
-    )
+    try:
+        from scripts.website_analysis_common import public_llm_unavailable_html as _public_llm_unavailable_html
+    except Exception:
+        _public_llm_unavailable_html = None
+
+    def _anal_fallback() -> str:
+        if _public_llm_unavailable_html is not None:
+            return _public_llm_unavailable_html(
+                _scoring_today,
+                _matrix_last_date,
+                gemini_configured=bool(_gemini_key),
+            )
+        return (
+            '<div class="analysis-llm-unavailable"><p class="empty">'
+            "KI-Einordnung für diesen Lauf nicht verfügbar."
+            "</p></div>"
+        )
 
     _html_cap = _cfg_param_int(c, "DOCS_INDEX_HTML_MAX_BYTES", _DOCS_INDEX_HTML_MAX_BYTES_DEFAULT)
     _k_start = min(
@@ -1403,7 +1409,8 @@ def _run_phase17(c: Any) -> None:
         .analysis-llm-body .analysis-code{{font-family:ui-monospace,Consolas,monospace;font-size:.88em;background:#1a1a2e;color:#b0bec5;padding:2px 7px;border-radius:4px;border:1px solid #2d2d4e}}
         .analysis-llm-body .analysis-bq{{margin:10px 0;padding:10px 14px;border-left:3px solid #4fc3f7;background:#12121f;border-radius:0 6px 6px 0;color:#b0bec5}}
         .analysis-llm-body .analysis-hr{{border:none;border-top:1px solid #37474f;margin:16px 0}}
-        .analysis-llm-missing h2{{font-size:.95em;color:#ffb74d;margin-bottom:8px}}
+        .analysis-llm-unavailable .empty{{color:#90a4ae;font-size:.88em;line-height:1.55}}
+        .analysis-llm-note{{font-size:.78em;color:#78909c;margin:0 0 10px;line-height:1.45}}
         @media(max-width:960px){{.signals-grid{{grid-template-columns:1fr}}}}
         @media(max-width:600px){{header h1{{font-size:.95em}}}}
       </style>
@@ -1482,21 +1489,7 @@ def _run_phase17(c: Any) -> None:
     </html>"""
 
 
-        _llm_html = (_analysis_llm_section.strip() if _analysis_llm_section.strip() else _anal_fallback)
-        if _llm_html:
-            _llm_html = re.sub(
-                r'^\s*<div class="section analysis-llm">\s*<h2>[^<]+</h2>\s*',
-                "",
-                _llm_html,
-                count=1,
-            )
-            _llm_html = re.sub(
-                r'<p class="prompt-lead">[^<]*</p>\s*',
-                "",
-                _llm_html,
-                count=1,
-            )
-            _llm_html = re.sub(r"\s*</div>\s*$", "", _llm_html.strip())
+        _llm_html = _analysis_llm_section.strip() if _analysis_llm_section.strip() else _anal_fallback()
         html = html.replace("__ANALYSIS_LLM_SECTION__", _llm_html)
         _nb = len(html.encode("utf-8"))
         if _nb <= _html_cap or _chart_k == 0:
