@@ -69,35 +69,42 @@ def website_context_guide_html() -> str:
       <div class="section context-user-guide" id="context-user-guide">
         <h2>Kontext-Ampel — Erklärung</h2>
         <p class="section-lead">
-          Jede Signalkarte erhält eine <strong>Kontext-Ampel</strong> (grün / orange / gelb / rot).
+          Jede Signalkarte erhält eine <strong>Kontext-Ampel</strong> mit
+          <strong>fünf Stufen</strong> (grün / orange / rot / gelb / gelb-risiko).
           Das ist <em>kein</em> zweites Modell und <em>kein</em> Ausschluss — nur eine
           OOS-validierte Einordnung des Marktumfelds am Signaltag.
         </p>
 
         <details open>
-          <summary><strong>Die Stufen (OOS-validiert)</strong></summary>
+          <summary><strong>Die fünf Stufen (OOS-validiert)</strong></summary>
           <div class="guide-body">
-            <h3 style="color:#a5d6a7">Grün — Kontext gut</h3>
+            <h3 style="color:#a5d6a7">1. Grün — Kontext gut</h3>
             <p>
               <strong>Kein</strong> Makro-Event in ±2 Handelstagen <strong>und</strong>
               VIX ≥ <strong>{vix_min:.0f}</strong>.
               Historisch stärkstes OOS-Regime (~+4,6&nbsp;%, Hit &gt;2,5&nbsp;% ~63&nbsp;%).
             </p>
-            <h3 style="color:#ffcc80">Orange — Makro + hohes Vol</h3>
+            <h3 style="color:#ffcc80">2. Orange — Makro + hohes Vol</h3>
             <p>
               Makro-Termin in ±2 Handelstagen, aber VIX ≥ <strong>{macro_min:.0f}</strong>.
               Historisch noch tradbar mit Vorsicht (~+4,7&nbsp;%) — nicht pauschal meiden.
             </p>
-            <h3 style="color:#ef9a9a">Rot — Makro-Risiko (niedriges Vol)</h3>
+            <h3 style="color:#ef9a9a">3. Rot — Makro-Risiko (niedriges Vol)</h3>
             <p>
               Makro-Termin in ±2 Handelstagen bei VIX <strong>&lt; {macro_min:.0f}</strong>.
               Historisch schwächstes Regime (~−1,5&nbsp;%, Hit ~20&nbsp;%).
             </p>
-            <h3 style="color:#fff59d">Gelb — Standard</h3>
+            <h3 style="color:#fff59d">4. Gelb — Standard</h3>
             <p>
-              Kein Makro-Warnsignal, VIX unter {vix_min:.0f}.
-              Schwächeres Gelb bei vix3m/vix ≥ {ratio_min:.2f} (Terminstruktur).
-              Modell-Signal bleibt gültig.
+              Kein Makro-Warnsignal, VIX unter {vix_min:.0f}, vix3m/vix unter {ratio_min:.2f}.
+              Schwächeres Regime als Grün, Modell-Signal bleibt gültig.
+            </p>
+            <h3 style="color:#fff59d">5. Gelb-Risiko — Vol-Struktur</h3>
+            <p>
+              Wie Gelb (kein Makro, VIX &lt; {vix_min:.0f}), zusätzlich
+              vix3m/vix ≥ <strong>{ratio_min:.2f}</strong> (steile Terminstruktur / Contango).
+              Historisch das schwächste Nicht-Makro-Regime (~+1,2&nbsp;%, Hit ~37&nbsp;%).
+              Auf den Karten als Badge <strong>„Gelb-Risiko“</strong>.
             </p>
           </div>
         </details>
@@ -107,14 +114,14 @@ def website_context_guide_html() -> str:
           <div class="guide-body">
             <p>
               Preset <strong>„Empfohlen“</strong> = Grün + Orange (~+4,6&nbsp;% OOS-Mittel).
-              Gelb und Rot (niedriges Vol + Makro) historisch unterdurchschnittlich.
+              Gelb, Gelb-Risiko und Rot (niedriges Vol + Makro) historisch unterdurchschnittlich.
             </p>
           </div>
         </details>
 
         <p class="section-lead" style="margin-top:10px">
           Sortierung: <strong>neuestes Signaldatum zuerst</strong>.
-          Filter: Alle / Empfohlen / Grün / Orange / Gelb / Rot.
+          Filter: Alle / Empfohlen / Grün / Orange / Gelb (inkl. Gelb-Risiko) / Rot.
         </p>
       </div>"""
 
@@ -124,8 +131,15 @@ def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
     n_red = int(counts.get("red", 0))
     n_orange = int(counts.get("orange", 0))
     n_yellow = int(counts.get("yellow", 0))
+    n_yellow_plain = int(counts.get("yellow_plain", n_yellow))
+    n_yellow_risk = int(counts.get("yellow_risk", 0))
     n_green = int(counts.get("green", 0))
     n_trade = n_green + n_orange
+    yellow_label = (
+        f"Gelb ({n_yellow_plain}+{n_yellow_risk})"
+        if n_yellow_risk
+        else f"Gelb ({n_yellow})"
+    )
     return website_context_guide_html() + f"""
       <div class="section ampel-filter-bar" id="ampel-filter">
         <h2>OOS-Signale nach Kontext-Ampel</h2>
@@ -138,7 +152,7 @@ def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
           <button type="button" class="ampel-filter-btn ampel-filter-btn--trade" data-ampel="trade">Empfohlen ({n_trade})</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--green" data-ampel="green">Grün ({n_green})</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--orange" data-ampel="orange">Orange ({n_orange})</button>
-          <button type="button" class="ampel-filter-btn ampel-filter-btn--yellow" data-ampel="yellow">Gelb ({n_yellow})</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--yellow" data-ampel="yellow">{yellow_label}</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--red" data-ampel="red">Rot ({n_red})</button>
         </div>
         <p class="ampel-filter-status" id="ampel-filter-status" aria-live="polite"></p>

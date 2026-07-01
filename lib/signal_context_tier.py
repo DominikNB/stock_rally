@@ -137,7 +137,7 @@ def classify_signal_context_tier(signal: Mapping[str, Any]) -> dict[str, Any]:
     ):
         return {
             "level": "yellow_risk",
-            "label_de": "Standard (Vol-Struktur)",
+            "label_de": "Gelb-Risiko",
             "hint_de": (
                 f"VIX {vix:.1f} unter {vix_min:.0f}, vix3m/vix {vix3m_ratio:.2f} ≥ {ratio_min:.2f} "
                 "— historisch schwächeres Gelb-Regime (ruhigeres Vol + steile Terminstruktur)."
@@ -289,11 +289,13 @@ def context_tier_panel_html() -> str:
         '<div class="context-panel">'
         '<p class="context-panel-lead">'
         "<strong>Kontext-Ampel</strong> pro Signal (OOS-validiert, kein zweites Modell): "
+        "fünf Stufen — "
         f"<strong style=\"color:#a5d6a7\">Grün</strong> = kein Makro ±2d und VIX ≥ {vix_min:.0f}; "
         f"<strong style=\"color:#ffcc80\">Orange</strong> = Makro ±2d mit VIX ≥ {macro_min:.0f}; "
-        "<strong style=\"color:#ef9a9a\">Rot</strong> = Makro bei niedrigem VIX; "
-        f"<strong style=\"color:#fff59d\">Gelb</strong> = Standard (schwächer bei VIX &lt; {vix_min:.0f} "
-        f"oder vix3m/vix ≥ {ratio_min:.2f})."
+        "<strong style=\"color:#ef9a9a\">Rot</strong> = Makro bei VIX &lt; "
+        f"{macro_min:.0f}; "
+        f"<strong style=\"color:#fff59d\">Gelb</strong> = kein Makro, VIX &lt; {vix_min:.0f}; "
+        f"<strong style=\"color:#fff59d\">Gelb-Risiko</strong> = zusätzlich vix3m/vix ≥ {ratio_min:.2f}."
         "</p></div>"
     )
 
