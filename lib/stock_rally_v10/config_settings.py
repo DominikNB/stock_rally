@@ -32,13 +32,18 @@ print(f'Training:  {START_DATE} -> {TRAIN_END_DATE}  (bis zum aktuellen Datum)')
 # True  → Daten + Scoring/HTML; Training (``training_phases`` 12–16) übersprungen.
 # False → volles Training; Artefakt nach Meta-/Threshold-Phase automatisch schreiben.
 # Nur diese Datei (bzw. ``cfg.SCORING_ONLY`` nach ``import``) — nicht nur eine Notebook-Variable.
-SCORING_ONLY = True
+SCORING_ONLY = False
 # True → Base-Optuna/Base-Modelle bleiben aus Artefakt bestehen; Training startet direkt bei Meta.
 # Voraussetzung: SCORING_ONLY=False und ein vorhandenes ``SCORING_ARTIFACT_PATH``.
 RETRAIN_META_ONLY = False
+# Meta-Optuna-only: Pipeline-Cache muss AN sein, damit der nächste Lauf Universum/OHLCV/Features
+# unter ``data/pipeline_cache/`` speichert (Seed). Erfolg im Log:
+#   [PipelineCache] OHLCV-Store gespeichert …
+#   [PipelineCache] Features-Store gespeichert …
+# Folgelauf am selben END_DATE: Feature-Cache-Treffer → Meta-Optuna startet ohne Rebuild.
 SCORING_ARTIFACT_PATH = Path("models") / "scoring_artifacts.joblib"
 # Phase 17: Signal-Filter pro Ticker parallel (joblib loky). -1 = alle Kerne, 1 = seriell.
-PHASE17_SIGNAL_FILTER_JOBS = -1
+PHASE17_SIGNAL_FILTER_JOBS = 1
 # Fortschrittslog alle N Ticker; 0 = ca. 10 Stufen (nt//10).
 PHASE17_SIGNAL_FILTER_PROGRESS_BATCH = 0
 # docs/index.html: GitHub lehnt Dateien >100 MiB ab (nur diese Datei — nicht docs/charts/).
@@ -63,8 +68,14 @@ _SCORING_ARTIFACT_SAVED_THIS_SESSION = False
 # rot: VIX < VIX_AMPEL_YELLOW_MIN | gelb: bis GREEN | grün: ab GREEN
 VIX_AMPEL_YELLOW_MIN = 20.0
 VIX_AMPEL_GREEN_MIN = 25.0
-# Website Kontext-Ampel (grün): VIX am Signaltag ≥ dieser Wert und kein Makro-Event ±2 Handelstage.
-SIGNAL_CONTEXT_VIX_GREEN_MIN = 20.0
+# Website Kontext-Ampel (OOS-validiert, Jun 2026):
+# grün: kein Makro ±2d und VIX ≥ GREEN_MIN
+# orange: Makro ±2d und VIX ≥ MACRO_ORANGE_MIN (tradbar mit Vorsicht)
+# rot: Makro ±2d und VIX < MACRO_ORANGE_MIN
+# gelb_risk: kein Makro, VIX < GREEN_MIN, vix3m/vix ≥ YELLOW_RISK_RATIO
+SIGNAL_CONTEXT_VIX_GREEN_MIN = 22.0
+SIGNAL_CONTEXT_VIX_MACRO_ORANGE_MIN = 22.0
+SIGNAL_CONTEXT_VIX3M_RATIO_YELLOW_RISK_MIN = 1.05
 # Rot-Kontext-Chips (OOS META+THR + FINAL, scripts/_scratch_validate_all_context.py)
 VIX_RED_CHIP_VIX3M_RATIO_MAX = 1.16
 VIX_RED_CHIP_SECTOR_HHI_MAX = 0.35
@@ -77,6 +88,26 @@ VIX_RED_CHIP_SECTOR_HHI_MAX = 0.35
 N_WF_SPLITS           = 5     # Walk-forward CV folds
 GDELT_CHUNK_DAYS      = 45    # Nur bei NEWS_SOURCE="gdelt_api": Chunk-Länge in Tagen
 OPT_MIN_PRECISION_BASE   = 0.64   # Phase 1 Base-XGB
+# ── A/B: Base-Optuna-Selektionsmetrik (Diversität Base vs. Meta) ─────────────
+# Steuert NUR, wonach die Base-Optuna ihre Hyperparameter auswählt (innerer XGB-Loss
+# bleibt focal/logloss). Default reproduziert das bisherige Verhalten.
+#   "tp_precision"            : Positiv = Label target==1; Precision-Gate (OPT_MIN_PRECISION_BASE),
+#                              Reward = Recall%. (bisheriges Standardverhalten)
+#   "signal_return_hit_count" : Positiv = realisierter Forward-Return > Hit-Min (wie Meta-ZFK),
+#                              Trefferdefinition aus META_OBJECTIVE_RETURN_HIT_HORIZONS / _MIN.
+#                              Gleiches Gate/Reward-Gerüst wie tp_precision, aber Return- statt Label-Ziel.
+#   "average_precision"       : dichtes PR-AUC (sklearn) auf dem Label, OHNE Signal-Filter/Gate —
+#                              Diagnose, ob das harte Precision-Gate die Base-Modelle aushungert.
+# Per ENV überschreibbar (für A/B-Orchestrierung ohne Datei-Edit).
+BASE_OBJECTIVE_MODE = os.environ.get("BASE_OBJECTIVE_MODE", "average_precision").strip().lower()
+# A/B/Research: Git-Commit/Push am Pipeline-Ende abschaltbar (Default an). ENV-überschreibbar.
+DAILY_HTML_GIT_PUSH = os.environ.get("DAILY_HTML_GIT_PUSH", "1").strip().lower() not in {
+    "0", "false", "no", "off",
+}
+# Base-Optuna-Checkpoint als Seed-Trial laden (Default an). ENV-überschreibbar (Arme unabhängig halten).
+BASE_OPTUNA_CHECKPOINT_LOAD = os.environ.get("BASE_OPTUNA_CHECKPOINT_LOAD", "1").strip().lower() not in {
+    "0", "false", "no", "off",
+}
 OPT_MIN_PRECISION_META   = 0.99  # Phase 4 Meta-CV + Phase 5 WF-CV: hartes Precision-Gate (s. META_PRECISION_HARD_GATE)
 OPT_MIN_PRECISION = OPT_MIN_PRECISION_META  # Reports/PR-Plots: gleiches Gate wie Meta
 # Phase 5: Mindestanzahl positiver Roh-Vorhersagen (prob>=t), damit Precision nicht trivial ist
@@ -150,7 +181,7 @@ FIXED_Y_RALLY_PLUS_TARGET_SEGMENT_HEAD_FRACTION = 0.35
 FIXED_Y_RALLY_SIGNAL_ENTRY_DAYS = 2
 FIXED_Y_RALLY_PLUS_TARGET_OVERLAP_MODE = "union"  # "greedy_first" | "union"
 EARLY_STOPPING_ROUNDS = 30
-N_OPTUNA_TRIALS       = 150  # mehr Coverage im großen Kombinationsraum (TPE warm-up + Exploitation)
+N_OPTUNA_TRIALS       = 300  # Arm-C-Lauf: PR-AUC-Base (average_precision), erweiterte Suche
 # 0 = Base-Optuna überspringen, wenn ``models/base_optuna_checkpoint.joblib`` existiert (Resume nach Fix).
 # Nur Optuna Phase 1 (Base-XGB): drosseln, wenn Trials trotz kleinem Universum langsam sind.
 # UNIVERSE_FRACTION verkürzt nur Zeilen/Ticker in df_train; Laufzeit dominiert oft
@@ -158,7 +189,7 @@ N_OPTUNA_TRIALS       = 150  # mehr Coverage im großen Kombinationsraum (TPE wa
 OPTUNA_WF_SPLITS      = None  # None → N_WF_SPLITS; z.B. 3 weniger Folds pro Trial
 # tqdm-Balken in Phase 1: None oder True = an; False = aus (ruhigeres Log, weniger Sonderzeichen | % in der Konsole).
 OPTUNA_SHOW_PROGRESS_BAR = None
-N_META_TRIALS         = 150
+N_META_TRIALS         = 500
 # True (oder N_META_TRIALS=0) + vorhandener META_OPTUNA_CHECKPOINT_PATH → Optuna überspringen.
 SKIP_META_OPTUNA = False
 META_OPTUNA_CHECKPOINT_PATH = Path("models") / "meta_optuna_poststudy_checkpoint.json"
@@ -166,7 +197,14 @@ META_OPTUNA_CHECKPOINT_PATH = Path("models") / "meta_optuna_poststudy_checkpoint
 # - "tp_precision": bisherige Zielfunktion (TP/Precision/FP-Run Constraints).
 # - "signal_mean_return": mittlere Signal-Rendite über Haltehorizonte (z. B. 1..5 Tage).
 # - "signal_win_rate": Anteil der Signale mit positivem mittlerem Horizon-Return.
-META_OBJECTIVE_MODE = "tp_precision"
+# - "signal_return_hit_count": Summe CV-Signale mit mean(ret_h) > META_OBJECTIVE_RETURN_HIT_MIN
+#   über META_OBJECTIVE_RETURN_HIT_HORIZONS (plain mean), nur wenn mean CV return-hit-rate
+#   (n_hits/n_sig) >= META_OBJECTIVE_RETURN_HIT_MIN_PRECISION (META_PRECISION_HARD_GATE).
+META_OBJECTIVE_MODE = "signal_return_hit_count"
+# Nur bei META_OBJECTIVE_MODE == "signal_return_hit_count":
+META_OBJECTIVE_RETURN_HIT_MIN = 0.025
+META_OBJECTIVE_RETURN_HIT_HORIZONS = (2, 4, 6, 8, 10)
+META_OBJECTIVE_RETURN_HIT_MIN_PRECISION = 0.70
 # True: Meta-CV wie Base — mittlere Filter-Precision über WF-Folds >= OPT_MIN_PRECISION_META,
 # dann Trial-Score = Summe n_TP; darunter Penalty mean(precision)−1. False = weiches Sigmoid (Legacy).
 META_PRECISION_HARD_GATE = True
@@ -219,6 +257,8 @@ META_PHASE5_SEED_USE_NESTED_THR_MEAN = True
 META_PHASE5_USE_WF_CV = True
 N_PHASE5_FOLDS = 3
 META_PHASE5_MIN_TRAIN_FRAC = 0.40
+# Phase-5 Grid (signal_return_hit_count): Schwellen ohne gefilterte Signale sind
+# disqualifiziert; Mindest-Signaltage/d wie Meta-CV (META_OBJECTIVE_MIN_SIGNALS_PER_DAY_PER_FOLD).
 # Wahrscheinlichkeitsskalierung für Meta-Classifier-Ausgaben:
 # - "none": rohe predict_proba
 # - "sigmoid": Platt-Skalierung (logistische Kalibrierung)
@@ -232,7 +272,10 @@ META_SHAP_CUM_FRAC = 0.85  # kleinstes K mit kumulierter SHAP-Masse ≥ 75 %
 META_SHAP_TOP_K_MIN = 5
 META_SHAP_TOP_K_MAX = 35
 RANDOM_STATE          = 42
-N_WORKERS             = os.cpu_count()
+# Parallelität: 1 = weniger CPU-Spikes, stabileres Fast-SHAP / Optuna auf Windows.
+MODEL_N_JOBS          = 1   # sklearn RF/ET/LR, joblib Parallel
+XGB_NTHREAD           = 1   # xgb.train / XGBClassifier (OpenMP)
+N_WORKERS             = 1   # News-Prescreen u.ä.
 
 # ── Parametrisches Y (nur wenn OPT_OPTIMIZE_Y_TARGETS=True) ─────────────────
 # Bei festem Y (False) nutzt ``create_target`` nur FIXED_Y_*; diese Werte sind dann irrelevant,
@@ -407,6 +450,7 @@ RET_MOMENT_WINDOWS = [20, 60, 120]
 YANG_ZHANG_WINDOWS = [10, 20, 60]
 # Amihud-Illiquidität: Mittelwert |ret| / Dollarvolumen über das Fenster (höher = illiquider).
 AMIHUD_WINDOWS = [10, 20, 60]
+# Corwin–Schultz: Z-Score + Mikrostruktur-Interaktionen (Fenster = Optuna amihud_window).
 # VCP-Lower-Lows: in wie vielen der letzten N Tage hat ``vcp_tightness_{vw}d`` ein neues
 # Minimum gegenüber dem laufenden Tief markiert. Stärker = engere/anhaltendere Kontraktion.
 VCP_LOWER_LOW_WINDOWS = [20, 60, 120]
@@ -445,9 +489,51 @@ FEAR_GREED_ENABLED = True
 FEAR_GREED_API_URL = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
 FEAR_GREED_CACHE_FILE = os.path.join(os.getcwd(), "data", "fear_greed_cache.json")
 # Nach neuen mr_*-Spalten: Cache-Version erhöhen (macro_augment_cache.py).
-MACRO_AUGMENT_CACHE_VERSION = 2
+# v4: mr_fear_greed-Fix (Browser-UA gegen HTTP 418 + Stale-Cache-Fallback) erzwingt
+#     Macro-Neuberechnung + Feature-Rebuild, damit echte Fear&Greed-Werte einfließen.
+MACRO_AUGMENT_CACHE_VERSION = 4
 MACRO_AUGMENT_CACHE_ENABLED = True
 MACRO_AUGMENT_CACHE_DIR = os.path.join(os.getcwd(), "data", "macro_augment_cache")
+
+# ── Pipeline-Cache (Universum, OHLCV, fertige Feature-Matrix) ───────────────
+# Meta-Only / Full-Run: Seed befüllt Store; Folgeläufe ergänzen nur Datum/Ticker/Spalten.
+# Bei Logik-Änderung: FEATURES_CACHE_VERSION oder OHLCV_CACHE_VERSION erhöhen.
+PIPELINE_CACHE_ENABLED = True
+PIPELINE_CACHE_DIR = os.path.join(os.getcwd(), "data", "pipeline_cache")
+UNIVERSE_CACHE_ENABLED = True
+UNIVERSE_CACHE_VERSION = 1
+OHLCV_CACHE_ENABLED = True
+OHLCV_CACHE_VERSION = 1
+FEATURES_CACHE_ENABLED = True
+FEATURES_CACHE_VERSION = 1
+FEATURES_CACHE_INCREMENTAL_ENABLED = True
+INDICATOR_CACHE_ENABLED = True
+INDICATOR_CACHE_VERSION = 1
+INDICATOR_CACHE_DIR = os.path.join(os.getcwd(), "data", "indicator_cache")
+PIPELINE_STORE_VERSION = 1
+PIPELINE_CACHE_OHLCV_WARMUP_OVERLAP = True
+PIPELINE_CACHE_WARMUP_MARGIN_DAYS = 5
+PIPELINE_CACHE_WARMUP_CALENDAR_RATIO = 365.0 / 252.0
+PIPELINE_CACHE_WARMUP_CALENDAR_EXTRA = 14
+
+if RETRAIN_META_ONLY and not SCORING_ONLY:
+    _cache_ok = (
+        PIPELINE_CACHE_ENABLED
+        and UNIVERSE_CACHE_ENABLED
+        and OHLCV_CACHE_ENABLED
+        and FEATURES_CACHE_ENABLED
+        and INDICATOR_CACHE_ENABLED
+    )
+    if _cache_ok:
+        print(
+            f"Pipeline-Cache: AN — Meta-Seed speichert unter {PIPELINE_CACHE_DIR} "
+            "(Universum, OHLCV, Features)."
+        )
+    else:
+        print(
+            "WARNUNG Pipeline-Cache: nicht vollständig aktiv — "
+            "nächster Meta-Lauf speichert ggf. keine Größen für Folgeläufe."
+        )
 
 # ── Phase 11: Statistisches Pre-Pruning (nur df_train / BASE, vor Phase 12) ───
 STATISTICAL_PRE_PRUNE_ENABLED = True
@@ -468,6 +554,7 @@ STATISTICAL_PRE_PRUNE_WHITELIST_EXACT = (
     "macro_event_within_2bd",
     "ret_vs_spy_5d",
     "ret_vs_spy_20d",
+    "vol_zscore_div_spyrv",
 )
 OPTUNA_INTERSECT_FEAT_COLS_WITH_STATISTICAL_PRUNE = True
 # Phase 11: pro News-Shard-Tag (Manifest) Sparsity+MI → ``survivors_by_tag`` für Optuna.
@@ -479,6 +566,13 @@ STATISTICAL_PRE_PRUNE_ARTIFACT_NAME = "statistical_pre_prune_v1.json"
 STATISTICAL_PRE_PRUNE_LOG_TOP_MI = 15  # Top-N MI-Features im Log
 STATISTICAL_PRE_PRUNE_LOG_DROP_SAMPLE = 12  # Beispiel-Spalten nach Sparsity-Drop
 STATISTICAL_PRE_PRUNE_NEWS_TAG = "5_10_3"  # Fallback-Shard wenn SEED-Tag fehlt
+# Phase-11-Ranking: "fast_shap" (flaches XGB + TreeSHAP) oder "mutual_info"
+STATISTICAL_PRE_PRUNE_METHOD = "fast_shap"
+STATISTICAL_PRE_PRUNE_SHAP_MAX_DEPTH = 3
+STATISTICAL_PRE_PRUNE_SHAP_N_ESTIMATORS = 150
+STATISTICAL_PRE_PRUNE_SHAP_NEG_DOWN_RATIO = 5  # Negatives : Positives beim SHAP-Screener
+STATISTICAL_PRE_PRUNE_SHAP_SAMPLE_ROWS = None  # None = gleiche Zeilen-Cap-Logik wie MI
+STATISTICAL_PRE_PRUNE_LOG_TOP_SHAP = 15
 _FEAT_COLS_STATISTICAL_SURVIVORS: list[str] | None = None
 _FEAT_COLS_STATISTICAL_SURVIVORS_BY_TAG: dict[str, list[str]] | None = None
 
@@ -576,4 +670,13 @@ GKG_GCAM_KEYS_PATH = Path("data") / "gkg_gcam_metric_keys.json"
 # Z. B. 8 in der Datei exploriert, hier 2 → nur Must-Haves + 2 Extras. None = keine Kürzung; 0 = nur Must-Haves.
 # Nur *schmalere* Key-Liste löst keinen News-BigQuery-Neu-Scan aus, solange der Pickle-Cache die Keys schon kennt.
 GKG_GCAM_USE_EXTRA_N = 2  # schlankere Feature-Matrix; None = alle Extras aus Datei
+
+# ── Sektor-Anker (point-in-time Liquidität statt Market-Cap-Look-Ahead) ───────
+NEWS_ANCHOR_LIQUIDITY_LOOKBACK_DAYS = 30
+NEWS_TONE_DIV_VIX_ENABLED = True
+MACRO_MICRO_INTERACTIONS_ENABLED = True
+
+# ── News-Korrelations-Pre-Screen (SHAP-Importance für Cluster-Survivors) ──────
+NEWS_CORRELATION_PRESCREEN_SHAP_POS_FRAC = 0.40  # Oversampling Positives nur im SHAP-Screener
+NEWS_CORRELATION_PRESCREEN_SHAP_MAX_DEPTH = 3
 

@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
 
-from lib.signal_context_tier import context_tier_counts, context_vix_green_min
+from lib.signal_context_tier import (
+    context_tier_counts,
+    context_vix3m_ratio_yellow_risk_min,
+    context_vix_green_min,
+    context_vix_macro_orange_min,
+)
 
 
 def ampel_counts(signals: Sequence[Mapping[str, Any]]) -> dict[str, int]:
@@ -20,8 +25,10 @@ def website_ampel_filter_css_block() -> str:
         .ampel-filter-btn.is-active{transform:translateY(-1px);color:#fff}
         .ampel-filter-btn--all.is-active{background:#263238;border-color:#90a4ae}
         .ampel-filter-btn--red.is-active{background:#3d1f1f;border-color:#c62828;color:#ef9a9a}
+        .ampel-filter-btn--orange.is-active{background:#3d2a14;border-color:#fb8c00;color:#ffcc80}
         .ampel-filter-btn--yellow.is-active{background:#3d3520;border-color:#f9a825;color:#fff59d}
         .ampel-filter-btn--green.is-active{background:#1b3d24;border-color:#43a047;color:#a5d6a7}
+        .ampel-filter-btn--trade.is-active{background:#1a3320;border-color:#66bb6a;color:#c8e6c9}
         .ampel-filter-status{font-size:.78em;color:#78909c;margin:0 0 8px;line-height:1.45}
         .ampel-filter-list{max-height:min(52vh,520px);overflow:auto;border:1px solid #2d2d4e;border-radius:8px;background:#0d1117}
         .ampel-filter-list[hidden]{display:none}
@@ -34,6 +41,7 @@ def website_ampel_filter_css_block() -> str:
         .ampel-filter-table .col-prob{color:#a5d6a7;white-space:nowrap}
         .ampel-filter-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
         .ampel-filter-dot--red{background:#ef5350}
+        .ampel-filter-dot--orange{background:#ffa726}
         .ampel-filter-dot--yellow{background:#ffca28}
         .ampel-filter-dot--green{background:#66bb6a}
         .context-user-guide{margin-bottom:14px;padding:14px 16px}
@@ -53,57 +61,60 @@ def website_ampel_filter_css_block() -> str:
 
 
 def website_context_guide_html() -> str:
-    """Kurze Legende zur neuen Kontext-Ampel (Makro + VIX)."""
+    """Kurze Legende zur Kontext-Ampel (Makro × VIX, OOS Jun 2026)."""
     vix_min = context_vix_green_min()
+    macro_min = context_vix_macro_orange_min()
+    ratio_min = context_vix3m_ratio_yellow_risk_min()
     return f"""
       <div class="section context-user-guide" id="context-user-guide">
         <h2>Kontext-Ampel — Erklärung</h2>
         <p class="section-lead">
-          Jede Signalkarte erhält eine <strong>Kontext-Ampel</strong> (grün / gelb / rot).
+          Jede Signalkarte erhält eine <strong>Kontext-Ampel</strong> (grün / orange / gelb / rot).
           Das ist <em>kein</em> zweites Modell und <em>kein</em> Ausschluss — nur eine
           OOS-validierte Einordnung des Marktumfelds am Signaltag.
         </p>
 
         <details open>
-          <summary><strong>Die drei Stufen</strong></summary>
+          <summary><strong>Die Stufen (OOS-validiert)</strong></summary>
           <div class="guide-body">
-            <h3 style="color:#ef9a9a">Rot — Makro-Risiko</h3>
-            <p>
-              Ein wichtiger Makro-Termin (z.&nbsp;B. FOMC, CPI, NFP) liegt innerhalb von
-              <strong>±2 Handelstagen</strong> um den Signaltag
-              (<code>macro_event_within_2bd = True</code>).
-              Historisch waren die durchschnittlichen OOS-Renditen in diesem Umfeld schwächer.
-            </p>
             <h3 style="color:#a5d6a7">Grün — Kontext gut</h3>
             <p>
               <strong>Kein</strong> Makro-Event in ±2 Handelstagen <strong>und</strong>
-              VIX am Signaltag <strong>≥ {vix_min:.0f}</strong>
-              (<code>regime_vix_level</code>, Yahoo <code>^VIX</code>).
-              Historisch das stärkste OOS-Regime im Schnitt.
+              VIX ≥ <strong>{vix_min:.0f}</strong>.
+              Historisch stärkstes OOS-Regime (~+4,6&nbsp;%, Hit &gt;2,5&nbsp;% ~63&nbsp;%).
+            </p>
+            <h3 style="color:#ffcc80">Orange — Makro + hohes Vol</h3>
+            <p>
+              Makro-Termin in ±2 Handelstagen, aber VIX ≥ <strong>{macro_min:.0f}</strong>.
+              Historisch noch tradbar mit Vorsicht (~+4,7&nbsp;%) — nicht pauschal meiden.
+            </p>
+            <h3 style="color:#ef9a9a">Rot — Makro-Risiko (niedriges Vol)</h3>
+            <p>
+              Makro-Termin in ±2 Handelstagen bei VIX <strong>&lt; {macro_min:.0f}</strong>.
+              Historisch schwächstes Regime (~−1,5&nbsp;%, Hit ~20&nbsp;%).
             </p>
             <h3 style="color:#fff59d">Gelb — Standard</h3>
             <p>
-              Alles andere: kein Makro-Warnsignal, aber VIX unter {vix_min:.0f} — oder
-              unvollständige Kalender-/VIX-Daten. Das Modell-Signal bleibt unverändert gültig.
+              Kein Makro-Warnsignal, VIX unter {vix_min:.0f}.
+              Schwächeres Gelb bei vix3m/vix ≥ {ratio_min:.2f} (Terminstruktur).
+              Modell-Signal bleibt gültig.
             </p>
           </div>
         </details>
 
         <details>
-          <summary><strong>Was die Ampel nicht ist</strong></summary>
+          <summary><strong>Empfohlener Filter</strong></summary>
           <div class="guide-body">
-            <ul>
-              <li>Kein Ersatz für die Meta-Wahrscheinlichkeit (<code>prob</code>) — höhere
-                  <code>prob</code> bedeutet nicht automatisch bessere Rendite.</li>
-              <li>Keine Anlageberatung — nur historischer Kontext aus dem Backtest.</li>
-              <li>Kein Filter im Modell — alle Signale bleiben sichtbar; Sie filtern nur die Ansicht.</li>
-            </ul>
+            <p>
+              Preset <strong>„Empfohlen“</strong> = Grün + Orange (~+4,6&nbsp;% OOS-Mittel).
+              Gelb und Rot (niedriges Vol + Makro) historisch unterdurchschnittlich.
+            </p>
           </div>
         </details>
 
         <p class="section-lead" style="margin-top:10px">
-          Sortierung der Karten: <strong>neuestes Signaldatum zuerst</strong>.
-          Filter oben: Alle / Grün / Gelb / Rot.
+          Sortierung: <strong>neuestes Signaldatum zuerst</strong>.
+          Filter: Alle / Empfohlen / Grün / Orange / Gelb / Rot.
         </p>
       </div>"""
 
@@ -111,8 +122,10 @@ def website_context_guide_html() -> str:
 def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
     n_all = int(counts.get("all", 0))
     n_red = int(counts.get("red", 0))
+    n_orange = int(counts.get("orange", 0))
     n_yellow = int(counts.get("yellow", 0))
     n_green = int(counts.get("green", 0))
+    n_trade = n_green + n_orange
     return website_context_guide_html() + f"""
       <div class="section ampel-filter-bar" id="ampel-filter">
         <h2>OOS-Signale nach Kontext-Ampel</h2>
@@ -122,9 +135,11 @@ def website_ampel_filter_html(counts: Mapping[str, int]) -> str:
         </p>
         <div class="ampel-filter-btns" role="group" aria-label="Kontext-Ampel Filter">
           <button type="button" class="ampel-filter-btn ampel-filter-btn--all is-active" data-ampel="all">Alle ({n_all})</button>
-          <button type="button" class="ampel-filter-btn ampel-filter-btn--red" data-ampel="red">Rot ({n_red})</button>
-          <button type="button" class="ampel-filter-btn ampel-filter-btn--yellow" data-ampel="yellow">Gelb ({n_yellow})</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--trade" data-ampel="trade">Empfohlen ({n_trade})</button>
           <button type="button" class="ampel-filter-btn ampel-filter-btn--green" data-ampel="green">Grün ({n_green})</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--orange" data-ampel="orange">Orange ({n_orange})</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--yellow" data-ampel="yellow">Gelb ({n_yellow})</button>
+          <button type="button" class="ampel-filter-btn ampel-filter-btn--red" data-ampel="red">Rot ({n_red})</button>
         </div>
         <p class="ampel-filter-status" id="ampel-filter-status" aria-live="polite"></p>
         <div class="ampel-filter-list" id="ampel-filter-list" hidden>
@@ -152,26 +167,52 @@ def website_ampel_filter_js_block() -> str:
 
       function tierFromSignal(s) {
         var t = (s.context_tier || s.vix_regime_ampel || '').toLowerCase();
-        if (t === 'red' || t === 'yellow' || t === 'green') return t;
+        if (t === 'yellow_risk') return 'yellow';
+        if (t === 'red' || t === 'orange' || t === 'yellow' || t === 'green') return t;
         return 'unknown';
       }
 
+      function rawTierFromSignal(s) {
+        return (s.context_tier || s.vix_regime_ampel || '').toLowerCase();
+      }
+
       function ampelFromCard(card) {
-        var pre = (card.getAttribute('data-vix-ampel') || card.getAttribute('data-context-tier') || '').toLowerCase();
-        if (pre === 'red' || pre === 'yellow' || pre === 'green') return pre;
+        var pre = (card.getAttribute('data-context-tier') || card.getAttribute('data-vix-ampel') || '').toLowerCase();
+        if (pre === 'yellow_risk') return 'yellow';
+        if (pre === 'red' || pre === 'orange' || pre === 'yellow' || pre === 'green') return pre;
         var badge = card.querySelector('.context-tier');
         if (badge) {
-          var m = badge.className.match(/context-tier--(red|yellow|green)/);
-          if (m) return m[1];
+          var m = badge.className.match(/context-tier--(red|orange|yellow_risk|yellow|green)/);
+          if (m) {
+            return m[1] === 'yellow_risk' ? 'yellow' : m[1];
+          }
         }
         return 'unknown';
       }
 
+      function rawTierFromCard(card) {
+        var pre = (card.getAttribute('data-context-tier') || '').toLowerCase();
+        if (pre) return pre;
+        var badge = card.querySelector('.context-tier');
+        if (badge) {
+          var m = badge.className.match(/context-tier--(red|orange|yellow_risk|yellow|green)/);
+          if (m) return m[1];
+        }
+        return ampelFromCard(card);
+      }
+
+      function matchesFilter(cardTier, ampel) {
+        if (ampel === 'all') return true;
+        if (ampel === 'trade') return cardTier === 'green' || cardTier === 'orange';
+        if (ampel === 'yellow') return cardTier === 'yellow' || cardTier === 'yellow_risk';
+        return cardTier === ampel;
+      }
+
       function initCardAmpelAttrs() {
         document.querySelectorAll('.sig-card').forEach(function (card) {
-          var a = ampelFromCard(card);
-          card.dataset.vixAmpel = a;
-          card.dataset.contextTier = a;
+          var raw = rawTierFromCard(card);
+          card.dataset.contextTier = raw;
+          card.dataset.vixAmpel = raw === 'yellow_risk' ? 'yellow' : raw;
         });
       }
 
@@ -179,8 +220,8 @@ def website_ampel_filter_js_block() -> str:
         var shown = 0, total = 0;
         document.querySelectorAll('.sig-card').forEach(function (card) {
           total += 1;
-          var a = card.dataset.vixAmpel || card.dataset.contextTier || 'unknown';
-          var ok = ampel === 'all' || a === ampel;
+          var raw = rawTierFromCard(card);
+          var ok = matchesFilter(raw, ampel);
           card.style.display = ok ? '' : 'none';
           if (ok) shown += 1;
         });
@@ -192,6 +233,11 @@ def website_ampel_filter_js_block() -> str:
           .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
 
+      function signalMatchesFilter(s, ampel) {
+        var raw = rawTierFromSignal(s);
+        return matchesFilter(raw, ampel);
+      }
+
       function renderList(ampel) {
         if (!tbody || !listEl) return;
         if (ampel === 'all') {
@@ -200,13 +246,14 @@ def website_ampel_filter_js_block() -> str:
           return;
         }
         var rows = signals.filter(function (s) {
-          return tierFromSignal(s) === ampel;
+          return signalMatchesFilter(s, ampel);
         });
         rows.sort(function (a, b) {
           return (b.date || '').localeCompare(a.date || '') ||
             (a.ticker || '').localeCompare(b.ticker || '');
         });
-        var dot = 'ampel-filter-dot ampel-filter-dot--' + ampel;
+        var dotAmpel = ampel === 'trade' ? 'green' : ampel;
+        var dot = 'ampel-filter-dot ampel-filter-dot--' + dotAmpel;
         var html = [];
         rows.forEach(function (s) {
           var sec = s.gics_sector || s.sector || '—';
@@ -232,11 +279,14 @@ def website_ampel_filter_js_block() -> str:
         renderList(ampel);
         if (!statusEl) return;
         var n = signals.filter(function (s) {
-          return tierFromSignal(s) === ampel;
+          return signalMatchesFilter(s, ampel);
         }).length;
         if (ampel === 'all') {
           statusEl.textContent = 'Alle OOS-Signale: ' + signals.length + ' gesamt; ' +
             cards.shown + ' Chart-Karten sichtbar.';
+        } else if (ampel === 'trade') {
+          statusEl.textContent = 'Empfohlen (Grün+Orange): ' + n + ' OOS-Signale; ' +
+            cards.shown + ' von ' + cards.total + ' Chart-Karten sichtbar.';
         } else {
           statusEl.textContent = 'Kontext ' + ampel + ': ' + n + ' OOS-Signale in der Liste; ' +
             cards.shown + ' von ' + cards.total + ' Chart-Karten passen.';

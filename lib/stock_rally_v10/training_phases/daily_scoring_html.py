@@ -570,6 +570,7 @@ def _run_phase17(c: Any) -> None:
                 _ctx_cols = (
                     "regime_vix_level",
                     "macro_event_within_2bd",
+                    "vix3m_vix_ratio",
                 )
                 signals_holdout_final = []
                 for _, _r in _exported_ho.iterrows():
@@ -1677,17 +1678,20 @@ def _run_phase17(c: Any) -> None:
         for p in _git_docs
         if Path(p).is_file() or (Path(p).is_dir() and p.replace("\\", "/").rstrip("/") == "docs/charts")
     ]
-    try:
-        if not _git_to_add:
-            print("\nGit: keine der erwarteten docs-Dateien gefunden — Commit/Push übersprungen.")
-        else:
-            subprocess.run(["git", "add", "--"] + _git_to_add, check=True)
-            result = subprocess.run(["git", "diff", "--cached", "--quiet"])
-            if result.returncode != 0:
-                subprocess.run(["git", "commit", "-m", _msg], check=True)
-                subprocess.run(["git", "push"], check=True)
-                print(f'\nGit: committed and pushed — "{_msg}"')
+    if not bool(getattr(c, "DAILY_HTML_GIT_PUSH", True)):
+        print("\nGit: Commit/Push deaktiviert (DAILY_HTML_GIT_PUSH=0) — Research/A-B-Lauf.")
+    else:
+        try:
+            if not _git_to_add:
+                print("\nGit: keine der erwarteten docs-Dateien gefunden — Commit/Push übersprungen.")
             else:
-                print("\nGit: no changes to commit (docs already up to date).")
-    except Exception as _e:
-        print(f"\nGit push failed: {_e}")
+                subprocess.run(["git", "add", "--"] + _git_to_add, check=True)
+                result = subprocess.run(["git", "diff", "--cached", "--quiet"])
+                if result.returncode != 0:
+                    subprocess.run(["git", "commit", "-m", _msg], check=True)
+                    subprocess.run(["git", "push"], check=True)
+                    print(f'\nGit: committed and pushed — "{_msg}"')
+                else:
+                    print("\nGit: no changes to commit (docs already up to date).")
+        except Exception as _e:
+            print(f"\nGit push failed: {_e}")

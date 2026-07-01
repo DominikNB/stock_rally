@@ -14,12 +14,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
-def test_scoring_only_ignores_retrain_meta_for_features():
+def test_pipeline_assemble_always_full_matrix_for_meta_parity():
     from lib.stock_rally_v10.data_and_split import meta_only_features_for_assemble
 
+    # Full-Run, Meta-Retrain und Scoring: gleicher assemble_features-Pfad (meta_only=False).
     assert meta_only_features_for_assemble(scoring_only=True, retrain_meta_only=True) is False
     assert meta_only_features_for_assemble(scoring_only=True, retrain_meta_only=False) is False
-    assert meta_only_features_for_assemble(scoring_only=False, retrain_meta_only=True) is True
+    assert meta_only_features_for_assemble(scoring_only=False, retrain_meta_only=True) is False
     assert meta_only_features_for_assemble(scoring_only=False, retrain_meta_only=False) is False
 
 
@@ -61,6 +62,31 @@ def test_context_tier_llm_matches_website_for_low_vix_no_macro():
     assert "rot" not in fields["red_context_llm"].lower().split("gelb")[0]
     df = attach_context_tier_llm_columns(pd.DataFrame([row]))
     assert str(df["vix_regime_ampel"].iloc[0]) == "yellow"
+
+
+def test_context_tier_green_requires_vix_22():
+    from lib.signal_context_tier import classify_signal_context_tier
+
+    assert classify_signal_context_tier({"regime_vix_level": 21.0, "macro_event_within_2bd": False})["level"] == "yellow"
+    assert classify_signal_context_tier({"regime_vix_level": 22.0, "macro_event_within_2bd": False})["level"] == "green"
+
+
+def test_context_tier_macro_splits_by_vix():
+    from lib.signal_context_tier import classify_signal_context_tier
+
+    assert classify_signal_context_tier({"regime_vix_level": 25.0, "macro_event_within_2bd": True})["level"] == "orange"
+    assert classify_signal_context_tier({"regime_vix_level": 18.0, "macro_event_within_2bd": True})["level"] == "red"
+
+
+def test_context_tier_yellow_risk_by_vix3m_ratio():
+    from lib.signal_context_tier import classify_signal_context_tier
+
+    row = {
+        "regime_vix_level": 17.0,
+        "macro_event_within_2bd": False,
+        "vix3m_vix_ratio": 1.10,
+    }
+    assert classify_signal_context_tier(row)["level"] == "yellow_risk"
 
 
 def test_red_regime_llm_matches_website_badge():
